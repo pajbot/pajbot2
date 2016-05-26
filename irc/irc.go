@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net"
 	"net/textproto"
-	"nuulsbot/src/bot"
 	"strings"
 	"time"
+
+	"github.com/nuuls/pajbot2/bot"
 )
 
 type Irc struct {

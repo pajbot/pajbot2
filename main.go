@@ -1,9 +1,10 @@
 package main
 
 import (
-	"nuulsbot/config"
-	"nuulsbot/src/irc"
 	"time"
+
+	"github.com/nuuls/pajbot2/config"
+	"github.com/nuuls/pajbot2/irc"
 )
 
 func main() {

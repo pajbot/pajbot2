@@ -2,9 +2,10 @@ package irc
 
 import (
 	"fmt"
-	"nuulsbot/src/bot"
 	"strconv"
 	"strings"
+
+	"github.com/nuuls/pajbot2/bot"
 )
 
 type parse struct {
