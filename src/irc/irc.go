@@ -36,6 +36,7 @@ func (irc *Irc) newConn(send bool) {
 	irc.SendRaw(conn, "CAP REQ twitch.tv/tags")
 	if send {
 		irc.sendconn[conn] = make([]int, 30)
+		go irc.keepAlive(conn)
 	} else {
 		irc.readconn[conn] = make([]string, 0)
 		go irc.readConnection(conn)
@@ -71,9 +72,7 @@ func (irc *Irc) send() {
 func (irc *Irc) rateLimit() {
 	for {
 		for conn, s := range irc.sendconn {
-			fmt.Println(s)
 			newS := append(s[1:], 0)
-			fmt.Println(newS)
 			irc.sendconn[conn] = newS
 		}
 		time.Sleep(1 * time.Second)
