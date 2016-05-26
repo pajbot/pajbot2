@@ -5,11 +5,57 @@ import (
 	"strings"
 )
 
-func NewBot(cfg BotConfig) {
-	bot := &Bot{}
-	bot.Read = cfg.Readchan
-	bot.Send = cfg.Sendchan
-	bot.Channel = cfg.Channel
+/*
+Config contains some data about
+*/
+type Config struct {
+	ReadChan chan Msg
+	SendChan chan string
+	Channel  string
+}
+
+/*
+Msg contains all the information about an IRC message.
+This included already-parsed ircv3-tags
+
+XXX: Should this contain the user object?
+yes we should. That way we can throw away the Subscriber/Mod/Turbo thing from here
+*/
+type Msg struct {
+	Color       string
+	Displayname string
+	Emotes      []Emote
+	Mod         bool
+	Subscriber  bool
+	Turbo       bool
+	Usertype    string
+	Username    string
+	Channel     string
+	Message     string
+	MessageType string
+	Me          bool
+	Length      int
+}
+
+/*
+A Bot runs in a single channel and reacts according to its
+given commands.
+*/
+type Bot struct {
+	Read    chan Msg
+	Send    chan string
+	Channel string
+}
+
+/*
+NewBot instansiates a new Bot object with the given Config object
+*/
+func NewBot(cfg Config) {
+	bot := &Bot{
+		Read:    cfg.ReadChan,
+		Send:    cfg.SendChan,
+		Channel: cfg.Channel,
+	}
 	bot.init()
 }
 
@@ -25,6 +71,9 @@ func (bot *Bot) init() {
 	}
 }
 
+/*
+Say sends a PRIVMSG to the bots given channel
+*/
 func (bot *Bot) Say(message string) {
 	if !strings.HasPrefix(message, ".") {
 		message = ". " + message

@@ -12,6 +12,9 @@ type parse struct {
 	m *bot.Msg
 }
 
+/*
+Parse parses an IRC message into a more readable bot.Msg
+*/
 func Parse(line string) bot.Msg {
 	p := &parse{}
 	p.m = &bot.Msg{}
@@ -39,11 +42,11 @@ func Parse(line string) bot.Msg {
 		} else {
 			p.m.MessageType = "whisper"
 		}
-		tags_ := strings.Split(tagsRaw, ";")
 
-		for i := range tags_ {
-			k := strings.Split(tags_[i], "=")[0]
-			v := strings.Split(tags_[i], "=")[1]
+		for _, tagValue := range strings.Split(tagsRaw, ";") {
+			spl := strings.Split(tagValue, "=")
+			k := spl[0]
+			v := spl[1]
 			tags[k] = v
 		}
 		p.GetTwitchEmotes(tags["emotes"])
@@ -64,7 +67,7 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 		e := &bot.Emote{}
 		e.EmoteType = "twitch"
 		e.Name = ""
-		e.Id = id
+		e.ID = id
 		e.Count = strings.Count(emoteSlice[i], "-")
 		p.m.Emotes = append(p.m.Emotes, *e)
 	}
