@@ -43,18 +43,27 @@ func (irc *Irc) newConn(send bool) {
 	fmt.Println("connected")
 }
 
+func (irc *Irc) getSendConn() net.Conn {
+	var conn net.Conn
+	for c := range irc.sendconn {
+		if irc.sendconn[c] < 15 {
+			conn = c
+			break
+		}
+	}
+	if conn == nil {
+		irc.newConn(true)
+		conn = irc.getSendConn()
+	}
+	return conn
+}
+
 func (irc *Irc) send() {
 	for {
 		msg := <-irc.Sendchan
-		conn := func() net.Conn {
-			for c := range irc.sendconn {
-				if irc.sendconn[c] < 15 {
-					return c
-				}
-			}
-			return nil
-		}()
+		conn := irc.getSendConn()
 		irc.SendRaw(conn, msg)
+		fmt.Println("sent: " + msg)
 	}
 }
 
@@ -97,7 +106,7 @@ func (irc *Irc) JoinChannel(channel string) {
 	newbot := &bot.BotConfig{
 		Channel:  channel,
 		Readchan: read,
-		Sendchan: make(chan string, 5),
+		Sendchan: irc.Sendchan,
 	}
 	irc.bots[channel] = read
 	go bot.NewBot(*newbot)

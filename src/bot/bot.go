@@ -18,5 +18,11 @@ func (bot *Bot) init() {
 		if m.MessageType == "sub" {
 			fmt.Printf("%s subbed for %d months in a row\n", m.Username, m.Length)
 		}
+		go bot.Handle(m)
 	}
+}
+
+func (bot *Bot) Say(message string) {
+	m := fmt.Sprintf("PRIVMSG #%s : %s", bot.Channel, message)
+	bot.Send <- m
 }
