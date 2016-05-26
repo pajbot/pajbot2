@@ -1,6 +1,9 @@
 package bot
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func NewBot(cfg BotConfig) {
 	bot := &Bot{}
@@ -14,7 +17,7 @@ func (bot *Bot) init() {
 	fmt.Printf("new bot in %s\n", bot.Channel)
 	for {
 		m := <-bot.Read
-		fmt.Printf("#%s %s : %s\n", m.Channel, m.Username, m.Message)
+		fmt.Printf("#%s %s :%s\n", m.Channel, m.Username, m.Message)
 		if m.MessageType == "sub" {
 			fmt.Printf("%s subbed for %d months in a row\n", m.Username, m.Length)
 		}
@@ -23,6 +26,9 @@ func (bot *Bot) init() {
 }
 
 func (bot *Bot) Say(message string) {
-	m := fmt.Sprintf("PRIVMSG #%s : %s", bot.Channel, message)
+	if !strings.HasPrefix(message, ".") {
+		message = ". " + message
+	}
+	m := fmt.Sprintf("PRIVMSG #%s :%s", bot.Channel, message)
 	bot.Send <- m
 }
