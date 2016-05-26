@@ -16,7 +16,7 @@ type Irc struct {
 	pass     string
 	nick     string
 	readconn map[net.Conn][]string
-	sendconn map[net.Conn]int
+	sendconn map[net.Conn][]int
 	Readchan chan string
 	Sendchan chan string
 	channels map[string]net.Conn
@@ -35,7 +35,7 @@ func (irc *Irc) newConn(send bool) {
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	irc.SendRaw(conn, "CAP REQ twitch.tv/tags")
 	if send {
-		irc.sendconn[conn] = 0
+		irc.sendconn[conn] = make([]int, 30)
 	} else {
 		irc.readconn[conn] = make([]string, 0)
 		go irc.readConnection(conn)
@@ -46,7 +46,7 @@ func (irc *Irc) newConn(send bool) {
 func (irc *Irc) getSendConn() net.Conn {
 	var conn net.Conn
 	for c := range irc.sendconn {
-		if irc.sendconn[c] < 15 {
+		if Sum(irc.sendconn[c]) < 15 {
 			conn = c
 			break
 		}
@@ -64,6 +64,19 @@ func (irc *Irc) send() {
 		conn := irc.getSendConn()
 		irc.SendRaw(conn, msg)
 		fmt.Println("sent: " + msg)
+		irc.sendconn[conn][29]++
+	}
+}
+
+func (irc *Irc) rateLimit() {
+	for {
+		for conn, s := range irc.sendconn {
+			fmt.Println(s)
+			newS := append(s[1:], 0)
+			fmt.Println(newS)
+			irc.sendconn[conn] = newS
+		}
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -142,7 +155,7 @@ func Init(pass string, nick string) Irc {
 		pass:     pass,
 		nick:     nick,
 		readconn: make(map[net.Conn][]string),
-		sendconn: make(map[net.Conn]int),
+		sendconn: make(map[net.Conn][]int),
 		Readchan: make(chan string, 10),
 		Sendchan: make(chan string, 10),
 		bots:     make(map[string]chan bot.Msg),
@@ -150,5 +163,6 @@ func Init(pass string, nick string) Irc {
 	irc.newConn(true)
 	irc.newConn(false)
 	go irc.send()
+	go irc.rateLimit()
 	return *irc
 }
