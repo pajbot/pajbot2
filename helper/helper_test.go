@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/nuuls/pajbot2/helper"
+	"github.com/pajlada/pajbot2/helper"
 )
 
 func TestSum(t *testing.T) {

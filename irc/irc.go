@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nuuls/pajbot2/bot"
-	"github.com/nuuls/pajbot2/helper"
+	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/helper"
 )
 
 /*

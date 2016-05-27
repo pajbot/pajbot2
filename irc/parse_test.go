@@ -3,8 +3,8 @@ package irc_test
 import (
 	"testing"
 
-	"github.com/nuuls/pajbot2/bot"
-	"github.com/nuuls/pajbot2/irc"
+	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/irc"
 	"github.com/stretchr/testify/assert"
 )
 

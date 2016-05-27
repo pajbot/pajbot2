@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/nuuls/pajbot2/irc"
+	"github.com/pajlada/pajbot2/irc"
 )
 
 /*

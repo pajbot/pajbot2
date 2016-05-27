@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nuuls/pajbot2/bot"
+	"github.com/pajlada/pajbot2/bot"
 )
 
 type parse struct {
