@@ -27,10 +27,10 @@ func TestSum(t *testing.T) {
 	}
 
 	for _, tt := range sumTests {
-		e := helper.Sum(tt.input)
+		res := helper.Sum(tt.input)
 
-		if e != tt.expected {
-			t.Errorf("%d is not equal to %d", e, tt.expected)
+		if res != tt.expected {
+			t.Errorf("%d is not equal to %d", res, tt.expected)
 		}
 	}
 	fmt.Println("xD")
