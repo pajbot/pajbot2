@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/nuuls/pajbot2/bot"
+	"github.com/nuuls/pajbot2/helper"
 )
 
 /*
@@ -59,7 +60,7 @@ func (irc *Irc) newConn(send bool) {
 func (irc *Irc) getSendConn() net.Conn {
 	var conn net.Conn
 	for c := range irc.sendConn {
-		if Sum(irc.sendConn[c]) < 15 {
+		if helper.Sum(irc.sendConn[c]) < 15 {
 			conn = c
 			break
 		}
