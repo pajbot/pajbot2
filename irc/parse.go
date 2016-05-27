@@ -18,12 +18,14 @@ Parse parses an IRC message into a more readable bot.Msg
 func Parse(line string) bot.Msg {
 	p := &parse{}
 	p.m = &bot.Msg{}
-	//fmt.Println(line)
+	parseTags := true
+	fmt.Println(line)
 	if strings.Contains(line, "twitchnotify") {
 		fmt.Println(line)
 	}
 	var splitline []string
 	if strings.HasPrefix(line, ":") {
+		parseTags = false
 		splitline = strings.SplitN(line, ":", 2)
 	} else {
 		splitline = strings.SplitN(line, " :", 2)
@@ -43,14 +45,16 @@ func Parse(line string) bot.Msg {
 			p.m.MessageType = "whisper"
 		}
 
-		for _, tagValue := range strings.Split(tagsRaw, ";") {
-			spl := strings.Split(tagValue, "=")
-			k := spl[0]
-			v := spl[1]
-			tags[k] = v
+		if parseTags {
+			for _, tagValue := range strings.Split(tagsRaw, ";") {
+				spl := strings.Split(tagValue, "=")
+				k := spl[0]
+				v := spl[1]
+				tags[k] = v
+			}
+			p.GetTwitchEmotes(tags["emotes"])
+			p.GetTags(tags)
 		}
-		p.GetTwitchEmotes(tags["emotes"])
-		p.GetTags(tags)
 	}
 
 	return *p.m
