@@ -30,7 +30,11 @@ type Config struct {
 	FromWeb chan map[string]interface{}
 }
 
-func loadConfig(path string) (*Config, error) {
+/*
+LoadConfig parses a config file from the given json file at the path
+and returns a Config object
+*/
+func LoadConfig(path string) (*Config, error) {
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -46,7 +50,7 @@ func loadConfig(path string) (*Config, error) {
 
 func main() {
 	// TODO: Use config path from system arguments
-	config, err := loadConfig("config.json")
+	config, err := LoadConfig("config.json")
 	if err != nil {
 		log.Fatal("An error occured while loading the config file:", err)
 	}

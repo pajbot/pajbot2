@@ -45,21 +45,29 @@ type Bot struct {
 	Read    chan Msg
 	Send    chan string
 	Channel string
+	Modules []Module
 }
 
 /*
 NewBot instansiates a new Bot object with the given Config object
 */
-func NewBot(cfg Config) {
-	bot := &Bot{
+func NewBot(cfg Config, modules []Module) *Bot {
+	return &Bot{
 		Read:    cfg.ReadChan,
 		Send:    cfg.SendChan,
 		Channel: cfg.Channel,
+		Modules: modules,
 	}
-	bot.init()
 }
 
-func (bot *Bot) init() {
+/*
+Init starts the bots
+
+Connects to irc, joins channel etc
+starts channels?
+idk
+*/
+func (bot *Bot) Init() {
 	fmt.Printf("new bot in %s\n", bot.Channel)
 	for {
 		m := <-bot.Read

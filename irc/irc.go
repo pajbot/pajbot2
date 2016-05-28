@@ -10,6 +10,8 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/helper"
+	"github.com/pajlada/pajbot2/modules/banphrase"
+	"github.com/pajlada/pajbot2/modules/command"
 )
 
 /*
@@ -133,13 +135,18 @@ func (irc *Irc) JoinChannel(channel string) {
 	irc.SendRaw(conn, "JOIN #"+channel)
 	irc.readConn[conn] = append(irc.readConn[conn], channel)
 	read := make(chan bot.Msg)
-	newbot := &bot.Config{
+	newbot := bot.Config{
 		Channel:  channel,
 		ReadChan: read,
 		SendChan: irc.SendChan,
 	}
 	irc.bots[channel] = read
-	go bot.NewBot(*newbot)
+	modules := []bot.Module{
+		&banphrase.Banphrase{},
+		&command.Command{},
+	}
+	b := bot.NewBot(newbot, modules)
+	go b.Init()
 
 }
 
