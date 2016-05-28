@@ -81,3 +81,13 @@ func (bot *Bot) Say(message string) {
 	m := fmt.Sprintf("PRIVMSG #%s :%s", bot.Channel, message)
 	bot.Send <- m
 }
+
+/*
+Ban returns the ban/TO message and reason, perm ban if duration < 0
+*/
+func (bot *Bot) Ban(user string, duration int, reason string) string {
+	if duration < 0 {
+		return fmt.Sprintf(".ban %s %s - autoban by pajbot", user, reason)
+	}
+	return fmt.Sprintf(".timeout %s %d %s - autoban by pajbot", user, duration, reason)
+}

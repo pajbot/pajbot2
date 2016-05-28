@@ -18,14 +18,15 @@ type Command struct {
 	Level    int
 }
 
-/*
-Handle attempts to handle the given message
-*/
-func (bot *Bot) Handle(msg Msg) error {
+func (bot *Bot) CheckForCommand(msg Msg) Action {
+	a := &Action{}
 	m := strings.Split(msg.Message, " ")
 	trigger := strings.ToLower(m[0])
 	if trigger == "!xd" {
-		bot.Say("pajaSWA")
+		a.Response = "pajaSWA"
 	}
-	return nil
+	if a.Response != "" {
+		a.Match = true
+	}
+	return *a
 }
