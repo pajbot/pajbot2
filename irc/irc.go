@@ -10,8 +10,7 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/helper"
-	"github.com/pajlada/pajbot2/modules/banphrase"
-	"github.com/pajlada/pajbot2/modules/command"
+	"github.com/pajlada/pajbot2/modules"
 )
 
 /*
@@ -129,6 +128,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 JoinChannel creates a new bot in the given channel
 
 TODO: Only create a new bot if one doesn't already exist in the channel
+TODO: clean up method
 */
 func (irc *Irc) JoinChannel(channel string) {
 	conn := irc.getReadconn()
@@ -141,13 +141,12 @@ func (irc *Irc) JoinChannel(channel string) {
 		SendChan: irc.SendChan,
 	}
 	irc.bots[channel] = read
-	modules := []bot.Module{
-		&banphrase.Banphrase{},
-		&command.Command{},
+	_modules := []bot.Module{
+		&modules.Banphrase{},
+		&modules.Command{},
 	}
-	b := bot.NewBot(newbot, modules)
+	b := bot.NewBot(newbot, _modules)
 	go b.Init()
-
 }
 
 /*

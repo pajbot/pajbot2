@@ -1,4 +1,4 @@
-package module
+package modules
 
 import "github.com/pajlada/pajbot2/bot"
 

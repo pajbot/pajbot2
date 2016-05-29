@@ -1,10 +1,9 @@
-package command
+package modules
 
 import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
-	"github.com/pajlada/pajbot2/modules"
 )
 
 /*
@@ -14,7 +13,7 @@ type Command struct {
 }
 
 // Ensure the module implements the interface properly
-var _ module.Module = (*Command)(nil)
+var _ Module = (*Command)(nil)
 
 // Check xD
 func (module *Command) Check(b *bot.Bot, msg *bot.Msg, action *bot.Action) error {

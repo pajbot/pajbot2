@@ -1,10 +1,9 @@
-package banphrase
+package modules
 
 import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
-	"github.com/pajlada/pajbot2/modules"
 )
 
 /*
@@ -14,7 +13,7 @@ type Banphrase struct {
 }
 
 // Ensure the module implements the interface properly
-var _ module.Module = (*Banphrase)(nil)
+var _ Module = (*Banphrase)(nil)
 
 // Check xD
 func (module *Banphrase) Check(b *bot.Bot, msg *bot.Msg, action *bot.Action) error {
