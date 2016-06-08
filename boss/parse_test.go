@@ -1,4 +1,4 @@
-package irc_test
+package boss_test
 
 import (
 	"testing"

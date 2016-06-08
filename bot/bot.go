@@ -3,38 +3,17 @@ package bot
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pajlada/pajbot2/common"
 )
 
 /*
 Config contains some data about
 */
 type Config struct {
-	ReadChan chan Msg
+	ReadChan chan common.Msg
 	SendChan chan string
 	Channel  string
-}
-
-/*
-Msg contains all the information about an IRC message.
-This included already-parsed ircv3-tags
-
-XXX: Should this contain the user object?
-yes we should. That way we can throw away the Subscriber/Mod/Turbo thing from here
-*/
-type Msg struct {
-	Color       string
-	Displayname string
-	Emotes      []Emote
-	Mod         bool
-	Subscriber  bool
-	Turbo       bool
-	Usertype    string
-	Username    string
-	Channel     string
-	Message     string
-	MessageType string
-	Me          bool
-	Length      int
 }
 
 /*
@@ -42,7 +21,7 @@ A Bot runs in a single channel and reacts according to its
 given commands.
 */
 type Bot struct {
-	Read    chan Msg
+	Read    chan common.Msg
 	Send    chan string
 	Channel string
 	Modules []Module
@@ -71,9 +50,9 @@ func (bot *Bot) Init() {
 	fmt.Printf("new bot in %s\n", bot.Channel)
 	for {
 		m := <-bot.Read
-		fmt.Printf("#%s %s :%s\n", m.Channel, m.Username, m.Message)
-		if m.MessageType == "sub" {
-			fmt.Printf("%s subbed for %d months in a row\n", m.Username, m.Length)
+		fmt.Printf("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
+		if m.Type == "sub" {
+			fmt.Printf("%s subbed for %d months in a row\n", m.User.Name, m.Length)
 		}
 		go bot.Handle(m)
 	}

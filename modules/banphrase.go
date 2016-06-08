@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
 )
 
 /*
@@ -16,10 +17,10 @@ type Banphrase struct {
 var _ Module = (*Banphrase)(nil)
 
 // Check xD
-func (module *Banphrase) Check(b *bot.Bot, msg *bot.Msg, action *bot.Action) error {
+func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	m := strings.ToLower(msg.Message)
 	if strings.Contains(m, "www.com") {
-		action.Response = b.Ban(msg.Username, 10, "bad link")
+		action.Response = b.Ban(msg.User.Name, 10, "bad link")
 		action.Stop = true
 	}
 	return nil

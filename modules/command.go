@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
 )
 
 /*
@@ -16,7 +17,7 @@ type Command struct {
 var _ Module = (*Command)(nil)
 
 // Check xD
-func (module *Command) Check(b *bot.Bot, msg *bot.Msg, action *bot.Action) error {
+func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	m := strings.Split(msg.Message, " ")
 	trigger := strings.ToLower(m[0])
 	if trigger == "!xd" {

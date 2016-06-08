@@ -1,4 +1,4 @@
-package irc
+package boss
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/modules"
 )
@@ -26,7 +27,7 @@ type Irc struct {
 	ReadChan chan string
 	SendChan chan string
 	channels map[string]net.Conn
-	bots     map[string]chan bot.Msg
+	bots     map[string]chan common.Msg
 }
 
 /*
@@ -105,8 +106,8 @@ func (irc *Irc) keepAlive(conn net.Conn) {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 		}
 	}
-
 }
+
 func (irc *Irc) readConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -124,17 +125,9 @@ func (irc *Irc) readConnection(conn net.Conn) {
 	}
 }
 
-/*
-JoinChannel creates a new bot in the given channel
-
-TODO: Only create a new bot if one doesn't already exist in the channel
-TODO: clean up method
-*/
-func (irc *Irc) JoinChannel(channel string) {
-	conn := irc.getReadconn()
-	irc.SendRaw(conn, "JOIN #"+channel)
-	irc.readConn[conn] = append(irc.readConn[conn], channel)
-	read := make(chan bot.Msg)
+// NewBot creates a new bot in the given channel
+func (irc *Irc) NewBot(channel string) {
+	read := make(chan common.Msg)
 	newbot := bot.Config{
 		Channel:  channel,
 		ReadChan: read,
@@ -147,6 +140,20 @@ func (irc *Irc) JoinChannel(channel string) {
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()
+
+}
+
+/*
+JoinChannel joins a twitch chat and creates a new bot if there isnt already one
+*/
+func (irc *Irc) JoinChannel(channel string) {
+	conn := irc.getReadconn()
+	irc.SendRaw(conn, "JOIN #"+channel)
+	if _, ok := irc.bots[channel]; !ok {
+		irc.readConn[conn] = append(irc.readConn[conn], channel)
+		irc.NewBot(channel)
+	}
+
 }
 
 /*
@@ -190,7 +197,7 @@ func Init(pass string, nick string) Irc {
 		sendConn: make(map[net.Conn][]int),
 		ReadChan: make(chan string, 10),
 		SendChan: make(chan string, 10),
-		bots:     make(map[string]chan bot.Msg),
+		bots:     make(map[string]chan common.Msg),
 	}
 	irc.newConn(true)
 	irc.newConn(false)

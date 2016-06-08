@@ -1,23 +1,25 @@
-package irc
+package boss
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
 )
 
 type parse struct {
-	m *bot.Msg
+	m *common.Msg
 }
 
 /*
 Parse parses an IRC message into a more readable bot.Msg
 */
-func Parse(line string) bot.Msg {
+func Parse(line string) common.Msg {
 	p := &parse{}
-	p.m = &bot.Msg{}
+	p.m = &common.Msg{
+		User: common.User{},
+	}
 	parseTags := true
 	fmt.Println(line)
 	if strings.Contains(line, "twitchnotify") {
@@ -35,14 +37,14 @@ func Parse(line string) bot.Msg {
 	tags := make(map[string]string)
 
 	p.GetMessage(msg)
-	if p.m.Username == "twitchnotify" {
-		p.m.MessageType = "sub"
+	if p.m.User.Name == "twitchnotify" {
+		p.m.Type = "sub"
 		p.Sub()
 	} else {
 		if strings.Contains(msg, "PRIVMSG") {
-			p.m.MessageType = "privmsg"
+			p.m.Type = "privmsg"
 		} else {
-			p.m.MessageType = "whisper"
+			p.m.Type = "whisper"
 		}
 
 		if parseTags {
@@ -61,15 +63,15 @@ func Parse(line string) bot.Msg {
 }
 
 func (p *parse) GetTwitchEmotes(emotetag string) {
-	p.m.Emotes = make([]bot.Emote, 0)
+	p.m.Emotes = make([]common.Emote, 0)
 	if emotetag == "" {
 		return
 	}
 	emoteSlice := strings.Split(emotetag, "/")
 	for i := range emoteSlice {
 		id := strings.Split(emoteSlice[i], ":")[0]
-		e := &bot.Emote{}
-		e.EmoteType = "twitch"
+		e := &common.Emote{}
+		e.Type = "twitch"
 		e.Name = ""
 		e.ID = id
 		e.Count = strings.Count(emoteSlice[i], "-")
@@ -78,18 +80,17 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 }
 
 func (p *parse) GetTags(tags map[string]string) {
-	p.m.Color = tags["color"]
-	p.m.Displayname = tags["display-name"]
-	p.m.Usertype = tags["user-type"]
+	p.m.User.Displayname = tags["display-name"]
+	p.m.User.Type = tags["user-type"]
 
 	if tags["turbo"] == "1" {
-		p.m.Turbo = true
+		p.m.User.Turbo = true
 	}
 	if tags["mod"] == "1" {
-		p.m.Mod = true
+		p.m.User.Mod = true
 	}
 	if tags["subscriber"] == "1" {
-		p.m.Subscriber = true
+		p.m.User.Mod = true
 	}
 
 }
@@ -100,7 +101,7 @@ func (p *parse) GetMessage(msg string) {
 	}
 	//fmt.Println(msg)
 	p.m.Message = strings.SplitN(msg, " :", 2)[1]
-	p.m.Username = strings.SplitN(msg, "!", 2)[0]
+	p.m.User.Name = strings.SplitN(msg, "!", 2)[0]
 	c := strings.SplitN(msg, "#", 3)[1]
 	p.m.Channel = strings.SplitN(c, " ", 2)[0]
 }
@@ -119,6 +120,6 @@ func (p *parse) Sub() {
 			panic(err)
 		}
 	}
-	p.m.Displayname = strings.Split(m, " ")[0]
-	p.m.Username = strings.ToLower(p.m.Displayname)
+	p.m.User.Displayname = strings.Split(m, " ")[0]
+	p.m.User.Name = strings.ToLower(p.m.User.Displayname)
 }

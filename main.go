@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/pajlada/pajbot2/irc"
+	"github.com/pajlada/pajbot2/boss"
 )
 
 /*
@@ -55,10 +55,10 @@ func main() {
 		log.Fatal("An error occured while loading the config file:", err)
 	}
 
-	irc := irc.Init(config.Pass, config.Nick)
+	boss := boss.Init(config.Pass, config.Nick)
 
 	for _, channel := range config.Channels {
-		irc.JoinChannel(channel)
+		boss.JoinChannel(channel)
 	}
 
 	for {
