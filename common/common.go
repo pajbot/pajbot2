@@ -60,6 +60,8 @@ type Config struct {
 
 	Channels []string `json:"channels"`
 
+	Quit chan string
+
 	ToWeb   chan map[string]interface{}
 	FromWeb chan map[string]interface{}
 }

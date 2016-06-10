@@ -30,12 +30,12 @@ func LoadConfig(path string) (*common.Config, error) {
 func main() {
 	// TODO: Use config path from system arguments
 	config, err := LoadConfig("config.json")
+
 	if err != nil {
 		log.Fatal("An error occured while loading the config file:", err)
 	}
-
-	boss.Init(config)
-
-	quit := make(chan interface{})
-	<-quit
+	config.Quit = make(chan string)
+	go boss.Init(config)
+	q := <-config.Quit
+	log.Fatal(q)
 }

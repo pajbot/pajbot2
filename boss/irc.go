@@ -30,6 +30,7 @@ type Irc struct {
 	SendChan chan string
 	channels map[string]net.Conn
 	bots     map[string]chan common.Msg
+	quit     chan string
 }
 
 /*
@@ -137,6 +138,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 func (irc *Irc) NewBot(channel string) {
 	read := make(chan common.Msg)
 	newbot := bot.Config{
+		Quit:     irc.quit,
 		Channel:  channel,
 		ReadChan: read,
 		SendChan: irc.SendChan,
@@ -209,6 +211,7 @@ func Init(config *common.Config) Irc {
 		ReadChan: make(chan string, 10),
 		SendChan: make(chan string, 10),
 		bots:     make(map[string]chan common.Msg),
+		quit:     config.Quit,
 	}
 	irc.newConn(true)
 	irc.newConn(false)

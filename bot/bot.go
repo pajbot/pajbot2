@@ -11,6 +11,7 @@ import (
 Config contains some data about
 */
 type Config struct {
+	Quit     chan string
 	ReadChan chan common.Msg
 	SendChan chan string
 	Channel  string
@@ -21,6 +22,7 @@ A Bot runs in a single channel and reacts according to its
 given commands.
 */
 type Bot struct {
+	Quit    chan string
 	Read    chan common.Msg
 	Send    chan string
 	Channel string
@@ -32,6 +34,7 @@ NewBot instansiates a new Bot object with the given Config object
 */
 func NewBot(cfg Config, modules []Module) *Bot {
 	return &Bot{
+		Quit:    cfg.Quit,
 		Read:    cfg.ReadChan,
 		Send:    cfg.SendChan,
 		Channel: cfg.Channel,
