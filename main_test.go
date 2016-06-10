@@ -1,21 +1,21 @@
-package main_test
+package main
 
 import (
 	"testing"
 
-	"github.com/pajlada/pajbot2"
+	"github.com/pajlada/pajbot2/common"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLoadConfig(t *testing.T) {
 	var configTests = []struct {
 		inputPath string
-		expectedC *main.Config
+		expectedC *common.Config
 		expectedE bool
 	}{
 		{
 			inputPath: "resources/testfiles/config1.json",
-			expectedC: &main.Config{Pass: "oauth:xD", Nick: "twitch_username", BrokerPort: "", RedisHost: "", RedisPassword: "", TLSKey: "", TLSCert: "", Channels: []string{"pajlada", "nuuls", "forsenlol"}, ToWeb: (chan map[string]interface{})(nil), FromWeb: (chan map[string]interface{})(nil)},
+			expectedC: &common.Config{Pass: "oauth:xD", Nick: "twitch_username", BrokerPort: "", RedisHost: "", RedisPassword: "", TLSKey: "", TLSCert: "", Channels: []string{"pajlada", "nuuls", "forsenlol"}, ToWeb: (chan map[string]interface{})(nil), FromWeb: (chan map[string]interface{})(nil)},
 			expectedE: false,
 		},
 		{
@@ -31,7 +31,7 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	for _, tt := range configTests {
-		res, err := main.LoadConfig(tt.inputPath)
+		res, err := LoadConfig(tt.inputPath)
 
 		if tt.expectedE {
 			assert.NotNil(t, err)
