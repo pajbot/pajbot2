@@ -144,9 +144,14 @@ func (irc *Irc) NewBot(channel string) {
 		SendChan: irc.SendChan,
 	}
 	irc.bots[channel] = read
+	commandModule := &modules.Command{}
+	// TODO: This should be generalized (and optional if possible)
+	// Could that be based on module type?
+	// If module.@type == 'NeedsInit' { (cast)module.Init() }
+	commandModule.Init()
 	_modules := []bot.Module{
 		&modules.Banphrase{},
-		&modules.Command{},
+		commandModule,
 		&modules.Pyramid{},
 	}
 	b := bot.NewBot(newbot, _modules)
@@ -200,7 +205,7 @@ Init initalizes shit.
 TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
-func Init(config *common.Config) Irc {
+func Init(config *common.Config) *Irc {
 	irc := &Irc{
 		server:   "irc.chat.twitch.tv",
 		port:     "80",
@@ -218,5 +223,5 @@ func Init(config *common.Config) Irc {
 	go irc.send()
 	go irc.rateLimit()
 	go irc.JoinChannels(config.Channels)
-	return *irc
+	return irc
 }

@@ -4,6 +4,7 @@ package common
 
 import "time"
 
+// User xD
 type User struct {
 	ID          int
 	Name        string
@@ -33,6 +34,7 @@ type Msg struct {
 	Emotes  []Emote
 }
 
+// Emote xD
 type Emote struct {
 	Name  string
 	ID    string
