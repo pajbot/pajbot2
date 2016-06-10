@@ -7,7 +7,7 @@ import "time"
 type User struct {
 	ID          int
 	Name        string
-	Displayname string
+	DisplayName string
 	Color       string //do we even want colors ?
 	Mod         bool
 	Sub         bool

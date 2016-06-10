@@ -11,6 +11,7 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
+// Pyramid module from pajbot 1
 type Pyramid struct {
 	data      [][]string
 	goingDown bool
@@ -19,6 +20,7 @@ type Pyramid struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Pyramid)(nil)
 
+// Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if msg.User.Name == "twitchnotify" {
 		return nil

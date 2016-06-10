@@ -21,7 +21,6 @@ func Parse(line string) common.Msg {
 		User: common.User{},
 	}
 	parseTags := true
-	fmt.Println(line)
 	if strings.Contains(line, "twitchnotify") {
 		fmt.Println(line)
 	}
@@ -80,9 +79,12 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 }
 
 func (p *parse) GetTags(tags map[string]string) {
-	p.m.User.Displayname = tags["display-name"]
+	if tags["display-name"] == "" {
+		p.m.User.DisplayName = p.m.User.Name
+	} else {
+		p.m.User.DisplayName = tags["display-name"]
+	}
 	p.m.User.Type = tags["user-type"]
-
 	if tags["turbo"] == "1" {
 		p.m.User.Turbo = true
 	}
@@ -120,6 +122,6 @@ func (p *parse) Sub() {
 			panic(err)
 		}
 	}
-	p.m.User.Displayname = strings.Split(m, " ")[0]
-	p.m.User.Name = strings.ToLower(p.m.User.Displayname)
+	p.m.User.DisplayName = strings.Split(m, " ")[0]
+	p.m.User.Name = strings.ToLower(p.m.User.DisplayName)
 }

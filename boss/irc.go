@@ -137,6 +137,7 @@ func (irc *Irc) NewBot(channel string) {
 	_modules := []bot.Module{
 		&modules.Banphrase{},
 		&modules.Command{},
+		&modules.Pyramid{},
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()
