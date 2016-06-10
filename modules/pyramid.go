@@ -22,7 +22,7 @@ var _ Module = (*Pyramid)(nil)
 
 // Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	if msg.User.Name == "twitchnotify" {
+	if msg.Type != "privmsg" {
 		return nil
 	}
 	msgParts := strings.Split(msg.Message, " ")
