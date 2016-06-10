@@ -37,8 +37,13 @@ func Parse(line string) common.Msg {
 
 	p.GetMessage(msg)
 	if p.m.User.Name == "twitchnotify" {
-		p.m.Type = "sub"
-		p.Sub()
+		if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
+			p.m.Type = "sub"
+			p.Sub()
+		} else {
+			p.m.Type = "hostSub" // useless xD
+		}
+
 	} else {
 		if strings.Contains(msg, "PRIVMSG") {
 			p.m.Type = "privmsg"
