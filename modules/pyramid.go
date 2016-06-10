@@ -31,8 +31,6 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 		lastLen := len(module.data[len(module.data)-1])
 		pyramidThing := module.data[0][0]
 		lenDiff := curLen - lastLen
-		log.Println(module.data)
-		log.Println(msgParts)
 
 		if math.Abs(float64(lenDiff)) == 1 {
 			good := true
