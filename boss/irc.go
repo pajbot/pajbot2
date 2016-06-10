@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/textproto"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -18,6 +19,7 @@ import (
 The Irc object contains all data xD
 */
 type Irc struct {
+	sync.Mutex
 	server   string
 	port     string
 	pass     string
@@ -49,6 +51,8 @@ func (irc *Irc) newConn(send bool) {
 	}
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	irc.SendRaw(conn, "CAP REQ twitch.tv/tags")
+	irc.Lock()
+	defer irc.Unlock()
 	if send {
 		irc.sendConn[conn] = make([]int, 30)
 		go irc.keepAlive(conn)
@@ -80,7 +84,9 @@ func (irc *Irc) send() {
 		conn := irc.getSendConn()
 		irc.SendRaw(conn, msg)
 		fmt.Println("sent: " + msg)
+		irc.Lock()
 		irc.sendConn[conn][29]++
+		irc.Unlock()
 	}
 }
 
@@ -88,7 +94,9 @@ func (irc *Irc) rateLimit() {
 	for {
 		for conn, s := range irc.sendConn {
 			newS := append(s[1:], 0)
+			irc.Lock()
 			irc.sendConn[conn] = newS
+			irc.Unlock()
 		}
 		time.Sleep(1 * time.Second)
 	}
@@ -150,6 +158,8 @@ JoinChannel joins a twitch chat and creates a new bot if there isnt already one
 func (irc *Irc) JoinChannel(channel string) {
 	conn := irc.getReadconn()
 	irc.SendRaw(conn, "JOIN #"+channel)
+	irc.Lock()
+	defer irc.Unlock()
 	if _, ok := irc.bots[channel]; !ok {
 		irc.readConn[conn] = append(irc.readConn[conn], channel)
 		irc.NewBot(channel)
@@ -188,12 +198,12 @@ Init initalizes shit.
 TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
-func Init(pass string, nick string) Irc {
+func Init(config *common.Config) Irc {
 	irc := &Irc{
 		server:   "irc.chat.twitch.tv",
 		port:     "80",
-		pass:     pass,
-		nick:     nick,
+		pass:     config.Pass,
+		nick:     config.Nick,
 		readConn: make(map[net.Conn][]string),
 		sendConn: make(map[net.Conn][]int),
 		ReadChan: make(chan string, 10),
@@ -204,5 +214,6 @@ func Init(pass string, nick string) Irc {
 	irc.newConn(false)
 	go irc.send()
 	go irc.rateLimit()
+	go irc.JoinChannels(config.Channels)
 	return *irc
 }

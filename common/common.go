@@ -42,3 +42,24 @@ type Emote struct {
 	IsGif bool
 	Count int
 }
+
+/*
+The Config contains all the data required to connect
+to the twitch IRC servers
+*/
+type Config struct {
+	Pass       string `json:"pass"`
+	Nick       string `json:"nick"`
+	BrokerPort string `json:"broker_port"`
+
+	RedisHost     string `json:"redis_host"`
+	RedisPassword string `json:"redis_password"`
+
+	TLSKey  string `json:"tls_key"`
+	TLSCert string `json:"tls_cert"`
+
+	Channels []string `json:"channels"`
+
+	ToWeb   chan map[string]interface{}
+	FromWeb chan map[string]interface{}
+}

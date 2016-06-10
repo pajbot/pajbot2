@@ -4,42 +4,21 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
-	"time"
 
 	"github.com/pajlada/pajbot2/boss"
+	"github.com/pajlada/pajbot2/common"
 )
-
-/*
-The Config contains all the data required to connect
-to the twitch IRC servers
-*/
-type Config struct {
-	Pass       string `json:"pass"`
-	Nick       string `json:"nick"`
-	BrokerPort string `json:"broker_port"`
-
-	RedisHost     string `json:"redis_host"`
-	RedisPassword string `json:"redis_password"`
-
-	TLSKey  string `json:"tls_key"`
-	TLSCert string `json:"tls_cert"`
-
-	Channels []string `json:"channels"`
-
-	ToWeb   chan map[string]interface{}
-	FromWeb chan map[string]interface{}
-}
 
 /*
 LoadConfig parses a config file from the given json file at the path
 and returns a Config object
 */
-func LoadConfig(path string) (*Config, error) {
+func LoadConfig(path string) (*common.Config, error) {
 	file, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{}
+	config := &common.Config{}
 	err = json.Unmarshal(file, config)
 	if err != nil {
 		return nil, err
@@ -55,13 +34,8 @@ func main() {
 		log.Fatal("An error occured while loading the config file:", err)
 	}
 
-	boss := boss.Init(config.Pass, config.Nick)
+	boss.Init(config)
 
-	for _, channel := range config.Channels {
-		boss.JoinChannel(channel)
-	}
-
-	for {
-		time.Sleep(5 * time.Second)
-	}
+	quit := make(chan interface{})
+	<-quit
 }
