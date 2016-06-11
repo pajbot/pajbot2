@@ -22,6 +22,7 @@ func Parse(line string) common.Msg {
 	}
 	parseTags := true
 	if strings.Contains(line, "twitchnotify") {
+		// Also true when "twitchnotify" is in any message
 		fmt.Println(line)
 	}
 	var splitline []string
@@ -51,6 +52,7 @@ func Parse(line string) common.Msg {
 			p.m.Type = "whisper"
 		}
 
+		// Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?
 		if parseTags {
 			for _, tagValue := range strings.Split(tagsRaw, ";") {
 				spl := strings.Split(tagValue, "=")
@@ -67,6 +69,7 @@ func Parse(line string) common.Msg {
 }
 
 func (p *parse) GetTwitchEmotes(emotetag string) {
+	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
 	p.m.Emotes = make([]common.Emote, 0)
 	if emotetag == "" {
 		return
@@ -84,6 +87,7 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 }
 
 func (p *parse) GetTags(tags map[string]string) {
+	// TODO: Parse id and color
 	if tags["display-name"] == "" {
 		p.m.User.DisplayName = p.m.User.Name
 	} else {

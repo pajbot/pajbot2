@@ -1,10 +1,8 @@
-package helper_test
+package helper
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/pajlada/pajbot2/helper"
 )
 
 func TestSum(t *testing.T) {
@@ -27,7 +25,7 @@ func TestSum(t *testing.T) {
 	}
 
 	for _, tt := range sumTests {
-		res := helper.Sum(tt.input)
+		res := Sum(tt.input)
 
 		if res != tt.expected {
 			t.Errorf("%d is not equal to %d", res, tt.expected)
