@@ -79,8 +79,5 @@ func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 			return nil
 		}
 	}
-	if trigger == "!quit" && msg.User.Name == "nuuls" {
-		b.Quit <- "ayy lmao something bad happened xD"
-	}
 	return nil
 }
