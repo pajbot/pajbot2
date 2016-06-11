@@ -1,7 +1,6 @@
 package boss
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -121,7 +120,6 @@ func (p *parse) GetMessage(msg string) {
 
 // regex in 2016 LUL
 func (p *parse) getAction() {
-	fmt.Println(":" + p.m.Message + ":")
 	if strings.HasPrefix(p.m.Message, "\u0001ACTION ") && strings.HasSuffix(p.m.Message, "\u0001") {
 		p.m.Me = true
 		m := p.m.Message
