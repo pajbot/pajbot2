@@ -2,8 +2,21 @@ package command
 
 // Command xD
 type Command struct {
-	Trigger  string
+	Triggers []string
 	Response string
+}
+
+/*
+IsTriggered returns true if the given string `message` would trigger this command,
+otherwise return false
+*/
+func (command *Command) IsTriggered(message string) bool {
+	for _, trigger := range command.Triggers {
+		if trigger == message {
+			return true
+		}
+	}
+	return false
 }
 
 // GetResponse xD

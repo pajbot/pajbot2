@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"log"
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -59,8 +58,11 @@ var _ Module = (*Command)(nil)
 // Init initializes something
 func (module *Command) Init() {
 	xdCommand := command.Command{
-		Trigger:  "!test",
-		Response: ":P",
+		Triggers: []string{
+			"!xd",
+			"!xdlol",
+		},
+		Response: "pajaSWA",
 	}
 	module.commands = append(module.commands, xdCommand)
 }
@@ -70,17 +72,12 @@ func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 	m := strings.Split(msg.Message, " ")
 	trigger := strings.ToLower(m[0])
 	for _, command := range module.commands {
-		log.Println(trigger, command.Trigger)
-		if trigger == command.Trigger {
+		if command.IsTriggered(trigger) {
 			// TODO: Get response first, and skip if the response is nil or something of that sort
 			action.Response = command.GetResponse()
 			action.Stop = true
 			return nil
 		}
-	}
-	if trigger == "!xd" {
-		action.Response = "pajaSWA"
-		action.Stop = true
 	}
 	if trigger == "!quit" && msg.User.Name == "nuuls" {
 		b.Quit <- "ayy lmao something bad happened xD"
