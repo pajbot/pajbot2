@@ -3,6 +3,8 @@ package bot
 import (
 	"fmt"
 
+	"github.com/pajlada/pajbot2/redismanager"
+
 	"github.com/pajlada/pajbot2/common"
 )
 
@@ -14,6 +16,7 @@ type Config struct {
 	ReadChan chan common.Msg
 	SendChan chan string
 	Channel  string
+	Redis    *redismanager.Redismanager
 }
 
 /*
@@ -25,6 +28,7 @@ type Bot struct {
 	Read    chan common.Msg
 	Send    chan string
 	Channel string
+	Redis   *redismanager.Redismanager
 	Modules []Module
 }
 
@@ -38,6 +42,7 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Send:    cfg.SendChan,
 		Channel: cfg.Channel,
 		Modules: modules,
+		Redis:   cfg.Redis,
 	}
 }
 
@@ -55,6 +60,10 @@ func (bot *Bot) Init() {
 		fmt.Printf("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
 		if m.Type == common.MsgSub {
 			fmt.Printf("%s subbed for %d months in a row\n", m.User.Name, m.Length)
+		}
+		if m.Type != common.MsgSub {
+			bot.Redis.UpdateUser(bot.Channel, &m.User)
+			bot.Redis.GetUser(bot.Channel, &m.User)
 		}
 		go bot.Handle(m)
 	}

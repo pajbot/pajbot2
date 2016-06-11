@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pajlada/pajbot2/redismanager"
+
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/helper"
@@ -30,6 +32,7 @@ type Irc struct {
 	SendChan chan string
 	channels map[string]net.Conn
 	bots     map[string]chan common.Msg
+	redis    *redismanager.Redismanager
 	quit     chan string
 }
 
@@ -145,6 +148,7 @@ func (irc *Irc) NewBot(channel string) {
 		Channel:  channel,
 		ReadChan: read,
 		SendChan: irc.SendChan,
+		Redis:    irc.redis,
 	}
 	irc.bots[channel] = read
 	commandModule := &modules.Command{}
@@ -219,6 +223,7 @@ func Init(config *common.Config) *Irc {
 		ReadChan: make(chan string, 10),
 		SendChan: make(chan string, 10),
 		bots:     make(map[string]chan common.Msg),
+		redis:    redismanager.Init(config),
 		quit:     config.Quit,
 	}
 	irc.newConn(true)
