@@ -38,7 +38,7 @@ func Parse(line string) common.Msg {
 			p.m.Type = "sub"
 			p.Sub()
 		} else {
-			p.m.Type = "hostSub" // useless xD
+			p.m.Type = "throwAway"
 		}
 
 	} else {

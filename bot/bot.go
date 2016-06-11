@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/pajlada/pajbot2/common"
 )
@@ -65,10 +64,7 @@ func (bot *Bot) Init() {
 Say sends a PRIVMSG to the bots given channel
 */
 func (bot *Bot) Say(message string) {
-	if !strings.HasPrefix(message, ".") {
-		message = ". " + message
-	}
-	m := fmt.Sprintf("PRIVMSG #%s :%s", bot.Channel, message)
+	m := fmt.Sprintf("PRIVMSG #%s :%s ", bot.Channel, message)
 	bot.Send <- m
 }
 

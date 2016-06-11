@@ -129,7 +129,10 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 		} else if strings.Contains(line, "PRIVMSG") || strings.Contains(line, "WHISPER") {
 			m := Parse(line)
-			irc.bots[m.Channel] <- m
+			// throw away its own and other useless msgs
+			if m.Type != "throwAway" && m.User.Name != irc.nick {
+				irc.bots[m.Channel] <- m
+			}
 		}
 	}
 }
