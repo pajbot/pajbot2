@@ -53,7 +53,7 @@ func (bot *Bot) Init() {
 	for {
 		m := <-bot.Read
 		fmt.Printf("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
-		if m.Type == "sub" {
+		if m.Type == common.MsgSub {
 			fmt.Printf("%s subbed for %d months in a row\n", m.User.Name, m.Length)
 		}
 		go bot.Handle(m)

@@ -35,17 +35,17 @@ func Parse(line string) common.Msg {
 	p.GetMessage(msg)
 	if p.m.User.Name == "twitchnotify" {
 		if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
-			p.m.Type = "sub"
+			p.m.Type = common.MsgSub
 			p.Sub()
 		} else {
-			p.m.Type = "throwAway"
+			p.m.Type = common.MsgThrowAway
 		}
 
 	} else {
 		if strings.Contains(msg, "PRIVMSG") {
-			p.m.Type = "privmsg"
+			p.m.Type = common.MsgPrivmsg
 		} else {
-			p.m.Type = "whisper"
+			p.m.Type = common.MsgWhisper
 		}
 
 		// Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?

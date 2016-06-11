@@ -22,7 +22,7 @@ var _ Module = (*Pyramid)(nil)
 
 // Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	if msg.Type != "privmsg" {
+	if msg.Type != common.MsgPrivmsg {
 		return nil
 	}
 	msgParts := strings.Split(msg.Message, " ")

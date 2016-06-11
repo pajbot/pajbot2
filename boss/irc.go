@@ -130,7 +130,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 		} else if strings.Contains(line, "PRIVMSG") || strings.Contains(line, "WHISPER") {
 			m := Parse(line)
 			// throw away its own and other useless msgs
-			if m.Type != "throwAway" && m.User.Name != irc.nick {
+			if m.Type != common.MsgThrowAway && m.User.Name != irc.nick {
 				irc.bots[m.Channel] <- m
 			}
 		}

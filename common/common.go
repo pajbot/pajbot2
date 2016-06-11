@@ -19,6 +19,17 @@ type User struct {
 	LastActive  time.Time
 }
 
+// MsgType specifies the message's type, for example PRIVMSG or WHISPER
+type MsgType uint32
+
+// Various message types which describe what sort of message they are
+const (
+	MsgPrivmsg MsgType = iota + 1
+	MsgWhisper
+	MsgSub
+	MsgThrowAway
+)
+
 /*
 Msg contains all the information about an IRC message.
 This included already-parsed ircv3-tags and the User object
@@ -27,8 +38,8 @@ type Msg struct {
 	User    User
 	Message string
 	Channel string
-	Type    string // PRIVMSG , WHISPER, (SUB?)
-	Length  int    // will be set by a module or length of resub
+	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
+	Length  int     // will be set by a module or length of resub
 	Me      bool
 	Emotes  []Emote
 }
