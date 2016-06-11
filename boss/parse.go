@@ -1,7 +1,6 @@
 package boss
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -21,10 +20,7 @@ func Parse(line string) common.Msg {
 		User: common.User{},
 	}
 	parseTags := true
-	if strings.Contains(line, "twitchnotify") {
-		// Also true when "twitchnotify" is in any message
-		fmt.Println(line)
-	}
+
 	var splitline []string
 	if strings.HasPrefix(line, ":") {
 		parseTags = false
@@ -70,6 +66,7 @@ func Parse(line string) common.Msg {
 
 func (p *parse) GetTwitchEmotes(emotetag string) {
 	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
+	// will we done by a module in the bot itself
 	p.m.Emotes = make([]common.Emote, 0)
 	if emotetag == "" {
 		return
@@ -81,6 +78,9 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 		e.Type = "twitch"
 		e.Name = ""
 		e.ID = id
+		// 28 px should be fine for twitch emotes
+		e.SizeX = 28
+		e.SizeY = 28
 		e.Count = strings.Count(emoteSlice[i], "-")
 		p.m.Emotes = append(p.m.Emotes, *e)
 	}
@@ -88,6 +88,7 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 
 func (p *parse) GetTags(tags map[string]string) {
 	// TODO: Parse id and color
+	// color and id is pretty useless imo
 	if tags["display-name"] == "" {
 		p.m.User.DisplayName = p.m.User.Name
 	} else {
@@ -110,7 +111,6 @@ func (p *parse) GetMessage(msg string) {
 	if strings.HasPrefix(msg, ":") {
 		msg = strings.Replace(msg, ":", "", 1)
 	}
-	//fmt.Println(msg)
 	p.m.Message = strings.SplitN(msg, " :", 2)[1]
 	p.m.User.Name = strings.SplitN(msg, "!", 2)[0]
 	c := strings.SplitN(msg, "#", 3)[1]
