@@ -160,7 +160,6 @@ func (irc *Irc) NewBot(channel string) {
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()
-
 }
 
 /*
