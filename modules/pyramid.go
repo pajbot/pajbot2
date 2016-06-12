@@ -2,7 +2,6 @@ package modules
 
 import (
 	"fmt"
-	"log"
 	"math"
 	"strings"
 
@@ -56,7 +55,6 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 						for _, x := range module.data {
 							if len(x) > peakLen {
 								peakLen = len(x)
-								log.Println(peakLen)
 							}
 						}
 						if peakLen > 2 {

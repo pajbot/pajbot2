@@ -57,6 +57,9 @@ func (irc *Irc) newConn(send bool) {
 	irc.SendRaw(conn, "CAP REQ twitch.tv/tags")
 	irc.Lock()
 	defer irc.Unlock()
+	// wait for connection, this should be done better but we're gonna use
+	// relaybroker anyways so it should be fine for now
+	time.Sleep(500 * time.Millisecond)
 	if send {
 		irc.sendConn[conn] = make([]int, 30)
 		go irc.keepAlive(conn)

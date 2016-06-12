@@ -12,6 +12,7 @@ func (bot *Bot) Handle(msg common.Msg) {
 
 		if action.Response != "" {
 			bot.Say(action.Response)
+			action.Response = "" // delete Response
 		}
 
 		if action.Stop {
