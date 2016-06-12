@@ -7,6 +7,7 @@ import (
 
 	"github.com/garyburd/redigo/redis" // are you ok with this package?
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/helper"
 )
 
 type Redismanager struct {
@@ -71,14 +72,51 @@ func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *commo
 	r.UpdateGlobalUser(channel, user, u)
 }
 
-func (r *Redismanager) UpdateUser(channel string, user *common.User) {
+func (r *Redismanager) SetPoints(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("ZADD", channel+":points", user.Points, user.Name)
-	//                ^^^^^^^^^^^^^^^^^^  is this how you do it? LUL
+	conn.Flush()
+}
+
+func (r *Redismanager) IncrPoints(channel string, user *common.User, incrby int) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	conn.Send("ZINCRBY", channel+":points", incrby, user.Name)
+	conn.Flush()
+}
+
+func (r *Redismanager) newUser(channel string, user *common.User) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	conn.Send("HSET", channel+":lastseen", user.Name, time.Now().Unix())
+	conn.Send("ZADD", channel+":points", user.Points, user.Name)
+	conn.Send("HSET", channel+":level", user.Name, float64(r.getLevel(0.1, user)))
+	conn.Flush()
+}
+
+func (r *Redismanager) SetLevel(channel string, user *common.User, level int) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	conn.Send("HSET", channel+":level", user.Name, float64(level)+0.2)
+	conn.Flush()
+}
+
+func (r *Redismanager) ResetLevel(channel string, user *common.User) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	conn.Send("HSET", channel+":level", user.Name, float64(r.getLevel(0.1, user))+0.1)
+	conn.Flush()
+}
+
+func (r *Redismanager) UpdateUser(channel string, user *common.User) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	if user.Name == channel {
+		r.SetLevel(channel, user, 1500)
+	}
 	conn.Send("HSET", channel+":lastseen", user.Name, time.Now().Unix())
 	conn.Flush()
-	log.Printf("saved new user %s\n", user.Name)
 }
 
 // GetUser fills out missing fields of the given User object
@@ -90,17 +128,50 @@ func (r *Redismanager) GetUser(channel string, user *common.User) {
 	exist, err := conn.Do("HEXISTS", channel+":lastseen", user.Name)
 	e, _ := redis.Bool(exist, err)
 	if e {
+		conn.Send("HGET", channel+":level", user.Name)
 		conn.Send("ZSCORE", channel+":points", user.Name)
 		conn.Send("HGET", channel+":lastseen", user.Name)
 		conn.Flush()
 		// can this be done in a loop somehow?
+		// Level
 		res, err := conn.Receive()
+		level, _ := redis.Float64(res, err)
+		user.Level = r.getLevel(level, user)
+		// Points
+		res, err = conn.Receive()
 		user.Points, _ = redis.Int(res, err)
+		// LastSeen
 		res, err = conn.Receive()
 		lastseen, _ := redis.String(res, err)
 		user.LastSeen, _ = time.Parse(time.UnixDate, lastseen)
 	} else {
-		r.UpdateUser(channel, user)
+		r.newUser(channel, user)
 		r.GetUser(channel, user)
+	}
+}
+
+/*
+.1 : level not set manually, the bot will change it automatically
+
+.2 : level set manually, the bot will not change it until !level reset
+global level is always set manually
+*/
+func (r *Redismanager) getLevel(channel float64, user *common.User) int {
+
+	if float64(user.Level) > channel {
+		return user.Level
+	}
+	status := helper.Round(channel, 1) * 10
+	if status == 2 {
+		return int(channel)
+	}
+	if user.ChannelOwner {
+		return 1500
+	} else if user.Mod {
+		return 500
+	} else if user.Sub {
+		return 250
+	} else {
+		return 100
 	}
 }

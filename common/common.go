@@ -6,17 +6,18 @@ import "time"
 
 // User xD
 type User struct {
-	ID          int
-	Name        string
-	DisplayName string
-	Mod         bool
-	Sub         bool
-	Turbo       bool
-	Type        string // admin , staff etc
-	Level       int
-	Points      int
-	LastSeen    time.Time // should this be time.Time or int/float?
-	LastActive  time.Time
+	ID           int
+	Name         string
+	DisplayName  string
+	Mod          bool
+	Sub          bool
+	Turbo        bool
+	ChannelOwner bool
+	Type         string // admin , staff etc
+	Level        int
+	Points       int
+	LastSeen     time.Time // should this be time.Time or int/float?
+	LastActive   time.Time
 }
 
 // GlobalUser will only be used by boss to check if user is admin

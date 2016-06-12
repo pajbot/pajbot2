@@ -63,6 +63,10 @@ func (p *Parse) Parse(line string) common.Msg {
 		}
 	}
 
+	if p.m.Channel == p.m.User.Name {
+		p.m.User.ChannelOwner = true
+	}
+
 	p.GetGlobalUser()
 
 	return *p.m
@@ -114,7 +118,7 @@ func (p *Parse) GetTags(tags map[string]string) {
 		p.m.User.Mod = true
 	}
 	if tags["subscriber"] == "1" {
-		p.m.User.Mod = true
+		p.m.User.Sub = true
 	}
 
 }
