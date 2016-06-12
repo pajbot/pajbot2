@@ -124,6 +124,14 @@ func (irc *Irc) keepAlive(conn net.Conn) {
 	}
 }
 
+func (irc *Irc) GetGlobalUser(m *common.Msg) {
+	u := &common.GlobalUser{}
+	irc.redis.GetGlobalUser(m.Channel, &m.User, u)
+	if m.Type == common.MsgWhisper {
+		m.Channel = u.Channel
+	}
+}
+
 func (irc *Irc) readConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
@@ -138,6 +146,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			m := irc.parser.Parse(line)
 			// throw away its own and other useless msgs
 			if m.Type != common.MsgThrowAway && m.User.Name != irc.nick {
+				irc.GetGlobalUser(&m)
 				irc.bots[m.Channel] <- m
 			}
 		}

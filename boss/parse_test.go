@@ -42,15 +42,16 @@ func TestParseMessage(t *testing.T) {
 			input: "@badges=broadcaster/1,subscriber/1;color=#CC44FF;display-name=pajlada;emotes=12:13-14;mod=1;room-id=11148817;subscriber=1;turbo=0;user-id=11148817;user-type=mod :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :ACTION MEME-MESSAGE :P",
 			expected: common.Msg{
 				User: common.User{
-					ID:          0,
-					Name:        "pajlada",
-					DisplayName: "pajlada",
-					Mod:         true,
-					Sub:         false,
-					Turbo:       false,
-					Type:        "mod",
-					Level:       0,
-					Points:      0,
+					ID:           0,
+					Name:         "pajlada",
+					DisplayName:  "pajlada",
+					Mod:          true,
+					Sub:          true,
+					Turbo:        false,
+					ChannelOwner: true,
+					Type:         "mod",
+					Level:        0,
+					Points:       0,
 				},
 				Message: "ACTION MEME-MESSAGE :P",
 				Channel: "pajlada",
@@ -74,15 +75,16 @@ func TestParseMessage(t *testing.T) {
 			input: "@badges=broadcaster/1,subscriber/1;color=#CC44FF;display-name=pajlada;emotes=;mod=1;room-id=11148817;subscriber=1;turbo=0;user-id=11148817;user-type=mod :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :!ping",
 			expected: common.Msg{
 				User: common.User{
-					ID:          0,
-					Name:        "pajlada",
-					DisplayName: "pajlada",
-					Mod:         true,
-					Sub:         false,
-					Turbo:       false,
-					Type:        "mod",
-					Level:       0,
-					Points:      0,
+					ID:           0,
+					Name:         "pajlada",
+					DisplayName:  "pajlada",
+					Mod:          true,
+					Sub:          true,
+					Turbo:        false,
+					ChannelOwner: true,
+					Type:         "mod",
+					Level:        0,
+					Points:       0,
 				},
 				Message: "!ping",
 				Channel: "pajlada",
@@ -117,7 +119,8 @@ func TestParseMessage(t *testing.T) {
 	}
 
 	for _, tt := range messageTests {
-		res := Parse(tt.input)
+		p := &Parse{}
+		res := p.Parse(tt.input)
 
 		assert.Equal(t, tt.expected, res)
 	}

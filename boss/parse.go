@@ -67,17 +67,7 @@ func (p *Parse) Parse(line string) common.Msg {
 		p.m.User.ChannelOwner = true
 	}
 
-	p.GetGlobalUser()
-
 	return *p.m
-}
-
-func (p *Parse) GetGlobalUser() {
-	u := &common.GlobalUser{}
-	p.redis.GetGlobalUser(p.m.Channel, &p.m.User, u)
-	if p.m.Type == common.MsgWhisper {
-		p.m.Channel = u.Channel
-	}
 }
 
 func (p *Parse) GetTwitchEmotes(emotetag string) {
