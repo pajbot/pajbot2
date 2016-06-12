@@ -33,6 +33,7 @@ type Irc struct {
 	channels map[string]net.Conn
 	bots     map[string]chan common.Msg
 	redis    *redismanager.Redismanager
+	parser   *Parse
 	quit     chan string
 }
 
@@ -134,7 +135,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 		if strings.HasPrefix(line, "PING") {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 		} else if strings.Contains(line, "PRIVMSG") || strings.Contains(line, "WHISPER") {
-			m := Parse(line)
+			m := irc.parser.Parse(line)
 			// throw away its own and other useless msgs
 			if m.Type != common.MsgThrowAway && m.User.Name != irc.nick {
 				irc.bots[m.Channel] <- m
@@ -227,8 +228,10 @@ func Init(config *common.Config) *Irc {
 		SendChan: make(chan string, 10),
 		bots:     make(map[string]chan common.Msg),
 		redis:    redismanager.Init(config),
+		parser:   &Parse{},
 		quit:     config.Quit,
 	}
+	irc.parser.redis = irc.redis
 	irc.newConn(true)
 	irc.newConn(false)
 	go irc.send()

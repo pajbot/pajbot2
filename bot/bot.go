@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/pajlada/pajbot2/redismanager"
 
@@ -65,6 +66,7 @@ func (bot *Bot) Init() {
 			bot.Redis.UpdateUser(bot.Channel, &m.User)
 			bot.Redis.GetUser(bot.Channel, &m.User)
 		}
+		log.Printf("%s is level %d\n", m.User.Name, m.User.Level)
 		go bot.Handle(m)
 	}
 }

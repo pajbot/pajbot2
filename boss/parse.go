@@ -4,18 +4,20 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pajlada/pajbot2/redismanager"
+
 	"github.com/pajlada/pajbot2/common"
 )
 
-type parse struct {
-	m *common.Msg
+type Parse struct {
+	m     *common.Msg
+	redis *redismanager.Redismanager
 }
 
 /*
 Parse parses an IRC message into a more readable bot.Msg
 */
-func Parse(line string) common.Msg {
-	p := &parse{}
+func (p *Parse) Parse(line string) common.Msg {
 	p.m = &common.Msg{
 		User: common.User{},
 	}
@@ -61,10 +63,20 @@ func Parse(line string) common.Msg {
 		}
 	}
 
+	p.GetGlobalUser()
+
 	return *p.m
 }
 
-func (p *parse) GetTwitchEmotes(emotetag string) {
+func (p *Parse) GetGlobalUser() {
+	u := &common.GlobalUser{}
+	p.redis.GetGlobalUser(p.m.Channel, &p.m.User, u)
+	if p.m.Type == common.MsgWhisper {
+		p.m.Channel = u.Channel
+	}
+}
+
+func (p *Parse) GetTwitchEmotes(emotetag string) {
 	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
 	// will we done by a module in the bot itself
 	p.m.Emotes = make([]common.Emote, 0)
@@ -86,7 +98,7 @@ func (p *parse) GetTwitchEmotes(emotetag string) {
 	}
 }
 
-func (p *parse) GetTags(tags map[string]string) {
+func (p *Parse) GetTags(tags map[string]string) {
 	// TODO: Parse id and color
 	// color and id is pretty useless imo
 	if tags["display-name"] == "" {
@@ -107,7 +119,7 @@ func (p *parse) GetTags(tags map[string]string) {
 
 }
 
-func (p *parse) GetMessage(msg string) {
+func (p *Parse) GetMessage(msg string) {
 	if strings.HasPrefix(msg, ":") {
 		msg = strings.Replace(msg, ":", "", 1)
 	}
@@ -119,7 +131,7 @@ func (p *parse) GetMessage(msg string) {
 }
 
 // regex in 2016 LUL
-func (p *parse) getAction() {
+func (p *Parse) getAction() {
 	if strings.HasPrefix(p.m.Message, "\u0001ACTION ") && strings.HasSuffix(p.m.Message, "\u0001") {
 		p.m.Me = true
 		m := p.m.Message
@@ -129,7 +141,7 @@ func (p *parse) getAction() {
 	}
 }
 
-func (p *parse) Sub() {
+func (p *Parse) Sub() {
 	m := p.m.Message
 	if strings.Contains(m, "just ") {
 		p.m.Length = 1

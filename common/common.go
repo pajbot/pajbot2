@@ -19,6 +19,14 @@ type User struct {
 	LastActive  time.Time
 }
 
+// GlobalUser will only be used by boss to check if user is admin
+// and to decide what channel to send the message to if its a whisper
+type GlobalUser struct {
+	LastActive time.Time
+	Channel    string
+	Level      int
+}
+
 // MsgType specifies the message's type, for example PRIVMSG or WHISPER
 type MsgType uint32
 
