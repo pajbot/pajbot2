@@ -75,37 +75,37 @@ func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *commo
 func (r *Redismanager) SetPoints(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("ZADD", channel+":points", user.Points, user.Name)
+	conn.Send("ZADD", channel+":users:points", user.Points, user.Name)
 	conn.Flush()
 }
 
 func (r *Redismanager) IncrPoints(channel string, user *common.User, incrby int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("ZINCRBY", channel+":points", incrby, user.Name)
+	conn.Send("ZINCRBY", channel+":users:points", incrby, user.Name)
 	conn.Flush()
 }
 
 func (r *Redismanager) newUser(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("HSET", channel+":lastseen", user.Name, time.Now().Unix())
-	conn.Send("ZADD", channel+":points", user.Points, user.Name)
-	conn.Send("HSET", channel+":level", user.Name, float64(r.getLevel(0.1, user)))
+	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
+	conn.Send("ZADD", channel+":users:points", user.Points, user.Name)
+	conn.Send("HSET", channel+":users:level", user.Name, float64(r.getLevel(0.1, user)))
 	conn.Flush()
 }
 
 func (r *Redismanager) SetLevel(channel string, user *common.User, level int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("HSET", channel+":level", user.Name, float64(level)+0.2)
+	conn.Send("HSET", channel+":users:level", user.Name, float64(level)+0.2)
 	conn.Flush()
 }
 
 func (r *Redismanager) ResetLevel(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("HSET", channel+":level", user.Name, float64(r.getLevel(0.1, user))+0.1)
+	conn.Send("HSET", channel+":users:level", user.Name, float64(r.getLevel(0.1, user))+0.1)
 	conn.Flush()
 }
 
@@ -115,7 +115,7 @@ func (r *Redismanager) UpdateUser(channel string, user *common.User) {
 	if user.Name == channel {
 		r.SetLevel(channel, user, 1500)
 	}
-	conn.Send("HSET", channel+":lastseen", user.Name, time.Now().Unix())
+	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
 	conn.Flush()
 }
 
@@ -125,12 +125,12 @@ func (r *Redismanager) GetUser(channel string, user *common.User) {
 	fmt.Println(user.Name)
 	conn := r.Pool.Get()
 	defer conn.Close()
-	exist, err := conn.Do("HEXISTS", channel+":lastseen", user.Name)
+	exist, err := conn.Do("HEXISTS", channel+":users:lastseen", user.Name)
 	e, _ := redis.Bool(exist, err)
 	if e {
-		conn.Send("HGET", channel+":level", user.Name)
-		conn.Send("ZSCORE", channel+":points", user.Name)
-		conn.Send("HGET", channel+":lastseen", user.Name)
+		conn.Send("HGET", channel+":users:level", user.Name)
+		conn.Send("ZSCORE", channel+":users:points", user.Name)
+		conn.Send("HGET", channel+":users:lastseen", user.Name)
 		conn.Flush()
 		// can this be done in a loop somehow?
 		// Level

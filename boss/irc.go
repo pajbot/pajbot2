@@ -3,6 +3,7 @@ package boss
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"net"
 	"net/textproto"
 	"strings"
@@ -116,7 +117,8 @@ func (irc *Irc) keepAlive(conn net.Conn) {
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			irc.newConn(true)
 		}
 		if strings.HasPrefix(line, "PING") {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
