@@ -13,7 +13,7 @@ func Sum(s []int) int {
 	return x
 }
 
-// Round xD
+// Round returns the rounded value of a float64 up to N places
 func Round(val float64, places int) (newVal float64) {
 	var round float64
 	pow := math.Pow(10, float64(places))
