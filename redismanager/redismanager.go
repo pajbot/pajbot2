@@ -5,11 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/garyburd/redigo/redis" // are you ok with this package?
+	"github.com/garyburd/redigo/redis"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/helper"
 )
 
+// Redismanager keeps the pool of redis connections
 type Redismanager struct {
 	Pool *redis.Pool
 }
@@ -31,7 +32,8 @@ func Init(config *common.Config) *Redismanager {
 	return r
 }
 
-// only globally banned users and admins have a level in global redis
+// UpdateGlobalUser sets global values for a user (in other words, values that transcend channels)
+// Only globally banned users and admins have a level in global redis
 func (r *Redismanager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
 	log.Printf("redis: user: %s  channel: %s", user.Name, channel)
 	conn := r.Pool.Get()
@@ -41,6 +43,7 @@ func (r *Redismanager) UpdateGlobalUser(channel string, user *common.User, u *co
 	conn.Flush()
 }
 
+// GetGlobalUser fills in the user and u objects with values from the users global values
 func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -56,6 +59,7 @@ func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *commo
 		res, err := conn.Receive()
 		level, _ := redis.Int(res, err) // will be 0 unless user is admin or globally banned
 		if level > user.Level {
+			// XXX: Should this set u.Level instead? not sure!
 			user.Level = level
 		}
 		// LastActive
@@ -72,6 +76,7 @@ func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *commo
 	r.UpdateGlobalUser(channel, user, u)
 }
 
+// SetPoints sets the amount of points a user has in the given channel
 func (r *Redismanager) SetPoints(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -79,6 +84,7 @@ func (r *Redismanager) SetPoints(channel string, user *common.User) {
 	conn.Flush()
 }
 
+// IncrPoints increases the points of a user in the given channel
 func (r *Redismanager) IncrPoints(channel string, user *common.User, incrby int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -91,24 +97,30 @@ func (r *Redismanager) newUser(channel string, user *common.User) {
 	defer conn.Close()
 	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
 	conn.Send("ZADD", channel+":users:points", user.Points, user.Name)
-	conn.Send("HSET", channel+":users:level", user.Name, float64(r.getLevel(0.1, user)))
+
+	// Why is this called?
+	conn.Send("HSET", channel+":users:level", user.Name, r.getLevel(createLevel(0, 1), user))
+
 	conn.Flush()
 }
 
+// SetLevel sets the users level in the given channel
 func (r *Redismanager) SetLevel(channel string, user *common.User, level int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("HSET", channel+":users:level", user.Name, float64(level)+0.2)
+	conn.Send("HSET", channel+":users:level", user.Name, createLevel(uint32(level), 0)) // XXX: Make sure the flags are right
 	conn.Flush()
 }
 
+// ResetLevel resets a users level to 0/default XXX
 func (r *Redismanager) ResetLevel(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("HSET", channel+":users:level", user.Name, float64(r.getLevel(0.1, user))+0.1)
+	conn.Send("HSET", channel+":users:level", user.Name, r.getLevel(createLevel(0, 1), user))
 	conn.Flush()
 }
 
+// UpdateUser saves data about a user in redis
 func (r *Redismanager) UpdateUser(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -135,7 +147,7 @@ func (r *Redismanager) GetUser(channel string, user *common.User) {
 		// can this be done in a loop somehow?
 		// Level
 		res, err := conn.Receive()
-		level, _ := redis.Float64(res, err)
+		level, _ := redis.Uint64(res, err)
 		user.Level = r.getLevel(level, user)
 		// Points
 		res, err = conn.Receive()
@@ -150,28 +162,46 @@ func (r *Redismanager) GetUser(channel string, user *common.User) {
 	}
 }
 
+// Flags for user level values
+const (
+	// Specifies whether the level was set automatically or not.
+	// If the level was set automatically, that means it will always be
+	// re-evaluated
+	LevelFlagAutomatic = 1 << iota
+)
+
 /*
-.1 : level not set manually, the bot will change it automatically
-
-.2 : level set manually, the bot will not change it until !level reset
-global level is always set manually
+First 32 bits specifies the level Value
+Last 32 bits specifies the level Flags
 */
-func (r *Redismanager) getLevel(channel float64, user *common.User) int {
+func (r *Redismanager) getLevel(levelCombined uint64, user *common.User) int {
+	// Split up the values from levelCombined
+	levelFlags, levelValue := helper.SplitUint64(levelCombined)
 
-	if float64(user.Level) > channel {
+	// Returns the users Global Level if its higher than the Channel Level
+	if user.Level > int(levelValue) {
 		return user.Level
 	}
-	status := helper.Round(channel, 1) * 10
-	if status == 2 {
-		return int(channel)
+
+	// If the level was set manually, return that level
+	if !helper.CheckFlag(levelFlags, LevelFlagAutomatic) {
+		return int(levelValue)
 	}
+
+	// Otherwise, return the automatic level that's appropriate for the user
 	if user.ChannelOwner {
 		return 1500
 	} else if user.Mod {
 		return 500
 	} else if user.Sub {
 		return 250
-	} else {
-		return 100
 	}
+
+	// Normal user
+	return 100
+}
+
+func createLevel(levelValue uint32, levelFlags uint32) uint64 {
+	// XXX: Make sure this is correct
+	return helper.CombineUint32(levelFlags, levelValue)
 }
