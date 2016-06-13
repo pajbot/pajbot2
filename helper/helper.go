@@ -32,3 +32,8 @@ func Round(val float64, places int) (newVal float64) {
 func SplitUint64(val uint64) (uint32, uint32) {
 	return uint32(val >> 32), uint32(val)
 }
+
+// CheckFlag returns true if the given flag is enabled in the value
+func CheckFlag(value uint32, flag uint32) bool {
+	return (value & flag) != 0
+}

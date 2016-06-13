@@ -86,5 +86,46 @@ func TestSplitUint64(t *testing.T) {
 			t.Errorf("%d is not equal to %d", resB, tt.expectedA)
 		}
 	}
+}
 
+func TestCheckFlag(t *testing.T) {
+	var tests = []struct {
+		inputValue uint32
+		inputFlag  uint32
+		expected   bool
+	}{
+		{
+			inputValue: 3,
+			inputFlag:  1,
+			expected:   true,
+		},
+		{
+			inputValue: 2,
+			inputFlag:  1,
+			expected:   false,
+		},
+		{
+			inputValue: 16,
+			inputFlag:  1,
+			expected:   false,
+		},
+		{
+			inputValue: 18,
+			inputFlag:  2,
+			expected:   true,
+		},
+		{
+			inputValue: 17,
+			inputFlag:  1,
+			expected:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		res := CheckFlag(tt.inputValue, tt.inputFlag)
+
+		if res != tt.expected {
+			t.Errorf("%t is not equal to %t (%d - %d)", res, tt.expected, tt.inputValue, tt.inputFlag)
+		}
+	}
 }
