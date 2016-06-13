@@ -56,3 +56,35 @@ func TestRound(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitUint64(t *testing.T) {
+	var splitTests = []struct {
+		input     uint64
+		expectedA uint32
+		expectedB uint32
+	}{
+		{
+			input:     4294967298,
+			expectedA: 1,
+			expectedB: 2,
+		},
+		{
+			input:     30064771074,
+			expectedA: 7,
+			expectedB: 2,
+		},
+	}
+
+	for _, tt := range splitTests {
+		resA, resB := SplitUint64(tt.input)
+
+		if resA != tt.expectedA {
+			t.Errorf("%d is not equal to %d", resA, tt.expectedA)
+		}
+
+		if resB != tt.expectedB {
+			t.Errorf("%d is not equal to %d", resB, tt.expectedA)
+		}
+	}
+
+}

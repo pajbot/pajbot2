@@ -27,3 +27,8 @@ func Round(val float64, places int) (newVal float64) {
 	newVal = round / pow
 	return
 }
+
+// SplitUint64 spits a uint64 value into two uint32 values
+func SplitUint64(val uint64) (uint32, uint32) {
+	return uint32(val >> 32), uint32(val)
+}
