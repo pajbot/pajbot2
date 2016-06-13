@@ -127,6 +127,7 @@ func (irc *Irc) keepAlive(conn net.Conn) {
 	}
 }
 
+// GetGlobalUser fills in the global user in the message from redis
 func (irc *Irc) GetGlobalUser(m *common.Msg) {
 	u := &common.GlobalUser{}
 	irc.redis.GetGlobalUser(m.Channel, &m.User, u)
