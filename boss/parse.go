@@ -4,14 +4,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pajlada/pajbot2/redismanager"
-
 	"github.com/pajlada/pajbot2/common"
 )
 
 type Parse struct {
-	m     *common.Msg
-	redis *redismanager.Redismanager
+	m *common.Msg
 }
 
 /*
@@ -34,11 +31,11 @@ func (p *Parse) Parse(line string) common.Msg {
 	msg := splitline[1]
 	tags := make(map[string]string)
 
-	p.GetMessage(msg)
+	p.getMessage(msg)
 	if p.m.User.Name == "twitchnotify" {
 		if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
 			p.m.Type = common.MsgSub
-			p.Sub()
+			p.sub()
 		} else {
 			p.m.Type = common.MsgThrowAway
 		}
@@ -58,8 +55,8 @@ func (p *Parse) Parse(line string) common.Msg {
 				v := spl[1]
 				tags[k] = v
 			}
-			p.GetTwitchEmotes(tags["emotes"])
-			p.GetTags(tags)
+			p.getTwitchEmotes(tags["emotes"])
+			p.getTags(tags)
 		}
 	}
 
@@ -70,7 +67,7 @@ func (p *Parse) Parse(line string) common.Msg {
 	return *p.m
 }
 
-func (p *Parse) GetTwitchEmotes(emotetag string) {
+func (p *Parse) getTwitchEmotes(emotetag string) {
 	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
 	// will we done by a module in the bot itself
 	p.m.Emotes = make([]common.Emote, 0)
@@ -92,7 +89,7 @@ func (p *Parse) GetTwitchEmotes(emotetag string) {
 	}
 }
 
-func (p *Parse) GetTags(tags map[string]string) {
+func (p *Parse) getTags(tags map[string]string) {
 	// TODO: Parse id and color
 	// color and id is pretty useless imo
 	if tags["display-name"] == "" {
@@ -113,7 +110,7 @@ func (p *Parse) GetTags(tags map[string]string) {
 
 }
 
-func (p *Parse) GetMessage(msg string) {
+func (p *Parse) getMessage(msg string) {
 	if strings.HasPrefix(msg, ":") {
 		msg = strings.Replace(msg, ":", "", 1)
 	}
@@ -135,7 +132,7 @@ func (p *Parse) getAction() {
 	}
 }
 
-func (p *Parse) Sub() {
+func (p *Parse) sub() {
 	m := p.m.Message
 	if strings.Contains(m, "just ") {
 		p.m.Length = 1

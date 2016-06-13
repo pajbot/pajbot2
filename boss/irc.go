@@ -240,7 +240,6 @@ func Init(config *common.Config) *Irc {
 		parser:   &Parse{},
 		quit:     config.Quit,
 	}
-	irc.parser.redis = irc.redis
 	irc.newConn(true)
 	irc.newConn(false)
 	go irc.send()
