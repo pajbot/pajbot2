@@ -57,33 +57,38 @@ func TestRound(t *testing.T) {
 	}
 }
 
+var packingTests = []struct {
+	partA  uint32
+	partB  uint32
+	packed uint64
+}{
+	{
+		partA:  1,
+		partB:  2,
+		packed: 4294967298,
+	},
+	{
+		partA:  1,
+		partB:  4,
+		packed: 4294967300,
+	},
+	{
+		partA:  7,
+		partB:  2,
+		packed: 30064771074,
+	},
+}
+
 func TestSplitUint64(t *testing.T) {
-	var splitTests = []struct {
-		input     uint64
-		expectedA uint32
-		expectedB uint32
-	}{
-		{
-			input:     4294967298,
-			expectedA: 1,
-			expectedB: 2,
-		},
-		{
-			input:     30064771074,
-			expectedA: 7,
-			expectedB: 2,
-		},
-	}
+	for _, tt := range packingTests {
+		resA, resB := SplitUint64(tt.packed)
 
-	for _, tt := range splitTests {
-		resA, resB := SplitUint64(tt.input)
-
-		if resA != tt.expectedA {
-			t.Errorf("%d is not equal to %d", resA, tt.expectedA)
+		if resA != tt.partA {
+			t.Errorf("%d is not equal to %d", resA, tt.partA)
 		}
 
-		if resB != tt.expectedB {
-			t.Errorf("%d is not equal to %d", resB, tt.expectedA)
+		if resB != tt.partB {
+			t.Errorf("%d is not equal to %d", resB, tt.partB)
 		}
 	}
 }
@@ -126,6 +131,16 @@ func TestCheckFlag(t *testing.T) {
 
 		if res != tt.expected {
 			t.Errorf("%t is not equal to %t (%d - %d)", res, tt.expected, tt.inputValue, tt.inputFlag)
+		}
+	}
+}
+
+func TestCombineUint32(t *testing.T) {
+	for _, tt := range packingTests {
+		res := CombineUint32(tt.partA, tt.partB)
+
+		if res != tt.packed {
+			t.Errorf("%d is not equal to %d", res, tt.packed)
 		}
 	}
 }
