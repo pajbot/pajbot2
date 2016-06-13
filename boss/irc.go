@@ -33,7 +33,7 @@ type Irc struct {
 	SendChan chan string
 	channels map[string]net.Conn
 	bots     map[string]chan common.Msg
-	redis    *redismanager.Redismanager
+	redis    *redismanager.RedisManager
 	parser   *Parse
 	quit     chan string
 }

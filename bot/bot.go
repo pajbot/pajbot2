@@ -17,7 +17,7 @@ type Config struct {
 	ReadChan chan common.Msg
 	SendChan chan string
 	Channel  string
-	Redis    *redismanager.Redismanager
+	Redis    *redismanager.RedisManager
 }
 
 /*
@@ -29,7 +29,7 @@ type Bot struct {
 	Read    chan common.Msg
 	Send    chan string
 	Channel string
-	Redis   *redismanager.Redismanager
+	Redis   *redismanager.RedisManager
 	Modules []Module
 }
 
