@@ -117,8 +117,9 @@ func (irc *Irc) keepAlive(conn net.Conn) {
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
-			log.Println(err)
-			irc.newConn(true)
+			log.Println("connection died", err)
+			delete(irc.sendConn, conn)
+			return
 		}
 		if strings.HasPrefix(line, "PING") {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
@@ -140,7 +141,11 @@ func (irc *Irc) readConnection(conn net.Conn) {
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
-			panic(err)
+			log.Println("connection died", err)
+			irc.newConn(false)
+			irc.JoinChannels(irc.readConn[conn])
+			delete(irc.readConn, conn)
+			return
 		}
 		if strings.HasPrefix(line, "PING") {
 			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
