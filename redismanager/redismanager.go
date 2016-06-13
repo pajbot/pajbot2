@@ -10,14 +10,14 @@ import (
 	"github.com/pajlada/pajbot2/helper"
 )
 
-// Redismanager keeps the pool of redis connections
-type Redismanager struct {
+// RedisManager keeps the pool of redis connections
+type RedisManager struct {
 	Pool *redis.Pool
 }
 
 // Init connects to redis and returns redis client
-func Init(config *common.Config) *Redismanager {
-	r := &Redismanager{}
+func Init(config *common.Config) *RedisManager {
+	r := &RedisManager{}
 	pool := redis.NewPool(func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp", config.RedisHost)
 		if err != nil {
@@ -34,7 +34,7 @@ func Init(config *common.Config) *Redismanager {
 
 // UpdateGlobalUser sets global values for a user (in other words, values that transcend channels)
 // Only globally banned users and admins have a level in global redis
-func (r *Redismanager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
+func (r *RedisManager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
 	log.Printf("redis: user: %s  channel: %s", user.Name, channel)
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -44,7 +44,7 @@ func (r *Redismanager) UpdateGlobalUser(channel string, user *common.User, u *co
 }
 
 // GetGlobalUser fills in the user and u objects with values from the users global values
-func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
+func (r *RedisManager) GetGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	exist, err := conn.Do("HEXISTS", "global:lastactive", user.Name)
@@ -77,7 +77,7 @@ func (r *Redismanager) GetGlobalUser(channel string, user *common.User, u *commo
 }
 
 // SetPoints sets the amount of points a user has in the given channel
-func (r *Redismanager) SetPoints(channel string, user *common.User) {
+func (r *RedisManager) SetPoints(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("ZADD", channel+":users:points", user.Points, user.Name)
@@ -85,14 +85,14 @@ func (r *Redismanager) SetPoints(channel string, user *common.User) {
 }
 
 // IncrPoints increases the points of a user in the given channel
-func (r *Redismanager) IncrPoints(channel string, user *common.User, incrby int) {
+func (r *RedisManager) IncrPoints(channel string, user *common.User, incrby int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("ZINCRBY", channel+":users:points", incrby, user.Name)
 	conn.Flush()
 }
 
-func (r *Redismanager) newUser(channel string, user *common.User) {
+func (r *RedisManager) newUser(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
@@ -105,7 +105,7 @@ func (r *Redismanager) newUser(channel string, user *common.User) {
 }
 
 // SetLevel sets the users level in the given channel
-func (r *Redismanager) SetLevel(channel string, user *common.User, level int) {
+func (r *RedisManager) SetLevel(channel string, user *common.User, level int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("HSET", channel+":users:level", user.Name, createLevel(uint32(level), 0)) // XXX: Make sure the flags are right
@@ -113,7 +113,7 @@ func (r *Redismanager) SetLevel(channel string, user *common.User, level int) {
 }
 
 // ResetLevel resets a users level to 0/default XXX
-func (r *Redismanager) ResetLevel(channel string, user *common.User) {
+func (r *RedisManager) ResetLevel(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	conn.Send("HSET", channel+":users:level", user.Name, r.getLevel(createLevel(0, 1), user))
@@ -121,7 +121,7 @@ func (r *Redismanager) ResetLevel(channel string, user *common.User) {
 }
 
 // UpdateUser saves data about a user in redis
-func (r *Redismanager) UpdateUser(channel string, user *common.User) {
+func (r *RedisManager) UpdateUser(channel string, user *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	if user.Name == channel {
@@ -133,7 +133,7 @@ func (r *Redismanager) UpdateUser(channel string, user *common.User) {
 
 // GetUser fills out missing fields of the given User object
 // and creates new user in redis if the user doesnt exist
-func (r *Redismanager) GetUser(channel string, user *common.User) {
+func (r *RedisManager) GetUser(channel string, user *common.User) {
 	fmt.Println(user.Name)
 	conn := r.Pool.Get()
 	defer conn.Close()
@@ -174,7 +174,7 @@ const (
 First 32 bits specifies the level Value
 Last 32 bits specifies the level Flags
 */
-func (r *Redismanager) getLevel(levelCombined uint64, user *common.User) int {
+func (r *RedisManager) getLevel(levelCombined uint64, user *common.User) int {
 	// Split up the values from levelCombined
 	levelFlags, levelValue := helper.SplitUint64(levelCombined)
 
