@@ -21,7 +21,7 @@ func Init(config *common.Config) *RedisManager {
 	pool := redis.NewPool(func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp", config.RedisHost)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("An error occured while connecting to redis: ", err)
 			return nil, err
 		}
 		return c, err
