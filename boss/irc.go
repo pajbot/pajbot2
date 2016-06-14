@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pajlada/pajbot2/redismanager"
+	"github.com/pajlada/pajbot2/sqlmanager"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -34,6 +35,7 @@ type Irc struct {
 	channels map[string]net.Conn
 	bots     map[string]chan common.Msg
 	redis    *redismanager.RedisManager
+	sql      *sqlmanager.SQLManager
 	parser   *Parse
 	quit     chan string
 }
@@ -176,7 +178,7 @@ func (irc *Irc) NewBot(channel string) {
 	// TODO: This should be generalized (and optional if possible)
 	// Could that be based on module type?
 	// If module.@type == 'NeedsInit' { (cast)module.Init() }
-	commandModule.Init()
+	commandModule.Init(irc.sql)
 	_modules := []bot.Module{
 		&modules.Banphrase{},
 		commandModule,
@@ -245,6 +247,7 @@ func Init(config *common.Config) *Irc {
 		SendChan: make(chan string, 10),
 		bots:     make(map[string]chan common.Msg),
 		redis:    redismanager.Init(config),
+		sql:      sqlmanager.Init(config),
 		parser:   &Parse{},
 		quit:     config.Quit,
 	}
