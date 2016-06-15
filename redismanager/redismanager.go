@@ -44,10 +44,14 @@ func Init(config *common.Config) *RedisManager {
 func (r *RedisManager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
 	log.Printf("redis: user: %s  channel: %s", user.Name, channel)
 	conn := r.Pool.Get()
-	defer conn.Close()
 	conn.Send("HSET", "global:lastactive", user.Name, time.Now().Unix())
-	conn.Send("HSET", "global:channel", user.Name, channel)
+
+	// Don't update the channel if the channel is empty (i.e. a whisper)
+	if channel != "" {
+		conn.Send("HSET", "global:channel", user.Name, channel)
+	}
 	conn.Flush()
+	conn.Close()
 }
 
 // GetGlobalUser fills in the user and u objects with values from the users global values
