@@ -21,7 +21,9 @@ func LoadConfig(path string) (*common.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := &common.Config{}
+	config := &common.Config{
+		RedisDatabase: -1,
+	}
 	err = json.Unmarshal(file, config)
 	if err != nil {
 		return nil, err

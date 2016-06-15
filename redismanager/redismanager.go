@@ -24,6 +24,13 @@ func Init(config *common.Config) *RedisManager {
 			log.Fatal("An error occured while connecting to redis: ", err)
 			return nil, err
 		}
+		if config.RedisDatabase >= 0 {
+			_, err := c.Do("SELECT", config.RedisDatabase)
+			if err != nil {
+				log.Fatal("Error while selecting redis db:", err)
+				return nil, err
+			}
+		}
 		return c, err
 	}, 69)
 	// forsenGASM

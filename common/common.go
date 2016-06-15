@@ -75,6 +75,7 @@ type Config struct {
 
 	RedisHost     string `json:"redis_host"`
 	RedisPassword string `json:"redis_password"`
+	RedisDatabase int    `json:"redis_database"`
 
 	SQLDSN string `json:"sql_dsn"`
 
