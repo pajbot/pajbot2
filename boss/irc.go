@@ -36,7 +36,7 @@ type Irc struct {
 	bots     map[string]chan common.Msg
 	redis    *redismanager.RedisManager
 	sql      *sqlmanager.SQLManager
-	parser   *Parse
+	parser   *parse
 	quit     chan string
 }
 
@@ -59,6 +59,11 @@ func (irc *Irc) newConn(send bool) {
 	}
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	irc.SendRaw(conn, "CAP REQ twitch.tv/tags")
+	/*
+		TODO: Fix so you don't receive multiple of the same whisper
+		if you have more than one connection open
+	*/
+	irc.SendRaw(conn, "CAP REQ twitch.tv/commands")
 	irc.Lock()
 	defer irc.Unlock()
 	// wait for connection, this should be done better but we're gonna use
@@ -141,6 +146,43 @@ func (irc *Irc) GetGlobalUser(m *common.Msg) {
 func (irc *Irc) readConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
+	readChan := make(chan string)
+	running := true
+	go func() {
+		var line string
+		for running {
+			line = <-readChan
+			if strings.HasPrefix(line, "PING") {
+				irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
+			} else {
+				m := irc.parser.Parse(line)
+				// throw away its own and other useless msgs
+				if m.User.Name == irc.nick {
+					// Throw away its own messages
+					continue
+				}
+				log.Println(m.Type)
+				switch m.Type {
+				case common.MsgPrivmsg, common.MsgWhisper:
+					irc.GetGlobalUser(&m)
+					if m.Channel != "" {
+						irc.bots[m.Channel] <- m
+					} else {
+						log.Println("No channel for message")
+					}
+				case common.MsgThrowAway:
+					// Do nothing
+					break
+				default:
+					log.Printf("Unhandled message[%d]: %s\n", m.Type, m.Message)
+				}
+			}
+		}
+	}()
+	defer func() {
+		running = false
+		close(readChan)
+	}()
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
@@ -150,16 +192,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			delete(irc.readConn, conn)
 			return
 		}
-		if strings.HasPrefix(line, "PING") {
-			irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
-		} else if strings.Contains(line, "PRIVMSG") || strings.Contains(line, "WHISPER") {
-			m := irc.parser.Parse(line)
-			// throw away its own and other useless msgs
-			if m.Type != common.MsgThrowAway && m.User.Name != irc.nick {
-				irc.GetGlobalUser(&m)
-				irc.bots[m.Channel] <- m
-			}
-		}
+		readChan <- line
 	}
 }
 
@@ -248,7 +281,7 @@ func Init(config *common.Config) *Irc {
 		bots:     make(map[string]chan common.Msg),
 		redis:    redismanager.Init(config),
 		sql:      sqlmanager.Init(config),
-		parser:   &Parse{},
+		parser:   &parse{},
 		quit:     config.Quit,
 	}
 	irc.newConn(true)

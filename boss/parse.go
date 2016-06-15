@@ -1,20 +1,21 @@
 package boss
 
 import (
+	"log"
 	"strconv"
 	"strings"
 
 	"github.com/pajlada/pajbot2/common"
 )
 
-type Parse struct {
+type parse struct {
 	m *common.Msg
 }
 
 /*
 Parse parses an IRC message into a more readable bot.Msg
 */
-func (p *Parse) Parse(line string) common.Msg {
+func (p *parse) Parse(line string) common.Msg {
 	p.m = &common.Msg{
 		User: common.User{},
 	}
@@ -41,10 +42,25 @@ func (p *Parse) Parse(line string) common.Msg {
 		}
 
 	} else {
-		if strings.Contains(msg, "PRIVMSG") {
-			p.m.Type = common.MsgPrivmsg
+		tSplit := strings.Split(msg, " ")
+		if len(tSplit) >= 2 {
+			switch tSplit[1] {
+			case "PRIVMSG":
+				p.m.Type = common.MsgPrivmsg
+				break
+			case "WHISPER":
+				p.m.Type = common.MsgWhisper
+				break
+			default:
+				p.m.Type = common.MsgUnknown
+				break
+			}
 		} else {
-			p.m.Type = common.MsgWhisper
+			p.m.Type = common.MsgUnknown
+		}
+
+		if p.m.Type == common.MsgUnknown {
+			log.Printf("Unknown msg[%d]: %s", p.m.Type, msg)
 		}
 
 		// Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?
@@ -67,7 +83,7 @@ func (p *Parse) Parse(line string) common.Msg {
 	return *p.m
 }
 
-func (p *Parse) getTwitchEmotes(emotetag string) {
+func (p *parse) getTwitchEmotes(emotetag string) {
 	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
 	// will we done by a module in the bot itself
 	p.m.Emotes = make([]common.Emote, 0)
@@ -89,7 +105,7 @@ func (p *Parse) getTwitchEmotes(emotetag string) {
 	}
 }
 
-func (p *Parse) getTags(tags map[string]string) {
+func (p *parse) getTags(tags map[string]string) {
 	// TODO: Parse id and color
 	// color and id is pretty useless imo
 	if tags["display-name"] == "" {
@@ -110,19 +126,24 @@ func (p *Parse) getTags(tags map[string]string) {
 
 }
 
-func (p *Parse) getMessage(msg string) {
+func (p *parse) getMessage(msg string) {
 	if strings.HasPrefix(msg, ":") {
 		msg = strings.Replace(msg, ":", "", 1)
 	}
-	p.m.Message = strings.SplitN(msg, " :", 2)[1]
+	mSplit := strings.SplitN(msg, " :", 2)
+	if len(mSplit) >= 2 {
+		p.m.Message = strings.SplitN(msg, " :", 2)[1]
+	}
 	p.m.User.Name = strings.SplitN(msg, "!", 2)[0]
-	c := strings.SplitN(msg, "#", 3)[1]
-	p.m.Channel = strings.SplitN(c, " ", 2)[0]
+	cSplit := strings.SplitN(msg, "#", 3)
+	if len(cSplit) >= 2 {
+		p.m.Channel = strings.SplitN(cSplit[1], " ", 2)[0]
+	}
 	p.getAction()
 }
 
 // regex in 2016 LUL
-func (p *Parse) getAction() {
+func (p *parse) getAction() {
 	if strings.HasPrefix(p.m.Message, "\u0001ACTION ") && strings.HasSuffix(p.m.Message, "\u0001") {
 		p.m.Me = true
 		m := p.m.Message
@@ -132,7 +153,7 @@ func (p *Parse) getAction() {
 	}
 }
 
-func (p *Parse) sub() {
+func (p *parse) sub() {
 	m := p.m.Message
 	if strings.Contains(m, "just ") {
 		p.m.Length = 1

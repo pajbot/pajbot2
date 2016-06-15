@@ -119,7 +119,7 @@ func TestParseMessage(t *testing.T) {
 	}
 
 	for _, tt := range messageTests {
-		p := &Parse{}
+		p := &parse{}
 		res := p.Parse(tt.input)
 
 		assert.Equal(t, tt.expected, res)

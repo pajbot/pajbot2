@@ -37,6 +37,7 @@ const (
 	MsgWhisper
 	MsgSub
 	MsgThrowAway
+	MsgUnknown
 )
 
 /*
