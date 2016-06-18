@@ -2,6 +2,7 @@ package boss
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -44,14 +45,14 @@ func (irc *Irc) SendRaw(s net.Conn, line string) {
 	fmt.Fprint(s, line+"\r\n")
 }
 
-func (irc *Irc) newConn() {
+func (irc *Irc) newConn() error {
 	if irc.conn != nil {
-		return
+		// A connection already exists
+		return nil
 	}
 	conn, err := net.Dial("tcp", irc.server+":"+irc.port)
 	if err != nil {
-		fmt.Println("Error connecting to the IRC servers:", err)
-		return
+		return errors.New("Error connecting to the IRC servers:" + err.Error())
 	}
 	if irc.pass != "" {
 		irc.SendRaw(conn, "PASS "+irc.pass)
@@ -60,6 +61,7 @@ func (irc *Irc) newConn() {
 	go irc.readConnection(conn)
 	irc.conn = conn
 	fmt.Println("connected")
+	return nil
 }
 
 func (irc *Irc) send() {
@@ -206,7 +208,12 @@ func Init(config *common.Config) *Irc {
 		parser:   &parse{},
 		quit:     config.Quit,
 	}
-	irc.newConn()
+	err := irc.newConn()
+	if err != nil {
+		// Right now we just fatally exit the bot
+		// You're personally responsible for restarting the bot if it crashes
+		log.Fatal(err)
+	}
 	go irc.send()
 	go irc.JoinChannels(config.Channels)
 	return irc
