@@ -23,18 +23,18 @@ The Irc object contains all data xD
 */
 type Irc struct {
 	sync.Mutex
-	server   string
-	port     string
-	pass     string
-	nick     string
-	conn     net.Conn
-	ReadChan chan string
-	SendChan chan string
-	bots     map[string]chan common.Msg
-	redis    *redismanager.RedisManager
-	sql      *sqlmanager.SQLManager
-	parser   *parse
-	quit     chan string
+	brokerHost string
+	brokerPass string
+	pass       string
+	nick       string
+	conn       net.Conn
+	ReadChan   chan string
+	SendChan   chan string
+	bots       map[string]chan common.Msg
+	redis      *redismanager.RedisManager
+	sql        *sqlmanager.SQLManager
+	parser     *parse
+	quit       chan string
 }
 
 /*
@@ -50,12 +50,12 @@ func (irc *Irc) newConn() error {
 		// A connection already exists
 		return nil
 	}
-	conn, err := net.Dial("tcp", irc.server+":"+irc.port)
+	conn, err := net.Dial("tcp", irc.brokerHost)
 	if err != nil {
 		return errors.New("Error connecting to the IRC servers:" + err.Error())
 	}
 	if irc.pass != "" {
-		irc.SendRaw(conn, "PASS "+irc.pass)
+		irc.SendRaw(conn, "PASS "+irc.brokerPass+";"+irc.pass)
 	}
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	go irc.readConnection(conn)
@@ -187,26 +187,18 @@ TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
 func Init(config *common.Config) *Irc {
-	server := "irc.chat.twitch.tv"
-	port := "80"
-	//usingBroker := false
-	if config.BrokerPort != "" {
-		server = "localhost"
-		port = config.BrokerPort
-		//usingBroker = true
-	}
 	irc := &Irc{
-		server:   server,
-		port:     port,
-		pass:     config.Pass,
-		nick:     config.Nick,
-		ReadChan: make(chan string, 10),
-		SendChan: make(chan string, 10),
-		bots:     make(map[string]chan common.Msg),
-		redis:    redismanager.Init(config),
-		sql:      sqlmanager.Init(config),
-		parser:   &parse{},
-		quit:     config.Quit,
+		brokerHost: *config.BrokerHost,
+		brokerPass: *config.BrokerPass,
+		pass:       config.Pass,
+		nick:       config.Nick,
+		ReadChan:   make(chan string, 10),
+		SendChan:   make(chan string, 10),
+		bots:       make(map[string]chan common.Msg),
+		redis:      redismanager.Init(config),
+		sql:        sqlmanager.Init(config),
+		parser:     &parse{},
+		quit:       config.Quit,
 	}
 	err := irc.newConn()
 	if err != nil {

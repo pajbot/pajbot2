@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -33,6 +34,14 @@ func LoadConfig(path string) (*common.Config, error) {
 		return nil, err
 	}
 
+	// Check for missing fields
+	if config.BrokerHost == nil {
+		return nil, errors.New("Missing field broker_host in config file")
+	}
+	if config.BrokerPass == nil {
+		return nil, errors.New("Missing field broker_pass in config file")
+	}
+
 	return config, nil
 }
 
@@ -56,6 +65,16 @@ func main() {
 	}
 
 	switch command {
+	case "check":
+		_, err := LoadConfig(*configPath)
+		if err != nil {
+			fmt.Println("An error occured while loading the config file:", err)
+			os.Exit(1)
+		} else {
+			log.Println("No errors found in the config file")
+			os.Exit(0)
+		}
+
 	case "install":
 		installCmd()
 
@@ -77,6 +96,7 @@ func helpCmd() {
 		`usage: pajbot2 <command> [<args>]
 Commands:
    run            Run the bot (Default)
+   check          Check the config file for missing fields
    install        Start the installation process (WIP)
    create <name>  Create a migration (WIP)
 `)

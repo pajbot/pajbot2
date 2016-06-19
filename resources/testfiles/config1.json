@@ -5,5 +5,9 @@
         "pajlada",
         "nuuls",
         "forsenlol"
-    ]
+    ],
+    "redis_host": "localhost:6379",
+    "sql_dsn": "pajbot2:password@tcp(localhost:3306)/pajbot2_test",
+    "broker_host": "localhost:7353",
+    "broker_pass": "test"
 }
