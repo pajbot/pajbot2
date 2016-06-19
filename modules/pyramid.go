@@ -64,8 +64,13 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 								pyramidThing)
 							action.Response = m
 						}
+						module.data = make([][]string, 0)
+						module.goingDown = false
 					}
 				}
+			} else {
+				module.data = make([][]string, 0)
+				module.goingDown = false
 			}
 		} else {
 			module.data = make([][]string, 0)
