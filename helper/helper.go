@@ -45,3 +45,8 @@ func CombineUint32(val1 uint32, val2 uint32) uint64 {
 func CheckFlag(value uint32, flag uint32) bool {
 	return (value & flag) != 0
 }
+
+// NewStringPtr returns the pointer to the given string
+func NewStringPtr(s string) *string {
+	return &s
+}
