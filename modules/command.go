@@ -128,8 +128,11 @@ func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 	for _, command := range module.commands {
 		if triggered, c := command.IsTriggered(trigger, m, 0); triggered {
 			// TODO: Get response first, and skip if the response is nil or something of that sort
-			action.Response = c.Run()
-			action.Stop = true
+			r := c.Run()
+			if r != "" {
+				action.Response = r
+				action.Stop = true
+			}
 			return nil
 		}
 	}
