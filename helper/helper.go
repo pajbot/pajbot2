@@ -1,6 +1,9 @@
 package helper
 
-import "math"
+import (
+	"math"
+	"strings"
+)
 
 /*
 Sum returns the sum of the given slice of ints
@@ -49,4 +52,10 @@ func CheckFlag(value uint32, flag uint32) bool {
 // NewStringPtr returns the pointer to the given string
 func NewStringPtr(s string) *string {
 	return &s
+}
+
+// GetTriggers returns a list of strings that have been parsed in accordance
+// to the command rules
+func GetTriggers(message string) []string {
+	return strings.Split(strings.Replace(strings.ToLower(message), "!", "", 1), " ")
 }

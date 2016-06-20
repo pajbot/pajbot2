@@ -7,6 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
@@ -72,35 +73,62 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 			log.Fatal(err)
 		}
 		log.Println("triggers: ", triggers)
-		c := command.Command{
+		c := command.TextCommand{
 			Triggers: strings.Split(triggers, "|"),
 			Response: "pajaSWA xD",
 		}
-		module.commands = append(module.commands, c)
+		module.commands = append(module.commands, &c)
 	}
 
-	xdCommand := command.Command{
+	xdCommand := command.TextCommand{
 		Triggers: []string{
 			"xd",
 			"xdlol",
 		},
 		Response: "pajaSWA",
 	}
-	module.commands = append(module.commands, xdCommand)
+	module.commands = append(module.commands, &xdCommand)
+	testCommand := command.NestedCommand{
+		Triggers: []string{
+			"lul",
+			"xdlul",
+		},
+		Commands: []command.Command{
+			&xdCommand,
+			&command.TextCommand{
+				Triggers: []string{
+					"a",
+				},
+				Response: "pajaSWA a ;P",
+			},
+			&command.TextCommand{
+				Triggers: []string{
+					"b",
+				},
+				Response: "pajaSWA b ;P",
+			},
+		},
+	}
+	module.commands = append(module.commands, &testCommand)
 }
 
 // Check xD
 func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	m := strings.Split(msg.Message, " ")
-	trigger := strings.ToLower(m[0])
-	if trigger[0] != '!' {
+	if len(msg.Message) == 0 {
+		// Do nothing with empty messages
 		return nil
 	}
-	trigger = trigger[1:]
+
+	m := helper.GetTriggers(msg.Message)
+	trigger := m[0]
+
+	if msg.Message[0] != '!' {
+		return nil
+	}
 	for _, command := range module.commands {
-		if command.IsTriggered(trigger) {
+		if triggered, c := command.IsTriggered(trigger, m, 0); triggered {
 			// TODO: Get response first, and skip if the response is nil or something of that sort
-			action.Response = command.GetResponse()
+			action.Response = c.Run()
 			action.Stop = true
 			return nil
 		}

@@ -1,122 +1,139 @@
 package command
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/pajlada/pajbot2/helper"
+)
 
 func TestIsTriggered(t *testing.T) {
 	var tests = []struct {
 		command  Command
-		trigger  string
+		message  string
 		expected bool
 	}{
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"a",
 					"b",
 				},
 			},
-			trigger:  "xd",
+			message:  "!xd",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{},
 			},
-			trigger:  "xd",
+			message:  "!xd",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{},
 			},
-			trigger:  "",
+			message:  "",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 				},
 			},
-			trigger:  "",
+			message:  "",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 				},
 			},
-			trigger:  "testa",
+			message:  "!testa",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 				},
 			},
-			trigger:  "atest",
+			message:  "!atest",
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 				},
 			},
-			trigger:  "!test", // the !-parsing is handled by the module
+			message:  "!!test", // the !-parsing is handled by the module
 			expected: false,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 				},
 			},
-			trigger:  "test",
+			message:  "!test",
 			expected: true,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 					"abc",
 				},
 			},
-			trigger:  "test",
+			message:  "!test",
 			expected: true,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 					"abc",
 				},
 			},
-			trigger:  "abc",
+			message:  "!abc",
 			expected: true,
 		},
 		{
-			command: Command{
+			command: &TextCommand{
 				Triggers: []string{
 					"test",
 					"abc",
 				},
 			},
-			trigger:  "abcd",
+			message:  "!abcd",
+			expected: false,
+		},
+		{
+			command: &TextCommand{
+				Triggers: []string{
+					"test",
+					"abc",
+				},
+			},
+			message:  "!abcd LALALA",
 			expected: false,
 		},
 	}
 
 	for _, tt := range tests {
-		res := tt.command.IsTriggered(tt.trigger)
+		m := helper.GetTriggers(tt.message)
+		trigger := m[0]
 
-		if res != tt.expected {
+		triggered, _ := tt.command.IsTriggered(trigger, m, 0)
+
+		if triggered != tt.expected {
 			if tt.expected {
-				t.Errorf("%s failed triggering %s", tt.trigger, tt.command.Triggers)
+				t.Errorf("%s failed triggering", tt.message)
 			} else {
-				t.Errorf("%s triggered %s when it shouldn't have", tt.trigger, tt.command.Triggers)
+				t.Errorf("%s triggered when it shouldn't have", tt.message)
 			}
 		}
 	}
