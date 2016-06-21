@@ -39,7 +39,7 @@ func TestParseMessage(t *testing.T) {
 			},
 		*/
 		{
-			input: "@badges=broadcaster/1,subscriber/1;color=#CC44FF;display-name=pajlada;emotes=12:13-14;mod=1;room-id=11148817;subscriber=1;turbo=0;user-id=11148817;user-type=mod :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :ACTION MEME-MESSAGE :P",
+			input: "@badges=broadcaster/1,subscriber/1;color=#CC44FF;display-name=pajlada;emotes=12:13-14;mod=1;room-id=11148817;subscriber=1;turbo=0;user-id=11148817;user-type=mod :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :\u0001ACTION MEME-MESSAGE :P\u0001",
 			expected: common.Msg{
 				User: common.User{
 					ID:           0,
@@ -53,11 +53,11 @@ func TestParseMessage(t *testing.T) {
 					Level:        0,
 					Points:       0,
 				},
-				Message: "ACTION MEME-MESSAGE :P",
+				Message: "MEME-MESSAGE :P",
 				Channel: "pajlada",
 				Type:    common.MsgPrivmsg,
 				Length:  0,
-				Me:      false,
+				Me:      true,
 				Emotes: []common.Emote{
 					{
 						Name:  ":P",
