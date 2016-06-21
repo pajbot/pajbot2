@@ -104,7 +104,10 @@ func (irc *Irc) readConnection(conn net.Conn) {
 				case common.MsgPrivmsg, common.MsgWhisper:
 					irc.GetGlobalUser(&m)
 					if m.Channel != "" {
-						irc.bots[m.Channel] <- m
+						// dont freeze if there is no bot for the channel
+						if b, ok := irc.bots[m.Channel]; ok {
+							b <- m
+						}
 					} else {
 						log.Println("No channel for message")
 					}
