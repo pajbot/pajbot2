@@ -60,7 +60,7 @@ func TestParseMessage(t *testing.T) {
 				Me:      false,
 				Emotes: []common.Emote{
 					{
-						Name:  "",
+						Name:  ":P",
 						ID:    "12",
 						Type:  "twitch",
 						SizeX: 28,
