@@ -149,8 +149,10 @@ func (irc *Irc) NewBot(channel string) {
 	// Could that be based on module type?
 	// If module.@type == 'NeedsInit' { (cast)module.Init() }
 	commandModule.Init(irc.sql)
+	banphraseModule := &modules.Banphrase{}
+	banphraseModule.Init(irc.sql)
 	_modules := []bot.Module{
-		&modules.Banphrase{},
+		banphraseModule,
 		commandModule,
 		&modules.Pyramid{},
 		&modules.Quit{},

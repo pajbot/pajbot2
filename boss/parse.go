@@ -92,10 +92,13 @@ func (p *parse) getTwitchEmotes(emotetag string) {
 	}
 	emoteSlice := strings.Split(emotetag, "/")
 	for i := range emoteSlice {
-		id := strings.Split(emoteSlice[i], ":")[0]
+		log.Println(emoteSlice[i])
+		spl := strings.Split(emoteSlice[i], ":")
+		id := spl[0]
 		e := &common.Emote{}
 		e.Type = "twitch"
-		e.Name = ""
+		e.Name = p.getEmoteName(spl[1])
+		log.Println(e.Name)
 		e.ID = id
 		// 28 px should be fine for twitch emotes
 		e.SizeX = 28
@@ -103,6 +106,16 @@ func (p *parse) getTwitchEmotes(emotetag string) {
 		e.Count = strings.Count(emoteSlice[i], "-")
 		p.m.Emotes = append(p.m.Emotes, *e)
 	}
+}
+
+func (p *parse) getEmoteName(pos string) string {
+	pos = strings.Split(pos, ",")[0]
+	spl := strings.Split(pos, "-")
+	start, _ := strconv.Atoi(spl[0])
+	end, _ := strconv.Atoi(spl[1])
+	runes := []rune(p.m.Message)
+	name := runes[start : end+1]
+	return string(name)
 }
 
 func (p *parse) getTags(tags map[string]string) {
