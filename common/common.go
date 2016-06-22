@@ -38,6 +38,8 @@ const (
 	MsgSub
 	MsgThrowAway
 	MsgUnknown
+	MsgUsernotice
+	MsgReSub
 )
 
 /*
@@ -52,6 +54,7 @@ type Msg struct {
 	Length  int     // will be set by a module or length of resub
 	Me      bool
 	Emotes  []Emote
+	Tags    map[string]string
 }
 
 // Emote xD

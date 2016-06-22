@@ -1,8 +1,6 @@
 package redismanager
 
 import (
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -35,14 +33,14 @@ func Init(config *common.Config) *RedisManager {
 	}, 69)
 	// forsenGASM
 	r.Pool = pool
-	log.Println("connected to redis")
+	log.Debug("connected to redis")
 	return r
 }
 
 // UpdateGlobalUser sets global values for a user (in other words, values that transcend channels)
 // Only globally banned users and admins have a level in global redis
 func (r *RedisManager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
-	log.Printf("redis: user: %s  channel: %s", user.Name, channel)
+	log.Debugf("redis: user: %s  channel: %s", user.Name, channel)
 	conn := r.Pool.Get()
 	conn.Send("HSET", "global:lastactive", user.Name, time.Now().Unix())
 
@@ -145,7 +143,6 @@ func (r *RedisManager) UpdateUser(channel string, user *common.User) {
 // GetUser fills out missing fields of the given User object
 // and creates new user in redis if the user doesnt exist
 func (r *RedisManager) GetUser(channel string, user *common.User) {
-	fmt.Println(user.Name)
 	conn := r.Pool.Get()
 	defer conn.Close()
 	exist, err := conn.Do("HEXISTS", channel+":users:lastseen", user.Name)

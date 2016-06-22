@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"log"
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -72,7 +71,7 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 		if err := rows.Scan(&triggers); err != nil {
 			log.Fatal(err)
 		}
-		log.Println("triggers: ", triggers)
+		log.Debug("triggers: ", triggers)
 		c := command.TextCommand{
 			Triggers: strings.Split(triggers, "|"),
 			Response: "pajaSWA xD",

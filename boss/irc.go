@@ -4,12 +4,13 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/textproto"
+	"strconv"
 	"strings"
 	"sync"
 
+	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 
@@ -17,6 +18,8 @@ import (
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/modules"
 )
+
+var log = plog.GetLogger()
 
 /*
 The Irc object contains all data xD
@@ -60,7 +63,7 @@ func (irc *Irc) newConn() error {
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	go irc.readConnection(conn)
 	irc.conn = conn
-	fmt.Println("connected")
+	log.Debug("connected")
 	return nil
 }
 
@@ -68,7 +71,7 @@ func (irc *Irc) send() {
 	for {
 		msg := <-irc.SendChan
 		irc.SendRaw(irc.conn, msg)
-		fmt.Println("sent: " + msg)
+		log.Debugf("sent: %s", msg)
 	}
 }
 
@@ -99,7 +102,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					// Throw away its own messages
 					continue
 				}
-				log.Println(m.Type)
+				log.Debug(m.Type)
 				switch m.Type {
 				case common.MsgPrivmsg, common.MsgWhisper:
 					irc.GetGlobalUser(&m)
@@ -109,13 +112,25 @@ func (irc *Irc) readConnection(conn net.Conn) {
 							b <- m
 						}
 					} else {
-						log.Println("No channel for message")
+						log.Debug("No channel for message")
 					}
+				case common.MsgSub:
+					// Post sub to sub channel
+					log.Debugf("%s just subbed!", m.User.DisplayName)
+					break
+				case common.MsgReSub:
+					months, err := strconv.Atoi(m.Tags["msg-param-months"])
+					if err != nil {
+						// ERROR
+						break
+					}
+					// TODO: check room-id
+					log.Debugf("%s just resubbed for %d months", m.User.DisplayName, months)
 				case common.MsgThrowAway:
 					// Do nothing
 					break
 				default:
-					log.Printf("Unhandled message[%d]: %s\n", m.Type, m.Message)
+					log.Debugf("Unhandled message[%d]: %s\n", m.Type, m.Message)
 				}
 			}
 		}
@@ -127,7 +142,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
-			log.Println("connection died", err)
+			log.Debug("connection died", err)
 			irc.newConn()
 			//irc.JoinChannels(irc.readConn[conn])
 			return

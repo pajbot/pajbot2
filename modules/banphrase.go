@@ -2,7 +2,6 @@ package modules
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -38,7 +37,7 @@ func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) 
 		if a.Matched {
 			action.Response = b.Ban(msg.User.Name, a.Level, a.Reason)
 		}
-		log.Println(msg.Length)
+		log.Debug(msg.Length)
 		if msg.Length > 400 {
 			action.Response = b.Ban(msg.User.Name, 5, fmt.Sprintf("msg too long %d", msg.Length))
 		}

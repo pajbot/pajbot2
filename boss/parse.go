@@ -1,7 +1,6 @@
 package boss
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
@@ -51,6 +50,9 @@ func (p *parse) Parse(line string) common.Msg {
 			case "WHISPER":
 				p.m.Type = common.MsgWhisper
 				break
+			case "USERNOTICE":
+				p.m.Type = common.MsgUsernotice
+				break
 			default:
 				p.m.Type = common.MsgUnknown
 				break
@@ -60,7 +62,9 @@ func (p *parse) Parse(line string) common.Msg {
 		}
 
 		if p.m.Type == common.MsgUnknown {
-			log.Printf("Unknown msg[%d]: %s", p.m.Type, msg)
+			log.Debugf("Unknown msg[%d]: %s", p.m.Type, msg)
+		} else {
+			log.Debugf("Handled msg[%d]: %s", p.m.Type, msg)
 		}
 
 		// Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?
@@ -72,8 +76,15 @@ func (p *parse) Parse(line string) common.Msg {
 				tags[k] = v
 			}
 			p.getTwitchEmotes(tags["emotes"])
+			delete(tags, "emotes")
 			p.getTags(tags)
+
+			if p.m.Type == common.MsgUsernotice {
+				p.readExtendedTags(tags)
+			}
 		}
+
+		log.Debug(p.m.Tags)
 	}
 
 	if p.m.Channel == p.m.User.Name {
@@ -92,13 +103,13 @@ func (p *parse) getTwitchEmotes(emotetag string) {
 	}
 	emoteSlice := strings.Split(emotetag, "/")
 	for i := range emoteSlice {
-		log.Println(emoteSlice[i])
+		log.Debug(emoteSlice[i])
 		spl := strings.Split(emoteSlice[i], ":")
 		id := spl[0]
 		e := &common.Emote{}
 		e.Type = "twitch"
 		e.Name = p.getEmoteName(spl[1])
-		log.Println(e.Name)
+		log.Debug(e.Name)
 		e.ID = id
 		// 28 px should be fine for twitch emotes
 		e.SizeX = 28
@@ -126,17 +137,33 @@ func (p *parse) getTags(tags map[string]string) {
 	} else {
 		p.m.User.DisplayName = tags["display-name"]
 	}
+	delete(tags, "display-name")
 	p.m.User.Type = tags["user-type"]
+	delete(tags, "user-type")
 	if tags["turbo"] == "1" {
 		p.m.User.Turbo = true
 	}
+	delete(tags, "turbo")
 	if tags["mod"] == "1" {
 		p.m.User.Mod = true
 	}
+	delete(tags, "mod")
 	if tags["subscriber"] == "1" {
 		p.m.User.Sub = true
 	}
+	delete(tags, "subscriber")
 
+	p.m.Tags = tags
+}
+
+func (p *parse) readExtendedTags(tags map[string]string) {
+	switch tags["msg-id"] {
+	case "resub":
+		p.m.Type = common.MsgReSub
+
+	default:
+		p.m.Type = common.MsgUnknown
+	}
 }
 
 func (p *parse) getMessage(msg string) {

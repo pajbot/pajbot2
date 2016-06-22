@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/pajlada/pajbot2/redismanager"
 
@@ -55,17 +54,17 @@ starts channels?
 idk
 */
 func (bot *Bot) Init() {
-	fmt.Printf("new bot in %s\n", bot.Channel)
+	log.Infof("new bot in %s", bot.Channel)
 	for {
 		m := <-bot.Read
-		fmt.Printf("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
+		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
 		if m.Type == common.MsgSub {
-			fmt.Printf("%s subbed for %d months in a row\n", m.User.Name, m.Length)
+			log.Infof("%s subbed for %d months in a row\n", m.User.Name, m.Length)
 		}
 		if m.Type != common.MsgSub {
 			bot.Redis.GetUser(bot.Channel, &m.User)
 		}
-		log.Printf("%s is level %d\n", m.User.Name, m.User.Level)
+		log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
 		go bot.Handle(m)
 	}
 }

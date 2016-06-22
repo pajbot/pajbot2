@@ -6,16 +6,21 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gorilla/websocket"
 
 	_ "github.com/mattes/migrate/driver/mysql"
 	"github.com/mattes/migrate/migrate"
 	"github.com/pajlada/pajbot2/boss"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/plog"
+	pb_websocket "github.com/pajlada/pajbot2/websocket"
 )
+
+var log = plog.GetLogger()
 
 /*
 LoadConfig parses a config file from the given json file at the path
@@ -53,6 +58,11 @@ var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
 
 func main() {
+	plog.InitLogging()
+
+	log.Warning("asd")
+	log.Debug("xD")
+
 	flag.Usage = func() {
 		helpCmd()
 	}
@@ -68,10 +78,10 @@ func main() {
 	case "check":
 		_, err := LoadConfig(*configPath)
 		if err != nil {
-			fmt.Println("An error occured while loading the config file:", err)
+			log.Error("An error occured while loading the config file:", err)
 			os.Exit(1)
 		} else {
-			log.Println("No errors found in the config file")
+			log.Debug("No errors found in the config file")
 			os.Exit(0)
 		}
 
@@ -102,6 +112,27 @@ Commands:
 `)
 }
 
+type msg struct {
+	Num int
+}
+
+func wsHandler(conn *websocket.Conn) {
+	for {
+		m := msg{}
+
+		err := conn.ReadJSON(&m)
+		if err != nil {
+			log.Error("Error reading json.", err)
+		}
+
+		log.Infof("Got message: %#v\n", m)
+
+		if err = conn.WriteJSON(m); err != nil {
+			log.Error(err)
+		}
+	}
+}
+
 func runCmd() {
 	// TODO: Use config path from system arguments
 	config, err := LoadConfig(*configPath)
@@ -110,16 +141,23 @@ func runCmd() {
 	}
 
 	// Run database migrations
-	log.Println("Running database migrations")
+	log.Debug("Running database migrations")
 	allErrors, ok := migrate.UpSync("mysql://"+config.SQLDSN, "./migrations")
 	if !ok {
-		log.Println("An error occured while trying to run database migrations")
+		log.Debug("An error occured while trying to run database migrations")
 		for _, err := range allErrors {
-			log.Println(err)
+			log.Debug(err)
 		}
 		os.Exit(1)
 	}
-	log.Println("Done")
+	log.Debug("Done")
+
+	// Start websocket server
+	wsHost := ":2355"
+	log.Debugf("Starting websocket server at %s\n", wsHost)
+	wsBoss := pb_websocket.Init(wsHost)
+	wsBoss.Handler = wsHandler
+	go wsBoss.Run()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

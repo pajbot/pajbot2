@@ -1,12 +1,14 @@
 package filter
 
 import (
-	"log"
 	"strings"
 	"unicode"
 
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/plog"
 )
+
+var log = plog.GetLogger()
 
 // Length xD should
 // should this be a filter or a module?
@@ -29,7 +31,7 @@ func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
 		elen = elen * emote.Count
 		m = strings.Replace(m, emote.Name, "", -1)
 		// TODO: parse emote names
-		log.Println(elen)
+		log.Debug(elen)
 		msglength += elen
 	}
 	runes := []rune(m)
@@ -43,5 +45,5 @@ func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
 		}
 	}
 	msg.Length = msglength
-	log.Println(msg.Length)
+	log.Debug(msg.Length)
 }
