@@ -78,6 +78,15 @@ func (bot *Bot) Say(message string) {
 }
 
 /*
+Sayf sends a formatted PRIVMSG to the bots given channel
+*/
+func (bot *Bot) Sayf(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	m := fmt.Sprintf("PRIVMSG #%s :%s ", bot.Channel, message)
+	bot.Send <- m
+}
+
+/*
 Ban returns the ban/TO message and reason, perm ban if duration < 0
 */
 func (bot *Bot) Ban(user string, duration int, reason string) string {
