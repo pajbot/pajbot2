@@ -75,6 +75,14 @@ func (irc *Irc) send() {
 	}
 }
 
+func (irc *Irc) dontSend() {
+	for {
+		// Do nothing with the messages.
+		// This is used in silent bots
+		<-irc.SendChan
+	}
+}
+
 // GetGlobalUser fills in the global user in the message from redis
 func (irc *Irc) GetGlobalUser(m *common.Msg) {
 	u := &common.GlobalUser{}
@@ -226,7 +234,11 @@ func Init(config *common.Config) *Irc {
 		// You're personally responsible for restarting the bot if it crashes
 		log.Fatal(err)
 	}
-	go irc.send()
+	if config.Silent {
+		go irc.dontSend()
+	} else {
+		go irc.send()
+	}
 	go irc.JoinChannels(config.Channels)
 	return irc
 }

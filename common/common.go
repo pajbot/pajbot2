@@ -77,6 +77,7 @@ type Config struct {
 	Nick       string  `json:"nick"`
 	BrokerHost *string `json:"broker_host"`
 	BrokerPass *string `json:"broker_pass"`
+	Silent     bool    `json:"silent"`
 
 	RedisHost     string `json:"redis_host"`
 	RedisPassword string `json:"redis_password"`
