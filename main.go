@@ -60,9 +60,6 @@ var configPath = flag.String("config", "./config.json", "")
 func main() {
 	plog.InitLogging()
 
-	log.Warning("asd")
-	log.Debug("xD")
-
 	flag.Usage = func() {
 		helpCmd()
 	}
