@@ -38,8 +38,18 @@ const (
 	MsgSub
 	MsgThrowAway
 	MsgUnknown
-	MsgUsernotice
+	MsgUserNotice
 	MsgReSub
+	MsgNotice
+	MsgRoomState
+	MsgSubsOn
+	MsgSubsOff
+	MsgSlowOn
+	MsgSlowOff
+	MsgR9kOn
+	MsgR9kOff
+	MsgHostOn
+	MsgHostOff
 )
 
 /*

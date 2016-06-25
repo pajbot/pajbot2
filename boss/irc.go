@@ -144,7 +144,11 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					// Do nothing
 					break
 				default:
-					log.Debugf("Unhandled message[%d]: %s\n", m.Type, m.Message)
+					if b := irc.getBot(m.Channel); b != nil {
+						b <- m
+					} else {
+						log.Debugf("default No channel for message (chan: %s)", m.Channel)
+					}
 				}
 			}
 		}
@@ -190,6 +194,7 @@ func (irc *Irc) NewBot(channel string) {
 		&modules.Quit{},
 		&modules.SubAnnounce{},
 		&modules.MyInfo{},
+		&modules.Test{},
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()

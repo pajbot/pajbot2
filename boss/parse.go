@@ -56,11 +56,9 @@ func (p *parse) Parse(line string) common.Msg {
 		// Parse message + msg type (if it's a /me message or not)
 		p.parseMessage(msg)
 
-		// TODO: fix this sub detection (@pajlada)
 		if p.m.User.Name == "twitchnotify" {
 			if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
-				p.m.Type = common.MsgSub
-				p.sub()
+				p.parseNewSub()
 			}
 		}
 	}
@@ -147,6 +145,32 @@ func (p *parse) parseExtendedTags() {
 	case "resub":
 		p.m.Type = common.MsgReSub
 
+	case "subs_on":
+		p.m.Type = common.MsgSubsOn
+
+	case "subs_off":
+		p.m.Type = common.MsgSubsOff
+
+	case "slow_on":
+		// Slow mode duration is found in the tag slow_duration
+		p.m.Type = common.MsgSlowOn
+
+	case "slow_off":
+		p.m.Type = common.MsgSlowOff
+
+	case "r9k_on":
+		p.m.Type = common.MsgR9kOn
+
+	case "r9k_off":
+		p.m.Type = common.MsgR9kOff
+
+	case "host_on":
+		// Host target can be found in target_channel tag
+		p.m.Type = common.MsgHostOn
+
+	case "host_off":
+		p.m.Type = common.MsgHostOff
+
 	case "":
 		break
 
@@ -197,7 +221,13 @@ func (p *parse) parseMsgType(msg string) {
 		p.m.Type = common.MsgWhisper
 
 	case "USERNOTICE":
-		p.m.Type = common.MsgUsernotice
+		p.m.Type = common.MsgUserNotice
+
+	case "NOTICE":
+		p.m.Type = common.MsgNotice
+
+	case "ROOMSTATE":
+		p.m.Type = common.MsgRoomState
 	}
 }
 
@@ -223,21 +253,9 @@ func (p *parse) getAction() {
 	}
 }
 
-// TODO: rewrite (@pajlada)
-func (p *parse) sub() {
-	m := p.m.Message
-	if strings.Contains(m, "just ") {
-		p.m.Length = 1
-	} else {
-		temp := strings.Split(m, " for ")[1]
-		l := strings.Split(temp, " ")[0]
-		length, err := strconv.Atoi(l)
-		if err == nil {
-			p.m.Length = length
-		} else {
-			panic(err)
-		}
-	}
-	p.m.User.DisplayName = strings.Split(m, " ")[0]
+func (p *parse) parseNewSub() {
+	p.m.Type = common.MsgSub
+	p.m.Length = 1
+	p.m.User.DisplayName = strings.Split(p.m.Message, " ")[0]
 	p.m.User.Name = strings.ToLower(p.m.User.DisplayName)
 }
