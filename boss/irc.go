@@ -182,6 +182,7 @@ func (irc *Irc) NewBot(channel string) {
 		commandModule,
 		&modules.Pyramid{},
 		&modules.Quit{},
+		&modules.MyInfo{},
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()
