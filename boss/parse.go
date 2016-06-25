@@ -53,11 +53,11 @@ func (p *parse) Parse(line string) common.Msg {
 	if len(splitLine) == 2 {
 		msg = splitLine[1]
 
-		// Parse message + msg type (if it's a /me message or not)
-		p.parseMessage(msg)
+		// Parse message text + msg type (if it's a /me message or not)
+		p.parseText(msg)
 
 		if p.m.User.Name == "twitchnotify" {
-			if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
+			if !strings.Contains(p.m.Text, " to ") && !strings.Contains(p.m.Text, " while ") {
 				p.parseNewSub()
 			}
 		}
@@ -106,7 +106,7 @@ func (p *parse) getEmoteName(pos string) string {
 	spl := strings.Split(pos, "-")
 	start, _ := strconv.Atoi(spl[0])
 	end, _ := strconv.Atoi(spl[1])
-	runes := []rune(p.m.Message)
+	runes := []rune(p.m.Text)
 	name := runes[start : end+1]
 	return string(name)
 }
@@ -235,8 +235,8 @@ func (p *parse) parseChannel(msg string) {
 	p.m.Channel = strings.Replace(msg[1:], "#", "", 0)
 }
 
-func (p *parse) parseMessage(msg string) {
-	p.m.Message = msg[1:]
+func (p *parse) parseText(msg string) {
+	p.m.Text = msg[1:]
 
 	// figure out whether the message is an ACTION or not
 	p.getAction()
@@ -244,18 +244,18 @@ func (p *parse) parseMessage(msg string) {
 
 // regex in 2016 LUL
 func (p *parse) getAction() {
-	if strings.HasPrefix(p.m.Message, "\u0001ACTION ") && strings.HasSuffix(p.m.Message, "\u0001") {
+	if strings.HasPrefix(p.m.Text, "\u0001ACTION ") && strings.HasSuffix(p.m.Text, "\u0001") {
 		p.m.Me = true
-		m := p.m.Message
+		m := p.m.Text
 		m = strings.Replace(m, "\u0001ACTION ", "", 1)
 		m = strings.Replace(m, "\u0001", "", 1)
-		p.m.Message = m
+		p.m.Text = m
 	}
 }
 
 func (p *parse) parseNewSub() {
 	p.m.Type = common.MsgSub
 	p.m.Length = 1
-	p.m.User.DisplayName = strings.Split(p.m.Message, " ")[0]
+	p.m.User.DisplayName = strings.Split(p.m.Text, " ")[0]
 	p.m.User.Name = strings.ToLower(p.m.User.DisplayName)
 }

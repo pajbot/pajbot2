@@ -21,7 +21,7 @@ var _ Filter = (*Length)(nil)
 func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
 	var msgLength int
 	var emoteLength int
-	m := msg.Message
+	m := msg.Text
 	for _, emote := range msg.Emotes {
 		emoteLength = (emote.SizeX * emote.SizeY) / 100
 		// 7 for twitch emotes, 16 for NaM
@@ -45,5 +45,5 @@ func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
 		}
 	}
 	msg.Length = msgLength
-	log.Debugf("Message: %s [Length: %d]", msg.Message, msg.Length)
+	log.Debugf("Message: %s [Length: %d]", msg.Text, msg.Length)
 }

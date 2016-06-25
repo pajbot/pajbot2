@@ -58,10 +58,10 @@ This included already-parsed ircv3-tags and the User object
 */
 type Msg struct {
 	User    User
-	Message string
+	Text    string
 	Channel string
 	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
-	Length  int     // Length of the message (Using a special algorithm, used by Length filter)
+	Length  int     // Length of the message (Using a special algorithm, decided by Length filter)
 	Me      bool
 	Emotes  []Emote
 	Tags    map[string]string

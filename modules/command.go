@@ -113,15 +113,15 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 
 // Check xD
 func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	if len(msg.Message) == 0 {
+	if len(msg.Text) == 0 {
 		// Do nothing with empty messages
 		return nil
 	}
 
-	m := helper.GetTriggers(msg.Message)
+	m := helper.GetTriggers(msg.Text)
 	trigger := m[0]
 
-	if msg.Message[0] != '!' {
+	if msg.Text[0] != '!' {
 		return nil
 	}
 	for _, command := range module.commands {

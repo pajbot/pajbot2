@@ -16,7 +16,7 @@ var _ Module = (*MyInfo)(nil)
 
 // Check xD
 func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	m := strings.Split(msg.Message, " ")
+	m := strings.Split(msg.Text, " ")
 	trigger := strings.ToLower(m[0])
 
 	if trigger == "!myinfo" {

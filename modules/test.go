@@ -50,6 +50,6 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			}
 		}
 	}
-	log.Debug("Checking ", msg.Message)
+	log.Debug("Checking ", msg.Text)
 	return nil
 }

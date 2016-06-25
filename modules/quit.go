@@ -16,7 +16,7 @@ var _ Module = (*Quit)(nil)
 
 // Check xD
 func (module *Quit) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	m := strings.Split(msg.Message, " ")
+	m := strings.Split(msg.Text, " ")
 	trigger := strings.ToLower(m[0])
 
 	// TODO: Make sure the User level is the right level

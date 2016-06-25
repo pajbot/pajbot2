@@ -24,7 +24,7 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 	if msg.Type != common.MsgPrivmsg {
 		return nil
 	}
-	msgParts := strings.Split(msg.Message, " ")
+	msgParts := strings.Split(msg.Text, " ")
 	if len(module.data) > 0 {
 		curLen := len(msgParts)
 		lastLen := len(module.data[len(module.data)-1])

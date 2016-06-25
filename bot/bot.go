@@ -57,7 +57,7 @@ func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
 	for {
 		m := <-bot.Read
-		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Message)
+		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
 		if m.Type == common.MsgSub {
 			log.Infof("%s subbed for %d months in a row\n", m.User.Name, m.Length)
 		}

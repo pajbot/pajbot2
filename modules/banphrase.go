@@ -31,7 +31,7 @@ func (module *Banphrase) Init(sql *sqlmanager.SQLManager) {
 // Check xD
 func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	a := filter.BanAction{}
-	m := msg.Message // TODO: confusables, github.com/FiloSottile/tr39-confusables this is kinda shitty
+	m := msg.Text // TODO: confusables, github.com/FiloSottile/tr39-confusables this is kinda shitty
 	for _, f := range module.Filters {
 		f.Run(m, msg, &a)
 		if a.Matched {
