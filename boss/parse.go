@@ -17,84 +17,67 @@ Parse parses an IRC message into a more readable bot.Msg
 func (p *parse) Parse(line string) common.Msg {
 	p.m = &common.Msg{
 		User: common.User{},
+		Type: common.MsgUnknown,
 	}
-	parseTags := true
 
-	var splitline []string
-	if strings.HasPrefix(line, ":") {
-		parseTags = false
-		splitline = strings.SplitN(line, ":", 2)
-	} else {
-		splitline = strings.SplitN(line, " :", 2)
+	// msg is the string we will keep working on/reducing as we parse things
+	msg := line
+
+	var splitLine []string
+
+	// The message starts with @, that means there are IRCv3 tags available to parse
+	if strings.HasPrefix(line, "@") {
+		splitLine = strings.SplitN(msg, " ", 2)
+		p.parseTags(splitLine[0])
+		msg = splitLine[1]
 	}
-	tagsRaw := splitline[0]
-	msg := splitline[1]
-	tags := make(map[string]string)
 
-	p.getMessage(msg)
+	// Parse source
+	splitLine = strings.SplitN(msg, " ", 2)
+	p.parseSource(splitLine[0])
+	msg = splitLine[1]
+
+	// Parse message type
+	splitLine = strings.SplitN(msg, " ", 2)
+	p.parseMsgType(splitLine[0])
+	msg = splitLine[1]
+
+	if p.m.Type == common.MsgUnknown {
+		p.m.Type = common.MsgThrowAway
+		return *p.m
+	}
+
+	splitLine = strings.SplitN(msg, " ", 2)
+	p.parseChannel(splitLine[0])
+	msg = splitLine[1]
+
+	// Parse message + msg type (if it's a /me message or not)
+	p.parseMessage(msg)
+
+	// TODO: fix this sub detection (@pajlada)
 	if p.m.User.Name == "twitchnotify" {
 		if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
 			p.m.Type = common.MsgSub
 			p.sub()
-		} else {
-			p.m.Type = common.MsgThrowAway
 		}
-
-	} else {
-		tSplit := strings.Split(msg, " ")
-		if len(tSplit) >= 2 {
-			switch tSplit[1] {
-			case "PRIVMSG":
-				p.m.Type = common.MsgPrivmsg
-				break
-			case "WHISPER":
-				p.m.Type = common.MsgWhisper
-				break
-			case "USERNOTICE":
-				p.m.Type = common.MsgUsernotice
-				break
-			default:
-				p.m.Type = common.MsgUnknown
-				break
-			}
-		} else {
-			p.m.Type = common.MsgUnknown
-		}
-
-		if p.m.Type == common.MsgUnknown {
-			log.Debugf("Unknown msg[%d]: %s", p.m.Type, msg)
-		} else {
-			log.Debugf("Handled msg[%d]: %s", p.m.Type, msg)
-		}
-
-		// Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?
-		if parseTags {
-			for _, tagValue := range strings.Split(tagsRaw, ";") {
-				spl := strings.Split(tagValue, "=")
-				k := spl[0]
-				v := spl[1]
-				tags[k] = v
-			}
-			p.getTwitchEmotes(tags["emotes"])
-			delete(tags, "emotes")
-			p.getTags(tags)
-
-			if p.m.Type == common.MsgUsernotice {
-				p.readExtendedTags(tags)
-			}
-		}
-
-		log.Debug(p.m.Tags)
 	}
 
+	// If the destination of the message is the same as the username,
+	// then we tag the user as the channel owner. This will automatically
+	// give him access to broadcaster commands
 	if p.m.Channel == p.m.User.Name {
 		p.m.User.ChannelOwner = true
+	}
+
+	if p.m.Tags != nil {
+		// Parse tags further, such as the msg-id value for determinig the msg type
+		p.parseExtendedTags()
 	}
 
 	return *p.m
 }
 
-func (p *parse) getTwitchEmotes(emotetag string) {
+func (p *parse) parseTwitchEmotes(emotetag string) {
 	// TODO: Parse more emote information (bttv (and ffz?), name, size, isGif)
 	// will we done by a module in the bot itself
 	p.m.Emotes = make([]common.Emote, 0)
@@ -103,13 +86,11 @@ func (p *parse) getTwitchEmotes(emotetag string) {
 	}
 	emoteSlice := strings.Split(emotetag, "/")
 	for i := range emoteSlice {
-		log.Debug(emoteSlice[i])
 		spl := strings.Split(emoteSlice[i], ":")
 		id := spl[0]
 		e := &common.Emote{}
 		e.Type = "twitch"
 		e.Name = p.getEmoteName(spl[1])
-		log.Debug(e.Name)
 		e.ID = id
 		// 28 px should be fine for twitch emotes
 		e.SizeX = 28
@@ -129,56 +110,102 @@ func (p *parse) getEmoteName(pos string) string {
 	return string(name)
 }
 
-func (p *parse) getTags(tags map[string]string) {
+func (p *parse) parseTagValues() {
 	// TODO: Parse id and color
 	// color and id is pretty useless imo
-	if tags["display-name"] == "" {
+	if p.m.Tags["display-name"] == "" {
 		p.m.User.DisplayName = p.m.User.Name
 	} else {
-		p.m.User.DisplayName = tags["display-name"]
+		p.m.User.DisplayName = p.m.Tags["display-name"]
 	}
-	delete(tags, "display-name")
-	p.m.User.Type = tags["user-type"]
-	delete(tags, "user-type")
-	if tags["turbo"] == "1" {
+	delete(p.m.Tags, "display-name")
+	p.m.User.Type = p.m.Tags["user-type"]
+	delete(p.m.Tags, "user-type")
+	if p.m.Tags["turbo"] == "1" {
 		p.m.User.Turbo = true
 	}
-	delete(tags, "turbo")
-	if tags["mod"] == "1" {
+	delete(p.m.Tags, "turbo")
+	if p.m.Tags["mod"] == "1" {
 		p.m.User.Mod = true
 	}
-	delete(tags, "mod")
-	if tags["subscriber"] == "1" {
+	delete(p.m.Tags, "mod")
+	if p.m.Tags["subscriber"] == "1" {
 		p.m.User.Sub = true
 	}
-	delete(tags, "subscriber")
-
-	p.m.Tags = tags
+	delete(p.m.Tags, "subscriber")
 }
 
-func (p *parse) readExtendedTags(tags map[string]string) {
-	switch tags["msg-id"] {
+func (p *parse) parseExtendedTags() {
+	// Parse twitch emotes from the "emotes" tag
+	p.parseTwitchEmotes(p.m.Tags["emotes"])
+	delete(p.m.Tags, "emotes")
+
+	switch p.m.Tags["msg-id"] {
 	case "resub":
 		p.m.Type = common.MsgReSub
+
+	case "":
+		break
 
 	default:
 		p.m.Type = common.MsgUnknown
 	}
+
+	if p.m.Tags["login"] != "" {
+		p.m.User.Name = p.m.Tags["login"]
+	}
 }
 
-func (p *parse) getMessage(msg string) {
-	if strings.HasPrefix(msg, ":") {
-		msg = strings.Replace(msg, ":", "", 1)
+/*
+XXX: Should user properties stay at their zero value when there are no tags? Do we even care about this scenario?
+*/
+func (p *parse) parseTags(msg string) {
+	p.m.Tags = make(map[string]string)
+	// IRCv3-tags are separated by semicolons
+	for _, tagValue := range strings.Split(msg, ";") {
+		spl := strings.Split(tagValue, "=")
+		k := spl[0]
+		v := strings.Replace(spl[1], "\\s", " ", -1)
+		p.m.Tags[k] = v
 	}
-	mSplit := strings.SplitN(msg, " :", 2)
-	if len(mSplit) >= 2 {
-		p.m.Message = strings.SplitN(msg, " :", 2)[1]
+
+	p.parseTagValues()
+
+}
+
+func (p *parse) parseSource(msg string) {
+	msg = msg[1:]
+	// Check if the source is a user
+	userSepPos := strings.Index(msg, "!")
+	hostSepPos := strings.Index(msg, "@")
+	if userSepPos > -1 && hostSepPos > -1 && userSepPos < hostSepPos {
+		// A valid user address is found!
+		p.m.User.Name = msg[0:userSepPos]
 	}
-	p.m.User.Name = strings.SplitN(msg, "!", 2)[0]
-	cSplit := strings.SplitN(msg, "#", 3)
-	if len(cSplit) >= 2 {
-		p.m.Channel = strings.SplitN(cSplit[1], " ", 2)[0]
+	log.Debug(msg)
+}
+
+func (p *parse) parseMsgType(msg string) {
+	switch msg {
+	case "PRIVMSG":
+		p.m.Type = common.MsgPrivmsg
+
+	case "WHISPER":
+		p.m.Type = common.MsgWhisper
+
+	case "USERNOTICE":
+		p.m.Type = common.MsgUsernotice
 	}
+}
+
+func (p *parse) parseChannel(msg string) {
+	p.m.Channel = strings.Replace(msg[1:], "#", "", 0)
+}
+
+func (p *parse) parseMessage(msg string) {
+	p.m.Message = msg[1:]
+
+	// figure out whether the message is an ACTION or not
 	p.getAction()
 }
 
@@ -193,6 +220,7 @@ func (p *parse) getAction() {
 	}
 }
 
+// TODO: rewrite (@pajlada)
 func (p *parse) sub() {
 	m := p.m.Message
 	if strings.Contains(m, "just ") {

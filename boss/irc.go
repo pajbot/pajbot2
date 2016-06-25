@@ -110,22 +110,22 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					// Throw away its own messages
 					continue
 				}
-				log.Debug(m.Type)
 				switch m.Type {
 				case common.MsgPrivmsg, common.MsgWhisper:
 					irc.GetGlobalUser(&m)
-					if m.Channel != "" {
-						// dont freeze if there is no bot for the channel
-						if b, ok := irc.bots[m.Channel]; ok {
-							b <- m
-						}
+					if b := irc.getBot(m.Channel); b != nil {
+						b <- m
 					} else {
-						log.Debug("No channel for message")
+						log.Debugf("No channel for message (chan: %s)", m.Channel)
 					}
 				case common.MsgSub:
 					// Post sub to sub channel
 					log.Debugf("%s just subbed!", m.User.DisplayName)
-					break
+					if b := irc.getBot(m.Channel); b != nil {
+						b <- m
+					} else {
+						log.Debugf("MsgSub No channel for message (chan: %s)", m.Channel)
+					}
 				case common.MsgReSub:
 					months, err := strconv.Atoi(m.Tags["msg-param-months"])
 					if err != nil {
@@ -134,6 +134,12 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					}
 					// TODO: check room-id
 					log.Debugf("%s just resubbed for %d months", m.User.DisplayName, months)
+
+					if b := irc.getBot(m.Channel); b != nil {
+						b <- m
+					} else {
+						log.Debugf("MsgReSub No channel for message (chan: %s)", m.Channel)
+					}
 				case common.MsgThrowAway:
 					// Do nothing
 					break
@@ -242,4 +248,13 @@ func Init(config *common.Config) *Irc {
 	}
 	go irc.JoinChannels(config.Channels)
 	return irc
+}
+
+// XXX: rename to getBotChannel? idk
+func (irc *Irc) getBot(channel string) chan common.Msg {
+	if b, ok := irc.bots[channel]; ok {
+		return b
+	}
+
+	return nil
 }
