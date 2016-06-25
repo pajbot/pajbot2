@@ -17,7 +17,7 @@ var _ Filter = (*Link)(nil)
 func (Link *Link) Run(m string, msg *common.Msg, action *BanAction) {
 	matches := xurls.Relaxed.FindAllString(m, -1)
 	action.Matches = matches
-	if len(matches) > 0 {
+	if len(matches) > 0 && msg.User.Level < 250 {
 		action.Level = 3
 		action.Reason = fmt.Sprintf("matched links: %v", matches)
 		action.Matched = true
