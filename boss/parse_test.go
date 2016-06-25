@@ -70,7 +70,7 @@ func TestParseMessage(t *testing.T) {
 					},
 				},
 				Tags: map[string]string{
-					"@badges": "broadcaster/1,subscriber/1",
+					"badges":  "broadcaster/1,subscriber/1",
 					"color":   "#CC44FF",
 					"room-id": "11148817",
 					"user-id": "11148817",
@@ -99,7 +99,7 @@ func TestParseMessage(t *testing.T) {
 				Me:      false,
 				Emotes:  []common.Emote{},
 				Tags: map[string]string{
-					"@badges":          "subscriber/1",
+					"badges":           "subscriber/1",
 					"color":            "#FF0000",
 					"room-id":          "11148817",
 					"user-id":          "56871381",
@@ -132,7 +132,7 @@ func TestParseMessage(t *testing.T) {
 				Me:      false,
 				Emotes:  []common.Emote{},
 				Tags: map[string]string{
-					"@badges":          "subscriber/1",
+					"badges":           "subscriber/1",
 					"color":            "#FF0000",
 					"room-id":          "11148817",
 					"user-id":          "56871381",
@@ -165,7 +165,7 @@ func TestParseMessage(t *testing.T) {
 				Me:      false,
 				Emotes:  []common.Emote{},
 				Tags: map[string]string{
-					"@badges": "broadcaster/1,subscriber/1",
+					"badges":  "broadcaster/1,subscriber/1",
 					"color":   "#CC44FF",
 					"room-id": "11148817",
 					"user-id": "11148817",

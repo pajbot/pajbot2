@@ -28,7 +28,7 @@ func (p *parse) Parse(line string) common.Msg {
 	// The message starts with @, that means there are IRCv3 tags available to parse
 	if strings.HasPrefix(line, "@") {
 		splitLine = strings.SplitN(msg, " ", 2)
-		p.parseTags(splitLine[0])
+		p.parseTags(splitLine[0][1:])
 		msg = splitLine[1]
 	}
 
