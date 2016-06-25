@@ -188,6 +188,7 @@ func (irc *Irc) NewBot(channel string) {
 		commandModule,
 		&modules.Pyramid{},
 		&modules.Quit{},
+		&modules.SubAnnounce{},
 		&modules.MyInfo{},
 	}
 	b := bot.NewBot(newbot, _modules)
