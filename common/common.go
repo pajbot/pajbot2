@@ -61,7 +61,7 @@ type Msg struct {
 	Message string
 	Channel string
 	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
-	Length  int     // will be set by a module or length of resub
+	Length  int     // Length of the message (Using a special algorithm, used by Length filter)
 	Me      bool
 	Emotes  []Emote
 	Tags    map[string]string

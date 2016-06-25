@@ -37,7 +37,6 @@ func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) 
 		if a.Matched {
 			action.Response = b.Ban(msg.User.Name, a.Level, a.Reason)
 		}
-		log.Debug(msg.Length)
 		if msg.Length > 400 {
 			action.Response = b.Ban(msg.User.Name, 5, fmt.Sprintf("msg too long %d", msg.Length))
 		}
