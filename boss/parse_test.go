@@ -111,6 +111,39 @@ func TestParseMessage(t *testing.T) {
 			},
 		},
 		{
+			input: "@badges=subscriber/1;color=#FF0000;display-name=JoeMoneyTV;emotes=;login=joemoneytv;mod=0;msg-id=resub;msg-param-months=6;room-id=11148817;subscriber=1;system-msg=JoeMoneyTV\\ssubscribed\\sfor\\s6\\smonths\\sin\\sa\\srow!;turbo=0;user-id=56871381;user-type= :tmi.twitch.tv USERNOTICE #pajlada",
+			expected: common.Msg{
+				User: common.User{
+					ID:           0,
+					Name:         "joemoneytv",
+					DisplayName:  "JoeMoneyTV",
+					Mod:          false,
+					Sub:          true,
+					Turbo:        false,
+					ChannelOwner: false,
+					Type:         "",
+					Level:        0,
+					Points:       0,
+				},
+				Message: "",
+				Channel: "pajlada",
+				Type:    common.MsgReSub,
+				Length:  0,
+				Me:      false,
+				Emotes:  []common.Emote{},
+				Tags: map[string]string{
+					"@badges":          "subscriber/1",
+					"color":            "#FF0000",
+					"room-id":          "11148817",
+					"user-id":          "56871381",
+					"msg-param-months": "6",
+					"msg-id":           "resub",
+					"login":            "joemoneytv",
+					"system-msg":       "JoeMoneyTV subscribed for 6 months in a row!",
+				},
+			},
+		},
+		{
 			input: "@badges=broadcaster/1,subscriber/1;color=#CC44FF;display-name=pajlada;emotes=;mod=1;room-id=11148817;subscriber=1;turbo=0;user-id=11148817;user-type=mod :pajlada!pajlada@pajlada.tmi.twitch.tv PRIVMSG #pajlada :!ping",
 			expected: common.Msg{
 				User: common.User{

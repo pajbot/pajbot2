@@ -49,16 +49,19 @@ func (p *parse) Parse(line string) common.Msg {
 
 	splitLine = strings.SplitN(msg, " ", 2)
 	p.parseChannel(splitLine[0])
-	msg = splitLine[1]
 
-	// Parse message + msg type (if it's a /me message or not)
-	p.parseMessage(msg)
+	if len(splitLine) == 2 {
+		msg = splitLine[1]
 
-	// TODO: fix this sub detection (@pajlada)
-	if p.m.User.Name == "twitchnotify" {
-		if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
-			p.m.Type = common.MsgSub
-			p.sub()
+		// Parse message + msg type (if it's a /me message or not)
+		p.parseMessage(msg)
+
+		// TODO: fix this sub detection (@pajlada)
+		if p.m.User.Name == "twitchnotify" {
+			if !strings.Contains(p.m.Message, " to ") && !strings.Contains(p.m.Message, " while ") {
+				p.m.Type = common.MsgSub
+				p.sub()
+			}
 		}
 	}
 
