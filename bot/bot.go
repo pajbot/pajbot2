@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/pajlada/pajbot2/redismanager"
 
@@ -86,11 +87,24 @@ func (bot *Bot) Sayf(format string, a ...interface{}) {
 	bot.Send <- m
 }
 
+// Timeout sends 2 timeouts with a 500 ms delay
+func (bot *Bot) Timeout(user string, duration int, reason string) {
+	if duration == 0 {
+		return
+	}
+	m := bot.Ban(user, duration, reason)
+	bot.Say(m)
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		bot.Say(m)
+	}()
+}
+
 /*
 Ban returns the ban/TO message and reason, perm ban if duration < 0
 */
 func (bot *Bot) Ban(user string, duration int, reason string) string {
-	if duration < 0 {
+	if duration == -1 {
 		return fmt.Sprintf(".ban %s %s - autoban by pajbot", user, reason)
 	}
 	return fmt.Sprintf(".timeout %s %d %s - autoban by pajbot", user, duration, reason)
