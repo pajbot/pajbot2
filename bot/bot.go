@@ -3,9 +3,8 @@ package bot
 import (
 	"fmt"
 
-	"github.com/pajlada/pajbot2/redismanager"
-
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/redismanager"
 )
 
 /*
@@ -81,9 +80,7 @@ func (bot *Bot) Say(message string) {
 Sayf sends a formatted PRIVMSG to the bots given channel
 */
 func (bot *Bot) Sayf(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	m := fmt.Sprintf("PRIVMSG #%s :%s ", bot.Channel, message)
-	bot.Send <- m
+	bot.Say(fmt.Sprintf(format, a...))
 }
 
 /*
