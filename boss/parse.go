@@ -201,7 +201,9 @@ func (p *parse) parseTags(msg string) {
 }
 
 func (p *parse) parseSource(msg string) {
-	msg = msg[1:]
+	if strings.HasPrefix(msg, ":") {
+		msg = msg[1:]
+	}
 	// Check if the source is a user
 	userSepPos := strings.Index(msg, "!")
 	hostSepPos := strings.Index(msg, "@")
