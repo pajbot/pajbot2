@@ -17,7 +17,7 @@ import (
 	"github.com/pajlada/pajbot2/boss"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/plog"
-	pb_websocket "github.com/pajlada/pajbot2/websocket"
+	"github.com/pajlada/pajbot2/web"
 )
 
 var log = plog.GetLogger()
@@ -149,12 +149,9 @@ func runCmd() {
 	}
 	log.Debug("Done")
 
-	// Start websocket server
-	wsHost := ":2355"
-	log.Debugf("Starting websocket server at %s\n", wsHost)
-	wsBoss := pb_websocket.Init(wsHost)
-	wsBoss.Handler = wsHandler
-	go wsBoss.Run()
+	// Start web server
+	webBoss := web.Init(config)
+	go webBoss.Run()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
