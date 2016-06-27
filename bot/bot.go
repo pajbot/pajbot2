@@ -6,6 +6,7 @@ import (
 
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/redismanager"
+	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 /*
@@ -17,6 +18,7 @@ type Config struct {
 	SendChan chan string
 	Channel  string
 	Redis    *redismanager.RedisManager
+	SQL      *sqlmanager.SQLManager
 }
 
 /*
@@ -29,6 +31,7 @@ type Bot struct {
 	Send    chan string
 	Channel string
 	Redis   *redismanager.RedisManager
+	SQL     *sqlmanager.SQLManager
 	Modules []Module
 }
 
@@ -43,6 +46,7 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Channel: cfg.Channel,
 		Modules: modules,
 		Redis:   cfg.Redis,
+		SQL:     cfg.SQL,
 	}
 }
 

@@ -178,6 +178,7 @@ func (irc *Irc) NewBot(channel string) {
 		ReadChan: read,
 		SendChan: irc.SendChan,
 		Redis:    irc.redis,
+		SQL:      irc.sql,
 	}
 	irc.bots[channel] = read
 	commandModule := &modules.Command{}
