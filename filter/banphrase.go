@@ -1,17 +1,32 @@
 package filter
 
-// BanAction xD , just an idea, this wont really work xD
-type BanAction struct {
-	/*
-	   1 not important
-	   3 timeout worthy
-	   5 sure timeout
-	   7 long timeout
-	   10 perm ban
-	   1-3 will be sent to dashboard
-	*/
-	Level   int
-	Reason  string   // matched ascii filter, matched link filter etc..
-	Matches []string // matched parts of msg
-	Matched bool
+import "strings"
+
+// ContainsWord xD
+func ContainsWord(msg string, bannedWords []BannedWord) int {
+	var lvl int
+	m := strings.ToLower(msg)
+	for _, word := range bannedWords {
+		if strings.Contains(m, word.Word) {
+			if word.Level > lvl {
+				lvl = word.Level
+			}
+		}
+	}
+	return lvl
+}
+
+func ContainsLink(links []string, bannedLinks []BannedLink) int {
+	var lvl int
+	for _, link := range links {
+		link = strings.ToLower(link)
+		for _, bannedLink := range bannedLinks {
+			if link == bannedLink.Link {
+				if bannedLink.Level > lvl {
+					lvl = bannedLink.Level
+				}
+			}
+		}
+	}
+	return lvl
 }

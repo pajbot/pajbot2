@@ -10,15 +10,9 @@ import (
 
 var log = plog.GetLogger()
 
-// Length xD should
-// should this be a filter or a module?
-type Length struct {
-}
-
-var _ Filter = (*Length)(nil)
-
-// Run filter
-func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
+// MessageLength , should this be a module?
+// if not we need filter settings
+func MessageLength(msg *common.Msg) int {
 	var msgLength int
 	var emoteLength int
 	m := msg.Text
@@ -46,4 +40,5 @@ func (length *Length) Run(_ string, msg *common.Msg, action *BanAction) {
 	}
 	msg.Length = msgLength
 	log.Debugf("Message: %s [Length: %d]", msg.Text, msg.Length)
+	return msgLength
 }

@@ -1,8 +1,11 @@
 package filter
 
-import "github.com/pajlada/pajbot2/common"
+type BannedWord struct {
+	Word  string
+	Level int
+}
 
-// Filter is the shared interface for all filters
-type Filter interface {
-	Run(m string, msg *common.Msg, action *BanAction)
+type BannedLink struct {
+	Link  string
+	Level int
 }
