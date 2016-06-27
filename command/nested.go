@@ -1,8 +1,13 @@
 package command
 
+import (
+	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
+)
+
 // A NestedCommand is a command that can trigger another command
 type NestedCommand struct {
-	Triggers []string
+	BaseCommand
 	Commands []Command
 	/* DefaultCommand is the command that would be called if no further argument
 	is sent */
@@ -49,6 +54,6 @@ func (command *NestedCommand) IsTriggered(t string, fullMessage []string, index 
 }
 
 // Run xD
-func (command *NestedCommand) Run() string {
+func (command *NestedCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string {
 	return ""
 }

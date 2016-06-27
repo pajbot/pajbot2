@@ -59,3 +59,9 @@ func NewStringPtr(s string) *string {
 func GetTriggers(message string) []string {
 	return strings.Split(strings.Replace(strings.ToLower(message), "!", "", 1), " ")
 }
+
+// GetTriggersKC returns a list of strings that have been parsed in accordance
+// to the command rules, but keeps the case
+func GetTriggersKC(message string) []string {
+	return strings.Split(strings.Replace(message, "!", "", 1), " ")
+}

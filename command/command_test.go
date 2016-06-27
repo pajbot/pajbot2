@@ -14,9 +14,11 @@ func TestIsTriggered(t *testing.T) {
 	}{
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"a",
-					"b",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"a",
+						"b",
+					},
 				},
 			},
 			message:  "!xd",
@@ -24,22 +26,17 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{},
+				BaseCommand: BaseCommand{
+					Triggers: []string{},
+				},
 			},
 			message:  "!xd",
 			expected: false,
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{},
-			},
-			message:  "",
-			expected: false,
-		},
-		{
-			command: &TextCommand{
-				Triggers: []string{
-					"test",
+				BaseCommand: BaseCommand{
+					Triggers: []string{},
 				},
 			},
 			message:  "",
@@ -47,8 +44,21 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+					},
+				},
+			},
+			message:  "",
+			expected: false,
+		},
+		{
+			command: &TextCommand{
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+					},
 				},
 			},
 			message:  "!testa",
@@ -56,8 +66,10 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+					},
 				},
 			},
 			message:  "!atest",
@@ -65,8 +77,10 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+					},
 				},
 			},
 			message:  "!!test", // the !-parsing is handled by the module
@@ -74,8 +88,10 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+					},
 				},
 			},
 			message:  "!test",
@@ -83,9 +99,11 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
-					"abc",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+						"abc",
+					},
 				},
 			},
 			message:  "!test",
@@ -93,9 +111,11 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
-					"abc",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+						"abc",
+					},
 				},
 			},
 			message:  "!abc",
@@ -103,9 +123,11 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
-					"abc",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+						"abc",
+					},
 				},
 			},
 			message:  "!abcd",
@@ -113,9 +135,11 @@ func TestIsTriggered(t *testing.T) {
 		},
 		{
 			command: &TextCommand{
-				Triggers: []string{
-					"test",
-					"abc",
+				BaseCommand: BaseCommand{
+					Triggers: []string{
+						"test",
+						"abc",
+					},
 				},
 			},
 			message:  "!abcd LALALA",

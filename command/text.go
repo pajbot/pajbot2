@@ -1,8 +1,13 @@
 package command
 
+import (
+	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
+)
+
 // TextCommand xD
 type TextCommand struct {
-	Triggers []string
+	BaseCommand
 	Response string
 }
 
@@ -18,6 +23,7 @@ func (command *TextCommand) IsTriggered(t string, fullMessage []string, index in
 			return true, command
 		}
 	}
+
 	return false, nil
 }
 
@@ -28,6 +34,6 @@ func (command *TextCommand) GetResponse() string {
 }
 
 // Run is the method that will decide what this sort of command will do forsenE
-func (command *TextCommand) Run() string {
+func (command *TextCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string {
 	return command.GetResponse()
 }
