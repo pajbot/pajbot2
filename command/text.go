@@ -37,3 +37,8 @@ func (command *TextCommand) GetResponse() string {
 func (command *TextCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string {
 	return command.GetResponse()
 }
+
+// GetBaseCommand returns the BaseCommand of the current command type
+func (command *TextCommand) GetBaseCommand() *BaseCommand {
+	return &command.BaseCommand
+}

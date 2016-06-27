@@ -57,3 +57,8 @@ func (command *NestedCommand) IsTriggered(t string, fullMessage []string, index 
 func (command *NestedCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string {
 	return ""
 }
+
+// GetBaseCommand returns the BaseCommand of the current command type
+func (command *NestedCommand) GetBaseCommand() *BaseCommand {
+	return &command.BaseCommand
+}

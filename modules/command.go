@@ -156,6 +156,7 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 							Triggers: []string{
 								"command",
 							},
+							Level: 500,
 						},
 						Function: module.createCommand,
 					},
@@ -241,6 +242,13 @@ func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 	}
 	for _, command := range module.commands {
 		if triggered, c := command.IsTriggered(trigger, m, 0); triggered {
+			// Is the user high level enough to use this command?
+			bc := c.GetBaseCommand()
+			if bc.Level > msg.User.Level {
+				log.Warningf("%s tried to use %s, which requires level %d (he is level %d)",
+					msg.User.DisplayName, strings.Join(m, " "), bc.Level, msg.User.Level)
+				return nil
+			}
 			// TODO: Get response first, and skip if the response is nil or something of that sort
 			r := c.Run(b, msg, action)
 			if r != "" {

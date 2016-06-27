@@ -35,3 +35,8 @@ func (command *FuncCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action)
 	command.Function(b, msg, action)
 	return "TEST"
 }
+
+// GetBaseCommand returns the BaseCommand of the current command type
+func (command *FuncCommand) GetBaseCommand() *BaseCommand {
+	return &command.BaseCommand
+}
