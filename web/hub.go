@@ -1,7 +1,5 @@
 package web
 
-import "encoding/json"
-
 // ConnectionHub xD
 type ConnectionHub struct {
 	connections map[*WSConn]bool
@@ -16,20 +14,6 @@ var Hub = ConnectionHub{
 	broadcast:   make(chan []byte),
 	unregister:  make(chan *WSConn),
 	register:    make(chan *WSConn),
-}
-
-// Payload xD
-type Payload struct {
-	Event string `json:"event"`
-}
-
-// ToJSON creates a json string from the payload
-func (p *Payload) ToJSON() (ret []byte) {
-	ret, err := json.Marshal(p)
-	if err != nil {
-		log.Error("Erro marshalling payload:", err)
-	}
-	return
 }
 
 func (h *ConnectionHub) run() {
