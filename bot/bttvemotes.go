@@ -10,7 +10,7 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
-type bttvApi struct {
+type bttvAPI struct {
 	Emotes []map[string]interface{} `json:"emotes"`
 }
 
@@ -21,7 +21,7 @@ func (bot *Bot) LoadBttvEmotes() {
 		log.Fatal(err)
 	}
 	blob, _ := ioutil.ReadAll(req.Body)
-	var data bttvApi
+	var data bttvAPI
 	err = json.Unmarshal(blob, &data)
 	if err != nil {
 		log.Fatal(err)
@@ -46,7 +46,7 @@ func (bot *Bot) LoadBttvEmotes() {
 			Count: 1,
 		}
 		bot.Channel.BttvEmotes[name] = emote
-		log.Debug(emote)
+		//log.Debug(emote)
 	}
 }
 

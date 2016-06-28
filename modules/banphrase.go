@@ -30,6 +30,7 @@ type userHistory struct {
 	time    time.Time
 }
 
+// these define what was actually wrong with the message
 const (
 	Link = iota
 	BannedWord
@@ -159,7 +160,7 @@ func (module *Banphrase) runFilters(msg *common.Msg) (int, string) {
 	var reason string
 	m := msg.Text // TODO: confusables, github.com/FiloSottile/tr39-confusables this is kinda shitty
 	links := filter.LinkFilter(m)
-	log.Debug(links)
+	//log.Debug(links)
 	if msg.User.Level < 250 && len(links) > 0 {
 		lvl = module.Level[Link]
 		reason = "matched link filter"
