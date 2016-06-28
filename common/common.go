@@ -93,6 +93,9 @@ type Config struct {
 	RedisPassword string `json:"redis_password"`
 	RedisDatabase int    `json:"redis_database"`
 
+	WebHost   string `json:"web_host"`
+	WebDomain string `json:"web_domain"`
+
 	SQLDSN string `json:"sql_dsn"`
 
 	TLSKey  string `json:"tls_key"`

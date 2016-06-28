@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/common"
 )
 
 // Boss xD
 type Boss struct {
-	Host string
+	Host   string
+	WSHost string
 }
 
 var (
@@ -20,36 +22,31 @@ var (
 
 // Init returns a webBoss which hosts the website
 func Init(config *common.Config) *Boss {
-	webHost := ":2355" // TEMPORARY
-	boss := &Boss{
-		Host: webHost,
+	b := &Boss{
+		Host:   config.WebHost,
+		WSHost: "ws://" + config.WebDomain + "/ws",
 	}
-	return boss
+	return b
 }
 
 // Run xD
-func (boss *Boss) Run() {
+func (b *Boss) Run() {
 	// start the hub
 	go Hub.run()
 
-	/*
-		r := mux.NewRouter()
-		r.HandleFunc("/ws", boss.wsHandler)
-		r.HandleFunc("/", boss.rootHandler)
-		r.HandleFunc("/dashboard", boss.dashboardHandler)
-	*/
-	http.HandleFunc("/ws", boss.wsHandler)
-	http.HandleFunc("/", boss.rootHandler)
-	http.HandleFunc("/dashboard", boss.dashboardHandler)
+	r := mux.NewRouter()
+	r.HandleFunc("/ws", b.wsHandler)
+	r.HandleFunc("/", b.rootHandler)
+	r.HandleFunc("/dashboard", b.dashboardHandler)
 
-	log.Infof("Starting web on host %s", boss.Host)
-	err := http.ListenAndServe(boss.Host, nil)
+	log.Infof("Starting web on host %s", b.Host)
+	err := http.ListenAndServe(b.Host, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (boss *Boss) rootHandler(w http.ResponseWriter, r *http.Request) {
+func (b *Boss) rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", "<h1>xD</h1>")
 }
 
@@ -61,7 +58,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (boss *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
+func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
