@@ -35,7 +35,7 @@ func (c *WSConn) pongHandler(string) error {
 func (c *WSConn) readPump() {
 	// read shit
 	defer func() {
-		hub.unregister <- c
+		Hub.unregister <- c
 		c.ws.Close()
 	}()
 	c.ws.SetReadLimit(maxMessageSize)
@@ -51,7 +51,7 @@ func (c *WSConn) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		log.Debugf("Got the message %s", message)
-		hub.broadcast <- message
+		Hub.broadcast <- message
 	}
 }
 

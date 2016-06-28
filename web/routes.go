@@ -1,15 +1,22 @@
 package web
 
 import (
-	"io/ioutil"
 	"net/http"
+
+	"github.com/gernest/hot"
 )
 
+var tpl, _ = hot.New(&hot.Config{
+	Watch:          true,
+	BaseName:       "base",
+	Dir:            "web/models/",
+	FilesExtension: []string{".html"},
+})
+
 func (boss *Boss) dashboardHandler(w http.ResponseWriter, r *http.Request) {
-	data, err := ioutil.ReadFile("./web/models/dashboard.html")
-	if err != nil {
-		w.Write([]byte("error: " + err.Error()))
-	} else {
-		w.Write(data)
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
 	}
+	tpl.Execute(w, "dashboard.html", r.Host)
 }

@@ -1,21 +1,38 @@
 package web
 
-// Hub xD
-type Hub struct {
+import "encoding/json"
+
+// ConnectionHub xD
+type ConnectionHub struct {
 	connections map[*WSConn]bool
 	broadcast   chan []byte
 	unregister  chan *WSConn
 	register    chan *WSConn
 }
 
-var hub = Hub{
+// Hub xD
+var Hub = ConnectionHub{
 	connections: make(map[*WSConn]bool),
 	broadcast:   make(chan []byte),
 	unregister:  make(chan *WSConn),
 	register:    make(chan *WSConn),
 }
 
-func (h *Hub) run() {
+// Payload xD
+type Payload struct {
+	Event string `json:"event"`
+}
+
+// ToJSON creates a json string from the payload
+func (p *Payload) ToJSON() (ret []byte) {
+	ret, err := json.Marshal(p)
+	if err != nil {
+		log.Error("Erro marshalling payload:", err)
+	}
+	return
+}
+
+func (h *ConnectionHub) run() {
 	for {
 		select {
 		case conn := <-h.register:
@@ -33,9 +50,14 @@ func (h *Hub) run() {
 				default:
 					// Not sure what this is for
 					close(conn.send)
-					delete(hub.connections, conn)
+					delete(h.connections, conn)
 				}
 			}
 		}
 	}
+}
+
+// Broadcast some data to all connections
+func (h *ConnectionHub) Broadcast(data []byte) {
+	h.broadcast <- data
 }

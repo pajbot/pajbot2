@@ -1,1 +1,91 @@
-<h1>DASHBOARD :P</h1>
+<html>
+    <head>
+        <title>Dashboard</title>
+<script type="text/javascript">
+var ws_host = 'ws://pajlada.com:2355/ws';
+</script>
+<script type="text/javascript">
+var isopen = false;
+function connect_to_ws()
+{
+    if (isopen) {
+        return;
+    }
+    console.log('Connecting to websocket....');
+    socket = new WebSocket(ws_host);
+    socket.binaryType = "arraybuffer";
+    socket.onopen = function() {
+        console.log('Connected!');
+        isopen = true;
+    }
+
+    socket.onmessage = function(e) {
+        if (typeof e.data == "string") {
+            var json_data = JSON.parse(e.data);
+            console.log(json_data);
+            if (json_data['event'] !== undefined) {
+                switch (json_data['event']) {
+                    case 'new_box':
+                        add_random_box(json_data['data']['color']);
+                        break;
+                    case 'new_emote':
+                        add_emote(json_data['data']['emote']);
+                        break;
+                    case 'notification':
+                        add_notification(json_data['data']['message']);
+                        break;
+                    case 'timeout':
+                        add_notification('<span class="user">' + json_data['data']['user'] + '</span> timed out <span class="victim">' + json_data['data']['victim'] + '</span> EleGiggle');
+                        setTimeout(function() {
+                            play_sound('slap');
+                        }, 100);
+                        break;
+                    case 'play_sound':
+                        play_sound(json_data['data']['sample']);
+                        break;
+                    case 'play_custom_sound':
+                        play_custom_sound(json_data['data']['url']);
+                        break;
+                    case 'emote_combo':
+                        refresh_emote_combo(json_data['data']['emote'], json_data['data']['count']);
+                        break;
+                    case 'hsbet_new_game':
+                        hsbet_new_game(json_data['data']['time_left'], json_data['data']['win'], json_data['data']['loss']);
+                        break;
+                    case 'hsbet_update_data':
+                        hsbet_update_data(json_data['data']['win'], json_data['data']['loss']);
+                        break;
+                    case 'show_custom_image':
+                        show_custom_image(json_data['data']);
+                        break;
+                    case 'refresh':
+                    case 'reload':
+                        location.reload(true);
+                        break;
+                }
+            }
+        } else {
+            var arr = new Uint8Array(e.data);
+            var hex = '';
+            for (var i = 0; i < arr.length; i++) {
+                hex += ('00' + arr[i].toString(16)).substr(-2);
+            }
+            //add_row('Binary message received: ' + hex);
+        }
+    }
+
+    socket.onclose = function(e) {
+        socket = null;
+        isopen = false;
+        setTimeout(connect_to_ws, 2500);
+    }
+}
+connect_to_ws();
+</script>
+    </head>
+    <body>
+        <h1>DASHBOARD :P</h1>
+        <h2>hi</h2>
+        asd
+    </body>
+</html>

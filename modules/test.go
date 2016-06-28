@@ -5,6 +5,7 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/web"
 )
 
 /*
@@ -18,6 +19,12 @@ var _ Module = (*Test)(nil)
 
 // Check xD
 func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
+	if msg.Text == "abc" {
+		payload := web.Payload{
+			Event: "xD",
+		}
+		web.Hub.Broadcast(payload.ToJSON())
+	}
 	r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
 	switch msg.Type {
 	case common.MsgRoomState:

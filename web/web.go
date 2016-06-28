@@ -30,7 +30,7 @@ func Init(config *common.Config) *Boss {
 // Run xD
 func (boss *Boss) Run() {
 	// start the hub
-	go hub.run()
+	go Hub.run()
 
 	/*
 		r := mux.NewRouter()
@@ -71,7 +71,7 @@ func (boss *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create a custom connection
 	conn := &WSConn{send: make(chan []byte, 256), ws: ws}
-	hub.register <- conn
+	Hub.register <- conn
 	go conn.writePump()
 	conn.readPump()
 }
