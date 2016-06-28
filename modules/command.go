@@ -87,7 +87,6 @@ func (module *Command) readCommands(rows *sql.Rows) {
 	for rows.Next() {
 		c := command.ReadSQLCommand(rows)
 		if c != nil {
-			log.Debug("Adding command %#v", c)
 			module.AddCommand(c)
 		}
 	}

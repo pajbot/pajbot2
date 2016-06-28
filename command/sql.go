@@ -62,7 +62,6 @@ func ReadSQLCommand(rows *sql.Rows) Command {
 		log.Error(err)
 		return nil
 	}
-	log.Debugf("xD: %#v", sqlCommand)
 	c := TextCommand{
 		BaseCommand: BaseCommand{
 			Triggers: strings.Split(sqlCommand.Triggers, "|"),
