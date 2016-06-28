@@ -33,6 +33,12 @@ $(document).ready(function() {
         };
         socket.send(JSON.stringify(payload));
     });
+    $('#btnQuit').click(function() {
+        var payload = {
+            'event': 'quit'
+        }
+        socket.send(JSON.stringify(payload));
+    });
 });
 
 function connect_to_ws()
@@ -83,9 +89,9 @@ connect_to_ws();
 </script>
     </head>
     <body>
-        <h1>DASHBOARD :P</h1>
-        <h2>hi</h2>
+        <h3>DASHBOARD</h3>
         <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
+        <div><button id="btnQuit">Quit</button></div>
         <textarea cols="80" rows="20" id="chat"></textarea>
         asd
     </body>
