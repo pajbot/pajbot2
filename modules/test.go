@@ -27,6 +27,18 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			},
 		}
 		web.Hub.Broadcast(wsMessage)
+	} else {
+		wsMessage := &web.WSMessage{
+			MessageType: web.MessageTypeDashboard,
+			Payload: &web.Payload{
+				Event: "chat",
+				Data: map[string]string{
+					"text": msg.Text,
+					"user": msg.User.DisplayName,
+				},
+			},
+		}
+		web.Hub.Broadcast(wsMessage)
 	}
 	r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
 	switch msg.Type {

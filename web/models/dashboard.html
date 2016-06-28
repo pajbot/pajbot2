@@ -4,8 +4,15 @@
 <script type="text/javascript">
 var ws_host = '{{.WSHost}}/dashboard';
 </script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <script type="text/javascript">
 var isopen = false;
+
+function add_message(data)
+{
+    $('#chat').val(data['user'] + ': ' + data['text'] + "\n" + $('#chat').val());
+}
+
 function connect_to_ws()
 {
     if (isopen) {
@@ -25,6 +32,9 @@ function connect_to_ws()
             console.log(json_data);
             if (json_data['event'] !== undefined) {
                 switch (json_data['event']) {
+                    case 'chat':
+                        add_message(json_data['data']);
+                        break;
                     case 'new_box':
                         add_random_box(json_data['data']['color']);
                         break;
@@ -86,6 +96,7 @@ connect_to_ws();
     <body>
         <h1>DASHBOARD :P</h1>
         <h2>hi</h2>
+        <textarea cols="80" rows="20" id="chat"></textarea>
         asd
     </body>
 </html>
