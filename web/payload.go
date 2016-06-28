@@ -16,3 +16,11 @@ func (p *Payload) ToJSON() (ret []byte) {
 	}
 	return
 }
+
+// FromJSON fills up a Payload object from a json string
+func (p *Payload) FromJSON(data []byte) {
+	err := json.Unmarshal(data, p)
+	if err != nil {
+		log.Error("Erro unmarshalling payload:", err)
+	}
+}

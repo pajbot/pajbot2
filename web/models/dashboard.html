@@ -7,11 +7,33 @@ var ws_host = '{{.WSHost}}/dashboard';
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <script type="text/javascript">
 var isopen = false;
+var socket = null;
 
 function add_message(data)
 {
     $('#chat').val(data['user'] + ': ' + data['text'] + "\n" + $('#chat').val());
 }
+
+$(document).ready(function() {
+    $('#messageText').keypress(function(e) {
+        if (e.which == 13) {
+            $('#sendMessage').click();
+            return false;
+        }
+    });
+    $('#sendMessage').click(function() {
+        var text = $('#messageText').val();
+        console.log(text);
+        $('#messageText').val('');
+        var payload = {
+            'event': 'chat',
+            'data': {
+                'text': text
+            }
+        };
+        socket.send(JSON.stringify(payload));
+    });
+});
 
 function connect_to_ws()
 {
@@ -34,39 +56,6 @@ function connect_to_ws()
                 switch (json_data['event']) {
                     case 'chat':
                         add_message(json_data['data']);
-                        break;
-                    case 'new_box':
-                        add_random_box(json_data['data']['color']);
-                        break;
-                    case 'new_emote':
-                        add_emote(json_data['data']['emote']);
-                        break;
-                    case 'notification':
-                        add_notification(json_data['data']['message']);
-                        break;
-                    case 'timeout':
-                        add_notification('<span class="user">' + json_data['data']['user'] + '</span> timed out <span class="victim">' + json_data['data']['victim'] + '</span> EleGiggle');
-                        setTimeout(function() {
-                            play_sound('slap');
-                        }, 100);
-                        break;
-                    case 'play_sound':
-                        play_sound(json_data['data']['sample']);
-                        break;
-                    case 'play_custom_sound':
-                        play_custom_sound(json_data['data']['url']);
-                        break;
-                    case 'emote_combo':
-                        refresh_emote_combo(json_data['data']['emote'], json_data['data']['count']);
-                        break;
-                    case 'hsbet_new_game':
-                        hsbet_new_game(json_data['data']['time_left'], json_data['data']['win'], json_data['data']['loss']);
-                        break;
-                    case 'hsbet_update_data':
-                        hsbet_update_data(json_data['data']['win'], json_data['data']['loss']);
-                        break;
-                    case 'show_custom_image':
-                        show_custom_image(json_data['data']);
                         break;
                     case 'refresh':
                     case 'reload':
@@ -96,6 +85,7 @@ connect_to_ws();
     <body>
         <h1>DASHBOARD :P</h1>
         <h2>hi</h2>
+        <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
         <textarea cols="80" rows="20" id="chat"></textarea>
         asd
     </body>

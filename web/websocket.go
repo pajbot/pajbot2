@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 )
 
@@ -59,6 +60,12 @@ func (c *WSConn) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		log.Debugf("Got the message %s", message)
+		payload := &Payload{}
+		log.Debugf("payload 1: %#v", payload)
+		payload.FromJSON(message)
+		log.Debugf("payload 2: %#v", payload)
+		log.Debugf("xD %#v", bot.Bots)
+		//bot.Bots["pajlada"].Say(payload.Data["text"])
 		// TODO: Handle incoming messages
 	}
 }

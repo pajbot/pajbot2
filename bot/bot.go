@@ -43,6 +43,9 @@ type Bot struct {
 	Modules []Module
 }
 
+// Bots is a map of bots, keyed by the channel
+var Bots = make(map[string]*Bot)
+
 /*
 NewBot instansiates a new Bot object with the given Config object
 */
@@ -51,7 +54,7 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Name:       cfg.Channel,
 		BttvEmotes: make(map[string]common.Emote),
 	}
-	return &Bot{
+	b := &Bot{
 		Quit:    cfg.Quit,
 		Read:    cfg.ReadChan,
 		Send:    cfg.SendChan,
@@ -60,6 +63,8 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Redis:   cfg.Redis,
 		SQL:     cfg.SQL,
 	}
+	Bots[cfg.Channel] = b
+	return b
 }
 
 /*
