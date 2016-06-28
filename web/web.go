@@ -35,12 +35,12 @@ func (b *Boss) Run() {
 	go Hub.run()
 
 	r := mux.NewRouter()
-	r.HandleFunc("/ws", b.wsHandler)
+	r.HandleFunc("/ws/{type}", b.wsHandler)
 	r.HandleFunc("/", b.rootHandler)
 	r.HandleFunc("/dashboard", b.dashboardHandler)
 
 	log.Infof("Starting web on host %s", b.Host)
-	err := http.ListenAndServe(b.Host, nil)
+	err := http.ListenAndServe(b.Host, r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,6 +59,21 @@ var upgrader = websocket.Upgrader{
 }
 
 func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	messageTypeString := vars["type"]
+	messageType := MessageTypeNone
+	switch messageTypeString {
+	case "clr":
+		messageType = MessageTypeCLR
+	case "dashboard":
+		messageType = MessageTypeDashboard
+	}
+
+	if messageType == MessageTypeNone {
+		http.Error(w, "Invalid url. Valid urls: /ws/clr and /ws/dashboard", http.StatusBadRequest)
+		return
+	}
+
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
@@ -67,7 +82,11 @@ func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a custom connection
-	conn := &WSConn{send: make(chan []byte, 256), ws: ws}
+	conn := &WSConn{
+		send:        make(chan []byte, 256),
+		ws:          ws,
+		messageType: messageType,
+	}
 	Hub.register <- conn
 	go conn.writePump()
 	conn.readPump()

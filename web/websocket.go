@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/pajlada/pajbot2/common"
 )
 
 const (
@@ -21,11 +22,22 @@ const (
 type WSConn struct {
 	ws   *websocket.Conn
 	send chan []byte
+
+	messageType MessageType
+
+	// user is nil if the user has not authenticated
+	user *common.User
 }
 
 func (c *WSConn) pongHandler(string) error {
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	return nil
+}
+
+// TODO: Fix proper authentication
+// TODO: load user from db/redis/cache
+func (c *WSConn) authenticate(username string) {
+	log.Debugf("Attempting to authenticate as %s", username)
 }
 
 func (c *WSConn) readPump() {
@@ -47,7 +59,7 @@ func (c *WSConn) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		log.Debugf("Got the message %s", message)
-		Hub.broadcast <- message
+		// TODO: Handle incoming messages
 	}
 }
 
@@ -94,4 +106,29 @@ func (c *WSConn) writePump() {
 			}
 		}
 	}
+}
+
+// MessageType is used to help redirect a message to the proper connections
+type MessageType uint8
+
+// All available MessageTypes
+const (
+	MessageTypeAll MessageType = iota
+	MessageTypeNone
+	MessageTypeCLR
+	MessageTypeDashboard
+)
+
+// WSMessage xD
+type WSMessage struct {
+	Channel string
+
+	MessageType MessageType
+
+	// LevelRequired <=0 means the message does not require authentication, otherwise
+	// authentication is required and the users level must be equal to or above
+	// the LevelRequired value
+	LevelRequired int
+
+	Payload *Payload
 }

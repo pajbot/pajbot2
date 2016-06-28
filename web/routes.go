@@ -13,10 +13,16 @@ var tpl, _ = hot.New(&hot.Config{
 	FilesExtension: []string{".html"},
 })
 
-func (boss *Boss) dashboardHandler(w http.ResponseWriter, r *http.Request) {
+type dashboardData struct {
+	WSHost string
+}
+
+func (b *Boss) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	tpl.Execute(w, "dashboard.html", r.Host)
+	tpl.Execute(w, "dashboard.html", dashboardData{
+		WSHost: b.WSHost,
+	})
 }
