@@ -21,7 +21,7 @@ func (module *Quit) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 
 	// TODO: Make sure the User level is the right level
 	if (trigger == "!quit" || trigger == "!exit") && (msg.User.Name == "nuuls" || msg.User.Name == "pajlada") {
-		b.Quit <- "ayy lmao something bad happened xD"
+		b.Quit <- "quit from command by " + msg.User.Name
 	}
 	return nil
 }
