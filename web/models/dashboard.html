@@ -11,7 +11,25 @@ var socket = null;
 
 function add_message(data)
 {
-    $('#chat').val(data['user'] + ': ' + data['text'] + "\n" + $('#chat').val());
+    $('#chat').append($(add_timeout_button(data['user'])));
+    $('#chat').append($("<div class=\"chat-line\">").text(data['user'] + ': ' + data['text']));
+}
+
+function add_timeout_button(user) {
+    var button = $('<input type="button" value="timeout" class="timeout-button">');
+    button.click(function() {
+        console.log("CLICKED ");
+        var payload = {
+            'event': 'timeout',
+            'data': {
+                'target_user': user,
+                'timeout_duration': '3'
+            }
+
+        }
+        socket.send(JSON.stringify(payload));
+    });
+    return button
 }
 
 $(document).ready(function() {
@@ -36,6 +54,14 @@ $(document).ready(function() {
     $('#btnQuit').click(function() {
         var payload = {
             'event': 'quit'
+        }
+        socket.send(JSON.stringify(payload));
+    });
+    $('#btnTimeout').click(function() {
+        var payload = {
+            'event': 'timeout',
+            'target_user': 'nuuls',
+            'timeout_duration': 3
         }
         socket.send(JSON.stringify(payload));
     });
@@ -92,7 +118,10 @@ connect_to_ws();
         <h3>DASHBOARD</h3>
         <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
         <div><button id="btnQuit">Quit</button></div>
-        <textarea cols="80" rows="20" id="chat"></textarea>
+        <div class="chatbox">
+            <ul id="chat">
+            </ul>
+        </div>
         asd
     </body>
 </html>
