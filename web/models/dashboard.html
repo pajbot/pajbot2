@@ -11,8 +11,7 @@
 </style>
 
 <script type="text/javascript">
-// var ws_host = '{{.WSHost}}/dashboard';
-var ws_host = 'ws://localhost:2355/ws/dashboard';
+var ws_host = '[[.WSHost]]/dashboard';
 </script>
 <script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
 <!-- Angular Material requires Angular.js Libraries -->
@@ -122,8 +121,8 @@ app.controller("dashboard", function($scope, $compile) {
             setTimeout(connect_to_ws, 2500);
         }
     }
-    connect_to_ws();
 
+    connect_to_ws();
 });
 
 </script>

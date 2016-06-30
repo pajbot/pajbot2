@@ -3,7 +3,7 @@ package web
 import (
 	"net/http"
 
-	"github.com/gernest/hot"
+	"github.com/pajlada/hot"
 )
 
 var tpl, _ = hot.New(&hot.Config{
@@ -11,6 +11,8 @@ var tpl, _ = hot.New(&hot.Config{
 	BaseName:       "base",
 	Dir:            "web/models/",
 	FilesExtension: []string{".html"},
+	LeftDelim:      "[[",
+	RightDelim:     "]]",
 })
 
 type dashboardData struct {
@@ -22,11 +24,7 @@ func (b *Boss) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	// tpl.Execute(w, "dashboard.html", dashboardData{
-	// 	WSHost: b.WSHost,
-	// })
-
-	// the template thing didnt work because ng also uses {{ }}
-	// and im too tired to fix it LUL
-	http.ServeFile(w, r, "./web/models/dashboard.html")
+	tpl.Execute(w, "dashboard.html", dashboardData{
+		WSHost: b.WSHost,
+	})
 }
