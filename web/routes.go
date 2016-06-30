@@ -22,7 +22,11 @@ func (b *Boss) dashboardHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", 405)
 		return
 	}
-	tpl.Execute(w, "dashboard.html", dashboardData{
-		WSHost: b.WSHost,
-	})
+	// tpl.Execute(w, "dashboard.html", dashboardData{
+	// 	WSHost: b.WSHost,
+	// })
+
+	// the template thing didnt work because ng also uses {{ }}
+	// and im too tired to fix it LUL
+	http.ServeFile(w, r, "./web/models/dashboard.html")
 }
