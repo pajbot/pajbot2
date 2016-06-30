@@ -18,16 +18,16 @@ type bttvAPI struct {
 func (bot *Bot) LoadBttvEmotes() {
 	req, err := http.Get("https://api.betterttv.net/emotes")
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	blob, _ := ioutil.ReadAll(req.Body)
 	var data bttvAPI
 	err = json.Unmarshal(blob, &data)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	if data.Emotes == nil {
-		log.Fatal("no data")
+		log.Error("no data")
 	}
 	for _, e := range data.Emotes {
 		name := e["regex"].(string)

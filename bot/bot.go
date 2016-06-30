@@ -76,7 +76,7 @@ idk
 */
 func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
-	bot.LoadBttvEmotes()
+	go bot.LoadBttvEmotes()
 	for {
 		m := <-bot.Read
 		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
