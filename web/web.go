@@ -39,6 +39,9 @@ func (b *Boss) Run() {
 	r.HandleFunc("/", b.rootHandler)
 	r.HandleFunc("/dashboard", b.dashboardHandler)
 
+	// Serve files statically from ./web/static in /static
+	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
+
 	log.Infof("Starting web on host %s", b.Host)
 	err := http.ListenAndServe(b.Host, r)
 	if err != nil {
