@@ -196,6 +196,7 @@ func (irc *Irc) NewBot(channel string) {
 		&modules.SubAnnounce{},
 		&modules.MyInfo{},
 		&modules.Test{},
+		&modules.Points{},
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()

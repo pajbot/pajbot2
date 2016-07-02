@@ -85,6 +85,16 @@ func (r *RedisManager) GetGlobalUser(channel string, user *common.User, u *commo
 	r.UpdateGlobalUser(channel, user, u)
 }
 
+func (r *RedisManager) IsValidUser(channel string, user string) bool {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	res, err := redis.Bool(conn.Do("HEXISTS", channel+":users:lastseen", user))
+	if err != nil {
+		log.Error(err)
+	}
+	return res
+}
+
 // SetPoints sets the amount of points a user has in the given channel
 func (r *RedisManager) SetPoints(channel string, user *common.User) {
 	conn := r.Pool.Get()
@@ -94,10 +104,10 @@ func (r *RedisManager) SetPoints(channel string, user *common.User) {
 }
 
 // IncrPoints increases the points of a user in the given channel
-func (r *RedisManager) IncrPoints(channel string, user *common.User, incrby int) {
+func (r *RedisManager) IncrPoints(channel string, user string, incrby int) {
 	conn := r.Pool.Get()
 	defer conn.Close()
-	conn.Send("ZINCRBY", channel+":users:points", incrby, user.Name)
+	conn.Send("ZINCRBY", channel+":users:points", incrby, user)
 	conn.Flush()
 }
 
