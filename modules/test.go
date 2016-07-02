@@ -2,6 +2,7 @@ package modules
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -19,6 +20,12 @@ var _ Module = (*Test)(nil)
 
 // Check xD
 func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
+	if msg.User.Level > 1000 {
+		m := strings.Split(msg.Text, " ")
+		if m[0] == "!say" {
+			b.SaySafe(strings.Join(m[1:], " "))
+		}
+	}
 	if msg.Text == "abc" {
 		wsMessage := &web.WSMessage{
 			MessageType: web.MessageTypeDashboard,
