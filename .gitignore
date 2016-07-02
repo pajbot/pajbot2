@@ -1,6 +1,7 @@
 # Ignore binary file
 pajbot2
 *.exe
+*.exe~
 
 # Ignore config files
 config.json
