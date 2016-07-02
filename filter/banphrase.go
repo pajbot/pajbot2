@@ -21,7 +21,7 @@ func ContainsLink(links []string, bannedLinks []BannedLink) int {
 	for _, link := range links {
 		link = strings.ToLower(link)
 		for _, bannedLink := range bannedLinks {
-			if link == bannedLink.Link {
+			if strings.Contains(link, bannedLink.Link) || strings.Contains(bannedLink.Link, link) {
 				if bannedLink.Level > lvl {
 					lvl = bannedLink.Level
 				}
