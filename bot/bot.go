@@ -134,8 +134,7 @@ func (bot *Bot) SaySafe(message string) {
 	case "emoteonly":
 	case "emoteonlyoff":
 	default:
-		log.Errorf("%s not allowed", cmd)
-		return
+		message = " " + message
 	}
 	bot.Say(message)
 }
