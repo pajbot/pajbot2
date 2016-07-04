@@ -143,13 +143,24 @@ func (r *RedisManager) ResetLevel(channel string, user *common.User) {
 }
 
 // UpdateUser saves data about a user in redis
-func (r *RedisManager) UpdateUser(channel string, user *common.User) {
+func (r *RedisManager) UpdateUser(channel string, user *common.User, oldUser *common.User) {
 	conn := r.Pool.Get()
 	defer conn.Close()
 	if user.Name == channel {
 		r.SetLevel(channel, user, 1500)
 	}
 	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
+	conn.Send("HSET", channel+":users:lastactive", user.Name, time.Now().Unix())
+
+	// Update online message count if needed
+	if user.OnlineMessageCount != oldUser.OnlineMessageCount {
+		conn.Send("ZADD", channel+":users:online_message_count", user.OnlineMessageCount, user.Name)
+	}
+
+	// Update offline message count if needed
+	if user.OfflineMessageCount != oldUser.OfflineMessageCount {
+		conn.Send("ZADD", channel+":users:offline_message_count", user.OfflineMessageCount, user.Name)
+	}
 	conn.Flush()
 }
 
@@ -177,6 +188,8 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 		conn.Send("HGET", channel+":users:level", user.Name)
 		conn.Send("ZSCORE", channel+":users:points", user.Name)
 		conn.Send("HGET", channel+":users:lastseen", user.Name)
+		conn.Send("ZSCORE", channel+":users:online_message_count", user.Name)
+		conn.Send("ZSCORE", channel+":users:offline_message_count", user.Name)
 		conn.Flush()
 		// can this be done in a loop somehow?
 		// Level
@@ -190,6 +203,12 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 		res, err = conn.Receive()
 		lastseen, _ := redis.String(res, err)
 		user.LastSeen, _ = time.Parse(time.UnixDate, lastseen)
+		// OnlineMessageCount
+		res, err = conn.Receive()
+		user.OnlineMessageCount, _ = redis.Int(res, err)
+		// OfflineMessageCount
+		res, err = conn.Receive()
+		user.OfflineMessageCount, _ = redis.Int(res, err)
 	} else {
 		r.newUser(channel, user)
 		r.GetUser(channel, user)

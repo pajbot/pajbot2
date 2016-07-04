@@ -5,20 +5,27 @@ import "github.com/pajlada/pajbot2/common"
 /*
 Handle attempts to handle the given message
 */
-func (bot *Bot) Handle(msg common.Msg) {
-	bot.parseBttvEmotes(&msg)
-	defer bot.Redis.UpdateUser(bot.Channel.Name, &msg.User)
+func (b *Bot) Handle(msg common.Msg) {
+	b.parseBttvEmotes(&msg)
+	oldUser := msg.User
+	defer b.Redis.UpdateUser(b.Channel.Name, &msg.User, &oldUser)
 	action := &Action{}
-	for _, module := range bot.Modules {
-		module.Check(bot, &msg, action)
+	for _, module := range b.Modules {
+		module.Check(b, &msg, action)
 
 		if action.Response != "" {
-			bot.Say(action.Response)
+			b.Say(action.Response)
 			action.Response = "" // delete Response
 		}
 
 		if action.Stop {
 			return
 		}
+	}
+
+	if b.Channel.Online {
+		msg.User.OnlineMessageCount++
+	} else {
+		msg.User.OfflineMessageCount++
 	}
 }
