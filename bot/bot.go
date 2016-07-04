@@ -42,6 +42,7 @@ type Bot struct {
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
 	Modules []Module
+	Fmt     *Format
 }
 
 // Bots is a map of bots, keyed by the channel
@@ -77,6 +78,7 @@ idk
 */
 func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
+	bot.Fmt = bot.InitFormatter()
 	go bot.LoadBttvEmotes()
 	for {
 		m := <-bot.Read
@@ -105,6 +107,11 @@ Sayf sends a formatted PRIVMSG to the bots given channel
 */
 func (bot *Bot) Sayf(format string, a ...interface{}) {
 	bot.Say(fmt.Sprintf(format, a...))
+}
+
+// SayFormat sends a formatted and safe message to the bots channel
+func (bot *Bot) SayFormat(line string, msg *common.Msg, a ...interface{}) {
+	bot.SaySafef(bot.Format(line, msg), a...)
 }
 
 /*

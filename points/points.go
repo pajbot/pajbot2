@@ -8,6 +8,7 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
+// GivePoints xD
 func GivePoints(b *bot.Bot, user *common.User, args []string) error {
 	if len(args) < 2 {
 		return errors.New("not enough args xD")

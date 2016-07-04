@@ -1,6 +1,7 @@
 package redismanager
 
 import (
+	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -23,7 +24,7 @@ func Init(config *common.Config) *RedisManager {
 			return nil, err
 		}
 		if config.RedisDatabase >= 0 {
-			_, err := c.Do("SELECT", config.RedisDatabase)
+			_, err = c.Do("SELECT", config.RedisDatabase)
 			if err != nil {
 				log.Fatal("Error while selecting redis db:", err)
 				return nil, err
@@ -85,9 +86,11 @@ func (r *RedisManager) GetGlobalUser(channel string, user *common.User, u *commo
 	r.UpdateGlobalUser(channel, user, u)
 }
 
-func (r *RedisManager) IsValidUser(channel string, user string) bool {
+// IsValidUser checks if the user is in the database
+func (r *RedisManager) IsValidUser(channel string, _user string) bool {
 	conn := r.Pool.Get()
 	defer conn.Close()
+	user := strings.ToLower(_user)
 	res, err := redis.Bool(conn.Do("HEXISTS", channel+":users:lastseen", user))
 	if err != nil {
 		log.Error(err)
@@ -148,6 +151,19 @@ func (r *RedisManager) UpdateUser(channel string, user *common.User) {
 	}
 	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
 	conn.Flush()
+}
+
+// LoadUser returns the user object, all default values if user doesnt exist
+func (r *RedisManager) LoadUser(channel string, user string) common.User {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	u := common.User{}
+	if r.IsValidUser(channel, user) {
+		u.Name = strings.ToLower(user)
+		u.DisplayName = user
+		r.GetUser(channel, &u)
+	}
+	return u
 }
 
 // GetUser fills out missing fields of the given User object
