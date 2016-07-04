@@ -83,9 +83,6 @@ func (bot *Bot) Init() {
 	for {
 		m := <-bot.Read
 		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
-		if m.Type == common.MsgSub {
-			log.Infof("%s subbed for %d months in a row\n", m.User.Name, m.Length)
-		}
 		if m.Type != common.MsgSub {
 			bot.Redis.GetUser(bot.Channel.Name, &m.User)
 		}

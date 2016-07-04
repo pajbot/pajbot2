@@ -61,7 +61,6 @@ type Msg struct {
 	Text    string
 	Channel string
 	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
-	Length  int     // how about renaming this and using it for resub length and bits
 	Me      bool
 	Emotes  []Emote
 	Tags    map[string]string

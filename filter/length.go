@@ -38,7 +38,6 @@ func MessageLength(msg *common.Msg) int {
 			msgLength += 2
 		}
 	}
-	msg.Length = msgLength
-	log.Debugf("Message: %s [Length: %d]", msg.Text, msg.Length)
+	log.Debugf("Message: %s [Length: %d]", msg.Text, msgLength)
 	return msgLength
 }

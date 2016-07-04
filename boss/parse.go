@@ -257,7 +257,6 @@ func (p *parse) getAction() {
 
 func (p *parse) parseNewSub() {
 	p.m.Type = common.MsgSub
-	p.m.Length = 1
 	p.m.User.DisplayName = strings.Split(p.m.Text, " ")[0]
 	p.m.User.Name = strings.ToLower(p.m.User.DisplayName)
 }
