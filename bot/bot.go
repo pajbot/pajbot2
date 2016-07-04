@@ -42,7 +42,6 @@ type Bot struct {
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
 	Modules []Module
-	Fmt     *Format
 }
 
 // Bots is a map of bots, keyed by the channel
@@ -78,7 +77,6 @@ idk
 */
 func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
-	bot.Fmt = bot.InitFormatter()
 	go bot.LoadBttvEmotes()
 	for {
 		m := <-bot.Read

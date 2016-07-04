@@ -1,32 +1,9 @@
 package bot
 
 import (
-	"fmt"
-	"regexp"
-	"strings"
-
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/format"
 )
-
-// Format xD
-type Format struct {
-}
-
-var mainRegex = regexp.MustCompile(`\$\([a-z\.]+\)`)
-var partRegex = regexp.MustCompile(`[a-z]+`)
-
-// command is not a good name, but idk what else to call it
-type command struct {
-	c       string
-	subC    []string
-	rawCmd  string
-	outcome string
-}
-
-// InitFormatter compiles format regexes
-func (bot *Bot) InitFormatter() *Format {
-	return &Format{}
-}
 
 // Format formats the given line xD
 func (bot *Bot) Format(line string, msg *common.Msg) string {
@@ -36,88 +13,9 @@ func (bot *Bot) Format(line string, msg *common.Msg) string {
 			log.Error(r)
 		}
 	}()
-	f := bot.Fmt
-	fmtline, rawCommands := f.parseLine(line)
+	fmtline, rawCommands := format.ParseLine(line)
 	for i := range rawCommands {
-		bot.execCommand(&rawCommands[i], msg)
+		format.ExecCommand(bot.Redis, &rawCommands[i], msg)
 	}
-	return f.formatCommands(fmtline, rawCommands)
-}
-
-func (bot *Bot) execCommand(cmd *command, msg *common.Msg) {
-	switch cmd.c {
-	case "source", "sender":
-		cmd.outcome = bot.formatUser(&msg.User, cmd.subC)
-	case "user":
-		if msg.Args != nil {
-			if bot.Redis.IsValidUser(msg.Channel, msg.Args[0]) {
-				user := bot.Redis.LoadUser(msg.Channel, msg.Args[0])
-				cmd.outcome = bot.formatUser(&user, cmd.subC)
-				return
-			}
-		}
-		cmd.outcome = bot.formatUser(&msg.User, cmd.subC)
-	}
-}
-
-func (bot *Bot) formatUser(user *common.User, cmds []string) string {
-	if cmds == nil {
-		return user.DisplayName
-	}
-	switch cmds[0] {
-	case "name":
-		return user.Name
-	case "points":
-		return fmt.Sprintf("%d", user.Points)
-	case "level":
-		return fmt.Sprintf("%d", user.Level)
-	case "lines":
-		return bot.Fmt.lines(user, cmds[1])
-	default:
-		return user.DisplayName
-	}
-}
-
-func (f *Format) lines(user *common.User, arg string) string {
-	switch arg {
-	case "online":
-		return fmt.Sprintf("%d", user.OnlineMessageCount)
-	case "offline":
-		return fmt.Sprintf("%d", user.OfflineMessageCount)
-	default:
-		return fmt.Sprintf("%d", user.TotalMessageCount)
-	}
-}
-
-func (f *Format) formatCommands(line string, cmds []command) string {
-	log.Debug(line)
-	log.Debug(cmds)
-	for _, c := range cmds {
-		line = strings.Replace(line, c.rawCmd, c.outcome, 1)
-	}
-	log.Debug(line)
-	return line
-}
-
-func (f *Format) parseLine(line string) (string, []command) {
-	log.Debug(line)
-	matches := mainRegex.FindAllString(line, -1)
-	log.Debug(matches)
-	var cmds []command
-	for _, match := range matches {
-		cmdlist := partRegex.FindAllString(match, -1)
-		c := command{
-			c: cmdlist[0],
-		}
-		if len(cmdlist) > 1 {
-			c.subC = cmdlist[1:]
-		}
-		c.rawCmd = match
-		// lazy fix to avoid out of range error
-		c.subC = append(c.subC, "")
-		c.subC = append(c.subC, "")
-		cmds = append(cmds, c)
-	}
-	log.Debug(cmds, line)
-	return line, cmds
+	return format.RunCommands(fmtline, rawCommands)
 }
