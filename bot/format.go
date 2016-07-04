@@ -73,8 +73,21 @@ func (bot *Bot) formatUser(user *common.User, cmds []string) string {
 		return fmt.Sprintf("%d", user.Points)
 	case "level":
 		return fmt.Sprintf("%d", user.Level)
+	case "lines":
+		return bot.Fmt.lines(user, cmds[1])
 	default:
 		return user.DisplayName
+	}
+}
+
+func (f *Format) lines(user *common.User, arg string) string {
+	switch arg {
+	case "online":
+		return fmt.Sprintf("%d", user.OnlineMessageCount)
+	case "offline":
+		return fmt.Sprintf("%d", user.OfflineMessageCount)
+	default:
+		return fmt.Sprintf("%d", user.TotalMessageCount)
 	}
 }
 
@@ -102,6 +115,9 @@ func (f *Format) parseLine(line string) (string, []command) {
 			c.subC = cmdlist[1:]
 		}
 		c.rawCmd = match
+		// lazy fix to avoid out of range error
+		c.subC = append(c.subC, "")
+		c.subC = append(c.subC, "")
 		cmds = append(cmds, c)
 	}
 	log.Debug(cmds, line)
