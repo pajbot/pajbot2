@@ -58,38 +58,42 @@ channel has:
 // Ensure the module implements the interface properly
 var _ Module = (*Command)(nil)
 
-func (module *Command) loadCommands(sql *sqlmanager.SQLManager) {
+func (module *Command) loadCommands(sql *sqlmanager.SQLManager) int {
 	// Fetch rows from pb_command
 	rows, err := sql.Session.Query("SELECT id, channel_id, triggers, response, response_type FROM pb_command")
 
 	if err != nil {
 		log.Error("Error fetching commands:", err)
-		return
+		return 0
 	}
 
-	module.readCommands(rows)
+	return module.readCommands(rows)
 }
 
 // loadCommand loads a command with a given ID
-func (module *Command) loadCommand(sql *sqlmanager.SQLManager, commandID int64) {
+func (module *Command) loadCommand(sql *sqlmanager.SQLManager, commandID int64) int {
 	// Fetch rows from pb_command
 	rows, err := sql.Session.Query("SELECT id, channel_id, triggers, response, response_type FROM pb_command WHERE `id`=?", commandID)
 
 	if err != nil {
 		log.Error("Error fetching commands:", err)
-		return
+		return 0
 	}
 
-	module.readCommands(rows)
+	return module.readCommands(rows)
 }
 
-func (module *Command) readCommands(rows *sql.Rows) {
+func (module *Command) readCommands(rows *sql.Rows) int {
+	numCommands := 0
+
 	for rows.Next() {
 		c := command.ReadSQLCommand(rows)
 		if c != nil {
 			module.AddCommand(c)
+			numCommands++
 		}
 	}
+	return numCommands
 }
 
 // Init initializes something
@@ -223,7 +227,6 @@ func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 	// TODO: use an argument parser so we can have --arguments like --silent and --reply --me --cd=0
 	arguments := triggers[triggerLength:]
 
-	// TODO: parse multiple triggers (separated by |)
 	triggerString := strings.Replace(strings.ToLower(arguments[0]), "!", "", -1)
 	if len(triggerString) == 0 {
 		b.Sayf(usageFormat, strings.Join(triggers[:triggerLength], " "))
@@ -244,7 +247,6 @@ func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 			}
 		}
 	}
-	b.Sayf("%s", strings.Join(triggerList, ","))
 	triggerString = strings.Join(triggerList, "|")
 
 	response := arguments[1:]
@@ -264,12 +266,13 @@ func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 		Response:  strings.Join(response, " "),
 	}
 
-	b.Sayf("CREATING COMMAND XD: %s - user level: %d", msg.Text, msg.User.Level)
-	b.Sayf("Triggers: %s", triggers)
-	b.Sayf("Arguments: %s", arguments)
 	commandID := sqlCommand.Insert(b.SQL.Session)
-	module.loadCommand(b.SQL, commandID)
-	b.Say("xD")
+	addedCommands := module.loadCommand(b.SQL, commandID)
+	if addedCommands == 1 {
+		b.Sayf("Successfully added command with triggers %s", triggerString)
+	} else {
+		b.Sayf("Something went wrong when adding the command, %d commands were added ???", addedCommands)
+	}
 }
 
 func (module *Command) removeCommand(b *bot.Bot, msg *common.Msg, action *bot.Action) {
@@ -297,9 +300,28 @@ func (module *Command) removeCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 		return
 	}
 
-	// TODO: Actually remove the command
-	b.Sayf("Remove command with trigger !%s", trigger)
-	b.Sayf("Command data: %#v", c)
+	bc := c.GetBaseCommand()
+
+	sqlCommand := command.SQLCommand{
+		ID: bc.ID,
+	}
+
+	// Delete from DB
+	err := sqlCommand.Delete(b.SQL.Session)
+	if err != nil {
+		b.Sayf("Error deleting command: %s", err)
+	} else {
+		b.Sayf("Successfully deleted command with trigger !%s", trigger)
+	}
+
+	// Delete from slice
+	for i, fC := range module.commands {
+		fBc := fC.GetBaseCommand()
+		if fBc.ID == bc.ID {
+			module.commands = append(module.commands[:i], module.commands[i+1:]...)
+			break
+		}
+	}
 }
 
 func (module *Command) getTriggeredCommand(text string) command.Command {

@@ -3,6 +3,8 @@ package command
 import (
 	"database/sql"
 	"database/sql/driver"
+	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -64,6 +66,7 @@ func ReadSQLCommand(rows *sql.Rows) Command {
 	}
 	c := TextCommand{
 		BaseCommand: BaseCommand{
+			ID:       sqlCommand.ID,
 			Triggers: strings.Split(sqlCommand.Triggers, "|"),
 		},
 		Response: sqlCommand.Response,
@@ -92,4 +95,34 @@ func (command *SQLCommand) Insert(session *sql.DB) int64 {
 	}
 	log.Debugf("Added new command with ID %d", lastID)
 	return lastID
+}
+
+// Delete deletes the command from the database
+func (command *SQLCommand) Delete(session *sql.DB) error {
+	// Ensure that the command ID is set
+	if command.ID == 0 {
+		return errors.New("Invalid SQLCommand used in Delete")
+	}
+
+	const queryF = `DELETE FROM pb_command WHERE id=?`
+
+	stmt, err := session.Prepare(queryF)
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(command.ID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	// Make sure that exactly one row was deleted
+	if rowsAffected != 1 {
+		return fmt.Errorf("Rows affected is %d when it should be 1", rowsAffected)
+	}
+	return nil
 }
