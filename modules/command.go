@@ -338,8 +338,12 @@ func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 		// TODO: Get response first, and skip if the response is nil or something of that sort
 		r := c.Run(b, msg, action)
 		if r != "" {
-			action.Response = r
-			action.Stop = true
+			args := strings.Split(msg.Text, " ")
+			if len(args) > 1 {
+				msg.Args = args[1:]
+				log.Debug(msg.Args)
+			}
+			b.SayFormat(r, msg)
 		}
 	}
 	return nil

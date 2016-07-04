@@ -61,10 +61,11 @@ type Msg struct {
 	Text    string
 	Channel string
 	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
-	Length  int     // Length of the message (Using a special algorithm, decided by Length filter)
+	Length  int     // how about renaming this and using it for resub length and bits
 	Me      bool
 	Emotes  []Emote
 	Tags    map[string]string
+	Args    []string // needed for bot.Format for now
 }
 
 // Emote xD
