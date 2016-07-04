@@ -167,6 +167,10 @@ func (r *RedisManager) UpdateUser(channel string, user *common.User, oldUser *co
 		conn.Send("ZADD", channel+":users:offline_message_count", user.OfflineMessageCount, user.Name)
 	}
 
+	if user.Points != oldUser.Points {
+		r.IncrPoints(channel, user.Name, user.Points-oldUser.Points)
+	}
+
 	conn.Flush()
 }
 

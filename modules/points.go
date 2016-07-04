@@ -52,6 +52,9 @@ func (module *Points) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 		if err != nil {
 			b.Say(fmt.Sprint(err))
 		}
+	case "!resetpts":
+		msg.User.Points = 0
+		b.Redis.SetPoints(msg.Channel, &msg.User)
 	}
 
 	return nil

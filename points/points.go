@@ -2,6 +2,7 @@ package points
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -16,6 +17,9 @@ func GivePoints(b *bot.Bot, user *common.User, args []string) error {
 	pts, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {
 		return err
+	}
+	if pts > 1000 || pts < -1000 {
+		return fmt.Errorf("you can only give 1000 points at a time pajaHop")
 	}
 	if !b.Redis.IsValidUser(b.Channel.Name, args[0]) {
 		return errors.New("invalid user")

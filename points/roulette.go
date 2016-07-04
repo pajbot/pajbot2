@@ -47,11 +47,9 @@ func (r *Roulette) runRoulette(b *bot.Bot, msg *common.Msg, points int) {
 	user := &msg.User
 	won := rand.Float32() >= 0.5
 	if won {
-		b.Redis.IncrPoints(b.Channel.Name, user.Name, points)
 		user.Points += points
 		b.SayFormat(r.WinMessage, msg, points)
 	} else {
-		b.Redis.IncrPoints(b.Channel.Name, user.Name, -points)
 		user.Points -= points
 		b.SayFormat(r.LoseMessage, msg, points)
 	}
