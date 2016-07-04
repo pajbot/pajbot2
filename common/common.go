@@ -4,22 +4,6 @@ package common
 
 import "time"
 
-// User xD
-type User struct {
-	ID           int
-	Name         string
-	DisplayName  string
-	Mod          bool
-	Sub          bool
-	Turbo        bool
-	ChannelOwner bool
-	Type         string // admin , staff etc
-	Level        int
-	Points       int
-	LastSeen     time.Time // should this be time.Time or int/float?
-	LastActive   time.Time
-}
-
 // GlobalUser will only be used by boss to check if user is admin
 // and to decide what channel to send the message to if its a whisper
 type GlobalUser struct {
