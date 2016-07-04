@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 )
 
@@ -71,8 +70,7 @@ func (c *WSConn) readPump() {
 		case "quit":
 			//bot.Bots["pajlada"].Quit <- "quit from websocket xD"
 		case "timeout":
-			log.Debug(payload.Data)
-			bot.Bots["pajlada"].Timeout(payload.Data["target_user"], 1, "xD")
+			//bot.Bots["pajlada"].Timeout(payload.Data["target_user"], 1, "xD")
 		}
 	}
 }
