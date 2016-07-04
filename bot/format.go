@@ -10,9 +10,10 @@ import (
 
 // Format xD
 type Format struct {
-	re    *regexp.Regexp
-	cmdRe *regexp.Regexp
 }
+
+var mainRegex = regexp.MustCompile(`\$\([a-z\.]+\)`)
+var partRegex = regexp.MustCompile(`[a-z]+`)
 
 // command is not a good name, but idk what else to call it
 type command struct {
@@ -24,10 +25,7 @@ type command struct {
 
 // InitFormatter compiles format regexes
 func (bot *Bot) InitFormatter() *Format {
-	return &Format{
-		re:    regexp.MustCompile(`\$\([a-z\.]+\)`),
-		cmdRe: regexp.MustCompile(`[a-z]+`),
-	}
+	return &Format{}
 }
 
 // Format formats the given line xD
@@ -103,11 +101,11 @@ func (f *Format) formatCommands(line string, cmds []command) string {
 
 func (f *Format) parseLine(line string) (string, []command) {
 	log.Debug(line)
-	matches := f.re.FindAllString(line, -1)
+	matches := mainRegex.FindAllString(line, -1)
 	log.Debug(matches)
 	var cmds []command
 	for _, match := range matches {
-		cmdlist := f.cmdRe.FindAllString(match, -1)
+		cmdlist := partRegex.FindAllString(match, -1)
 		c := command{
 			c: cmdlist[0],
 		}
