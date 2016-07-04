@@ -13,6 +13,7 @@ type User struct {
 	ChannelOwner        bool
 	Type                string // admin , staff etc
 	Level               int
+	TotalMessageCount   int
 	OnlineMessageCount  int
 	OfflineMessageCount int
 	Points              int

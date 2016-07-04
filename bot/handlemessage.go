@@ -28,4 +28,5 @@ func (b *Bot) Handle(msg common.Msg) {
 	} else {
 		msg.User.OfflineMessageCount++
 	}
+	msg.User.TotalMessageCount++
 }

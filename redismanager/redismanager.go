@@ -152,6 +152,11 @@ func (r *RedisManager) UpdateUser(channel string, user *common.User, oldUser *co
 	conn.Send("HSET", channel+":users:lastseen", user.Name, time.Now().Unix())
 	conn.Send("HSET", channel+":users:lastactive", user.Name, time.Now().Unix())
 
+	// Update total message count if needed
+	if user.TotalMessageCount != oldUser.TotalMessageCount {
+		conn.Send("ZADD", channel+":users:total_message_count", user.TotalMessageCount, user.Name)
+	}
+
 	// Update online message count if needed
 	if user.OnlineMessageCount != oldUser.OnlineMessageCount {
 		conn.Send("ZADD", channel+":users:online_message_count", user.OnlineMessageCount, user.Name)
@@ -161,6 +166,7 @@ func (r *RedisManager) UpdateUser(channel string, user *common.User, oldUser *co
 	if user.OfflineMessageCount != oldUser.OfflineMessageCount {
 		conn.Send("ZADD", channel+":users:offline_message_count", user.OfflineMessageCount, user.Name)
 	}
+
 	conn.Flush()
 }
 
@@ -188,6 +194,7 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 		conn.Send("HGET", channel+":users:level", user.Name)
 		conn.Send("ZSCORE", channel+":users:points", user.Name)
 		conn.Send("HGET", channel+":users:lastseen", user.Name)
+		conn.Send("ZSCORE", channel+":users:total_message_count", user.Name)
 		conn.Send("ZSCORE", channel+":users:online_message_count", user.Name)
 		conn.Send("ZSCORE", channel+":users:offline_message_count", user.Name)
 		conn.Flush()
@@ -203,6 +210,9 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 		res, err = conn.Receive()
 		lastseen, _ := redis.String(res, err)
 		user.LastSeen, _ = time.Parse(time.UnixDate, lastseen)
+		// TotalMessageCount
+		res, err = conn.Receive()
+		user.TotalMessageCount, _ = redis.Int(res, err)
 		// OnlineMessageCount
 		res, err = conn.Receive()
 		user.OnlineMessageCount, _ = redis.Int(res, err)
