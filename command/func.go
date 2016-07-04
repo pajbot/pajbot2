@@ -33,7 +33,7 @@ func (command *FuncCommand) IsTriggered(t string, fullMessage []string, index in
 // Run xD
 func (command *FuncCommand) Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string {
 	command.Function(b, msg, action)
-	return "TEST"
+	return ""
 }
 
 // GetBaseCommand returns the BaseCommand of the current command type
