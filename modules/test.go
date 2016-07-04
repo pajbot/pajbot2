@@ -23,7 +23,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!say" {
-			b.SayFormat(msg.Text[4:], msg)
+			b.SayFormat(msg.Text[5:], msg)
 		}
 	}
 	if msg.Text == "abc" {
