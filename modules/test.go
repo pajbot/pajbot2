@@ -33,6 +33,12 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			log.Debug(apirequest.GetStream(m[1]))
 		}
 	}
+	if msg.User.Level > 1000 {
+		m := strings.Split(msg.Text, " ")
+		if m[0] == "!follow" {
+			b.Twitter.Follow(m[1])
+		}
+	}
 	if msg.Text == "abc" {
 		wsMessage := &web.WSMessage{
 			MessageType: web.MessageTypeDashboard,

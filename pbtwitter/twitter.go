@@ -1,61 +1,47 @@
 package pbtwitter
 
 import (
-	"strings"
-
+	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/pajlada/pajbot2/common"
 )
 
-type Client struct {
-	TC   *twitter.Client
-	Bots map[string]*Bot
-}
-
-type Bot struct {
-	Following []string
-	Stream    chan *twitter.Tweet
-}
-
+// Init logs into twitter and starts the stream
 func Init(cfg *common.Config) *Client {
+	// streaming client
 	twitterCfg := oauth1.NewConfig(cfg.TwitterConsumerKey, cfg.TwitterConsumerSecret)
 	token := oauth1.NewToken(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
 	httpClient := twitterCfg.Client(oauth1.NoContext, token)
-	client := twitter.NewClient(httpClient)
-	return &Client{
-		TC:   client,
-		Bots: make(map[string]*Bot),
+	streamClient := twitter.NewClient(httpClient)
+	// rest api client
+	anaconda.SetConsumerKey(cfg.TwitterConsumerKey)
+	anaconda.SetConsumerSecret(cfg.TwitterConsumerSecret)
+	rest := anaconda.NewTwitterApi(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
+
+	c := &Client{
+		StreamClient: streamClient,
+		Bots:         make(map[string]*Bot),
+		Rest:         rest,
 	}
+	go c.loadAllFollowed()
+	go c.stream()
+	return c
 }
 
-func (bot *Bot) Follow(user string) {
-	bot.Following = append(bot.Following, strings.ToLower(user))
-}
-
-func (c *Client) streamToBots(tweet *twitter.Tweet) {
-	log.Debug(tweet.Text)
-	for _, bot := range c.Bots {
-		for _, followedUser := range bot.Following {
-			if strings.ToLower(tweet.User.Name) == followedUser {
-				bot.Stream <- tweet
-			}
+// TODO: store this in redis to avoid rate limits
+func (c *Client) loadAllFollowed() {
+	var all []string
+	pages := c.Rest.GetFriendsListAll(nil)
+	for page := range pages {
+		if page.Error != nil {
+			log.Error(page.Error)
+		}
+		for _, user := range page.Friends {
+			all = append(all, user.Name)
+			log.Debug(user.Name)
 		}
 	}
-}
-
-func (c *Client) Stream() {
-	demux := twitter.NewSwitchDemux()
-	demux.Tweet = func(tweet *twitter.Tweet) {
-		go c.streamToBots(tweet)
-	}
-	params := &twitter.StreamUserParams{
-		With:          "followings",
-		StallWarnings: twitter.Bool(true),
-	}
-	stream, err := c.TC.Streams.User(params)
-	if err != nil {
-		log.Fatal(err)
-	}
-	demux.HandleChan(stream.Messages)
+	c.followedUsers = all
+	c.doneLoading = true
 }

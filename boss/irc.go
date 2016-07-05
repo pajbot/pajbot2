@@ -177,6 +177,7 @@ func (irc *Irc) NewBot(channel string) {
 	irc.twitter.Bots[channel] = &pbtwitter.Bot{
 		Following: []string{"nuulsbot", "nuulss", "pajlada", "pajbot"},
 		Stream:    make(chan *twitter.Tweet, 5),
+		Client:    irc.twitter,
 	}
 	read := make(chan common.Msg)
 	newbot := bot.Config{
@@ -269,7 +270,6 @@ func Init(config *common.Config) *Irc {
 		go irc.send()
 	}
 	go irc.JoinChannels(config.Channels)
-	go irc.twitter.Stream()
 	return irc
 }
 
