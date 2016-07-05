@@ -11,10 +11,10 @@ import (
 	"sync"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
-	"github.com/pajlada/pajbot2/twitter"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"

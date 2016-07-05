@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
-	"github.com/pajlada/pajbot2/twitter"
 )
 
 /*
