@@ -44,6 +44,7 @@ func (c *Client) loadAllFollowed() {
 		log.Debug("loaded twitter follows form redis")
 		return
 	}
+	log.Error(err)
 	v := url.Values{}
 	v.Add("count", "200")
 	pages := c.Rest.GetFriendsListAll(v)

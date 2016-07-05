@@ -92,7 +92,7 @@ func (bot *Bot) Init() {
 			log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
 			go bot.Handle(m)
 		case tweet := <-bot.Twitter.Stream:
-			bot.SaySafef("PogChamp new tweet from %s: %s", tweet.User.Name, tweet.Text)
+			bot.SaySafef("PogChamp new tweet from %s (@%s): %s", tweet.User.Name, tweet.User.ScreenName, tweet.Text)
 		}
 	}
 }
