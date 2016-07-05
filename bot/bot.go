@@ -79,13 +79,17 @@ func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
 	go bot.LoadBttvEmotes()
 	for {
-		m := <-bot.Read
-		// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
-		if m.Type != common.MsgSub {
-			bot.Redis.GetUser(bot.Channel.Name, &m.User)
+		select {
+		case m := <-bot.Read:
+			// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
+			if m.Type != common.MsgSub {
+				bot.Redis.GetUser(bot.Channel.Name, &m.User)
+			}
+			log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
+			go bot.Handle(m)
+			// case tweet := <- bot.Tweets:
+			// 	go handleTweet(tweet)
 		}
-		log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
-		go bot.Handle(m)
 	}
 }
 

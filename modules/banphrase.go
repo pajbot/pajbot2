@@ -75,10 +75,10 @@ func (module *Banphrase) Init(sql *sqlmanager.SQLManager) {
 
 	// default values
 	module.Level = map[int]int{
-		Link:           5,
-		BannedLink:     6,
-		BannedWord:     6,
-		MessageTooLong: 3,
+		Link:           0,
+		BannedLink:     0,
+		BannedWord:     0,
+		MessageTooLong: 0,
 	}
 	module.TimeoutDur = [15]int{
 		0,
