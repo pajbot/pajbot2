@@ -15,7 +15,7 @@ func (bot *Bot) Follow(user string) {
 		}
 	}
 	bot.Following = append(bot.Following, u)
-	bot.Client.Follow(u)
+	go bot.Client.Follow(u)
 }
 
 func (c *Client) streamToBots(tweet *twitter.Tweet) {

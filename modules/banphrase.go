@@ -119,6 +119,9 @@ func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) 
 	}
 	l := module.getTimeoutLevel(msg.User.Name, lvl)
 	dur := module.TimeoutDur[l]
+	if dur < 1 {
+		return nil
+	}
 	b.Timeout(msg.User.Name, dur, reason)
 	action.Stop = true
 

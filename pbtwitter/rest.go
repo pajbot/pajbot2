@@ -20,5 +20,6 @@ func (c *Client) Follow(targetUser string) error {
 	}
 	log.Debug("followed ", user.Name)
 	c.followedUsers = append(c.followedUsers, targetUser)
+	c.redis.SaveTwitterFollows(c.followedUsers)
 	return nil
 }

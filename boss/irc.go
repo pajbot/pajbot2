@@ -175,7 +175,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 // NewBot creates a new bot in the given channel
 func (irc *Irc) NewBot(channel string) {
 	irc.twitter.Bots[channel] = &pbtwitter.Bot{
-		Following: []string{"nuulsbot", "nuulss", "pajlada", "pajbot"},
+		Following: []string{"nuulss", "pajlada", "pajbot"},
 		Stream:    make(chan *twitter.Tweet, 5),
 		Client:    irc.twitter,
 	}
@@ -254,10 +254,10 @@ func Init(config *common.Config) *Irc {
 		bots:       make(map[string]chan common.Msg),
 		redis:      redismanager.Init(config),
 		sql:        sqlmanager.Init(config),
-		twitter:    pbtwitter.Init(config),
 		parser:     &parse{},
 		quit:       config.Quit,
 	}
+	irc.twitter = pbtwitter.Init(config, irc.redis)
 	err := irc.newConn()
 	if err != nil {
 		// Right now we just fatally exit the bot

@@ -4,6 +4,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/pajlada/pajbot2/plog"
+	"github.com/pajlada/pajbot2/redismanager"
 )
 
 var log = plog.GetLogger()
@@ -15,6 +16,7 @@ type Client struct {
 	Rest          *anaconda.TwitterApi
 	followedUsers []string // all users that are followed by given account
 	doneLoading   bool     // wait to load all followed users until following new ones
+	redis         *redismanager.RedisManager
 }
 
 // Bot contains the bots followed users

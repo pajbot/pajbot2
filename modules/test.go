@@ -37,6 +37,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!follow" {
 			b.Twitter.Follow(m[1])
+			b.Sayf("now streaming %s's timeline", m[1])
 		}
 	}
 	if msg.Text == "abc" {
