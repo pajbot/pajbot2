@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/web"
@@ -24,6 +25,12 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!say" {
 			b.SayFormat(msg.Text[5:], msg)
+		}
+	}
+	if msg.User.Level > 1000 {
+		m := strings.Split(msg.Text, " ")
+		if m[0] == "!testapi" {
+			log.Debug(apirequest.GetStream(m[1]))
 		}
 	}
 	if msg.Text == "abc" {
