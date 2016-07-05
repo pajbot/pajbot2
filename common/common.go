@@ -85,6 +85,11 @@ type Config struct {
 	TLSKey  string `json:"tls_key"`
 	TLSCert string `json:"tls_cert"`
 
+	TwitterConsumerKey    string `json:"twitter_consumer_key"`
+	TwitterConsumerSecret string `json:"twitter_consumer_secret"`
+	TwitterAccessToken    string `json:"twitter_access_token"`
+	TwitterAccessSecret   string `json:"twitter_access_secret"`
+
 	Channels []string `json:"channels"`
 
 	Quit chan string

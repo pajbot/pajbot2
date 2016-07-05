@@ -8,6 +8,7 @@ import (
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
+	"github.com/pajlada/pajbot2/twitter"
 )
 
 /*
@@ -20,6 +21,7 @@ type Config struct {
 	Channel  string
 	Redis    *redismanager.RedisManager
 	SQL      *sqlmanager.SQLManager
+	Twitter  *pbtwitter.Bot
 }
 
 // Channel contains data about the channel
@@ -42,6 +44,7 @@ type Bot struct {
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
 	Modules []Module
+	Twitter *pbtwitter.Bot
 }
 
 // Bots is a map of bots, keyed by the channel
@@ -63,6 +66,7 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Modules: modules,
 		Redis:   cfg.Redis,
 		SQL:     cfg.SQL,
+		Twitter: cfg.Twitter,
 	}
 	Bots[cfg.Channel] = b
 	return b
@@ -87,8 +91,8 @@ func (bot *Bot) Init() {
 			}
 			log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
 			go bot.Handle(m)
-			// case tweet := <- bot.Tweets:
-			// 	go handleTweet(tweet)
+		case tweet := <-bot.Twitter.Stream:
+			bot.SaySafef("new tweet from %s PogChamp : %s", tweet.User.Name, tweet.Text)
 		}
 	}
 }

@@ -10,9 +10,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/dghubble/go-twitter/twitter"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
+	"github.com/pajlada/pajbot2/twitter"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -36,6 +38,7 @@ type Irc struct {
 	bots       map[string]chan common.Msg
 	redis      *redismanager.RedisManager
 	sql        *sqlmanager.SQLManager
+	twitter    *pbtwitter.Client
 	parser     *parse
 	quit       chan string
 }
@@ -171,6 +174,10 @@ func (irc *Irc) readConnection(conn net.Conn) {
 
 // NewBot creates a new bot in the given channel
 func (irc *Irc) NewBot(channel string) {
+	irc.twitter.Bots[channel] = &pbtwitter.Bot{
+		Following: []string{"nuulsbot", "nuulss", "pajlada", "pajbot"},
+		Stream:    make(chan *twitter.Tweet, 5),
+	}
 	read := make(chan common.Msg)
 	newbot := bot.Config{
 		Quit:     irc.quit,
@@ -179,6 +186,7 @@ func (irc *Irc) NewBot(channel string) {
 		SendChan: irc.SendChan,
 		Redis:    irc.redis,
 		SQL:      irc.sql,
+		Twitter:  irc.twitter.Bots[channel],
 	}
 	irc.bots[channel] = read
 	commandModule := &modules.Command{}
@@ -245,6 +253,7 @@ func Init(config *common.Config) *Irc {
 		bots:       make(map[string]chan common.Msg),
 		redis:      redismanager.Init(config),
 		sql:        sqlmanager.Init(config),
+		twitter:    pbtwitter.Init(config),
 		parser:     &parse{},
 		quit:       config.Quit,
 	}
@@ -260,6 +269,7 @@ func Init(config *common.Config) *Irc {
 		go irc.send()
 	}
 	go irc.JoinChannels(config.Channels)
+	go irc.twitter.Stream()
 	return irc
 }
 

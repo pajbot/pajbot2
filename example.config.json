@@ -11,5 +11,9 @@
     "broker_host": "localhost:7353",
     "broker_pass": "test",
     "web_host": "localhost:2355",
-    "web_domain": "pajlada.com:2355"
+    "web_domain": "pajlada.com:2355",
+    "twitter_consumer_key": "uhurehhiukewhfkjuerwh",
+    "twitter_consumer_secret": "uiswdhuioefhouiehfouie",
+    "twitter_access_token": "heiufheuifhuefheuofjiol",
+    "twitter_access_secret": "hjukfehuighiurehgiurewhgiu"
 }
