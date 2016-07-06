@@ -40,6 +40,13 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			b.Sayf("now streaming %s's timeline", m[1])
 		}
 	}
+	if msg.User.Level > 1000 {
+		m := strings.Split(msg.Text, " ")
+		if m[0] == "!lasttweet" {
+			tweet := b.Twitter.LastTweetString(m[1])
+			b.Sayf("last tweet from %s ", tweet)
+		}
+	}
 	if msg.Text == "abc" {
 		wsMessage := &web.WSMessage{
 			MessageType: web.MessageTypeDashboard,

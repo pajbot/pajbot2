@@ -28,6 +28,7 @@ func Init(cfg *common.Config, redis *redismanager.RedisManager) *Client {
 		Bots:         make(map[string]*Bot),
 		Rest:         rest,
 		redis:        redis,
+		lastTweets:   make(map[string]*twitter.Tweet),
 	}
 	go c.loadAllFollowed()
 	go c.stream()

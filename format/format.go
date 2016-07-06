@@ -16,8 +16,8 @@ type Command struct {
 	Outcome string
 }
 
-var mainRegex = regexp.MustCompile(`\$\([a-z\.]+\)`)
-var partRegex = regexp.MustCompile(`[a-z]+`)
+var mainRegex = regexp.MustCompile(`\$\([a-z\.\d]+\)`)
+var partRegex = regexp.MustCompile(`[a-z\d]+`)
 
 /*
 ParseLine parses all variables (i.e. $(user)) from a line and returns

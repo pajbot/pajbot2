@@ -36,5 +36,8 @@ func (bot *Bot) ExecCommand(cmd *format.Command, msg *common.Msg) {
 			}
 		}
 		cmd.Outcome = format.ParseUser(&msg.User, cmd.SubC)
+	case "lasttweet":
+		cmd.Outcome = bot.Twitter.LastTweetString(cmd.SubC[0])
 	}
+
 }

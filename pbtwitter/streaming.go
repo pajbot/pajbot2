@@ -30,6 +30,8 @@ func (c *Client) streamToBots(tweet *twitter.Tweet) {
 		log.Debug("RETWEETED OR QUOTED TWEET, NOT STREAMING")
 		return
 	}
+	// cache tweet for lasttweet
+	c.lastTweets[strings.ToLower(tweet.User.ScreenName)] = tweet
 	for _, bot := range c.Bots {
 		for _, followedUser := range bot.Following {
 			if strings.ToLower(tweet.User.ScreenName) == followedUser {
