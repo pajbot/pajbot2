@@ -82,6 +82,8 @@ func (c *Client) LastTweet(user string) (*twitter.Tweet, *anaconda.Tweet) {
 	v := url.Values{}
 	v.Add("count", "1")
 	v.Add("screen_name", user)
+	v.Add("exclude_replies", "true")
+	v.Add("include_rts", "false")
 	tweets, err := c.Rest.GetUserTimeline(v)
 	if err != nil {
 		log.Error(err)
