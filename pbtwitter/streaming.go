@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/pajlada/pajbot2/helper"
 )
 
 // Follow follows given users timeline stream
@@ -45,6 +46,7 @@ func (c *Client) streamToBots(tweet *twitter.Tweet) {
 func (c *Client) stream() {
 	demux := twitter.NewSwitchDemux()
 	demux.Tweet = func(tweet *twitter.Tweet) {
+		tweet.Text = helper.RemoveNewlines(tweet.Text)
 		go c.streamToBots(tweet)
 	}
 	params := &twitter.StreamUserParams{

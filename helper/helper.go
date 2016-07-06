@@ -65,3 +65,10 @@ func GetTriggers(message string) []string {
 func GetTriggersKC(message string) []string {
 	return strings.Split(strings.Replace(message, "!", "", 1), " ")
 }
+
+// RemoveNewlines replaces all \r and \n with spaces
+func RemoveNewlines(s string) string {
+	s = strings.Replace(s, "\r", " ", -1)
+	s = strings.Replace(s, "\n", " ", -1)
+	return s
+}
