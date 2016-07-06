@@ -6,15 +6,14 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/redismanager"
 )
 
 // Command is not a good name, but idk what else to call it
 type Command struct {
-	c       string
-	subC    []string
-	rawCmd  string
-	outcome string
+	C       string
+	SubC    []string
+	RawCmd  string
+	Outcome string
 }
 
 var mainRegex = regexp.MustCompile(`\$\([a-z\.]+\)`)
@@ -32,15 +31,15 @@ func ParseLine(line string) (string, []Command) {
 	for _, match := range matches {
 		cmdlist := partRegex.FindAllString(match, -1)
 		c := Command{
-			c: cmdlist[0],
+			C: cmdlist[0],
 		}
 		if len(cmdlist) > 1 {
-			c.subC = cmdlist[1:]
+			c.SubC = cmdlist[1:]
 		}
-		c.rawCmd = match
+		c.RawCmd = match
 		// lazy fix to avoid out of range error
-		c.subC = append(c.subC, "")
-		c.subC = append(c.subC, "")
+		c.SubC = append(c.SubC, "")
+		c.SubC = append(c.SubC, "")
 		cmds = append(cmds, c)
 	}
 	log.Debug(cmds, line)
@@ -52,28 +51,9 @@ RunCommands applies a list of commands on the given line
 */
 func RunCommands(line string, cmds []Command) string {
 	for _, c := range cmds {
-		line = strings.Replace(line, c.rawCmd, c.outcome, 1)
+		line = strings.Replace(line, c.RawCmd, c.Outcome, 1)
 	}
 	return line
-}
-
-/*
-ExecCommand xD
-*/
-func ExecCommand(redis *redismanager.RedisManager, cmd *Command, msg *common.Msg) {
-	switch cmd.c {
-	case "source", "sender":
-		cmd.outcome = ParseUser(&msg.User, cmd.subC)
-	case "user":
-		if msg.Args != nil {
-			if redis.IsValidUser(msg.Channel, msg.Args[0]) {
-				user := redis.LoadUser(msg.Channel, msg.Args[0])
-				cmd.outcome = ParseUser(&user, cmd.subC)
-				return
-			}
-		}
-		cmd.outcome = ParseUser(&msg.User, cmd.subC)
-	}
 }
 
 /*

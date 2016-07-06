@@ -15,7 +15,26 @@ func (bot *Bot) Format(line string, msg *common.Msg) string {
 	}()
 	fmtline, rawCommands := format.ParseLine(line)
 	for i := range rawCommands {
-		format.ExecCommand(bot.Redis, &rawCommands[i], msg)
+		bot.ExecCommand(&rawCommands[i], msg)
 	}
 	return format.RunCommands(fmtline, rawCommands)
+}
+
+/*
+ExecCommand xD
+*/
+func (bot *Bot) ExecCommand(cmd *format.Command, msg *common.Msg) {
+	switch cmd.C {
+	case "source", "sender":
+		cmd.Outcome = format.ParseUser(&msg.User, cmd.SubC)
+	case "user":
+		if msg.Args != nil {
+			if bot.Redis.IsValidUser(msg.Channel, msg.Args[0]) {
+				user := bot.Redis.LoadUser(msg.Channel, msg.Args[0])
+				cmd.Outcome = format.ParseUser(&user, cmd.SubC)
+				return
+			}
+		}
+		cmd.Outcome = format.ParseUser(&msg.User, cmd.SubC)
+	}
 }
