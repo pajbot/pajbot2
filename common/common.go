@@ -67,11 +67,12 @@ The Config contains all the data required to connect
 to the twitch IRC servers
 */
 type Config struct {
-	Pass       string  `json:"pass"`
-	Nick       string  `json:"nick"`
-	BrokerHost *string `json:"broker_host"`
-	BrokerPass *string `json:"broker_pass"`
-	Silent     bool    `json:"silent"`
+	Pass        string  `json:"pass"`
+	Nick        string  `json:"nick"`
+	BrokerHost  *string `json:"broker_host"`
+	BrokerPass  *string `json:"broker_pass"`
+	BrokerLogin string  `json:"broker_login"`
+	Silent      bool    `json:"silent"`
 
 	RedisHost     string `json:"redis_host"`
 	RedisPassword string `json:"redis_password"`

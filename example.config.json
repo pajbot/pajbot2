@@ -10,6 +10,7 @@
     "sql_dsn": "pajbot2:password@tcp(localhost:3306)/pajbot2_test",
     "broker_host": "localhost:7353",
     "broker_pass": "test",
+    "broker_login": "pajbot2",
     "web_host": "localhost:2355",
     "web_domain": "pajlada.com:2355",
     "twitter_consumer_key": "uhurehhiukewhfkjuerwh",

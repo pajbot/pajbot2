@@ -47,6 +47,21 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			b.Sayf("last tweet from %s ", tweet)
 		}
 	}
+	if msg.User.Level > 1000 {
+		m := strings.Split(msg.Text, " ")
+		if m[0] == "!spam" {
+			loops, err := strconv.ParseUint(m[1], 10, 64)
+			if err != nil {
+				b.Sayf("%v", err)
+			}
+			text := strings.Join(m[2:], " ")
+			var i uint64
+			for i < loops {
+				b.Say(text)
+				i++
+			}
+		}
+	}
 	if msg.Text == "abc" {
 		wsMessage := &web.WSMessage{
 			MessageType: web.MessageTypeDashboard,
