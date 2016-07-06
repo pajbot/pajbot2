@@ -34,6 +34,7 @@ type Irc struct {
 	pass        string
 	nick        string
 	conn        net.Conn
+	join        chan string
 	ReadChan    chan string
 	SendChan    chan string
 	bots        map[string]chan common.Msg
@@ -184,12 +185,13 @@ func (irc *Irc) NewBot(channel string) {
 		Stream:    make(chan *twitter.Tweet, 5),
 		Client:    irc.twitter,
 	}
-	read := make(chan common.Msg)
+	read := make(chan common.Msg, 10)
 	newbot := bot.Config{
 		Quit:     irc.quit,
 		Channel:  channel,
 		ReadChan: read,
 		SendChan: irc.SendChan,
+		Join:     irc.join,
 		Redis:    irc.redis,
 		SQL:      irc.sql,
 		Twitter:  irc.twitter.Bots[channel],
@@ -234,11 +236,37 @@ func (irc *Irc) JoinChannel(channel string) {
 }
 
 /*
-JoinChannels joins a list of channels, given as a string slice
+PartChannel leaves a twitch channel
+but the bot is still running and able to post in that chat
+TODO: proper Bot.Close() that stops all its go routines
 */
-func (irc *Irc) JoinChannels(channels []string) {
-	for _, channel := range channels {
-		irc.JoinChannel(channel)
+func (irc *Irc) PartChannel(channel string) {
+	irc.Lock()
+	defer irc.Unlock()
+	if bot, ok := irc.bots[channel]; ok {
+		delete(irc.bots, channel)
+		irc.SendRaw(irc.conn, "PART #"+channel)
+		close(bot)
+		log.Debug("CLOSED BOT IN", channel)
+
+	}
+}
+
+/*
+JoinChannels joins a list of channels, given as a string slice
+can also be used to part channels when using the prefix "PART "
+this might be confusing but a part channel is overkill imo
+*/
+func (irc *Irc) JoinChannels() {
+	for line := range irc.join {
+		log.Debug(line)
+		if strings.HasPrefix(line, "PART ") {
+			channel := strings.Split(line, " ")[1]
+			irc.PartChannel(channel)
+			log.Debug("PART CHANNEL", channel)
+		} else {
+			irc.JoinChannel(line)
+		}
 	}
 }
 
@@ -257,6 +285,7 @@ func Init(config *common.Config) *Irc {
 		nick:        config.Nick,
 		ReadChan:    make(chan string, 10),
 		SendChan:    make(chan string, 10),
+		join:        make(chan string, 5),
 		bots:        make(map[string]chan common.Msg),
 		redis:       redismanager.Init(config),
 		sql:         sqlmanager.Init(config),
@@ -275,7 +304,10 @@ func Init(config *common.Config) *Irc {
 	} else {
 		go irc.send()
 	}
-	go irc.JoinChannels(config.Channels)
+	go irc.JoinChannels()
+	for _, channel := range config.Channels {
+		irc.join <- channel
+	}
 	return irc
 }
 

@@ -18,6 +18,7 @@ type Config struct {
 	Quit     chan string
 	ReadChan chan common.Msg
 	SendChan chan string
+	Join     chan string
 	Channel  string
 	Redis    *redismanager.RedisManager
 	SQL      *sqlmanager.SQLManager
@@ -40,6 +41,7 @@ type Bot struct {
 	Quit    chan string
 	Read    chan common.Msg
 	Send    chan string
+	Join    chan string
 	Channel Channel
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
@@ -62,6 +64,7 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Quit:    cfg.Quit,
 		Read:    cfg.ReadChan,
 		Send:    cfg.SendChan,
+		Join:    cfg.Join,
 		Channel: channel,
 		Modules: modules,
 		Redis:   cfg.Redis,
@@ -82,18 +85,19 @@ idk
 func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
 	go bot.LoadBttvEmotes()
-	for {
-		select {
-		case m := <-bot.Read:
-			// log.Infof("#%s %s :%s\n", m.Channel, m.User.Name, m.Text)
-			if m.Type != common.MsgSub {
-				bot.Redis.GetUser(bot.Channel.Name, &m.User)
-			}
-			log.Debugf("%s is level %d\n", m.User.Name, m.User.Level)
-			go bot.Handle(m)
-		case tweet := <-bot.Twitter.Stream:
-			bot.SaySafef("PogChamp new tweet from %s (@%s): %s", tweet.User.Name, tweet.User.ScreenName, tweet.Text)
-		}
+	go bot.readChat()
+	go bot.readTweets()
+}
+
+func (bot *Bot) readChat() {
+	for m := range bot.Read {
+		go bot.Handle(m)
+	}
+}
+
+func (bot *Bot) readTweets() {
+	for tweet := range bot.Twitter.Stream {
+		bot.SaySafef("PogChamp new tweet from %s (@%s): %s", tweet.User.Name, tweet.User.ScreenName, tweet.Text)
 	}
 }
 
