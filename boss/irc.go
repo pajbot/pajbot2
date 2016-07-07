@@ -227,6 +227,7 @@ func (irc *Irc) NewBot(channel string) {
 JoinChannel joins a twitch chat and creates a new bot if there isnt already one
 */
 func (irc *Irc) JoinChannel(channel string) {
+	channel = strings.ToLower(channel)
 	irc.Lock()
 	defer irc.Unlock()
 	if _, ok := irc.bots[channel]; !ok {
