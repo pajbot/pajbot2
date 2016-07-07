@@ -91,6 +91,9 @@ func (bot *Bot) Init() {
 
 func (bot *Bot) readChat() {
 	for m := range bot.Read {
+		if m.Type != common.MsgSub {
+			bot.Redis.GetUser(bot.Channel.Name, &m.User)
+		}
 		go bot.Handle(m)
 	}
 }
