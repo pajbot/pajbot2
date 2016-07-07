@@ -6,6 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -152,6 +154,9 @@ func runCmd() {
 	// Start web server
 	webBoss := web.Init(config)
 	go webBoss.Run()
+	go func() {
+		log.Error(http.ListenAndServe(":11223", nil))
+	}()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
