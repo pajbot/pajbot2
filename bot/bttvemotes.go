@@ -8,13 +8,9 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
-type bttvAPI struct {
-	Emotes []map[string]interface{} `json:"emotes"`
-}
-
 // LoadBttvEmotes should load emotes from redis, but this should do for now
 func (bot *Bot) LoadBttvEmotes() {
-	channelEmotes, err := apirequest.LoadBttvEmotes(bot.Channel.Name)
+	channelEmotes, err := apirequest.BTTVAPI.LoadEmotes(bot.Channel.Name)
 	if err != nil {
 		log.Error(err)
 		return
@@ -22,7 +18,7 @@ func (bot *Bot) LoadBttvEmotes() {
 	for _, emote := range channelEmotes {
 		bot.Channel.BttvEmotes[emote.Name] = emote
 	}
-	globalEmotes, err := apirequest.LoadBttvEmotes("global")
+	globalEmotes, err := apirequest.BTTVAPI.LoadEmotes("global")
 	if err != nil {
 		log.Error(err)
 		return

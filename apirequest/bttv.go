@@ -8,11 +8,19 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
-type bttvAPI struct {
-	Emotes []map[string]interface{} `json:"emotes"`
+type bttvEmoteMap []map[string]interface{}
+
+type bttvEmotesAPI struct {
+	Emotes bttvEmoteMap `json:"emotes"`
 }
 
-func LoadBttvEmotes(channel string) ([]common.Emote, error) {
+type bttv struct {
+}
+
+// BTTVAPI contains all methods relevant to the bttv api
+var BTTVAPI = bttv{}
+
+func (b *bttv) LoadEmotes(channel string) ([]common.Emote, error) {
 	var url string
 	if channel == "global" {
 		url = "https://api.betterttv.net/emotes"
@@ -24,7 +32,7 @@ func LoadBttvEmotes(channel string) ([]common.Emote, error) {
 		log.Error(err)
 		return nil, err
 	}
-	var data bttvAPI
+	var data bttvEmotesAPI
 	err = json.Unmarshal(blob, &data)
 	if err != nil {
 		log.Error(err)
@@ -33,14 +41,15 @@ func LoadBttvEmotes(channel string) ([]common.Emote, error) {
 		log.Error("no data")
 	}
 	if channel == "global" {
-		return globalEmotes(data), nil
+		return globalEmotes(data.Emotes), nil
 	}
-	return channelEmotes(data), nil
+	return channelEmotes(data.Emotes), nil
 }
 
-func globalEmotes(data bttvAPI) []common.Emote {
+// filter out global emotes
+func globalEmotes(allEmotes bttvEmoteMap) []common.Emote {
 	var emotes []common.Emote
-	for _, e := range data.Emotes {
+	for _, e := range allEmotes {
 		name := e["regex"].(string)
 		spl := strings.Split(e["url"].(string), "/emote/")[1]
 		id := spl[:len(spl)-3] // remove /1x
@@ -61,9 +70,10 @@ func globalEmotes(data bttvAPI) []common.Emote {
 	return emotes
 }
 
-func channelEmotes(data bttvAPI) []common.Emote {
+// filter out channel emotes
+func channelEmotes(allEmotes bttvEmoteMap) []common.Emote {
 	var emotes []common.Emote
-	for _, e := range data.Emotes {
+	for _, e := range allEmotes {
 		name := e["code"].(string)
 		id := e["id"].(string)
 		isGif := e["imageType"].(string) == "gif"

@@ -20,7 +20,7 @@ func Init(config *common.Config) *SQLManager {
 
 	db, err := sql.Open("mysql", config.SQLDSN)
 	if err != nil {
-		log.Fatal("Error connectin to MySQL:", err)
+		log.Fatal("Error connecting to MySQL:", err)
 	}
 	// TODO: Close database
 

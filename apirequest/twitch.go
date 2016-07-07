@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	TwitchTimeFormat = "2006-01-02T15:04:05Z"
-	TwitchAPIUrl     = "https://api.twitch.tv/kraken/%s"
+	twitchTimeFormat = "2006-01-02T15:04:05Z"
+	twitchAPIUrl     = "https://api.twitch.tv/kraken/%s"
 )
 
 type twitchAPIStream struct {
@@ -29,33 +29,36 @@ type twitchAPIChannel struct {
 	Partner   bool    `json:"partner"`
 }
 
-type twitchAPI struct {
+type twitchStreamsChannelAPI struct {
 	Stream  twitchAPIStream  `json:"stream"`
 	Channel twitchAPIChannel `json:"channel"`
 }
 
-func GetStream(channel string) (Stream, error) {
-	var stream Stream
-	bs, err := HTTPRequest(fmt.Sprintf(TwitchAPIUrl, "streams/"+channel))
+type twitch struct {
+}
+
+// TwitchAPI contains all methods relevant to the twitch api
+var TwitchAPI = twitch{}
+
+func (t *twitch) GetStream(channel string) (*Stream, error) {
+	bs, err := HTTPRequest(fmt.Sprintf(twitchAPIUrl, "streams/"+channel))
 	if err != nil {
-		return stream, err
+		return nil, fmt.Errorf("HTTP Error %s", err)
 	}
-	var data twitchAPI
+	var data twitchStreamsChannelAPI
 	err = json.Unmarshal(bs, &data)
 	if err != nil {
-		log.Error(err)
-		return stream, err
+		return nil, fmt.Errorf("Invalid json: %s", err)
 	}
-	log.Debug(data)
 
 	if data.Stream.ID == 0 {
-		// stream offline
-		return stream, nil
+		return nil, fmt.Errorf("Stream offline")
 	}
-	created, err := time.Parse(TwitchTimeFormat, data.Stream.Created)
+	created, err := time.Parse(twitchTimeFormat, data.Stream.Created)
 	if err != nil {
-		log.Error(err)
+		return nil, fmt.Errorf("Invalid date format, probably malformed JSON")
 	}
+	stream := &Stream{}
 	stream.ID = fmt.Sprintf("%.f", data.Stream.ID)
 	stream.Online = !data.Stream.IsPlaylist
 	stream.Created = created

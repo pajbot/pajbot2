@@ -47,7 +47,16 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!testapi" {
-			log.Debug(apirequest.GetStream(m[1]))
+			if len(m) > 1 {
+				stream, err := apirequest.TwitchAPI.GetStream(m[1])
+				if err != nil {
+					b.Sayf("Error when fetching stream: %s", err)
+					return err
+				}
+				b.Sayf("Stream info: %#v", stream)
+			} else {
+				b.Say("Usage: !testapi pajlada")
+			}
 		}
 	}
 	if msg.User.Level > 1000 {
