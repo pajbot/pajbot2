@@ -195,6 +195,7 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 	exist, err := conn.Do("HEXISTS", channel+":users:lastseen", user.Name)
 	e, _ := redis.Bool(exist, err)
 	if e {
+		log.Debug("USER EXISTS")
 		conn.Send("HGET", channel+":users:level", user.Name)
 		conn.Send("ZSCORE", channel+":users:points", user.Name)
 		conn.Send("HGET", channel+":users:lastseen", user.Name)
@@ -223,7 +224,9 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 		// OfflineMessageCount
 		res, err = conn.Receive()
 		user.OfflineMessageCount, _ = redis.Int(res, err)
+		log.Debugf("%+v\n", user)
 	} else {
+		log.Debug("USER DOESNT EXIST")
 		r.newUser(channel, user)
 		r.GetUser(channel, user)
 	}

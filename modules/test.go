@@ -1,6 +1,8 @@
 package modules
 
 import (
+	"io/ioutil"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -21,6 +23,21 @@ var _ Module = (*Test)(nil)
 
 // Check xD
 func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
+	if strings.HasPrefix(msg.Text, "!") {
+		trigger := strings.Split(msg.Text, " ")[0]
+		if strings.ToLower(trigger) == "!relaybroker" {
+			req, err := http.Get("http://localhost:9002/stats")
+			if err != nil {
+				log.Error(err)
+				return nil
+			}
+			bs, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				log.Error(err)
+			}
+			b.SaySafe(string(bs))
+		}
+	}
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!say" {
