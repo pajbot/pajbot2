@@ -242,6 +242,7 @@ but the bot is still running and able to post in that chat
 TODO: proper Bot.Close() that stops all its go routines
 */
 func (irc *Irc) PartChannel(channel string) {
+	channel = strings.ToLower(channel)
 	irc.Lock()
 	defer irc.Unlock()
 	if bot, ok := irc.bots[channel]; ok {
