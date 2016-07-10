@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"math/rand"
 	"strconv"
 	"strings"
 
@@ -36,6 +35,16 @@ func (module *Bingo) usageCommand(b *bot.Bot, msg *common.Msg, action *bot.Actio
 var bingoRunning = false
 var bingoCancelChannel = make(chan bool)
 var bingoMessageChannel = make(chan *common.Msg)
+
+func (module *Bingo) bingoCancel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	if !bingoRunning {
+		b.Say("No bingo is running...")
+		return
+	}
+
+	// cancel bingo
+	bingoCancelChannel <- true
+}
 
 func (module *Bingo) bingoNumber(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 	const usageString = "Usage: !bango number 1-1000 500"
@@ -87,21 +96,26 @@ func (module *Bingo) bingoNumber(b *bot.Bot, msg *common.Msg, action *bot.Action
 		return
 	}
 
+	// Select a random number
+	winningNumber, err := helper.RandIntN(numLow, numHigh)
+	if err != nil {
+		b.Sayf("Invalid numbers: %s", err)
+		return
+	}
+
 	bingoRunning = true
 
-	b.Sayf("say a number between %d and %d", numLow, numHigh)
+	b.Sayf("A number bingo has been started! To win the %d point reward, guess the right number between %d and %d (both inclusive)", pointReward, numLow, numHigh)
 
-	go func(numLow int, numHigh int, pointReward int) {
+	go func(winningNumber int, pointReward int) {
 		defer func() {
 			bingoRunning = false
 		}()
 
-		// Select a random number
-		winningNumber := numLow + rand.Intn(numHigh-numLow)
-
 		for {
 			select {
 			case _ = <-bingoCancelChannel:
+				b.Say("The number bingo has been cancelled")
 				return
 			case newMessage := <-bingoMessageChannel:
 				// Check if the message is good!
@@ -122,7 +136,7 @@ func (module *Bingo) bingoNumber(b *bot.Bot, msg *common.Msg, action *bot.Action
 				}
 			}
 		}
-	}(numLow, numHigh, pointReward)
+	}(winningNumber, pointReward)
 }
 
 func (module *Bingo) topSpammerOnline(b *bot.Bot, msg *common.Msg, action *bot.Action) {
@@ -147,6 +161,16 @@ func (module *Bingo) Init(bot *bot.Bot) {
 		},
 		Function: module.bingoNumber,
 	}
+	cancelCommand := &command.FuncCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"cancel",
+				"stop",
+			},
+			Level: 500,
+		},
+		Function: module.bingoCancel,
+	}
 	usageCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -166,6 +190,7 @@ func (module *Bingo) Init(bot *bot.Bot) {
 		Commands: []command.Command{
 			usageCommand,
 			numberCommand,
+			cancelCommand,
 		},
 		DefaultCommand:  usageCommand,
 		FallbackCommand: usageCommand,
