@@ -208,6 +208,8 @@ func (irc *Irc) NewBot(channel string) {
 	pointsModule.Init(irc.sql)
 	topModule := &modules.Top{}
 	topModule.Init(irc.sql)
+	bingoModule := &modules.Bingo{}
+	bingoModule.Init(irc.sql)
 	_modules := []bot.Module{
 		banphraseModule,
 		commandModule,
@@ -218,6 +220,7 @@ func (irc *Irc) NewBot(channel string) {
 		&modules.Test{},
 		pointsModule,
 		topModule,
+		bingoModule,
 	}
 	b := bot.NewBot(newbot, _modules)
 	go b.Init()

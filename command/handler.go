@@ -18,6 +18,17 @@ func (h *Handler) AddCommand(c Command) {
 	h.commands = append(h.commands, c)
 }
 
+// RemoveCommand removes the given command from the list if commands
+func (h *Handler) RemoveCommand(bc *BaseCommand) {
+	for i, fC := range h.commands {
+		fBc := fC.GetBaseCommand()
+		if fBc.ID == bc.ID {
+			h.commands = append(h.commands[:i], h.commands[i+1:]...)
+			break
+		}
+	}
+}
+
 // GetTriggeredCommand returns the command that was triggered
 func (h *Handler) GetTriggeredCommand(text string) Command {
 	m := helper.GetTriggers(text)

@@ -60,6 +60,16 @@ func GetTriggers(message string) []string {
 	return strings.Split(strings.Replace(strings.ToLower(message), "!", "", 1), " ")
 }
 
+// GetTriggersN returns a list of strings that have been parsed in accordance
+// to the command rules. Offset by N
+func GetTriggersN(message string, n int) []string {
+	triggers := GetTriggers(message)
+	if len(triggers) >= n {
+		return triggers[n:]
+	}
+	return []string{}
+}
+
 // GetTriggersKC returns a list of strings that have been parsed in accordance
 // to the command rules, but keeps the case
 func GetTriggersKC(message string) []string {
