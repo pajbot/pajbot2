@@ -81,7 +81,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
-		if m[0] == "!join" {
+		if m[0] == "!joinchannel" {
 			b.Join <- m[1]
 		}
 	}

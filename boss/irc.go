@@ -208,6 +208,7 @@ func (irc *Irc) NewBot(channel string) {
 		&modules.Test{},
 		&modules.Points{},
 		&modules.Top{},
+		&modules.Raffle{},
 	}
 	b.Modules = _modules
 	for _, mod := range b.Modules {

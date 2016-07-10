@@ -16,6 +16,7 @@ type Points struct {
 
 var _ Module = (*Points)(nil)
 
+// Init xD
 func (module *Points) Init(bot *bot.Bot) {
 	module.Roulette = &points.Roulette{
 		WinMessage:  "$(source) won %d points in roulette and now has $(source.points) points VisLaud",
