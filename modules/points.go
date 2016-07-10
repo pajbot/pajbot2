@@ -7,7 +7,6 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/points"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 // Points module
@@ -17,7 +16,8 @@ type Points struct {
 
 var _ Module = (*Points)(nil)
 
-func (module *Points) Init(sql *sqlmanager.SQLManager) {
+// Init xD
+func (module *Points) Init(bot *bot.Bot) {
 	module.Roulette = &points.Roulette{
 		WinMessage:  "$(source) won %d points in roulette and now has $(source.points) points VisLaud",
 		LoseMessage: "$(source) lost %d points in roulette and now has $(source.points) LUL",

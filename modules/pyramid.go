@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"math"
 	"strings"
 
@@ -18,6 +17,11 @@ type Pyramid struct {
 
 // Ensure the module implements the interface properly
 var _ Module = (*Pyramid)(nil)
+
+// Init xD
+func (module *Pyramid) Init(bot *bot.Bot) {
+
+}
 
 // Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
@@ -58,11 +62,10 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 							}
 						}
 						if peakLen > 2 {
-							m := fmt.Sprintf("%s just finished a %d width %s pyramid PogChamp pajaClap",
+							b.SaySafef("%s just finished a %d width %s pyramid PogChamp //",
 								msg.User.DisplayName,
 								peakLen,
 								pyramidThing)
-							action.Response = m
 						}
 						module.data = make([][]string, 0)
 						module.goingDown = false

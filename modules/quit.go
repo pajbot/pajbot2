@@ -14,6 +14,11 @@ type Quit struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Quit)(nil)
 
+// Init xD
+func (module *Quit) Init(bot *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Quit) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	m := strings.Split(msg.Text, " ")

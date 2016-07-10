@@ -16,6 +16,11 @@ type SubAnnounce struct {
 // Ensure the module implements the interface properly
 var _ Module = (*SubAnnounce)(nil)
 
+// Init xD
+func (module *SubAnnounce) Init(bot *bot.Bot) {
+
+}
+
 // Check xD
 func (module *SubAnnounce) Check(b *bot.Bot, m *common.Msg, action *bot.Action) error {
 	if m.Type == common.MsgSub {

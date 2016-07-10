@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/pajlada/pajbot2/parser"
 	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
@@ -41,7 +42,6 @@ type Irc struct {
 	redis       *redismanager.RedisManager
 	sql         *sqlmanager.SQLManager
 	twitter     *pbtwitter.Client
-	parser      *parse
 	quit        chan string
 }
 
@@ -113,7 +113,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			if strings.HasPrefix(line, "PING") {
 				irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 			} else {
-				m := irc.parser.Parse(line)
+				m := parser.Parse(line)
 				// throw away its own and other useless msgs
 				if m.User.Name == irc.nick {
 					// Throw away its own messages
@@ -197,32 +197,24 @@ func (irc *Irc) NewBot(channel string) {
 		Twitter:  irc.twitter.Bots[channel],
 	}
 	irc.bots[channel] = read
-	commandModule := &modules.Command{}
-	// TODO: This should be generalized (and optional if possible)
-	// Could that be based on module type?
-	// If module.@type == 'NeedsInit' { (cast)module.Init() }
-	commandModule.Init(irc.sql)
-	banphraseModule := &modules.Banphrase{}
-	banphraseModule.Init(irc.sql)
-	pointsModule := &modules.Points{}
-	pointsModule.Init(irc.sql)
-	topModule := &modules.Top{}
-	topModule.Init(irc.sql)
-	bingoModule := &modules.Bingo{}
-	bingoModule.Init(irc.sql)
+	b := bot.NewBot(newbot)
 	_modules := []bot.Module{
-		banphraseModule,
-		commandModule,
+		&modules.Banphrase{},
+		&modules.Command{},
 		&modules.Pyramid{},
 		&modules.Quit{},
 		&modules.SubAnnounce{},
 		&modules.MyInfo{},
 		&modules.Test{},
-		pointsModule,
-		topModule,
-		bingoModule,
+		&modules.Points{},
+		&modules.Top{},
+		&modules.Raffle{},
+		&modules.Bingo{},
 	}
-	b := bot.NewBot(newbot, _modules)
+	b.Modules = _modules
+	for _, mod := range b.Modules {
+		mod.Init(b)
+	}
 	go b.Init()
 }
 
@@ -294,7 +286,6 @@ func Init(config *common.Config) *Irc {
 		bots:        make(map[string]chan common.Msg),
 		redis:       redismanager.Init(config),
 		sql:         sqlmanager.Init(config),
-		parser:      &parse{},
 		quit:        config.Quit,
 	}
 	irc.twitter = pbtwitter.Init(config, irc.redis)

@@ -21,6 +21,11 @@ type Test struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Test)(nil)
 
+// Init xD
+func (module *Test) Init(bot *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if strings.HasPrefix(msg.Text, "!") {
@@ -76,7 +81,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
-		if m[0] == "!join" {
+		if m[0] == "!joinchannel" {
 			b.Join <- m[1]
 		}
 	}
@@ -129,7 +134,8 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		log.Debug("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
 		if r9k != "" && slow != "" {
 			// Initial channel join
-			b.Sayf("initial join. state: r9k:%s, slow:%s, sub:%s", r9k, slow, sub)
+			//b.Sayf("initial join. state: r9k:%s, slow:%s, sub:%s", r9k, slow, sub)
+			b.Say("MrDestructoid")
 		} else {
 			if r9k != "" {
 				if r9k == "1" {

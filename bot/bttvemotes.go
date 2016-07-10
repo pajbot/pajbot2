@@ -34,7 +34,6 @@ func (bot *Bot) parseBttvEmotes(msg *common.Msg) {
 	for _, word := range m {
 		if emote, ok := bot.Channel.BttvEmotes[word]; ok {
 			msg.Emotes = append(msg.Emotes, emote)
-			log.Debug(emote)
 		}
 	}
 }
