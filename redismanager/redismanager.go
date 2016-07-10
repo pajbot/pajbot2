@@ -41,7 +41,6 @@ func Init(config *common.Config) *RedisManager {
 // UpdateGlobalUser sets global values for a user (in other words, values that transcend channels)
 // Only globally banned users and admins have a level in global redis
 func (r *RedisManager) UpdateGlobalUser(channel string, user *common.User, u *common.GlobalUser) {
-	log.Debugf("redis: user: %s  channel: %s", user.Name, channel)
 	conn := r.Pool.Get()
 	conn.Send("HSET", "global:lastactive", user.Name, time.Now().Unix())
 
@@ -195,7 +194,6 @@ func (r *RedisManager) GetUser(channel string, user *common.User) {
 	exist, err := conn.Do("HEXISTS", channel+":users:lastseen", user.Name)
 	e, _ := redis.Bool(exist, err)
 	if e {
-		log.Debug("USER EXISTS")
 		conn.Send("HGET", channel+":users:level", user.Name)
 		conn.Send("ZSCORE", channel+":users:points", user.Name)
 		conn.Send("HGET", channel+":users:lastseen", user.Name)

@@ -24,9 +24,7 @@ ParseLine parses all variables (i.e. $(user)) from a line and returns
 the new line, along with a list of commands
 */
 func ParseLine(line string) (string, []Command) {
-	log.Debug(line)
 	matches := mainRegex.FindAllString(line, -1)
-	log.Debug(matches)
 	var cmds []Command
 	for _, match := range matches {
 		cmdlist := partRegex.FindAllString(match, -1)
@@ -42,7 +40,6 @@ func ParseLine(line string) (string, []Command) {
 		c.SubC = append(c.SubC, "")
 		cmds = append(cmds, c)
 	}
-	log.Debug(cmds, line)
 	return line, cmds
 }
 

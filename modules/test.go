@@ -129,7 +129,8 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		log.Debug("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
 		if r9k != "" && slow != "" {
 			// Initial channel join
-			b.Sayf("initial join. state: r9k:%s, slow:%s, sub:%s", r9k, slow, sub)
+			//b.Sayf("initial join. state: r9k:%s, slow:%s, sub:%s", r9k, slow, sub)
+			b.Say("MrDestructoid")
 		} else {
 			if r9k != "" {
 				if r9k == "1" {

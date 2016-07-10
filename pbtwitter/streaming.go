@@ -25,8 +25,6 @@ func (bot *Bot) Follow(user string) {
 
 func (c *Client) streamToBots(tweet *twitter.Tweet) {
 	log.Debug(tweet.Text)
-	log.Debug(tweet.Retweeted)
-	log.Debugf("%+v", tweet)
 	if tweet.RetweetedStatus != nil || tweet.QuotedStatus != nil {
 		log.Debug("RETWEETED OR QUOTED TWEET, NOT STREAMING")
 		return

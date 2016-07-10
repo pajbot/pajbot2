@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"math"
 	"strings"
 
@@ -58,11 +57,10 @@ func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) er
 							}
 						}
 						if peakLen > 2 {
-							m := fmt.Sprintf("%s just finished a %d width %s pyramid PogChamp pajaClap",
+							b.SaySafef("%s just finished a %d width %s pyramid PogChamp //",
 								msg.User.DisplayName,
 								peakLen,
 								pyramidThing)
-							action.Response = m
 						}
 						module.data = make([][]string, 0)
 						module.goingDown = false
