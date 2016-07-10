@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/pajlada/pajbot2/parser"
 	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
@@ -41,7 +42,6 @@ type Irc struct {
 	redis       *redismanager.RedisManager
 	sql         *sqlmanager.SQLManager
 	twitter     *pbtwitter.Client
-	parser      *parse
 	quit        chan string
 }
 
@@ -113,7 +113,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			if strings.HasPrefix(line, "PING") {
 				irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 			} else {
-				m := irc.parser.Parse(line)
+				m := parser.Parse(line)
 				// throw away its own and other useless msgs
 				if m.User.Name == irc.nick {
 					// Throw away its own messages
@@ -285,7 +285,6 @@ func Init(config *common.Config) *Irc {
 		bots:        make(map[string]chan common.Msg),
 		redis:       redismanager.Init(config),
 		sql:         sqlmanager.Init(config),
-		parser:      &parse{},
 		quit:        config.Quit,
 	}
 	irc.twitter = pbtwitter.Init(config, irc.redis)
