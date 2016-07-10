@@ -10,6 +10,7 @@ func (b *Bot) Handle(msg common.Msg) {
 	oldUser := msg.User
 	defer b.Redis.UpdateUser(b.Channel.Name, &msg.User, &oldUser)
 	action := &Action{}
+	log.Debugf("%s # %s :%s", msg.Channel, msg.User.DisplayName, msg.Text)
 	for _, module := range b.Modules {
 		module.Check(b, &msg, action)
 

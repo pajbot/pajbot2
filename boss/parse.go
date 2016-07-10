@@ -211,7 +211,6 @@ func (p *parse) parseSource(msg string) {
 		// A valid user address is found!
 		p.m.User.Name = msg[0:userSepPos]
 	}
-	log.Debug(msg)
 }
 
 func (p *parse) parseMsgType(msg string) {
