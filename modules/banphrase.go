@@ -7,7 +7,6 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/filter"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 /*
@@ -42,7 +41,7 @@ const (
 var _ Module = (*Banphrase)(nil)
 
 // Init xD
-func (module *Banphrase) Init(sql *sqlmanager.SQLManager) {
+func (module *Banphrase) Init(bot *bot.Bot) {
 	// load banned words and links
 	module.BannedLinks = []filter.BannedLink{
 		filter.BannedLink{

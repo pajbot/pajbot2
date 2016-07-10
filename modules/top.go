@@ -7,7 +7,6 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 /*
@@ -67,7 +66,7 @@ func (module *Top) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Acti
 }
 
 // Init xD
-func (module *Top) Init(sql *sqlmanager.SQLManager) {
+func (module *Top) Init(bot *bot.Bot) {
 	topPointsCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{

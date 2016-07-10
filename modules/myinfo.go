@@ -25,3 +25,8 @@ func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 	}
 	return nil
 }
+
+// Init xD
+func (module *MyInfo) Init(bot *bot.Bot) {
+
+}

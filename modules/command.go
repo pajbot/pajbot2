@@ -60,8 +60,8 @@ func (module *Command) readCommands(rows *sql.Rows) int {
 }
 
 // Init initializes something
-func (module *Command) Init(sql *sqlmanager.SQLManager) {
-	module.loadCommands(sql)
+func (module *Command) Init(bot *bot.Bot) {
+	module.loadCommands(bot.SQL)
 
 	xdCommand := command.TextCommand{
 		BaseCommand: command.BaseCommand{

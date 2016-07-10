@@ -55,7 +55,7 @@ var Bots = make(map[string]*Bot)
 /*
 NewBot instansiates a new Bot object with the given Config object
 */
-func NewBot(cfg Config, modules []Module) *Bot {
+func NewBot(cfg Config) *Bot {
 	channel := Channel{
 		Name:       cfg.Channel,
 		BttvEmotes: make(map[string]common.Emote),
@@ -66,7 +66,6 @@ func NewBot(cfg Config, modules []Module) *Bot {
 		Send:    cfg.SendChan,
 		Join:    cfg.Join,
 		Channel: channel,
-		Modules: modules,
 		Redis:   cfg.Redis,
 		SQL:     cfg.SQL,
 		Twitter: cfg.Twitter,

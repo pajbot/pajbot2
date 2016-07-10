@@ -18,6 +18,11 @@ type Pyramid struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Pyramid)(nil)
 
+// Init xD
+func (module *Pyramid) Init(bot *bot.Bot) {
+
+}
+
 // Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if msg.Type != common.MsgPrivmsg {

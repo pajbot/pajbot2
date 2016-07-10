@@ -21,6 +21,11 @@ type Test struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Test)(nil)
 
+// Init xD
+func (module *Test) Init(bot *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if strings.HasPrefix(msg.Text, "!") {

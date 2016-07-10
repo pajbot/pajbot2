@@ -197,29 +197,22 @@ func (irc *Irc) NewBot(channel string) {
 		Twitter:  irc.twitter.Bots[channel],
 	}
 	irc.bots[channel] = read
-	commandModule := &modules.Command{}
-	// TODO: This should be generalized (and optional if possible)
-	// Could that be based on module type?
-	// If module.@type == 'NeedsInit' { (cast)module.Init() }
-	commandModule.Init(irc.sql)
-	banphraseModule := &modules.Banphrase{}
-	banphraseModule.Init(irc.sql)
-	pointsModule := &modules.Points{}
-	pointsModule.Init(irc.sql)
-	topModule := &modules.Top{}
-	topModule.Init(irc.sql)
+	b := bot.NewBot(newbot)
 	_modules := []bot.Module{
-		banphraseModule,
-		commandModule,
+		&modules.Banphrase{},
+		&modules.Command{},
 		&modules.Pyramid{},
 		&modules.Quit{},
 		&modules.SubAnnounce{},
 		&modules.MyInfo{},
 		&modules.Test{},
-		pointsModule,
-		topModule,
+		&modules.Points{},
+		&modules.Top{},
 	}
-	b := bot.NewBot(newbot, _modules)
+	b.Modules = _modules
+	for _, mod := range b.Modules {
+		mod.Init(b)
+	}
 	go b.Init()
 }
 
