@@ -9,7 +9,6 @@ import (
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/helper"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 type activeBingo struct {
@@ -136,7 +135,7 @@ func (module *Bingo) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Ac
 }
 
 // Init xD
-func (module *Bingo) Init(sql *sqlmanager.SQLManager) {
+func (module *Bingo) Init(bot *bot.Bot) {
 	numberCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
