@@ -79,7 +79,7 @@ func (r *RedisManager) GetGlobalUser(channel string, user *common.User, u *commo
 		res, err = conn.Receive()
 		u.Channel, _ = redis.String(res, err)
 	} else {
-		r.UpdateGlobalUser(channel, user, u)
+		r.UpdateGlobalUser(u.Channel, user, u)
 		r.GetGlobalUser(channel, user, u)
 	}
 	r.UpdateGlobalUser(channel, user, u)
