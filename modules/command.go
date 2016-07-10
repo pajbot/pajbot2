@@ -15,7 +15,7 @@ import (
 Command xD
 */
 type Command struct {
-	commands []command.Command
+	commandHandler command.Handler
 }
 
 // Ensure the module implements the interface properly
@@ -52,7 +52,7 @@ func (module *Command) readCommands(rows *sql.Rows) int {
 	for rows.Next() {
 		c := command.ReadSQLCommand(rows)
 		if c != nil {
-			module.AddCommand(c)
+			module.commandHandler.AddCommand(c)
 			numCommands++
 		}
 	}
@@ -72,7 +72,7 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 		},
 		Response: "pajaSWA",
 	}
-	module.AddCommand(&xdCommand)
+	module.commandHandler.AddCommand(&xdCommand)
 	testCommand := command.NestedCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -100,7 +100,7 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 			},
 		},
 	}
-	module.AddCommand(&testCommand)
+	module.commandHandler.AddCommand(&testCommand)
 
 	// Temporary !admin prefix while it's in development
 	adminCommand := &command.NestedCommand{
@@ -165,12 +165,7 @@ func (module *Command) Init(sql *sqlmanager.SQLManager) {
 			},
 		},
 	}
-	module.AddCommand(adminCommand)
-}
-
-// AddCommand adds the given command to the list of active commands
-func (module *Command) AddCommand(cmd command.Command) {
-	module.commands = append(module.commands, cmd)
+	module.commandHandler.AddCommand(adminCommand)
 }
 
 func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Action) {
@@ -216,7 +211,7 @@ func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 
 	// See if any of the aliases we want to use is already in use
 	for _, trigger := range triggerList {
-		c := module.getTriggeredCommand("!" + trigger)
+		c := module.commandHandler.GetTriggeredCommand("!" + trigger)
 		if c != nil {
 			b.Sayf("Command !%s is already in use.", trigger)
 			return
@@ -257,7 +252,7 @@ func (module *Command) removeCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 
 	trigger := strings.Replace(strings.ToLower(arguments[0]), "!", "", -1)
 
-	c := module.getTriggeredCommand("!" + trigger)
+	c := module.commandHandler.GetTriggeredCommand("!" + trigger)
 	if c == nil {
 		b.Sayf("No command with trigger !%s", trigger)
 		return
@@ -278,58 +273,10 @@ func (module *Command) removeCommand(b *bot.Bot, msg *common.Msg, action *bot.Ac
 	}
 
 	// Delete from slice
-	for i, fC := range module.commands {
-		fBc := fC.GetBaseCommand()
-		if fBc.ID == bc.ID {
-			module.commands = append(module.commands[:i], module.commands[i+1:]...)
-			break
-		}
-	}
-}
-
-func (module *Command) getTriggeredCommand(text string) command.Command {
-	m := helper.GetTriggers(text)
-	trigger := m[0]
-
-	for _, command := range module.commands {
-		if triggered, c := command.IsTriggered(trigger, m, 0); triggered {
-			return c
-		}
-	}
-	return nil
+	module.commandHandler.RemoveCommand(bc)
 }
 
 // Check xD
 func (module *Command) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
-	if len(msg.Text) == 0 {
-		// Do nothing with empty messages
-		return nil
-	}
-
-	m := helper.GetTriggers(msg.Text)
-
-	if msg.Text[0] != '!' {
-		return nil
-	}
-	c := module.getTriggeredCommand(msg.Text)
-	if c != nil {
-		// Is the user high level enough to use this command?
-		bc := c.GetBaseCommand()
-		if bc.Level > msg.User.Level {
-			log.Warningf("%s tried to use %s, which requires level %d (he is level %d)",
-				msg.User.DisplayName, strings.Join(m, " "), bc.Level, msg.User.Level)
-			return nil
-		}
-		// TODO: Get response first, and skip if the response is nil or something of that sort
-		r := c.Run(b, msg, action)
-		if r != "" {
-			args := strings.Split(msg.Text, " ")
-			if len(args) > 1 {
-				msg.Args = args[1:]
-				log.Debug(msg.Args)
-			}
-			b.SayFormat(r, msg)
-		}
-	}
-	return nil
+	return module.commandHandler.Check(b, msg, action)
 }
