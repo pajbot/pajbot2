@@ -13,6 +13,11 @@ type TextCommand struct {
 
 var _ Command = (*TextCommand)(nil)
 
+// OnCooldown checks if the command is on cooldown
+func (command *TextCommand) OnCooldown(user *common.User) bool {
+	return command.BaseCommand.OnCooldown(user)
+}
+
 /*
 IsTriggered returns true if the given string `message` would trigger this command,
 otherwise return false

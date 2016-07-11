@@ -19,6 +19,11 @@ type NestedCommand struct {
 
 var _ Command = (*NestedCommand)(nil)
 
+// OnCooldown checks if the command is on cooldown
+func (command *NestedCommand) OnCooldown(user *common.User) bool {
+	return command.OnCooldown(user)
+}
+
 /*
 IsTriggered returns true with the relevant Command if it finds a match
 */

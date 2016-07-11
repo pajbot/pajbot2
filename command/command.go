@@ -10,4 +10,5 @@ type Command interface {
 	IsTriggered(t string, fullMessage []string, index int) (bool, Command)
 	Run(b *bot.Bot, msg *common.Msg, action *bot.Action) string
 	GetBaseCommand() *BaseCommand
+	OnCooldown(user *common.User) bool
 }

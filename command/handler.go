@@ -2,6 +2,7 @@ package command
 
 import (
 	"strings"
+	"time"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -15,6 +16,11 @@ type Handler struct {
 
 // AddCommand adds the given command to the list of commands
 func (h *Handler) AddCommand(c Command) {
+	bc := c.GetBaseCommand()
+	bc.lastUse = make(map[string]time.Time)
+	// default values for now
+	bc.Cooldown = time.Second * 5
+	bc.UserCooldown = time.Second * 15
 	h.commands = append(h.commands, c)
 }
 
@@ -60,6 +66,10 @@ func (h *Handler) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 		if bc.Level > msg.User.Level {
 			log.Warningf("%s tried to use %s, which requires level %d (he is level %d)",
 				msg.User.DisplayName, strings.Join(m, " "), bc.Level, msg.User.Level)
+			return nil
+		}
+		if c.OnCooldown(&msg.User) {
+			log.Debug("COMMAND IS ON COOLDOWN XDDD")
 			return nil
 		}
 		// TODO: Get response first, and skip if the response is nil or something of that sort
