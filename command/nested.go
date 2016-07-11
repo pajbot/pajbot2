@@ -21,7 +21,7 @@ var _ Command = (*NestedCommand)(nil)
 
 // OnCooldown checks if the command is on cooldown
 func (command *NestedCommand) OnCooldown(user *common.User) bool {
-	return command.OnCooldown(user)
+	return command.BaseCommand.OnCooldown(user)
 }
 
 /*

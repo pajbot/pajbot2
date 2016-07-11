@@ -35,6 +35,9 @@ func (c *BaseCommand) OnCooldown(user *common.User) bool {
 		cd = c.Cooldown
 		usercd = c.UserCooldown
 	}
+	if c.lastUse == nil {
+		c.lastUse = make(map[string]time.Time)
+	}
 	now := time.Now()
 	var onCD bool
 	c.Lock()

@@ -17,7 +17,6 @@ type Handler struct {
 // AddCommand adds the given command to the list of commands
 func (h *Handler) AddCommand(c Command) {
 	bc := c.GetBaseCommand()
-	bc.lastUse = make(map[string]time.Time)
 	// default values for now
 	bc.Cooldown = time.Second * 5
 	bc.UserCooldown = time.Second * 15
