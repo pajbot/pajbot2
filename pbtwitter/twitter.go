@@ -7,12 +7,12 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
-	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/redismanager"
 )
 
 // Init logs into twitter and starts the stream
-func Init(cfg *common.Config, redis *redismanager.RedisManager) *Client {
+func Init(cfg *config.Config, redis *redismanager.RedisManager) *Client {
 	// streaming client
 	twitterCfg := oauth1.NewConfig(cfg.TwitterConsumerKey, cfg.TwitterConsumerSecret)
 	token := oauth1.NewToken(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)

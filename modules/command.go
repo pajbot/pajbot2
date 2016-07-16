@@ -21,7 +21,7 @@ type Command struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Command)(nil)
 
-func (module *Command) loadCommands(sql *sqlmanager.SQLManager) int {
+func (module *Command) loadCommands(sql *sqlmanager.SQLManager, channel common.Channel) int {
 	// Fetch rows from pb_command
 	rows, err := sql.Session.Query("SELECT id, channel_id, triggers, response, response_type FROM pb_command")
 
@@ -61,7 +61,7 @@ func (module *Command) readCommands(rows *sql.Rows) int {
 
 // Init initializes something
 func (module *Command) Init(bot *bot.Bot) {
-	module.loadCommands(bot.SQL)
+	module.loadCommands(bot.SQL, bot.Channel)
 
 	xdCommand := command.TextCommand{
 		BaseCommand: command.BaseCommand{

@@ -6,6 +6,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/helper"
 )
 
@@ -15,7 +16,7 @@ type RedisManager struct {
 }
 
 // Init connects to redis and returns redis client
-func Init(config *common.Config) *RedisManager {
+func Init(config *config.Config) *RedisManager {
 	r := &RedisManager{}
 	pool := redis.NewPool(func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp", config.RedisHost)

@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -17,40 +14,12 @@ import (
 	_ "github.com/mattes/migrate/driver/mysql"
 	"github.com/mattes/migrate/migrate"
 	"github.com/pajlada/pajbot2/boss"
-	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/web"
 )
 
 var log = plog.GetLogger()
-
-/*
-LoadConfig parses a config file from the given json file at the path
-and returns a Config object
-*/
-func LoadConfig(path string) (*common.Config, error) {
-	file, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	config := &common.Config{
-		RedisDatabase: -1,
-	}
-	err = json.Unmarshal(file, config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check for missing fields
-	if config.BrokerHost == nil {
-		return nil, errors.New("Missing field broker_host in config file")
-	}
-	if config.BrokerPass == nil {
-		return nil, errors.New("Missing field broker_pass in config file")
-	}
-
-	return config, nil
-}
 
 func cleanup() {
 	// TODO: Perform cleanups
@@ -75,7 +44,7 @@ func main() {
 
 	switch command {
 	case "check":
-		_, err := LoadConfig(*configPath)
+		_, err := config.LoadConfig(*configPath)
 		if err != nil {
 			log.Error("An error occured while loading the config file:", err)
 			os.Exit(1)
@@ -134,7 +103,7 @@ func wsHandler(conn *websocket.Conn) {
 
 func runCmd() {
 	// TODO: Use config path from system arguments
-	config, err := LoadConfig(*configPath)
+	config, err := config.LoadConfig(*configPath)
 	if err != nil {
 		log.Fatal("An error occured while loading the config file:", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/parser"
 	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/plog"
@@ -273,7 +274,7 @@ Init initalizes shit.
 TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
-func Init(config *common.Config) *Irc {
+func Init(config *config.Config) *Irc {
 	irc := &Irc{
 		brokerHost:  *config.BrokerHost,
 		brokerPass:  *config.BrokerPass,
@@ -300,10 +301,35 @@ func Init(config *common.Config) *Irc {
 	} else {
 		go irc.send()
 	}
+
+	// Start a goroutine which handles joining and parting from channels
 	go irc.JoinChannels()
-	for _, channel := range config.Channels {
-		irc.join <- channel
+
+	channels, err := common.FetchAllChannels(irc.sql)
+
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	hasOwnChannel := false
+	for _, channel := range channels {
+		if channel.Name == config.Nick {
+			hasOwnChannel = true
+		}
+
+		irc.join <- channel.Name
+	}
+
+	if !hasOwnChannel {
+		// Create our own channel, then use InsertToSQL
+		ownChannel := &common.Channel{
+			Name: config.Nick,
+		}
+		ownChannel.InsertToSQL(irc.sql)
+
+		irc.join <- ownChannel.Name
+	}
+
 	return irc
 }
 

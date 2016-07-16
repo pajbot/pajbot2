@@ -25,14 +25,6 @@ type Config struct {
 	Twitter  *pbtwitter.Bot
 }
 
-// Channel contains data about the channel
-type Channel struct {
-	Name       string
-	BttvEmotes map[string]common.Emote // channel and global emotes
-	Online     bool
-	Uptime     time.Time // time when stream went live, time when last stream ended if not online
-}
-
 /*
 A Bot runs in a single channel and reacts according to its
 given commands.
@@ -42,7 +34,7 @@ type Bot struct {
 	Read    chan common.Msg
 	Send    chan string
 	Join    chan string
-	Channel Channel
+	Channel common.Channel
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
 	Modules []Module
@@ -56,7 +48,7 @@ var Bots = make(map[string]*Bot)
 NewBot instansiates a new Bot object with the given Config object
 */
 func NewBot(cfg Config) *Bot {
-	channel := Channel{
+	channel := common.Channel{
 		Name:       cfg.Channel,
 		BttvEmotes: make(map[string]common.Emote),
 	}

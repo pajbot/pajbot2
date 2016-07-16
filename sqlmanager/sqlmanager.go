@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/pajlada/pajbot2/common"
-
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
+	"github.com/pajlada/pajbot2/common/config"
 )
 
 // SQLManager keeps a pool of sql connections or some shit like that
@@ -15,7 +14,7 @@ type SQLManager struct {
 }
 
 // Init creates an instance of the SQL Manager
-func Init(config *common.Config) *SQLManager {
+func Init(config *config.Config) *SQLManager {
 	m := &SQLManager{}
 
 	db, err := sql.Open("mysql", config.SQLDSN)

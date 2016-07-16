@@ -6,7 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/config"
 )
 
 // Boss xD
@@ -21,7 +21,7 @@ var (
 )
 
 // Init returns a webBoss which hosts the website
-func Init(config *common.Config) *Boss {
+func Init(config *config.Config) *Boss {
 	b := &Boss{
 		Host:   config.WebHost,
 		WSHost: "ws://" + config.WebDomain + "/ws",
