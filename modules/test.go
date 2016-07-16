@@ -8,7 +8,9 @@ import (
 
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/web"
 )
 
@@ -16,14 +18,53 @@ import (
 Test xD
 */
 type Test struct {
+	commandHandler command.Handler
 }
 
 // Ensure the module implements the interface properly
 var _ Module = (*Test)(nil)
 
+func cmdJoinChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	m := helper.GetTriggersN(msg.Text, 2)
+
+	if len(m) < 1 {
+		b.Say("Usage: !admin join forsenlol")
+		// Not enough arguments
+		return
+	}
+
+	// TODO: remove any #
+	// TODO: make full lowercase
+	// TODO: add to database if it's a new channel
+	// If the channel already exists in DB, toggle "join" state (and add it)
+
+	b.Join <- m[0]
+}
+
 // Init xD
 func (module *Test) Init(bot *bot.Bot) {
-
+	testCommand := command.NestedCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"admin",
+			},
+			Level: 500,
+		},
+		Commands: []command.Command{
+			&command.FuncCommand{
+				BaseCommand: command.BaseCommand{
+					Triggers: []string{
+						"join",
+						"joinchannel",
+						"channeljoin",
+					},
+					Level: 500,
+				},
+				Function: cmdJoinChannel,
+			},
+		},
+	}
+	module.commandHandler.AddCommand(&testCommand)
 }
 
 // Check xD
@@ -161,5 +202,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			}
 		}
 	}
-	return nil
+
+	log.Debug("CHECKING")
+	return module.commandHandler.Check(b, msg, action)
 }
