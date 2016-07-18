@@ -18,7 +18,7 @@ type Roulette struct {
 // Run roulette
 func (r *Roulette) Run(b *bot.Bot, msg *common.Msg, args []string) error {
 	user := &msg.User
-	if user.Points < 1 {
+	if user.Points == 0 {
 		return fmt.Errorf("you dont have enough points to roulette %s ;p", user.Name)
 	}
 	if len(args) < 1 {
