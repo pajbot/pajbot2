@@ -28,16 +28,16 @@ func (r *Roulette) Run(b *bot.Bot, msg *common.Msg, args []string) error {
 		r.runRoulette(b, msg, user.Points)
 		return nil
 	}
-	_bet, err := strconv.ParseUint(args[0], 10, 64)
+	_bet, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
 		return fmt.Errorf("usage: !roul 123")
 	}
 	bet := int(_bet)
-	if bet > user.Points {
-		return fmt.Errorf("%s, you dont have that many points :p", user.Name)
-	}
-	if bet < 1 {
+	if bet == 0 {
 		return fmt.Errorf("%s, you cant roulette 0 points pajaSWA", user.Name)
+	}
+	if (bet > 0 && bet > user.Points) || (bet < 0 && bet < user.Points) {
+		return fmt.Errorf("%s, you dont have that many points :p", user.Name)
 	}
 	r.runRoulette(b, msg, bet)
 	return nil
