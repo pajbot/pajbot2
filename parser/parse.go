@@ -44,7 +44,9 @@ func Parse(line string) common.Msg {
 	}
 
 	splitLine = strings.SplitN(msg, " ", 2)
-	parseChannel(m, splitLine[0])
+	if m.Type == common.MsgPrivmsg {
+		parseChannel(m, splitLine[0])
+	}
 
 	if len(splitLine) == 2 {
 		msg = splitLine[1]
