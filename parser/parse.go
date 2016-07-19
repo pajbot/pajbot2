@@ -44,7 +44,7 @@ func Parse(line string) common.Msg {
 	}
 
 	splitLine = strings.SplitN(msg, " ", 2)
-	if m.Type == common.MsgPrivmsg {
+	if m.Type != common.MsgWhisper {
 		parseChannel(m, splitLine[0])
 	}
 
