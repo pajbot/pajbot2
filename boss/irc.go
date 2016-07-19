@@ -207,6 +207,7 @@ func (irc *Irc) NewBot(channel string) {
 		&modules.SubAnnounce{},
 		&modules.MyInfo{},
 		&modules.Test{},
+		&modules.Admin{},
 		&modules.Points{},
 		&modules.Top{},
 		&modules.Raffle{},
@@ -251,9 +252,9 @@ func (irc *Irc) PartChannel(channel string) {
 }
 
 /*
-JoinChannels joins a list of channels, given as a string slice
-can also be used to part channels when using the prefix "PART "
-this might be confusing but a part channel is overkill imo
+JoinChannels listens to requests from the `irc.join` channel and
+joins those channels.
+If the message starts with "PART" we instead leave that channel.
 */
 func (irc *Irc) JoinChannels() {
 	for line := range irc.join {
@@ -306,26 +307,31 @@ func Init(config *config.Config) *Irc {
 	go irc.JoinChannels()
 
 	channels, err := common.FetchAllChannels(irc.sql)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	hasOwnChannel := false
 	for _, channel := range channels {
+		log.Debug(channel.Name)
 		if channel.Name == config.Nick {
 			hasOwnChannel = true
+		}
+
+		if !channel.Enabled {
+			log.Debugf("Skipping %s cuz not enabled", channel.Name)
+			continue
 		}
 
 		irc.join <- channel.Name
 	}
 
 	if !hasOwnChannel {
-		// Create our own channel, then use InsertToSQL
+		// Create our own channel, then use InsertNewToSQL
 		ownChannel := &common.Channel{
 			Name: config.Nick,
 		}
-		ownChannel.InsertToSQL(irc.sql)
+		ownChannel.InsertNewToSQL(irc.sql)
 
 		irc.join <- ownChannel.Name
 	}

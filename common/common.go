@@ -2,7 +2,13 @@ package common
 
 // this should make things easier with redis
 
-import "time"
+import (
+	"time"
+
+	"github.com/pajlada/pajbot2/plog"
+)
+
+var log = plog.GetLogger()
 
 // GlobalUser will only be used by boss to check if user is admin
 // and to decide what channel to send the message to if its a whisper
