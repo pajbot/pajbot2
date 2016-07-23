@@ -25,6 +25,12 @@ var _ Module = (*Test)(nil)
 
 // Init xD
 func (module *Test) Init(bot *bot.Bot) {
+
+}
+
+// DeInit xD
+func (module *Test) DeInit(b *bot.Bot) {
+
 }
 
 // Check xD

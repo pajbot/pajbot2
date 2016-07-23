@@ -30,3 +30,8 @@ func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 func (module *MyInfo) Init(bot *bot.Bot) {
 
 }
+
+// DeInit xD
+func (module *MyInfo) DeInit(b *bot.Bot) {
+
+}

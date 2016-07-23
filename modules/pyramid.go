@@ -23,6 +23,11 @@ func (module *Pyramid) Init(bot *bot.Bot) {
 
 }
 
+// DeInit xD
+func (module *Pyramid) DeInit(b *bot.Bot) {
+
+}
+
 // Check KKona
 func (module *Pyramid) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if msg.Type != common.MsgPrivmsg {

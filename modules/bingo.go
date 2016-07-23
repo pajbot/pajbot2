@@ -198,6 +198,11 @@ func (module *Bingo) Init(bot *bot.Bot) {
 	module.commandHandler.AddCommand(bingoCommand)
 }
 
+// DeInit xD
+func (module *Bingo) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Bingo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if bingoRunning {

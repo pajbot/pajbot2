@@ -37,8 +37,8 @@ type Bot struct {
 	Channel common.Channel
 	Redis   *redismanager.RedisManager
 	SQL     *sqlmanager.SQLManager
-	Modules []Module
 	Twitter *pbtwitter.Bot
+	Modules []Module
 }
 
 // Bots is a map of bots, keyed by the channel
@@ -63,6 +63,7 @@ func NewBot(cfg Config) *Bot {
 		Twitter: cfg.Twitter,
 	}
 	Bots[cfg.Channel] = b
+
 	return b
 }
 

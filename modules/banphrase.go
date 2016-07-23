@@ -103,6 +103,11 @@ func (module *Banphrase) Init(bot *bot.Bot) {
 	go module.gc()
 }
 
+// DeInit xD
+func (module *Banphrase) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Banphrase) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if msg.User.Level >= 500 {

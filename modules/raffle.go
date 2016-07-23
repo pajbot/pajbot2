@@ -23,6 +23,10 @@ func (module *Raffle) Init(bot *bot.Bot) {
 	module.bot = bot
 }
 
+// DeInit xD
+func (module *Raffle) DeInit(bot *bot.Bot) {
+}
+
 // Check xD
 func (module *Raffle) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if !strings.HasPrefix(msg.Text, "!") {

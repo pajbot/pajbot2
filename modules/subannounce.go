@@ -21,6 +21,11 @@ func (module *SubAnnounce) Init(bot *bot.Bot) {
 
 }
 
+// DeInit xD
+func (module *SubAnnounce) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *SubAnnounce) Check(b *bot.Bot, m *common.Msg, action *bot.Action) error {
 	if m.Type == common.MsgSub {

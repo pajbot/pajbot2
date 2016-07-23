@@ -20,7 +20,6 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/modules"
 )
 
 var log = plog.GetLogger()
@@ -199,21 +198,7 @@ func (irc *Irc) NewBot(channel string) {
 	}
 	irc.bots[channel] = read
 	b := bot.NewBot(newbot)
-	_modules := []bot.Module{
-		&modules.Banphrase{},
-		&modules.Command{},
-		&modules.Pyramid{},
-		&modules.Quit{},
-		&modules.SubAnnounce{},
-		&modules.MyInfo{},
-		&modules.Test{},
-		&modules.Admin{},
-		&modules.Points{},
-		&modules.Top{},
-		&modules.Raffle{},
-		&modules.Bingo{},
-	}
-	b.Modules = _modules
+	modulesLoad(b)
 	for _, mod := range b.Modules {
 		mod.Init(b)
 	}

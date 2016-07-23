@@ -19,6 +19,11 @@ func (module *Quit) Init(bot *bot.Bot) {
 
 }
 
+// DeInit xD
+func (module *Quit) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Quit) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	m := strings.Split(msg.Text, " ")

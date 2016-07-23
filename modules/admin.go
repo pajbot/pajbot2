@@ -145,6 +145,11 @@ func (module *Admin) Init(bot *bot.Bot) {
 	module.commandHandler.AddCommand(&testCommand)
 }
 
+// DeInit xD
+func (module *Admin) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Admin) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	return module.commandHandler.Check(b, msg, action)

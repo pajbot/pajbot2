@@ -11,4 +11,5 @@ A Module is the base of every handler for commands.
 type Module interface {
 	Check(bot *bot.Bot, msg *common.Msg, action *bot.Action) error
 	Init(bot *bot.Bot)
+	DeInit(bot *bot.Bot)
 }

@@ -120,6 +120,11 @@ func (module *Top) Init(bot *bot.Bot) {
 	module.commandHandler.AddCommand(topSpammerCommand)
 }
 
+// DeInit xD
+func (module *Top) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Top) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	return module.commandHandler.Check(b, msg, action)

@@ -24,6 +24,11 @@ func (module *Points) Init(bot *bot.Bot) {
 	}
 }
 
+// DeInit xD
+func (module *Points) DeInit(b *bot.Bot) {
+
+}
+
 // Check xD
 func (module *Points) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 	if !strings.HasPrefix(msg.Text, "!") {

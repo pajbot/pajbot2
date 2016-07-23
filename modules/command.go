@@ -168,6 +168,11 @@ func (module *Command) Init(bot *bot.Bot) {
 	module.commandHandler.AddCommand(adminCommand)
 }
 
+// DeInit xD
+func (module *Command) DeInit(b *bot.Bot) {
+
+}
+
 func (module *Command) createCommand(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 	// Change to 2 when we remove the !admin prefix
 	const triggerLength = 3
