@@ -15,6 +15,7 @@ import (
 Command xD
 */
 type Command struct {
+	common.BaseModule
 	commandHandler command.Handler
 }
 
@@ -60,7 +61,7 @@ func (module *Command) readCommands(rows *sql.Rows) int {
 }
 
 // Init initializes something
-func (module *Command) Init(bot *bot.Bot) {
+func (module *Command) Init(bot *bot.Bot) (string, bool) {
 	module.loadCommands(bot.SQL, bot.Channel)
 
 	xdCommand := command.TextCommand{
@@ -166,6 +167,8 @@ func (module *Command) Init(bot *bot.Bot) {
 		},
 	}
 	module.commandHandler.AddCommand(adminCommand)
+
+	return "command", true
 }
 
 // DeInit xD

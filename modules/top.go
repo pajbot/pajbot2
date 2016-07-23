@@ -13,6 +13,7 @@ import (
 Top xD
 */
 type Top struct {
+	common.BaseModule
 	commandHandler command.Handler
 }
 
@@ -66,7 +67,7 @@ func (module *Top) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Acti
 }
 
 // Init xD
-func (module *Top) Init(bot *bot.Bot) {
+func (module *Top) Init(bot *bot.Bot) (string, bool) {
 	topPointsCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -118,6 +119,8 @@ func (module *Top) Init(bot *bot.Bot) {
 		FallbackCommand: topSpammerTotalCommand,
 	}
 	module.commandHandler.AddCommand(topSpammerCommand)
+
+	return "top", isModuleEnabled("top")
 }
 
 // DeInit xD

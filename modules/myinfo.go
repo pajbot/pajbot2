@@ -9,6 +9,7 @@ import (
 
 // MyInfo xD
 type MyInfo struct {
+	common.BaseModule
 }
 
 // Ensure the module implements the interface properly
@@ -27,8 +28,8 @@ func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 }
 
 // Init xD
-func (module *MyInfo) Init(bot *bot.Bot) {
-
+func (module *MyInfo) Init(bot *bot.Bot) (string, bool) {
+	return "myinfo", isModuleEnabled("myinfo")
 }
 
 // DeInit xD

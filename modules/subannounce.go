@@ -11,14 +11,15 @@ import (
 SubAnnounce xD
 */
 type SubAnnounce struct {
+	common.BaseModule
 }
 
 // Ensure the module implements the interface properly
 var _ Module = (*SubAnnounce)(nil)
 
 // Init xD
-func (module *SubAnnounce) Init(bot *bot.Bot) {
-
+func (module *SubAnnounce) Init(bot *bot.Bot) (string, bool) {
+	return "sub-announce", true
 }
 
 // DeInit xD

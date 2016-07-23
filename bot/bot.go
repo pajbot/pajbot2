@@ -30,15 +30,16 @@ A Bot runs in a single channel and reacts according to its
 given commands.
 */
 type Bot struct {
-	Quit    chan string
-	Read    chan common.Msg
-	Send    chan string
-	Join    chan string
-	Channel common.Channel
-	Redis   *redismanager.RedisManager
-	SQL     *sqlmanager.SQLManager
-	Twitter *pbtwitter.Bot
-	Modules []Module
+	Quit       chan string
+	Read       chan common.Msg
+	Send       chan string
+	Join       chan string
+	Channel    common.Channel
+	Redis      *redismanager.RedisManager
+	SQL        *sqlmanager.SQLManager
+	Twitter    *pbtwitter.Bot
+	AllModules []Module // all modules with their states
+	Modules    []Module // only enabled modules
 }
 
 // Bots is a map of bots, keyed by the channel

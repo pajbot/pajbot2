@@ -11,6 +11,7 @@ import (
 
 // Pyramid module from pajbot 1
 type Pyramid struct {
+	common.BaseModule
 	data      [][]string
 	goingDown bool
 }
@@ -19,8 +20,8 @@ type Pyramid struct {
 var _ Module = (*Pyramid)(nil)
 
 // Init xD
-func (module *Pyramid) Init(bot *bot.Bot) {
-
+func (module *Pyramid) Init(bot *bot.Bot) (string, bool) {
+	return "pyramid", isModuleEnabled("pyramid")
 }
 
 // DeInit xD

@@ -10,6 +10,8 @@ A Module is the base of every handler for commands.
 */
 type Module interface {
 	Check(bot *bot.Bot, msg *common.Msg, action *bot.Action) error
-	Init(bot *bot.Bot)
+	Init(bot *bot.Bot) (id string, enabled bool)
 	DeInit(bot *bot.Bot)
+	GetState() *common.BaseModule
+	SetState(id string, enabled bool)
 }

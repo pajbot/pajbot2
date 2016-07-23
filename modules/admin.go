@@ -13,6 +13,7 @@ import (
 Admin xD
 */
 type Admin struct {
+	common.BaseModule
 	commandHandler command.Handler
 }
 
@@ -109,7 +110,7 @@ func cmdLeaveChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 }
 
 // Init xD
-func (module *Admin) Init(bot *bot.Bot) {
+func (module *Admin) Init(bot *bot.Bot) (string, bool) {
 	testCommand := command.NestedCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -143,6 +144,8 @@ func (module *Admin) Init(bot *bot.Bot) {
 		},
 	}
 	module.commandHandler.AddCommand(&testCommand)
+
+	return "admin", true
 }
 
 // DeInit xD

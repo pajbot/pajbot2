@@ -12,6 +12,7 @@ import (
 
 // Raffle module
 type Raffle struct {
+	common.BaseModule
 	bot    *bot.Bot
 	users  []string
 	length time.Duration
@@ -19,8 +20,10 @@ type Raffle struct {
 }
 
 // Init xD
-func (module *Raffle) Init(bot *bot.Bot) {
+func (module *Raffle) Init(bot *bot.Bot) (string, bool) {
 	module.bot = bot
+
+	return "raffle", isModuleEnabled("raffle")
 }
 
 // DeInit xD

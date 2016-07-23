@@ -14,27 +14,42 @@ func modulesUnload(b *bot.Bot) {
 	b.Modules = nil
 }
 
-func modulesLoad(b *bot.Bot) {
+func modulesInit(b *bot.Bot) {
 	// TODO(pajlada): Select which modules should be loaded
 	//                via a redis json list or something
-	b.Modules = []bot.Module{
+	b.AllModules = []bot.Module{
+		&modules.Admin{},
 		&modules.Banphrase{},
+		&modules.Bingo{},
 		&modules.Command{},
+		&modules.MyInfo{},
+		&modules.Points{},
 		&modules.Pyramid{},
 		&modules.Quit{},
-		&modules.SubAnnounce{},
-		&modules.MyInfo{},
-		&modules.Test{},
-		&modules.Admin{},
-		&modules.Points{},
-		&modules.Top{},
 		&modules.Raffle{},
-		&modules.Bingo{},
+		&modules.SubAnnounce{},
+		&modules.Test{},
+		&modules.Top{},
+	}
+}
+
+func modulesLoad(b *bot.Bot) {
+	// Initialize all loaded modules
+	for _, module := range b.AllModules {
+		id, enabled := module.Init(b)
+		module.SetState(id, enabled)
 	}
 
-	// Initialize all loaded modules
-	for _, module := range b.Modules {
-		module.Init(b)
+	b.Modules = nil
+
+	for _, module := range b.AllModules {
+		state := module.GetState()
+		if state.Enabled {
+			log.Debugf("Enabling module %s", state.ID)
+			b.Modules = append(b.Modules, module)
+		} else {
+			log.Debugf("Module %s will not be enabled", state.ID)
+		}
 	}
 }
 
@@ -43,4 +58,13 @@ func modulesLoad(b *bot.Bot) {
 func modulesReload(b *bot.Bot) {
 	modulesUnload(b)
 	modulesLoad(b)
+}
+
+// Compile BaseModules and OptionalModules into the Modules slice
+// This will be based on whether Init returned true or not
+// Or maybe there should be another method. Like Enabled?
+// Can we make it so all modules have the same thing?
+// Or do we need to reimplement the wheel?
+func modulesCompile(b *bot.Bot) {
+
 }

@@ -198,7 +198,16 @@ func (irc *Irc) NewBot(channel string) {
 	}
 	irc.bots[channel] = read
 	b := bot.NewBot(newbot)
+
+	// Create an instance of all modules in the bot
+	modulesInit(b)
+
+	// Load all modules
 	modulesLoad(b)
+
+	// Compile the list of modules that the
+	modulesCompile(b)
+
 	for _, mod := range b.Modules {
 		mod.Init(b)
 	}

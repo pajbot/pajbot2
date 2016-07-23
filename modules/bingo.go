@@ -21,6 +21,7 @@ func (bingo *activeBingo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action)
 Bingo xD
 */
 type Bingo struct {
+	common.BaseModule
 	commandHandler command.Handler
 	activeBingos   map[string]*activeBingo
 }
@@ -149,7 +150,7 @@ func (module *Bingo) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Ac
 }
 
 // Init xD
-func (module *Bingo) Init(bot *bot.Bot) {
+func (module *Bingo) Init(bot *bot.Bot) (string, bool) {
 	numberCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -196,6 +197,8 @@ func (module *Bingo) Init(bot *bot.Bot) {
 		FallbackCommand: usageCommand,
 	}
 	module.commandHandler.AddCommand(bingoCommand)
+
+	return "bingo", isModuleEnabled("bingo")
 }
 
 // DeInit xD

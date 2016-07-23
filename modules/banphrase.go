@@ -13,6 +13,7 @@ import (
 Banphrase module settings
 */
 type Banphrase struct {
+	common.BaseModule
 	sync.Mutex
 	BannedWords      []filter.BannedWord
 	BannedLinks      []filter.BannedLink
@@ -41,7 +42,7 @@ const (
 var _ Module = (*Banphrase)(nil)
 
 // Init xD
-func (module *Banphrase) Init(bot *bot.Bot) {
+func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 	// load banned words and links
 	module.BannedLinks = []filter.BannedLink{
 		filter.BannedLink{
@@ -101,6 +102,8 @@ func (module *Banphrase) Init(bot *bot.Bot) {
 	module.ResetDuration = time.Minute * 1
 	module.MaxMessageLength = 250
 	go module.gc()
+
+	return "banphrase", true
 }
 
 // DeInit xD

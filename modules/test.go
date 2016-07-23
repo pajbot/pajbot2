@@ -17,6 +17,7 @@ import (
 Test xD
 */
 type Test struct {
+	common.BaseModule
 	commandHandler command.Handler
 }
 
@@ -24,8 +25,8 @@ type Test struct {
 var _ Module = (*Test)(nil)
 
 // Init xD
-func (module *Test) Init(bot *bot.Bot) {
-
+func (module *Test) Init(bot *bot.Bot) (string, bool) {
+	return "test", true
 }
 
 // DeInit xD

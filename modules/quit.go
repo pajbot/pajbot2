@@ -9,14 +9,16 @@ import (
 
 // Quit xD
 type Quit struct {
+	common.BaseModule
 }
 
 // Ensure the module implements the interface properly
 var _ Module = (*Quit)(nil)
 
 // Init xD
-func (module *Quit) Init(bot *bot.Bot) {
-
+func (module *Quit) Init(bot *bot.Bot) (string, bool) {
+	// XXX: MOVE THIS
+	return "ASD", true
 }
 
 // DeInit xD

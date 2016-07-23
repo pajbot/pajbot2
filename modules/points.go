@@ -11,17 +11,20 @@ import (
 
 // Points module
 type Points struct {
+	common.BaseModule
 	Roulette *points.Roulette
 }
 
 var _ Module = (*Points)(nil)
 
 // Init xD
-func (module *Points) Init(bot *bot.Bot) {
+func (module *Points) Init(bot *bot.Bot) (string, bool) {
 	module.Roulette = &points.Roulette{
 		WinMessage:  "$(source) won %d points in roulette and now has $(source.points) points VisLaud",
 		LoseMessage: "$(source) lost %d points in roulette and now has $(source.points) LUL",
 	}
+
+	return "points", isModuleEnabled("points")
 }
 
 // DeInit xD
