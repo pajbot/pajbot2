@@ -23,7 +23,7 @@ type Raffle struct {
 func (module *Raffle) Init(bot *bot.Bot) (string, bool) {
 	module.bot = bot
 
-	return "raffle", isModuleEnabled("raffle")
+	return "raffle", isModuleEnabled(bot, "raffle", true)
 }
 
 // DeInit xD

@@ -21,7 +21,7 @@ var _ Module = (*Pyramid)(nil)
 
 // Init xD
 func (module *Pyramid) Init(bot *bot.Bot) (string, bool) {
-	return "pyramid", isModuleEnabled("pyramid")
+	return "pyramid", isModuleEnabled(bot, "pyramid", true)
 }
 
 // DeInit xD

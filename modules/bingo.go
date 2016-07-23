@@ -198,7 +198,7 @@ func (module *Bingo) Init(bot *bot.Bot) (string, bool) {
 	}
 	module.commandHandler.AddCommand(bingoCommand)
 
-	return "bingo", isModuleEnabled("bingo")
+	return "bingo", isModuleEnabled(bot, "bingo", false)
 }
 
 // DeInit xD

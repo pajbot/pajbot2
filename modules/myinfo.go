@@ -29,7 +29,7 @@ func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 
 // Init xD
 func (module *MyInfo) Init(bot *bot.Bot) (string, bool) {
-	return "myinfo", isModuleEnabled("myinfo")
+	return "myinfo", isModuleEnabled(bot, "myinfo", true)
 }
 
 // DeInit xD

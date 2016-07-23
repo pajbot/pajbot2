@@ -24,7 +24,7 @@ func (module *Points) Init(bot *bot.Bot) (string, bool) {
 		LoseMessage: "$(source) lost %d points in roulette and now has $(source.points) LUL",
 	}
 
-	return "points", isModuleEnabled("points")
+	return "points", isModuleEnabled(bot, "points", true)
 }
 
 // DeInit xD

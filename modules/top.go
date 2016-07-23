@@ -120,7 +120,7 @@ func (module *Top) Init(bot *bot.Bot) (string, bool) {
 	}
 	module.commandHandler.AddCommand(topSpammerCommand)
 
-	return "top", isModuleEnabled("top")
+	return "top", isModuleEnabled(bot, "top", true)
 }
 
 // DeInit xD
