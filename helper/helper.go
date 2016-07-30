@@ -109,3 +109,15 @@ func RandIntN(min int, max int) (int, error) {
 
 	return int(val.Int64()), nil
 }
+
+// GetTrueP returns a bool true pointer
+func GetTrueP() *bool {
+	b := true
+	return &b
+}
+
+// GetFalseP returns a bool false pointer
+func GetFalseP() *bool {
+	b := false
+	return &b
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
@@ -15,7 +16,7 @@ import (
 Command xD
 */
 type Command struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 }
 
@@ -62,6 +63,10 @@ func (module *Command) readCommands(rows *sql.Rows) int {
 
 // Init initializes something
 func (module *Command) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("command")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	module.loadCommands(bot.SQL, bot.Channel)
 
 	xdCommand := command.TextCommand{

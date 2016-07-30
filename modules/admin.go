@@ -6,6 +6,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/helper"
 )
 
@@ -13,7 +14,7 @@ import (
 Admin xD
 */
 type Admin struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 }
 
@@ -111,6 +112,10 @@ func cmdLeaveChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 
 // Init xD
 func (module *Admin) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("admin")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	testCommand := command.NestedCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{

@@ -67,20 +67,3 @@ type Emote struct {
 	IsGif bool
 	Count int
 }
-
-// BaseModule includes information on whether it's enabled or not
-type BaseModule struct {
-	ID      string
-	Enabled bool
-}
-
-// GetState xD
-func (b *BaseModule) GetState() *BaseModule {
-	return b
-}
-
-// SetState xD
-func (b *BaseModule) SetState(id string, enabled bool) {
-	b.ID = id
-	b.Enabled = enabled
-}

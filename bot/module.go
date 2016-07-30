@@ -1,6 +1,9 @@
 package bot
 
-import "github.com/pajlada/pajbot2/common"
+import (
+	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
+)
 
 /*
 Module xD
@@ -10,6 +13,5 @@ type Module interface {
 	// just pass in the bot so the module has access to everything, not just sql
 	Init(bot *Bot) (id string, enabled bool)
 	DeInit(bot *Bot)
-	GetState() *common.BaseModule
-	SetState(id string, enabled bool)
+	GetState() *basemodule.BaseModule
 }

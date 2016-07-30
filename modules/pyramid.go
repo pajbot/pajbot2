@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common/basemodule"
 
 	"github.com/pajlada/pajbot2/common"
 )
 
 // Pyramid module from pajbot 1
 type Pyramid struct {
-	common.BaseModule
+	basemodule.BaseModule
 	data      [][]string
 	goingDown bool
 }
@@ -21,6 +22,10 @@ var _ Module = (*Pyramid)(nil)
 
 // Init xD
 func (module *Pyramid) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("pyramid")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	return "pyramid", isModuleEnabled(bot, "pyramid", true)
 }
 

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"encoding/json"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -8,20 +9,49 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 )
 
 // Raffle module
 type Raffle struct {
-	common.BaseModule
+	basemodule.BaseModule
 	bot    *bot.Bot
 	users  []string
 	length time.Duration
 	points int
+
+	MinPoints *int64 `json:"min_points"`
+	MaxPoints *int64 `json:"max_points"`
+}
+
+func (module *Raffle) getMinPoints() int {
+	if module.MinPoints == nil {
+		return 50
+	}
+
+	return int(*module.MinPoints)
+}
+
+func (module *Raffle) getMaxPoints() int {
+	if module.MaxPoints == nil {
+		return 50
+	}
+
+	return int(*module.MaxPoints)
+}
+
+func (module *Raffle) parseSettings(jsonData []byte) {
+	json.Unmarshal(jsonData, module)
 }
 
 // Init xD
 func (module *Raffle) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("raffle")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	module.bot = bot
+	module.parseSettings(module.FetchSettings(bot.Redis, bot.Channel.Name))
 
 	return "raffle", isModuleEnabled(bot, "raffle", true)
 }

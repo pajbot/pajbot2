@@ -12,6 +12,8 @@ func (b *Bot) Handle(msg common.Msg) {
 	action := &Action{}
 	log.Debugf("%s # %s :%s", msg.Channel, msg.User.DisplayName, msg.Text)
 	for _, module := range b.Modules {
+		// If user level is above module bypass level
+		//   then don't call Check here
 		module.Check(b, &msg, action)
 
 		if action.Response != "" {

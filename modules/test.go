@@ -10,6 +10,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/web"
 )
 
@@ -17,7 +18,7 @@ import (
 Test xD
 */
 type Test struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 }
 
@@ -26,6 +27,10 @@ var _ Module = (*Test)(nil)
 
 // Init xD
 func (module *Test) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("test")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	return "test", true
 }
 

@@ -6,12 +6,13 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/points"
 )
 
 // Points module
 type Points struct {
-	common.BaseModule
+	basemodule.BaseModule
 	Roulette *points.Roulette
 }
 
@@ -19,6 +20,10 @@ var _ Module = (*Points)(nil)
 
 // Init xD
 func (module *Points) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("points")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	module.Roulette = &points.Roulette{
 		WinMessage:  "$(source) won %d points in roulette and now has $(source.points) points VisLaud",
 		LoseMessage: "$(source) lost %d points in roulette and now has $(source.points) LUL",

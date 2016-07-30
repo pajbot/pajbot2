@@ -5,11 +5,12 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 )
 
 // Quit xD
 type Quit struct {
-	common.BaseModule
+	basemodule.BaseModule
 }
 
 // Ensure the module implements the interface properly
@@ -17,6 +18,10 @@ var _ Module = (*Quit)(nil)
 
 // Init xD
 func (module *Quit) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("quit")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	// XXX: MOVE THIS
 	return "ASD", true
 }

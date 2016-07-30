@@ -36,15 +36,14 @@ func modulesInit(b *bot.Bot) {
 func modulesLoad(b *bot.Bot) {
 	// Initialize all loaded modules
 	for _, module := range b.AllModules {
-		id, enabled := module.Init(b)
-		module.SetState(id, enabled)
+		module.Init(b)
 	}
 
 	b.Modules = nil
 
 	for _, module := range b.AllModules {
 		state := module.GetState()
-		if state.Enabled {
+		if state.IsEnabled() {
 			log.Debugf("Enabling module %s", state.ID)
 			b.Modules = append(b.Modules, module)
 		} else {
