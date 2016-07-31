@@ -7,11 +7,11 @@ import (
 
 func modulesUnload(b *bot.Bot) {
 	// De-init all already-loaded modules
-	for _, module := range b.Modules {
+	for _, module := range b.EnabledModules {
 		module.DeInit(b)
 	}
 
-	b.Modules = nil
+	b.EnabledModules = nil
 }
 
 func modulesInit(b *bot.Bot) {
@@ -38,13 +38,13 @@ func modulesLoad(b *bot.Bot) {
 		module.Init(b)
 	}
 
-	b.Modules = nil
+	b.EnabledModules = nil
 
 	for _, module := range b.AllModules {
 		state := module.GetState()
 		if state.IsEnabled() {
 			log.Debugf("Enabling module %s", state.ID)
-			b.Modules = append(b.Modules, module)
+			b.EnabledModules = append(b.EnabledModules, module)
 		} else {
 			log.Debugf("Module %s will not be enabled", state.ID)
 		}
@@ -56,13 +56,4 @@ func modulesLoad(b *bot.Bot) {
 func modulesReload(b *bot.Bot) {
 	modulesUnload(b)
 	modulesLoad(b)
-}
-
-// Compile BaseModules and OptionalModules into the Modules slice
-// This will be based on whether Init returned true or not
-// Or maybe there should be another method. Like Enabled?
-// Can we make it so all modules have the same thing?
-// Or do we need to reimplement the wheel?
-func modulesCompile(b *bot.Bot) {
-
 }

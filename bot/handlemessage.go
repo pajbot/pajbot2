@@ -11,9 +11,10 @@ func (b *Bot) Handle(msg common.Msg) {
 	defer b.Redis.UpdateUser(b.Channel.Name, &msg.User, &oldUser)
 	action := &Action{}
 	log.Debugf("%s # %s :%s", msg.Channel, msg.User.DisplayName, msg.Text)
-	for _, module := range b.Modules {
+	for _, module := range b.EnabledModules {
 		// If user level is above module bypass level
 		//   then don't call Check here
+		// TODO: implement above shit
 		module.Check(b, &msg, action)
 
 		if action.Response != "" {
