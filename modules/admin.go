@@ -110,6 +110,10 @@ func cmdLeaveChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 	}
 }
 
+func cmdQuit(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	b.Quit <- "Quit from command by " + msg.User.Name
+}
+
 // Init xD
 func (module *Admin) Init(bot *bot.Bot) (string, bool) {
 	module.SetDefaults("admin")
@@ -149,6 +153,18 @@ func (module *Admin) Init(bot *bot.Bot) (string, bool) {
 		},
 	}
 	module.commandHandler.AddCommand(&testCommand)
+
+	quitCommand := command.FuncCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"quit",
+				"exit",
+			},
+			Level: 500,
+		},
+		Function: cmdQuit,
+	}
+	module.commandHandler.AddCommand(&quitCommand)
 
 	return "admin", true
 }

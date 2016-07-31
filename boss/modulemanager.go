@@ -25,7 +25,6 @@ func modulesInit(b *bot.Bot) {
 		&modules.MyInfo{},
 		&modules.Points{},
 		&modules.Pyramid{},
-		&modules.Quit{},
 		&modules.Raffle{},
 		&modules.SubAnnounce{},
 		&modules.Test{},
