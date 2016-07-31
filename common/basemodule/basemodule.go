@@ -14,7 +14,7 @@ var log = plog.GetLogger()
 // BaseModule includes information on whether it's enabled or not
 type BaseModule struct {
 	// Unique identifier of the module
-	ID string
+	ID string `json:"-"`
 
 	// Whether the module is enabled or not
 	// Valid values:
@@ -24,7 +24,7 @@ type BaseModule struct {
 	Enabled *bool `json:"enabled"`
 
 	// Whether the module is enabled by default or not
-	EnabledDefault bool
+	EnabledDefault bool `json:"-"`
 
 	// Level required to call the module
 	// Valid values:
@@ -32,7 +32,7 @@ type BaseModule struct {
 	// 0-2000 = int value, level required to call module
 	LevelRequired *int64 `json:"level_required"`
 
-	LevelRequiredDefault int
+	LevelRequiredDefault int `json:"-"`
 
 	// Level required to bypass the module
 	// Valid values:
@@ -41,7 +41,7 @@ type BaseModule struct {
 	// 0-2000 = int value, level required to bypass
 	LevelBypass *int64 `json:"level_bypass"`
 
-	LevelBypassDefault int
+	LevelBypassDefault int `json:"-"`
 }
 
 // SetDefaults sets the defaults values on the given module.
@@ -117,6 +117,21 @@ func (m *BaseModule) ParseState(r *redismanager.RedisManager, channelName string
 	err = json.Unmarshal(data, m)
 	if err != nil {
 		log.Error(err)
+		return
+	}
+}
+
+// SaveState saves the modules state to redis
+func (m *BaseModule) SaveState(r *redismanager.RedisManager, channelName string) {
+	conn := r.Pool.Get()
+	defer conn.Close()
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Errorf("Error while marshalling BaseModule: %s", err)
+		return
+	}
+	_, err = conn.Do("HSET", channelName+":modules:state", m.ID, data)
+	if err != nil {
 		return
 	}
 }

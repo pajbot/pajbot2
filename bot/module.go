@@ -37,7 +37,7 @@ func (b *Bot) EnableModule(module Module) {
 
 	b.EnabledModules = append(b.EnabledModules, module)
 
-	// TODO: Save module state
+	module.GetState().SaveState(b.Redis, b.Channel.Name)
 }
 
 // DisableModule disabled the given module in the bot
@@ -61,5 +61,5 @@ func (b *Bot) DisableModule(module Module) {
 		return
 	}
 
-	// TODO: Save module state
+	module.GetState().SaveState(b.Redis, b.Channel.Name)
 }
