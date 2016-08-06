@@ -3,11 +3,7 @@ package apirequest
 import (
 	"io/ioutil"
 	"net/http"
-
-	"github.com/pajlada/pajbot2/plog"
 )
-
-var log = plog.GetLogger()
 
 // HTTPRequest requests the given url
 func HTTPRequest(url string) ([]byte, error) {

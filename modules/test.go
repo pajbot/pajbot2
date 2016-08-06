@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dankeroni/gotwitch"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
@@ -66,12 +67,15 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!testapi" {
 			if len(m) > 1 {
-				stream, err := apirequest.TwitchAPI.GetStream(m[1])
-				if err != nil {
-					b.Sayf("Error when fetching stream: %s", err)
-					return err
-				}
-				b.Sayf("Stream info: %#v", stream)
+				apirequest.Twitch.Stream(m[1],
+					func(stream gotwitch.Stream) {
+						b.Sayf("Stream info: %+v", stream)
+					},
+					func(statusCode int, statusMessage, errorMessage string) {
+						b.Sayf("ERROR: %d", statusCode)
+					}, func(err error) {
+						b.Say("Internal error")
+					})
 			} else {
 				b.Say("Usage: !testapi pajlada")
 			}
