@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pajlada/pajbot2/common"
@@ -99,58 +98,6 @@ func (bot *Bot) readTweets() {
 	for tweet := range bot.Twitter.Stream {
 		bot.SaySafef("PogChamp new tweet from %s (@%s): %s", tweet.User.Name, tweet.User.ScreenName, tweet.Text)
 	}
-}
-
-/*
-Say sends a PRIVMSG to the bots given channel
-*/
-func (bot *Bot) Say(message string) {
-	m := fmt.Sprintf("PRIVMSG #%s :%s ", bot.Channel.Name, message)
-	bot.Send <- m
-}
-
-/*
-Sayf sends a formatted PRIVMSG to the bots given channel
-*/
-func (bot *Bot) Sayf(format string, a ...interface{}) {
-	bot.Say(fmt.Sprintf(format, a...))
-}
-
-// SayFormat sends a formatted and safe message to the bots channel
-func (bot *Bot) SayFormat(line string, msg *common.Msg, a ...interface{}) {
-	bot.SaySafef(bot.Format(line, msg), a...)
-}
-
-/*
-SaySafef sends a formatted PRIVMSG to the bots given channel
-*/
-func (bot *Bot) SaySafef(format string, a ...interface{}) {
-	bot.SaySafe(fmt.Sprintf(format, a...))
-}
-
-/*
-SaySafe allows only harmless irc commands,
-this should be used for commands added by users
-*/
-func (bot *Bot) SaySafe(message string) {
-	if !strings.HasPrefix(message, "/") && !strings.HasPrefix(message, ".") {
-		bot.Say(message)
-		return
-	}
-	m := strings.Split(message, " ")
-	cmd := m[0][1:] // remove "." or "/"
-	switch cmd {
-	case "me":
-	case "timeout":
-	case "unban":
-	case "subscribers":
-	case "subscribersoff":
-	case "emoteonly":
-	case "emoteonlyoff":
-	default:
-		message = " " + message
-	}
-	bot.Say(message)
 }
 
 // Timeout sends 2 timeouts with a 500 ms delay
