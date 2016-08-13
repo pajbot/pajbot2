@@ -7,13 +7,14 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 )
 
 /*
 Top xD
 */
 type Top struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 }
 
@@ -68,6 +69,10 @@ func (module *Top) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Acti
 
 // Init xD
 func (module *Top) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("top")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	topPointsCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{

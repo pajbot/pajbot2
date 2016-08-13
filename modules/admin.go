@@ -6,6 +6,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/helper"
 )
 
@@ -13,7 +14,7 @@ import (
 Admin xD
 */
 type Admin struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 }
 
@@ -109,8 +110,92 @@ func cmdLeaveChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 	}
 }
 
+func cmdQuit(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	b.Quit <- "Quit from command by " + msg.User.Name
+}
+
+func cmdModuleEnable(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	m := helper.GetTriggersN(msg.Text, 2)
+
+	if len(m) < 1 {
+		b.Say("Usage: !module enable <modulename>")
+		return
+	}
+
+	moduleName := strings.ToLower(m[0])
+	module := b.GetModule(moduleName)
+
+	if module == nil {
+		b.Sayf("%s, A module with the name %s does not exist", msg.User.Name, moduleName)
+		return
+	}
+
+	if module.GetState().IsEnabled() {
+		b.Sayf("%s, The module with the name %s is already enabled", msg.User.Name, moduleName)
+		return
+	}
+
+	b.EnableModule(module)
+	b.Sayf("%s, Successfully enabled module %s", msg.User.Name, moduleName)
+}
+
+func cmdModuleDisable(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	m := helper.GetTriggersN(msg.Text, 2)
+
+	if len(m) < 1 {
+		b.Say("Usage: !module disable <modulename>")
+		return
+	}
+
+	moduleName := strings.ToLower(m[0])
+	module := b.GetModule(moduleName)
+
+	if module == nil {
+		b.Sayf("%s, A module with the name %s does not exist", msg.User.Name, moduleName)
+		return
+	}
+
+	if !module.GetState().IsEnabled() {
+		b.Sayf("%s, The module with the name %s is already disabled", msg.User.Name, moduleName)
+		return
+	}
+
+	b.DisableModule(module)
+	b.Sayf("%s, Successfully disabled module %s", msg.User.Name, moduleName)
+}
+
+func cmdModuleToggle(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	m := helper.GetTriggersN(msg.Text, 2)
+
+	if len(m) < 1 {
+		b.Say("Usage: !module toggle <modulename>")
+		return
+	}
+
+	moduleName := strings.ToLower(m[0])
+	module := b.GetModule(moduleName)
+
+	if module == nil {
+		b.Sayf("%s, A module with the name %s does not exist", msg.User.Name, moduleName)
+		return
+	}
+
+	if module.GetState().IsEnabled() {
+		b.DisableModule(module)
+		b.Sayf("%s, Successfully disabled module %s", msg.User.Name, moduleName)
+	} else {
+		b.EnableModule(module)
+		b.Sayf("%s, Successfully enabled module %s", msg.User.Name, moduleName)
+	}
+
+}
+
 // Init xD
 func (module *Admin) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("admin")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	testCommand := command.NestedCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{
@@ -144,6 +229,57 @@ func (module *Admin) Init(bot *bot.Bot) (string, bool) {
 		},
 	}
 	module.commandHandler.AddCommand(&testCommand)
+
+	quitCommand := command.FuncCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"quit",
+				"exit",
+			},
+			Level: 500,
+		},
+		Function: cmdQuit,
+	}
+	module.commandHandler.AddCommand(&quitCommand)
+
+	moduleCommand := command.NestedCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"module",
+			},
+			Level: 500,
+		},
+		Commands: []command.Command{
+			&command.FuncCommand{
+				BaseCommand: command.BaseCommand{
+					Triggers: []string{
+						"enable",
+					},
+					Level: 500,
+				},
+				Function: cmdModuleEnable,
+			},
+			&command.FuncCommand{
+				BaseCommand: command.BaseCommand{
+					Triggers: []string{
+						"disable",
+					},
+					Level: 500,
+				},
+				Function: cmdModuleDisable,
+			},
+			&command.FuncCommand{
+				BaseCommand: command.BaseCommand{
+					Triggers: []string{
+						"toggle",
+					},
+					Level: 500,
+				},
+				Function: cmdModuleToggle,
+			},
+		},
+	}
+	module.commandHandler.AddCommand(&moduleCommand)
 
 	return "admin", true
 }

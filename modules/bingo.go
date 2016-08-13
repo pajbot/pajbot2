@@ -7,6 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/helper"
 )
 
@@ -21,7 +22,7 @@ func (bingo *activeBingo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action)
 Bingo xD
 */
 type Bingo struct {
-	common.BaseModule
+	basemodule.BaseModule
 	commandHandler command.Handler
 	activeBingos   map[string]*activeBingo
 }
@@ -151,6 +152,10 @@ func (module *Bingo) topSpammerTotal(b *bot.Bot, msg *common.Msg, action *bot.Ac
 
 // Init xD
 func (module *Bingo) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("bingo")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	numberCommand := &command.FuncCommand{
 		BaseCommand: command.BaseCommand{
 			Triggers: []string{

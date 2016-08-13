@@ -6,6 +6,7 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 	"github.com/pajlada/pajbot2/filter"
 )
 
@@ -13,7 +14,7 @@ import (
 Banphrase module settings
 */
 type Banphrase struct {
-	common.BaseModule
+	basemodule.BaseModule
 	sync.Mutex
 	BannedWords      []filter.BannedWord
 	BannedLinks      []filter.BannedLink
@@ -43,6 +44,10 @@ var _ Module = (*Banphrase)(nil)
 
 // Init xD
 func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("banphrase")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	// load banned words and links
 	module.BannedLinks = []filter.BannedLink{
 		filter.BannedLink{

@@ -5,13 +5,14 @@ import (
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/common/basemodule"
 )
 
 /*
 SubAnnounce xD
 */
 type SubAnnounce struct {
-	common.BaseModule
+	basemodule.BaseModule
 }
 
 // Ensure the module implements the interface properly
@@ -19,6 +20,10 @@ var _ Module = (*SubAnnounce)(nil)
 
 // Init xD
 func (module *SubAnnounce) Init(bot *bot.Bot) (string, bool) {
+	module.SetDefaults("sub-announce")
+	module.EnabledDefault = true
+	module.ParseState(bot.Redis, bot.Channel.Name)
+
 	return "sub-announce", true
 }
 
