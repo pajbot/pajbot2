@@ -6,8 +6,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/redismanager"
+	"github.com/pajlada/pajbot2/sqlmanager"
 )
+
+// Config xD
+type Config struct {
+	Redis *redismanager.RedisManager
+	SQL   *sqlmanager.SQLManager
+	Bots  map[string]*bot.Bot
+}
 
 // Boss xD
 type Boss struct {
@@ -16,16 +26,25 @@ type Boss struct {
 }
 
 var (
+	bots  map[string]*bot.Bot
+	redis *redismanager.RedisManager
+	sql   *sqlmanager.SQLManager
+)
+
+var (
 	newline = []byte{'\n'}
 	space   = []byte{' '}
 )
 
 // Init returns a webBoss which hosts the website
-func Init(config *config.Config) *Boss {
+func Init(config *config.Config, webCfg *Config) *Boss {
 	b := &Boss{
 		Host:   config.WebHost,
 		WSHost: "ws://" + config.WebDomain + "/ws",
 	}
+	bots = webCfg.Bots
+	redis = webCfg.Redis
+	sql = webCfg.SQL
 	return b
 }
 
@@ -38,11 +57,15 @@ func (b *Boss) Run() {
 	r.HandleFunc("/ws/{type}", b.wsHandler)
 	r.HandleFunc("/", b.rootHandler)
 	r.HandleFunc("/dashboard", b.dashboardHandler)
+	// i would like to use a subdomain for this but it might be annoying for you pajaHop
+	r.HandleFunc("/api", apiRootHandler)
+	api := r.PathPrefix("/api").Subrouter()
 
 	// Serve files statically from ./web/static in /static
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
 
 	log.Infof("Starting web on host %s", b.Host)
+	InitAPI(api)
 	err := http.ListenAndServe(b.Host, r)
 	if err != nil {
 		log.Fatal(err)
