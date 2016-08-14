@@ -60,9 +60,15 @@ func getEndPoint(url string) (string, string) {
 
 func exec(channel, endpoint, rest string) interface{} {
 	log.Info(channel, endpoint, rest)
+	if !isValidURL(rest) {
+		return newError(ErrInvalidUserName)
+	}
 	var p interface{}
 	switch endpoint {
 	case USER:
+		if !isValidUserName(rest) {
+			return newError(ErrInvalidUserName)
+		}
 		p = getUserPayload(channel, rest)
 	default:
 		p = newError("invalid endpoint")
