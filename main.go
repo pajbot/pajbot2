@@ -121,8 +121,7 @@ func runCmd() {
 	log.Debug("Done")
 
 	// Start web server
-	webBoss := web.Init(config)
-	go webBoss.Run()
+
 	go func() {
 		log.Error(http.ListenAndServe(":11223", nil))
 	}()
@@ -135,7 +134,14 @@ func runCmd() {
 		config.Quit <- "Quitting due to SIGTERM/SIGINT"
 	}()
 	config.Quit = make(chan string)
-	go boss.Init(config)
+	b := boss.Init(config)
+	webCfg := &web.Config{
+		Bots:  b.Bots,
+		Redis: b.Redis,
+		SQL:   b.SQL,
+	}
+	webBoss := web.Init(config, webCfg)
+	go webBoss.Run()
 	q := <-config.Quit
 	cleanup()
 	log.Fatal(q)

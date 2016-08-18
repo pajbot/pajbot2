@@ -38,9 +38,9 @@ type Irc struct {
 	join        chan string
 	ReadChan    chan string
 	SendChan    chan string
-	bots        map[string]chan common.Msg
-	redis       *redismanager.RedisManager
-	sql         *sqlmanager.SQLManager
+	Bots        map[string]*bot.Bot
+	Redis       *redismanager.RedisManager
+	SQL         *sqlmanager.SQLManager
 	twitter     *pbtwitter.Client
 	quit        chan string
 }
@@ -87,15 +87,15 @@ func (irc *Irc) send() {
 func (irc *Irc) dontSend() {
 	for {
 		// Do nothing with the messages.
-		// This is used in silent bots
+		// This is used in silent Bots
 		<-irc.SendChan
 	}
 }
 
-// GetGlobalUser fills in the global user in the message from redis
+// GetGlobalUser fills in the global user in the message from Redis
 func (irc *Irc) GetGlobalUser(m *common.Msg) {
 	u := &common.GlobalUser{}
-	irc.redis.GetGlobalUser(m.Channel, &m.User, u)
+	irc.Redis.GetGlobalUser(m.Channel, &m.User, u)
 	if m.Type == common.MsgWhisper {
 		m.Channel = u.Channel
 	}
@@ -123,7 +123,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 				case common.MsgPrivmsg, common.MsgWhisper:
 					irc.GetGlobalUser(&m)
 					if b := irc.getBot(m.Channel); b != nil {
-						b <- m
+						b.Read <- m
 					} else {
 						log.Debugf("No channel for message (chan: %s)", m.Channel)
 					}
@@ -131,7 +131,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					// Post sub to sub channel
 					log.Debugf("%s just subbed!", m.User.DisplayName)
 					if b := irc.getBot(m.Channel); b != nil {
-						b <- m
+						b.Read <- m
 					} else {
 						log.Debugf("MsgSub No channel for message (chan: %s)", m.Channel)
 					}
@@ -145,7 +145,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					log.Debugf("%s just resubbed for %d months", m.User.DisplayName, months)
 
 					if b := irc.getBot(m.Channel); b != nil {
-						b <- m
+						b.Read <- m
 					} else {
 						log.Debugf("MsgReSub No channel for message (chan: %s)", m.Channel)
 					}
@@ -154,7 +154,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					break
 				default:
 					if b := irc.getBot(m.Channel); b != nil {
-						b <- m
+						b.Read <- m
 					} else {
 						log.Debugf("default No channel for message (chan: %s)", m.Channel)
 					}
@@ -192,12 +192,12 @@ func (irc *Irc) NewBot(channel string) {
 		ReadChan: read,
 		SendChan: irc.SendChan,
 		Join:     irc.join,
-		Redis:    irc.redis,
-		SQL:      irc.sql,
+		Redis:    irc.Redis,
+		SQL:      irc.SQL,
 		Twitter:  irc.twitter.Bots[channel],
 	}
-	irc.bots[channel] = read
 	b := bot.NewBot(newbot)
+	irc.Bots[channel] = b
 
 	// Populate bot.AllModules with an instance of all available modules
 	modulesInit(b)
@@ -216,7 +216,7 @@ func (irc *Irc) JoinChannel(channel string) {
 	channel = strings.ToLower(channel)
 	irc.Lock()
 	defer irc.Unlock()
-	if _, ok := irc.bots[channel]; !ok {
+	if _, ok := irc.Bots[channel]; !ok {
 		irc.NewBot(channel)
 		irc.SendRaw(irc.conn, "JOIN #"+channel)
 	}
@@ -231,10 +231,10 @@ func (irc *Irc) PartChannel(channel string) {
 	channel = strings.ToLower(channel)
 	irc.Lock()
 	defer irc.Unlock()
-	if bot, ok := irc.bots[channel]; ok {
-		delete(irc.bots, channel)
+	if bot, ok := irc.Bots[channel]; ok {
+		delete(irc.Bots, channel)
 		irc.SendRaw(irc.conn, "PART #"+channel)
-		close(bot)
+		close(bot.Read)
 		log.Debug("CLOSED BOT IN", channel)
 
 	}
@@ -274,12 +274,12 @@ func Init(config *config.Config) *Irc {
 		ReadChan:    make(chan string, 10),
 		SendChan:    make(chan string, 10),
 		join:        make(chan string, 5),
-		bots:        make(map[string]chan common.Msg),
-		redis:       redismanager.Init(config),
-		sql:         sqlmanager.Init(config),
+		Bots:        make(map[string]*bot.Bot),
+		Redis:       redismanager.Init(config),
+		SQL:         sqlmanager.Init(config),
 		quit:        config.Quit,
 	}
-	irc.twitter = pbtwitter.Init(config, irc.redis)
+	irc.twitter = pbtwitter.Init(config, irc.Redis)
 	err := irc.newConn()
 	if err != nil {
 		// Right now we just fatally exit the bot
@@ -295,7 +295,7 @@ func Init(config *config.Config) *Irc {
 	// Start a goroutine which handles joining and parting from channels
 	go irc.JoinChannels()
 
-	channels, err := common.FetchAllChannels(irc.sql)
+	channels, err := common.FetchAllChannels(irc.SQL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -320,7 +320,7 @@ func Init(config *config.Config) *Irc {
 		ownChannel := &common.Channel{
 			Name: config.Nick,
 		}
-		ownChannel.InsertNewToSQL(irc.sql)
+		ownChannel.InsertNewToSQL(irc.SQL)
 
 		irc.join <- ownChannel.Name
 	}
@@ -329,8 +329,8 @@ func Init(config *config.Config) *Irc {
 }
 
 // XXX: rename to getBotChannel? idk
-func (irc *Irc) getBot(channel string) chan common.Msg {
-	if b, ok := irc.bots[channel]; ok {
+func (irc *Irc) getBot(channel string) *bot.Bot {
+	if b, ok := irc.Bots[channel]; ok {
 		return b
 	}
 
