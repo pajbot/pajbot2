@@ -22,7 +22,7 @@ func (module *MyInfo) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) err
 	trigger := strings.ToLower(m[0])
 
 	if trigger == "!myinfo" {
-		b.Sayf("ID: %d, username: %s, type: %s, level: %d",
+		b.Mentionf(msg.User, "ID: %d, username: %s, type: %s, level: %d",
 			msg.User.ID, msg.User.DisplayName, msg.User.Type, msg.User.Level)
 	}
 	return nil

@@ -279,6 +279,10 @@ func (module *Admin) Init(bot *bot.Bot) (string, bool) {
 			},
 		},
 	}
+
+	// TODO(pajlada): Add more module commands.
+	// !module reset <modulename>
+	// !module config <modulename> set <variable> <value>
 	module.commandHandler.AddCommand(&moduleCommand)
 
 	return "admin", true
