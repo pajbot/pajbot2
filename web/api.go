@@ -109,5 +109,5 @@ func apiRootHandler(w http.ResponseWriter, r *http.Request) {
 // InitAPI adds routes to the given subrouter
 func InitAPI(m *mux.Router) {
 	m.HandleFunc("/", apiRootHandler)
-	m.HandleFunc(`/{channel:\w+}/{rest:.*}`, APIHandler)
+	m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
 }
