@@ -67,7 +67,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		m := strings.Split(msg.Text, " ")
 		if m[0] == "!testapi" {
 			if len(m) > 1 {
-				apirequest.Twitch.Stream(m[1],
+				apirequest.Twitch.GetStream(m[1],
 					func(stream gotwitch.Stream) {
 						b.Sayf("Stream info: %+v", stream)
 					},
