@@ -11,5 +11,19 @@
     "twitter_consumer_key": "uhurehhiukewhfkjuerwh",
     "twitter_consumer_secret": "uiswdhuioefhouiehfouie",
     "twitter_access_token": "heiufheuifhuefheuofjiol",
-    "twitter_access_secret": "hjukfehuighiurehgiurewhgiu"
+    "twitter_access_secret": "hjukfehuighiurehgiurewhgiu",
+    "auth": {
+        "twitch": {
+            "bot": {
+                "client_id": "id123",
+                "client_secret": "secret123",
+                "redirect_uri": "http://pajlada.com:2355/api/auth/twitch/bot/callback"
+            },
+            "user": {
+                "client_id": "id321",
+                "client_secret": "secret321",
+                "redirect_uri": "http://pajlada.com:2355/api/auth/twitch/user/callback"
+            }
+        }
+    }
 }

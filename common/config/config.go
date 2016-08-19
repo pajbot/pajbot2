@@ -27,6 +27,22 @@ type Config struct {
 
 	SQLDSN string `json:"sql_dsn"`
 
+	Auth struct {
+		Twitch struct {
+			Bot struct {
+				// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
+				ClientID     string `json:"client_id"`
+				ClientSecret string `json:"client_secret"`
+				RedirectURI  string `json:"redirect_uri"`
+			} `json:"bot"`
+			User struct {
+				ClientID     string `json:"client_id"`
+				ClientSecret string `json:"client_secret"`
+				RedirectURI  string `json:"redirect_uri"`
+			} `json:"user"`
+		} `json:"twitch"`
+	} `json:"auth"`
+
 	TLSKey  string `json:"tls_key"`
 	TLSCert string `json:"tls_cert"`
 

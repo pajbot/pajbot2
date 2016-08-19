@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"golang.org/x/oauth2"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/bot"
@@ -38,6 +40,32 @@ var (
 
 // Init returns a webBoss which hosts the website
 func Init(config *config.Config, webCfg *Config) *Boss {
+	twitchBotOauthConfig.RedirectURL = config.Auth.Twitch.Bot.RedirectURI
+	twitchBotOauthConfig.ClientID = config.Auth.Twitch.Bot.ClientID
+	twitchBotOauthConfig.ClientSecret = config.Auth.Twitch.Bot.ClientSecret
+	twitchBotOauthConfig.Scopes = []string{
+		"user_read",
+		"chat_login",
+	}
+	twitchBotOauthConfig.Endpoint = oauth2.Endpoint{
+		AuthURL:  "https://api.twitch.tv/kraken/oauth2/authorize",
+		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
+	}
+	twitchUserOauthConfig.RedirectURL = config.Auth.Twitch.User.RedirectURI
+	twitchUserOauthConfig.ClientID = config.Auth.Twitch.User.ClientID
+	twitchUserOauthConfig.ClientSecret = config.Auth.Twitch.User.ClientSecret
+	twitchUserOauthConfig.Scopes = []string{
+		"user_read",
+		"channel_commercial",
+		"channel_subscriptions",
+		"channel_check_subscription",
+		"channel_feed_read",
+		"channel_feed_edit",
+	}
+	twitchUserOauthConfig.Endpoint = oauth2.Endpoint{
+		AuthURL:  "https://api.twitch.tv/kraken/oauth2/authorize",
+		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
+	}
 	b := &Boss{
 		Host:   config.WebHost,
 		WSHost: "ws://" + config.WebDomain + "/ws",

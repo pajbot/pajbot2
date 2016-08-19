@@ -2,11 +2,21 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
+	"golang.org/x/oauth2"
+)
+
+var (
+	twitchBotOauthConfig  = &oauth2.Config{}
+	twitchUserOauthConfig = &oauth2.Config{}
 )
 
 // api endpoints
@@ -106,8 +116,131 @@ func apiRootHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, p.data)
 }
 
+var oauthStateString = "penis"
+
+func apiTwitchBotLogin(w http.ResponseWriter, r *http.Request) {
+	url := twitchBotOauthConfig.AuthCodeURL(oauthStateString)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.FormValue("state")
+	if state != oauthStateString {
+		fmt.Printf("Invalid oauth state")
+		// bad oauth state
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	code := r.FormValue("code")
+	token, err := twitchBotOauthConfig.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		log.Errorf("Code exchange failed with %s", err)
+	}
+
+	requestParameters := url.Values{}
+
+	p := customPayload{}
+
+	var data twitchKrakenOauth
+
+	onSuccess := func() {
+		p.Add("token", token.AccessToken)
+		p.Add("data", data)
+	}
+
+	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
+
+	// We should, instead of returning the data raw, do something about it.
+	// Right now this is useful for new apps that need access.
+	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
+	write(w, p.data)
+}
+
+func apiTwitchUserLogin(w http.ResponseWriter, r *http.Request) {
+	url := twitchUserOauthConfig.AuthCodeURL(oauthStateString)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.FormValue("state")
+	if state != oauthStateString {
+		fmt.Printf("Invalid oauth state")
+		// bad oauth state
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	p := customPayload{}
+
+	code := r.FormValue("code")
+	if code == "" {
+		// no valid code given
+		p.Add("error", "Invalid code")
+		write(w, p.data)
+		return
+	}
+	token, err := twitchUserOauthConfig.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		log.Errorf("Code exchange failed with %s", err)
+	}
+
+	requestParameters := url.Values{}
+
+	var data twitchKrakenOauth
+
+	onSuccess := func() {
+		p.Add("token", token.AccessToken)
+		p.Add("data", data)
+	}
+
+	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
+
+	// We should, instead of returning the data raw, do something about it.
+	// Right now this is useful for new apps that need access.
+	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
+	write(w, p.data)
+}
+
+func onHTTPError(statusCode int, statusMessage, errorMessage string) {
+	log.Debug("HTTPERROR")
+}
+
+func onInternalError(err error) {
+	log.Debugf("internal error: %s", err)
+}
+
 // InitAPI adds routes to the given subrouter
 func InitAPI(m *mux.Router) {
 	m.HandleFunc("/", apiRootHandler)
+	m.HandleFunc("/auth/twitch/bot", apiTwitchBotLogin)
+	m.HandleFunc("/auth/twitch/user", apiTwitchUserLogin)
+	m.HandleFunc("/auth/twitch/bot/callback", apiTwitchBotCallback)
+	m.HandleFunc("/auth/twitch/user/callback", apiTwitchUserCallback)
 	m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
+}
+
+type twitchKrakenOauth struct {
+	Identified bool `json:"identified"`
+	Links      struct {
+		User     string `json:"user"`
+		Channel  string `json:"channel"`
+		Search   string `json:"search"`
+		Streams  string `json:"streams"`
+		Ingests  string `json:"ingests"`
+		Teams    string `json:"teams"`
+		Users    string `json:"users"`
+		Channels string `json:"channels"`
+		Chat     string `json:"chat"`
+	} `json:"_links"`
+	Token struct {
+		Valid         bool `json:"valid"`
+		Authorization struct {
+			Scopes    []string  `json:"scopes"`
+			CreatedAt time.Time `json:"created_at"`
+			UpdatedAt time.Time `json:"updated_at"`
+		} `json:"authorization"`
+		UserName string `json:"user_name"`
+		ClientID string `json:"client_id"`
+	} `json:"token"`
 }
