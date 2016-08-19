@@ -14,14 +14,14 @@ import (
 // Init logs into twitter and starts the stream
 func Init(cfg *config.Config, redis *redismanager.RedisManager) *Client {
 	// streaming client
-	twitterCfg := oauth1.NewConfig(cfg.TwitterConsumerKey, cfg.TwitterConsumerSecret)
-	token := oauth1.NewToken(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
+	twitterCfg := oauth1.NewConfig(cfg.Auth.Twitter.ConsumerKey, cfg.Auth.Twitter.ConsumerSecret)
+	token := oauth1.NewToken(cfg.Auth.Twitter.AccessToken, cfg.Auth.Twitter.AccessSecret)
 	httpClient := twitterCfg.Client(oauth1.NoContext, token)
 	streamClient := twitter.NewClient(httpClient)
 	// rest api client
-	anaconda.SetConsumerKey(cfg.TwitterConsumerKey)
-	anaconda.SetConsumerSecret(cfg.TwitterConsumerSecret)
-	rest := anaconda.NewTwitterApi(cfg.TwitterAccessToken, cfg.TwitterAccessSecret)
+	anaconda.SetConsumerKey(cfg.Auth.Twitter.ConsumerKey)
+	anaconda.SetConsumerSecret(cfg.Auth.Twitter.ConsumerSecret)
+	rest := anaconda.NewTwitterApi(cfg.Auth.Twitter.AccessToken, cfg.Auth.Twitter.AccessSecret)
 
 	c := &Client{
 		StreamClient: streamClient,

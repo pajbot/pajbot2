@@ -41,15 +41,17 @@ type Config struct {
 				RedirectURI  string `json:"redirect_uri"`
 			} `json:"user"`
 		} `json:"twitch"`
+
+		Twitter struct {
+			ConsumerKey    string `json:"consumer_key"`
+			ConsumerSecret string `json:"consumer_secret"`
+			AccessToken    string `json:"access_token"`
+			AccessSecret   string `json:"access_secret"`
+		} `json:"twitter"`
 	} `json:"auth"`
 
 	TLSKey  string `json:"tls_key"`
 	TLSCert string `json:"tls_cert"`
-
-	TwitterConsumerKey    string `json:"twitter_consumer_key"`
-	TwitterConsumerSecret string `json:"twitter_consumer_secret"`
-	TwitterAccessToken    string `json:"twitter_access_token"`
-	TwitterAccessSecret   string `json:"twitter_access_secret"`
 
 	Quit chan string
 

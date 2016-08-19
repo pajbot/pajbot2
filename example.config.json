@@ -8,10 +8,6 @@
     "broker_login": "pajbot2",
     "web_host": "localhost:2355",
     "web_domain": "pajlada.com:2355",
-    "twitter_consumer_key": "uhurehhiukewhfkjuerwh",
-    "twitter_consumer_secret": "uiswdhuioefhouiehfouie",
-    "twitter_access_token": "heiufheuifhuefheuofjiol",
-    "twitter_access_secret": "hjukfehuighiurehgiurewhgiu",
     "auth": {
         "twitch": {
             "bot": {
@@ -24,6 +20,12 @@
                 "client_secret": "secret321",
                 "redirect_uri": "http://pajlada.com:2355/api/auth/twitch/user/callback"
             }
+        },
+        "twitter": {
+            "consumer_key": "uhurehhiukewhfkjuerwh",
+            "consumer_secret": "uiswdhuioefhouiehfouie",
+            "access_token": "heiufheuifhuefheuofjiol",
+            "access_secret": "hjukfehuighiurehgiurewhgiu"
         }
     }
 }
