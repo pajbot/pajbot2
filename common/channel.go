@@ -2,6 +2,7 @@ package common
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/pajlada/pajbot2/sqlmanager"
@@ -150,4 +151,34 @@ func (c *Channel) SQLSetEnabled(sql *sqlmanager.SQLManager, enabled int) error {
 		return err
 	}
 	return nil
+}
+
+// GetChannel xD
+func GetChannel(session *sql.DB, name string) (Channel, error) {
+	const queryF = `SELECT id, name, nickname, enabled, twitch_channel_id, twitch_access_token, twitch_refresh_token FROM pb_channel WHERE name=?`
+
+	stmt, err := session.Prepare(queryF)
+	if err != nil {
+		return Channel{}, err
+	}
+
+	var outID int
+	var outName string
+	var outTwitchAccessToken string
+	var outTwitchRefreshToken string
+
+	var c Channel
+
+	//c.FetchFromSQL(stmt.QueryRow(name))
+
+	err = stmt.QueryRow(name).Scan(&outID, &outName, &outTwitchAccessToken, &outTwitchRefreshToken)
+	switch {
+	case err == sql.ErrNoRows:
+		return Channel{}, fmt.Errorf("No channel with the name %s", name)
+
+	case err != nil:
+		return Channel{}, err
+	}
+
+	return c, nil
 }

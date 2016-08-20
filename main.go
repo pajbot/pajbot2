@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"net/http"
@@ -14,8 +15,10 @@ import (
 	_ "github.com/mattes/migrate/driver/mysql"
 	"github.com/mattes/migrate/migrate"
 	"github.com/pajlada/pajbot2/boss"
+	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/plog"
+	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
 )
 
@@ -59,6 +62,12 @@ func main() {
 	case "create":
 		createCmd()
 
+	case "newbot":
+		newbotCmd()
+
+	case "linkchannel":
+		linkchannelCmd()
+
 	case "help":
 		helpCmd()
 
@@ -77,6 +86,7 @@ Commands:
    check          Check the config file for missing fields
    install        Start the installation process (WIP)
    create <name>  Create a migration (WIP)
+   newbot         Create a new bot
 `)
 }
 
@@ -109,7 +119,6 @@ func runCmd() {
 	}
 
 	// Run database migrations
-	log.Debug("Running database migrations")
 	allErrors, ok := migrate.UpSync("mysql://"+config.SQLDSN, "./migrations")
 	if !ok {
 		log.Debug("An error occured while trying to run database migrations")
@@ -118,7 +127,6 @@ func runCmd() {
 		}
 		os.Exit(1)
 	}
-	log.Debug("Done")
 
 	// Start web server
 
@@ -157,4 +165,67 @@ func createCmd() {
 	os.Stderr.WriteString(
 		`"create" not yet implemented
 `)
+}
+
+// add a new bot to pb_bot
+func newbotCmd() {
+	config, err := config.LoadConfig(*configPath)
+	if err != nil {
+		log.Fatal("An error occured while loading the config file:", err)
+	}
+
+	sql := sqlmanager.Init(config)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	var name string
+	var accessToken string
+	var refreshToken string
+
+	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
+
+	fmt.Print("Bot name: ")
+	name, _ = reader.ReadString('\n')
+	fmt.Print("Bot access token: ")
+	accessToken, _ = reader.ReadString('\n')
+	fmt.Print("Bot refresh token: ")
+	refreshToken, _ = reader.ReadString('\n')
+
+	fmt.Println("Creating a new bot with the given credentials")
+
+	common.CreateBotAccount(sql.Session, name, accessToken, refreshToken)
+}
+
+// Link a pb_channel to a pb_bot
+func linkchannelCmd() {
+	/*
+		config, err := config.LoadConfig(*configPath)
+		if err != nil {
+			log.Fatal("An error occured while loading the config file:", err)
+		}
+
+		sql := sqlmanager.Init(config)
+
+		reader := bufio.NewReader(os.Stdin)
+
+		var name string
+		var channelName string
+
+		fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
+
+		fmt.Print("Bot name: ")
+		name, _ = reader.ReadString('\n')
+
+			b, err := common.GetBotAccount(sql.Session, name)
+			if err == nil {
+				fmt.Println("No bot with the name " + name)
+				return
+			}
+			fmt.Print("Channel name: ")
+			channelName, _ = reader.ReadString('\n')
+
+			c, err := common.GetChannel(sql.Session, channelName)
+
+			fmt.Println("Creating a new bot with the given credentials")
+	*/
 }
