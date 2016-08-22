@@ -43,10 +43,7 @@ func modulesLoad(b *bot.Bot) {
 	for _, module := range b.AllModules {
 		state := module.GetState()
 		if state.IsEnabled() {
-			log.Debugf("Enabling module %s", state.ID)
 			b.EnabledModules = append(b.EnabledModules, module)
-		} else {
-			log.Debugf("Module %s will not be enabled", state.ID)
 		}
 	}
 }

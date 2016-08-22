@@ -2,7 +2,7 @@ package common
 
 // TwitchClientCredentials xD
 type TwitchClientCredentials struct {
-	TwitchAccessToken string
+	AccessToken string
 
-	TwitchRefreshToken string
+	RefreshToken string
 }

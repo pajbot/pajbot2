@@ -8,6 +8,8 @@ import (
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
+const channelQ = "SELECT id, name, nickname, enabled, twitch_channel_id, bot_id FROM pb_channel"
+
 // Channel contains data about the channel
 type Channel struct {
 	// ID in the database
@@ -25,9 +27,8 @@ type Channel struct {
 	// Channel ID (fetched from the twitch API)
 	TwitchChannelID int64
 
-	// Access token provided by user on signup
-	TwitchAccessToken  string
-	TwitchRefreshToken string
+	// XXX: this should probably we renamed to BotAcountID instead of naming it BotID or bot_id everywhere
+	BotID int
 
 	BttvEmotes map[string]Emote // channel and global emotes
 	Online     bool
@@ -36,20 +37,26 @@ type Channel struct {
 
 // ChannelSQLWrapper contains data about the channel that's stored in MySQL
 type ChannelSQLWrapper struct {
-	ID                 int
-	Name               string
-	Nickname           sql.NullString
-	Enabled            int
-	TwitchChannelID    sql.NullInt64
-	TwitchAccessToken  sql.NullString
-	TwitchRefreshToken sql.NullString
+	ID              int
+	Name            string
+	Nickname        sql.NullString
+	Enabled         int
+	TwitchChannelID sql.NullInt64
+	BotID           int
 }
 
 // FetchAllChannels loads all channels from pb_channel in MySQL
-func FetchAllChannels(sql *sqlmanager.SQLManager) ([]Channel, error) {
+func FetchAllChannels(sql *sqlmanager.SQLManager, botID int) ([]Channel, error) {
 	var channels []Channel
 
-	rows, err := sql.Session.Query("SELECT id, name, nickname, enabled, twitch_channel_id, twitch_access_token, twitch_refresh_token FROM pb_channel")
+	const queryF = channelQ + " WHERE bot_id=?"
+
+	stmt, err := sql.Session.Prepare(queryF)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(botID)
 	if err != nil {
 		return nil, err
 	}
@@ -86,12 +93,7 @@ func (c *Channel) FetchFromWrapper(w ChannelSQLWrapper) {
 	if w.TwitchChannelID.Valid {
 		c.TwitchChannelID = w.TwitchChannelID.Int64
 	}
-	if w.TwitchAccessToken.Valid {
-		c.TwitchAccessToken = w.TwitchAccessToken.String
-	}
-	if w.TwitchRefreshToken.Valid {
-		c.TwitchRefreshToken = w.TwitchRefreshToken.String
-	}
+	c.BotID = w.BotID
 }
 
 // FetchFromSQL populates the given object with data from SQL based on the
@@ -99,7 +101,7 @@ func (c *Channel) FetchFromWrapper(w ChannelSQLWrapper) {
 func (c *Channel) FetchFromSQL(row *sql.Rows) error {
 	w := ChannelSQLWrapper{}
 
-	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.TwitchChannelID, &w.TwitchAccessToken, &w.TwitchRefreshToken)
+	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.TwitchChannelID, &w.BotID)
 
 	if err != nil {
 		log.Error(err)
@@ -111,9 +113,25 @@ func (c *Channel) FetchFromSQL(row *sql.Rows) error {
 	return nil
 }
 
+// FetchFromSQLRow populates the given object with data from SQL based on the
+// given argument
+func (c *Channel) FetchFromSQLRow(row *sql.Row) error {
+	w := ChannelSQLWrapper{}
+
+	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.TwitchChannelID, &w.BotID)
+
+	if err != nil {
+		return err
+	}
+
+	c.FetchFromWrapper(w)
+
+	return nil
+}
+
 // InsertNewToSQL inserts the given channel to SQL
 func (c *Channel) InsertNewToSQL(sql *sqlmanager.SQLManager) error {
-	const queryF = `INSERT INTO pb_channel (name) VALUES (?)`
+	const queryF = `INSERT INTO pb_channel (name, bot_id) VALUES (?, ?)`
 
 	stmt, err := sql.Session.Prepare(queryF)
 	if err != nil {
@@ -122,7 +140,7 @@ func (c *Channel) InsertNewToSQL(sql *sqlmanager.SQLManager) error {
 		return err
 	}
 
-	_, err = stmt.Exec(c.Name)
+	_, err = stmt.Exec(c.Name, c.BotID)
 
 	if err != nil {
 		// XXX
@@ -153,30 +171,47 @@ func (c *Channel) SQLSetEnabled(sql *sqlmanager.SQLManager, enabled int) error {
 	return nil
 }
 
+// SQLSetBotID updates the enabled state of the given channel
+func (c *Channel) SQLSetBotID(sql *sqlmanager.SQLManager, botID int) error {
+	const queryF = `UPDATE pb_channel SET bot_id=? WHERE id=?`
+
+	stmt, err := sql.Session.Prepare(queryF)
+	if err != nil {
+		// XXX
+		log.Fatal(err)
+		return err
+	}
+
+	_, err = stmt.Exec(botID, c.ID)
+
+	if err != nil {
+		// XXX
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
 // GetChannel xD
 func GetChannel(session *sql.DB, name string) (Channel, error) {
-	const queryF = `SELECT id, name, nickname, enabled, twitch_channel_id, twitch_access_token, twitch_refresh_token FROM pb_channel WHERE name=?`
+	const queryF = channelQ + " WHERE name=?"
 
 	stmt, err := session.Prepare(queryF)
 	if err != nil {
 		return Channel{}, err
 	}
 
-	var outID int
-	var outName string
-	var outTwitchAccessToken string
-	var outTwitchRefreshToken string
-
 	var c Channel
 
-	//c.FetchFromSQL(stmt.QueryRow(name))
+	err = c.FetchFromSQLRow(stmt.QueryRow(name))
 
-	err = stmt.QueryRow(name).Scan(&outID, &outName, &outTwitchAccessToken, &outTwitchRefreshToken)
 	switch {
 	case err == sql.ErrNoRows:
+		log.Error(err)
 		return Channel{}, fmt.Errorf("No channel with the name %s", name)
 
 	case err != nil:
+		log.Error(err)
 		return Channel{}, err
 	}
 

@@ -15,8 +15,10 @@ import (
 	_ "github.com/mattes/migrate/driver/mysql"
 	"github.com/mattes/migrate/migrate"
 	"github.com/pajlada/pajbot2/boss"
+	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
@@ -87,6 +89,7 @@ Commands:
    install        Start the installation process (WIP)
    create <name>  Create a migration (WIP)
    newbot         Create a new bot
+   linkchannel    Link a channel to a bot ID
 `)
 }
 
@@ -143,8 +146,12 @@ func runCmd() {
 	}()
 	config.Quit = make(chan string)
 	b := boss.Init(config)
+	var bots []map[string]*bot.Bot
+	for _, ircConnection := range b.IRCConnections {
+		bots = append(bots, ircConnection.Bots)
+	}
 	webCfg := &web.Config{
-		Bots:  b.Bots,
+		Bots:  bots,
 		Redis: b.Redis,
 		SQL:   b.SQL,
 	}
@@ -185,11 +192,11 @@ func newbotCmd() {
 	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
 
 	fmt.Print("Bot name: ")
-	name, _ = reader.ReadString('\n')
+	name = helper.ReadArg(reader)
 	fmt.Print("Bot access token: ")
-	accessToken, _ = reader.ReadString('\n')
+	accessToken = helper.ReadArg(reader)
 	fmt.Print("Bot refresh token: ")
-	refreshToken, _ = reader.ReadString('\n')
+	refreshToken = helper.ReadArg(reader)
 
 	fmt.Println("Creating a new bot with the given credentials")
 
@@ -198,34 +205,38 @@ func newbotCmd() {
 
 // Link a pb_channel to a pb_bot
 func linkchannelCmd() {
-	/*
-		config, err := config.LoadConfig(*configPath)
-		if err != nil {
-			log.Fatal("An error occured while loading the config file:", err)
-		}
+	config, err := config.LoadConfig(*configPath)
+	if err != nil {
+		log.Fatal("An error occured while loading the config file:", err)
+	}
 
-		sql := sqlmanager.Init(config)
+	sql := sqlmanager.Init(config)
 
-		reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(os.Stdin)
 
-		var name string
-		var channelName string
+	var name string
+	var channelName string
 
-		fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
+	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
 
-		fmt.Print("Bot name: ")
-		name, _ = reader.ReadString('\n')
+	fmt.Print("Bot name: ")
+	name = helper.ReadArg(reader)
 
-			b, err := common.GetBotAccount(sql.Session, name)
-			if err == nil {
-				fmt.Println("No bot with the name " + name)
-				return
-			}
-			fmt.Print("Channel name: ")
-			channelName, _ = reader.ReadString('\n')
+	b, err := common.GetBotAccount(sql.Session, name)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	fmt.Print("Channel name: ")
+	channelName = helper.ReadArg(reader)
 
-			c, err := common.GetChannel(sql.Session, channelName)
+	c, err := common.GetChannel(sql.Session, channelName)
+	if err != nil {
+		fmt.Println("No channel with the name " + channelName)
+		return
+	}
 
-			fmt.Println("Creating a new bot with the given credentials")
-	*/
+	c.SQLSetBotID(sql, b.ID)
+
+	fmt.Printf("Linked channel %s to bot %s\n", channelName, name)
 }

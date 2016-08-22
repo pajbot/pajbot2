@@ -11,8 +11,6 @@ The Config contains all the data required to connect
 to the twitch IRC servers
 */
 type Config struct {
-	Pass        string  `json:"pass"`
-	Nick        string  `json:"nick"`
 	BrokerHost  *string `json:"broker_host"`
 	BrokerPass  *string `json:"broker_pass"`
 	BrokerLogin string  `json:"broker_login"`

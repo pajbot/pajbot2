@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/parser"
 	"github.com/pajlada/pajbot2/pbtwitter"
 	"github.com/pajlada/pajbot2/plog"
@@ -24,25 +23,38 @@ import (
 
 var log = plog.GetLogger()
 
+// IRCConfig xD
+type IRCConfig struct {
+	BrokerHost  string
+	BrokerPass  string
+	BrokerLogin string
+	Redis       *redismanager.RedisManager
+	SQL         *sqlmanager.SQLManager
+	Twitter     *pbtwitter.Client
+	Quit        chan string
+	Silent      bool
+}
+
 /*
 The Irc object contains all data xD
 */
 type Irc struct {
 	sync.Mutex
-	brokerHost  string
-	brokerPass  string
-	brokerLogin string
-	pass        string
-	nick        string
-	conn        net.Conn
-	join        chan string
-	ReadChan    chan string
-	SendChan    chan string
-	Bots        map[string]*bot.Bot
-	Redis       *redismanager.RedisManager
-	SQL         *sqlmanager.SQLManager
-	twitter     *pbtwitter.Client
-	quit        chan string
+	BotAccountID int
+	brokerHost   string
+	brokerPass   string
+	brokerLogin  string
+	pass         string
+	nick         string
+	conn         net.Conn
+	join         chan string
+	ReadChan     chan string
+	SendChan     chan string
+	Bots         map[string]*bot.Bot
+	Redis        *redismanager.RedisManager
+	SQL          *sqlmanager.SQLManager
+	twitter      *pbtwitter.Client
+	quit         chan string
 }
 
 /*
@@ -187,14 +199,15 @@ func (irc *Irc) NewBot(channel string) {
 	}
 	read := make(chan common.Msg, 10)
 	newbot := bot.Config{
-		Quit:     irc.quit,
-		Channel:  channel,
-		ReadChan: read,
-		SendChan: irc.SendChan,
-		Join:     irc.join,
-		Redis:    irc.Redis,
-		SQL:      irc.SQL,
-		Twitter:  irc.twitter.Bots[channel],
+		BotAccountID: irc.BotAccountID,
+		Quit:         irc.quit,
+		Channel:      channel,
+		ReadChan:     read,
+		SendChan:     irc.SendChan,
+		Join:         irc.join,
+		Redis:        irc.Redis,
+		SQL:          irc.SQL,
+		Twitter:      irc.twitter.Bots[channel],
 	}
 	b := bot.NewBot(newbot)
 	irc.Bots[channel] = b
@@ -259,27 +272,28 @@ func (irc *Irc) JoinChannels() {
 }
 
 /*
-Init initalizes shit.
+InitIRCConnection initalizes shit.
 
 TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
-func Init(config *config.Config) *Irc {
+func InitIRCConnection(config IRCConfig, botAccount common.BotAccount) *Irc {
 	irc := &Irc{
-		brokerHost:  *config.BrokerHost,
-		brokerPass:  *config.BrokerPass,
-		brokerLogin: config.BrokerLogin,
-		pass:        config.Pass,
-		nick:        config.Nick,
-		ReadChan:    make(chan string, 10),
-		SendChan:    make(chan string, 10),
-		join:        make(chan string, 5),
-		Bots:        make(map[string]*bot.Bot),
-		Redis:       redismanager.Init(config),
-		SQL:         sqlmanager.Init(config),
-		quit:        config.Quit,
+		BotAccountID: botAccount.ID,
+		brokerHost:   config.BrokerHost,
+		brokerPass:   config.BrokerPass,
+		brokerLogin:  config.BrokerLogin,
+		pass:         "oauth:" + botAccount.TwitchCredentials.AccessToken,
+		nick:         botAccount.Name,
+		ReadChan:     make(chan string, 10),
+		SendChan:     make(chan string, 10),
+		join:         make(chan string, 5),
+		Bots:         make(map[string]*bot.Bot),
+		Redis:        config.Redis,
+		SQL:          config.SQL,
+		twitter:      config.Twitter,
+		quit:         config.Quit,
 	}
-	irc.twitter = pbtwitter.Init(config, irc.Redis)
 	err := irc.newConn()
 	if err != nil {
 		// Right now we just fatally exit the bot
@@ -295,7 +309,7 @@ func Init(config *config.Config) *Irc {
 	// Start a goroutine which handles joining and parting from channels
 	go irc.JoinChannels()
 
-	channels, err := common.FetchAllChannels(irc.SQL)
+	channels, err := common.FetchAllChannels(irc.SQL, botAccount.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -303,7 +317,7 @@ func Init(config *config.Config) *Irc {
 	hasOwnChannel := false
 	for _, channel := range channels {
 		log.Debug(channel.Name)
-		if channel.Name == config.Nick {
+		if channel.Name == botAccount.Name {
 			hasOwnChannel = true
 		}
 
@@ -318,7 +332,8 @@ func Init(config *config.Config) *Irc {
 	if !hasOwnChannel {
 		// Create our own channel, then use InsertNewToSQL
 		ownChannel := &common.Channel{
-			Name: config.Nick,
+			Name:  botAccount.Name,
+			BotID: botAccount.ID,
 		}
 		ownChannel.InsertNewToSQL(irc.SQL)
 

@@ -18,7 +18,7 @@ import (
 type Config struct {
 	Redis *redismanager.RedisManager
 	SQL   *sqlmanager.SQLManager
-	Bots  map[string]*bot.Bot
+	Bots  []map[string]*bot.Bot
 }
 
 // Boss xD
@@ -28,7 +28,7 @@ type Boss struct {
 }
 
 var (
-	bots  map[string]*bot.Bot
+	bots  []map[string]*bot.Bot
 	redis *redismanager.RedisManager
 	sql   *sqlmanager.SQLManager
 )

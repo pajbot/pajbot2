@@ -1,9 +1,8 @@
 package common
 
-import (
-	"database/sql"
-	"fmt"
-)
+import "database/sql"
+
+const botAccountQ = "SELECT id, name, twitch_access_token, twitch_refresh_token FROM pb_bot_account"
 
 // BotAccount xD
 type BotAccount struct {
@@ -34,7 +33,7 @@ func CreateBotAccount(session *sql.DB, name string, accessToken string, refreshT
 
 // GetBotAccount xD
 func GetBotAccount(session *sql.DB, name string) (BotAccount, error) {
-	const queryF = `SELECT id, name, twitch_access_token, twitch_refresh_token FROM pb_bot_account WHERE name=?`
+	const queryF = botAccountQ + " WHERE name=?"
 
 	stmt, err := session.Prepare(queryF)
 	if err != nil {
@@ -50,7 +49,7 @@ func GetBotAccount(session *sql.DB, name string) (BotAccount, error) {
 	err = stmt.QueryRow(name).Scan(&outID, &outName, &outTwitchAccessToken, &outTwitchRefreshToken)
 	switch {
 	case err == sql.ErrNoRows:
-		return BotAccount{}, fmt.Errorf("No bot account with the name %s", name)
+		return BotAccount{}, err
 
 	case err != nil:
 		return BotAccount{}, err
@@ -60,10 +59,45 @@ func GetBotAccount(session *sql.DB, name string) (BotAccount, error) {
 		ID:   outID,
 		Name: outName,
 		TwitchCredentials: TwitchClientCredentials{
-			TwitchAccessToken:  outTwitchAccessToken,
-			TwitchRefreshToken: outTwitchRefreshToken,
+			AccessToken:  outTwitchAccessToken,
+			RefreshToken: outTwitchRefreshToken,
 		},
 	}
 
 	return ba, nil
+}
+
+// GetAllBotAccounts xD
+func GetAllBotAccounts(session *sql.DB) ([]BotAccount, error) {
+	const queryF = botAccountQ
+	var botAccounts []BotAccount
+
+	var outID int
+	var outName string
+	var outTwitchAccessToken string
+	var outTwitchRefreshToken string
+
+	rows, err := session.Query(queryF)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&outID, &outName, &outTwitchAccessToken, &outTwitchRefreshToken)
+		if err != nil {
+			log.Error(err)
+		} else {
+			ba := BotAccount{
+				ID:   outID,
+				Name: outName,
+				TwitchCredentials: TwitchClientCredentials{
+					AccessToken:  outTwitchAccessToken,
+					RefreshToken: outTwitchRefreshToken,
+				},
+			}
+			botAccounts = append(botAccounts, ba)
+		}
+	}
+
+	return botAccounts, nil
 }

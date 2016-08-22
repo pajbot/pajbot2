@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/common"
 	"golang.org/x/oauth2"
 )
 
@@ -95,13 +96,15 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	var bot *bot.Bot
 	var ok bool
 	var p interface{}
-	if bot, ok = bots[channel]; !ok {
-		p = apiError{
-			Err: "channel not found",
+	for _, _bots := range bots {
+		if bot, ok = _bots[channel]; !ok {
+			p = apiError{
+				Err: "channel not found",
+			}
+		} else {
+			ep, _rest := getEndPoint(v["rest"])
+			p = exec(channel, ep, _rest)
 		}
-	} else {
-		ep, _rest := getEndPoint(v["rest"])
-		p = exec(channel, ep, _rest)
 	}
 	log.Debug(p)
 	write(w, p)
@@ -145,8 +148,14 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	var data twitchKrakenOauth
 
 	onSuccess := func() {
-		p.Add("token", token.AccessToken)
 		p.Add("data", data)
+
+		if data.Identified && data.Token.Valid {
+			p.Add("username", data.Token.UserName)
+			p.Add("token", token.AccessToken)
+			p.Add("refreshtoken", token.RefreshToken)
+			common.CreateBotAccount(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
+		}
 	}
 
 	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
@@ -155,6 +164,8 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	// Right now this is useful for new apps that need access.
 	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
 	write(w, p.data)
+
+	//common.CreateBotAccount(sql.Session, )
 }
 
 func apiTwitchUserLogin(w http.ResponseWriter, r *http.Request) {
