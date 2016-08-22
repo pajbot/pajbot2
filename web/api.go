@@ -119,6 +119,7 @@ func apiRootHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, p.data)
 }
 
+// TODO(pajlada): This should be random per request
 var oauthStateString = "penis"
 
 func apiTwitchBotLogin(w http.ResponseWriter, r *http.Request) {
@@ -201,8 +202,14 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	var data twitchKrakenOauth
 
 	onSuccess := func() {
-		p.Add("token", token.AccessToken)
 		p.Add("data", data)
+
+		if data.Identified && data.Token.Valid {
+			p.Add("username", data.Token.UserName)
+			p.Add("token", token.AccessToken)
+			p.Add("refreshtoken", token.RefreshToken)
+			common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
+		}
 	}
 
 	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
