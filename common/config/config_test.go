@@ -16,8 +16,6 @@ func TestLoadConfig(t *testing.T) {
 		{
 			inputPath: "../../resources/testfiles/config1.json",
 			expectedC: &Config{
-				Pass:          "oauth:xD",
-				Nick:          "twitch_username",
 				BrokerHost:    helper.NewStringPtr("localhost:7353"),
 				BrokerPass:    helper.NewStringPtr("test"),
 				RedisHost:     "localhost:6379",
