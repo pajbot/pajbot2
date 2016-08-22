@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"bufio"
 	"crypto/rand"
 	"fmt"
 	"math"
@@ -120,4 +121,11 @@ func GetTrueP() *bool {
 func GetFalseP() *bool {
 	b := false
 	return &b
+}
+
+// ReadArg reads a string until \n and trims all whitespace
+func ReadArg(reader *bufio.Reader) string {
+	untrimmed, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(untrimmed)
 }
