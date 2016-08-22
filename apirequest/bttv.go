@@ -38,7 +38,6 @@ func (b *bttv) LoadEmotes(channel string) ([]common.Emote, error) {
 		log.Error(err)
 	}
 	if data.Emotes == nil {
-		log.Error("no data")
 		return nil, fmt.Errorf("No data")
 	}
 	if channel == "global" {
