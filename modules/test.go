@@ -137,7 +137,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			MessageType: web.MessageTypeDashboard,
 			Payload: &web.Payload{
 				Event: "chat",
-				Data: map[string]string{
+				Data: map[string]interface{}{
 					"text": msg.Text,
 					"user": msg.User.DisplayName,
 				},

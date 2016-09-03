@@ -4,8 +4,8 @@ import "encoding/json"
 
 // Payload xD
 type Payload struct {
-	Event string            `json:"event"`
-	Data  map[string]string `json:"data"`
+	Event string                 `json:"event"`
+	Data  map[string]interface{} `json:"data"`
 }
 
 // ToJSON creates a json string from the payload
