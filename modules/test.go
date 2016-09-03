@@ -124,6 +124,21 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			}
 		}
 	}
+
+	if len(msg.Emotes) > 0 {
+		wsMessage := &web.WSMessage{
+			MessageType: web.MessageTypeCLR,
+			Payload: &web.Payload{
+				Event: "emotes",
+				Data: map[string]interface{}{
+					"user":   msg.User.DisplayName,
+					"emotes": msg.Emotes,
+				},
+			},
+		}
+		web.Hub.Broadcast(wsMessage)
+	}
+
 	if msg.Text == "abc" {
 		wsMessage := &web.WSMessage{
 			MessageType: web.MessageTypeDashboard,
