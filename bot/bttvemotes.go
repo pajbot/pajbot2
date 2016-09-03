@@ -31,9 +31,16 @@ func (bot *Bot) LoadBttvEmotes() {
 // regex would probably be better but im a regex noob ¯\_(ツ)_/¯
 func (bot *Bot) parseBttvEmotes(msg *common.Msg) {
 	m := strings.Split(msg.Text, " ")
+	emoteCount := make(map[string]*common.Emote)
 	for _, word := range m {
-		if emote, ok := bot.Channel.BttvEmotes[word]; ok {
-			msg.Emotes = append(msg.Emotes, emote)
+		if emote, ok := emoteCount[word]; ok {
+			emote.Count++
+		} else if emote, ok := bot.Channel.BttvEmotes[word]; ok {
+			emoteCount[word] = &emote
 		}
+	}
+
+	for _, emote := range emoteCount {
+		msg.Emotes = append(msg.Emotes, *emote)
 	}
 }
