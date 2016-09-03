@@ -145,10 +145,12 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		}
 		web.Hub.Broadcast(wsMessage)
 	}
-	r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
 	switch msg.Type {
+	case common.MsgTimeoutSuccess:
+		b.Sayf("MsgTimeoutSuccess triggered: %#v", msg.Tags)
 	case common.MsgRoomState:
 		log.Debug("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
+		r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
 		if r9k != "" && slow != "" {
 			// Initial channel join
 			//b.Sayf("initial join. state: r9k:%s, slow:%s, sub:%s", r9k, slow, sub)

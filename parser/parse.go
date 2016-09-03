@@ -171,6 +171,9 @@ func parseExtendedTags(m *common.Msg) {
 	case "host_off":
 		m.Type = common.MsgHostOff
 
+	case "timeout_success":
+		m.Type = common.MsgTimeoutSuccess
+
 	case "":
 		break
 

@@ -44,6 +44,7 @@ const (
 	MsgR9kOff
 	MsgHostOn
 	MsgHostOff
+	MsgTimeoutSuccess
 )
 
 /*
