@@ -61,14 +61,3 @@ type Msg struct {
 	Tags    map[string]string
 	Args    []string // needed for bot.Format for now
 }
-
-// Emote xD
-type Emote struct {
-	Name  string
-	ID    string
-	Type  string // bttv, twitch
-	SizeX int    //in px
-	SizeY int    //in px
-	IsGif bool
-	Count int
-}
