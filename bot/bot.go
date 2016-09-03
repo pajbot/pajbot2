@@ -85,6 +85,8 @@ func (bot *Bot) Init() {
 	go bot.LoadBttvEmotes()
 	go bot.readChat()
 	go bot.readTweets()
+
+	bot.Sayf("Joined channel %s, build time: %s", bot.Channel.Name, common.BuildTime)
 }
 
 func (bot *Bot) readChat() {

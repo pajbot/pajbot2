@@ -111,6 +111,7 @@ func cmdLeaveChannel(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 }
 
 func cmdQuit(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	b.Sayf("Shutting down, build time: %s", common.BuildTime)
 	b.Quit <- "Quit from command by " + msg.User.Name
 }
 

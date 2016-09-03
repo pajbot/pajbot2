@@ -30,11 +30,15 @@ func cleanup() {
 	// TODO: Perform cleanups
 }
 
+var buildTime string
+
 var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
 
 func main() {
 	plog.InitLogging()
+
+	common.BuildTime = buildTime
 
 	flag.Usage = func() {
 		helpCmd()
