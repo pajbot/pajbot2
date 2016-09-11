@@ -175,9 +175,10 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 		delay := 100
 
 		for _, commit := range pushData.Commits {
-			//time.AfterFunc(time.Millisecond*time.Duration(delay), func() { writeCommit(b, commit, pushData.Repository) })
-			writeCommit(b, commit, pushData.Repository)
-			delay += 100
+			func(iCommit Commit) {
+				time.AfterFunc(time.Millisecond*time.Duration(delay), func() { writeCommit(b, iCommit, pushData.Repository) })
+			}(commit)
+			delay += 250
 		}
 		p.Add("success", true)
 	}
@@ -186,8 +187,7 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeCommit(b *bot.Bot, commit Commit, repository RepositoryData) {
-	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message)
-	log.Debug(msg)
+	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
 	b.SaySafef(msg)
 }
 
