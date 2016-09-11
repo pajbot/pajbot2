@@ -181,12 +181,6 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 		}
 		p.Add("success", true)
 	}
-	for _, botList := range bots {
-		for key, bot := range botList {
-			log.Debug(key)
-			log.Debug(bot)
-		}
-	}
 
 	write(w, p.data)
 }
