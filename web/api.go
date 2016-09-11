@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
+	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bot"
@@ -53,7 +53,7 @@ func newError(err string) interface{} {
 func write(w http.ResponseWriter, data interface{}) {
 	bs, err := json.Marshal(data)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Error in web write: %s", err)
 		bs, _ = json.Marshal(newError("internal server error"))
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -75,7 +75,6 @@ func getEndPoint(url string) (string, string) {
 }
 
 func exec(channel, endpoint, rest string) interface{} {
-	log.Info(channel, endpoint, rest)
 	if !isValidURL(rest) {
 		return newError(ErrInvalidUserName)
 	}
@@ -111,11 +110,8 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 			p = exec(channel, ep, _rest)
 		}
 	}
-	log.Debug(p)
+	log.Debugf("Bot: %#v", bot)
 	write(w, p)
-	//p.Write(w)
-	log.Info(bot != nil)
-	//bot.Say("LUL")
 }
 
 func apiHook(w http.ResponseWriter, r *http.Request) {
@@ -241,13 +237,9 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("Code exchange failed with %s", err)
 	}
 
-	requestParameters := url.Values{}
-
 	p := customPayload{}
 
-	var data twitchKrakenOauth
-
-	onSuccess := func() {
+	onSuccess := func(data gotwitch.Self) {
 		p.Add("data", data)
 
 		if data.Identified && data.Token.Valid {
@@ -258,7 +250,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
+	apirequest.Twitch.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
 
 	// We should, instead of returning the data raw, do something about it.
 	// Right now this is useful for new apps that need access.
@@ -296,11 +288,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("Code exchange failed with %s", err)
 	}
 
-	requestParameters := url.Values{}
-
-	var data twitchKrakenOauth
-
-	onSuccess := func() {
+	onSuccess := func(data gotwitch.Self) {
 		p.Add("data", data)
 
 		if data.Identified && data.Token.Valid {
@@ -311,7 +299,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	apirequest.Twitch.Get("/", requestParameters, token.AccessToken, &data, onSuccess, onHTTPError, onInternalError)
+	apirequest.Twitch.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
 
 	// We should, instead of returning the data raw, do something about it.
 	// Right now this is useful for new apps that need access.
@@ -320,7 +308,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	log.Debug("HTTPERROR")
+	// log.Debug("HTTPERROR")
 }
 
 func onInternalError(err error) {
@@ -336,29 +324,4 @@ func InitAPI(m *mux.Router) {
 	m.HandleFunc("/auth/twitch/user/callback", apiTwitchUserCallback)
 	m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
 	m.HandleFunc(`/hook/{channel:\w+}`, apiHook)
-}
-
-type twitchKrakenOauth struct {
-	Identified bool `json:"identified"`
-	Links      struct {
-		User     string `json:"user"`
-		Channel  string `json:"channel"`
-		Search   string `json:"search"`
-		Streams  string `json:"streams"`
-		Ingests  string `json:"ingests"`
-		Teams    string `json:"teams"`
-		Users    string `json:"users"`
-		Channels string `json:"channels"`
-		Chat     string `json:"chat"`
-	} `json:"_links"`
-	Token struct {
-		Valid         bool `json:"valid"`
-		Authorization struct {
-			Scopes    []string  `json:"scopes"`
-			CreatedAt time.Time `json:"created_at"`
-			UpdatedAt time.Time `json:"updated_at"`
-		} `json:"authorization"`
-		UserName string `json:"user_name"`
-		ClientID string `json:"client_id"`
-	} `json:"token"`
 }
