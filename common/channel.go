@@ -30,9 +30,10 @@ type Channel struct {
 	// XXX: this should probably we renamed to BotAcountID instead of naming it BotID or bot_id everywhere
 	BotID int
 
-	BttvEmotes map[string]Emote // channel and global emotes
-	Online     bool
-	Uptime     time.Time // time when stream went live, time when last stream ended if not online
+	Emotes ExtensionEmotes
+
+	Online bool
+	Uptime time.Time // time when stream went live, time when last stream ended if not online
 }
 
 // ChannelSQLWrapper contains data about the channel that's stored in MySQL

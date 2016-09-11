@@ -6,7 +6,7 @@ import "github.com/pajlada/pajbot2/common"
 Handle attempts to handle the given message
 */
 func (b *Bot) Handle(msg common.Msg) {
-	b.parseBttvEmotes(&msg)
+	b.parseEmotes(&msg)
 	common.ParseEmojis(&msg)
 	oldUser := msg.User
 	defer b.Redis.UpdateUser(b.Channel.Name, &msg.User, &oldUser)

@@ -1,10 +1,12 @@
 package common
 
+import "time"
+
 // Emote xD
 type Emote struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
-	// Possible types: bttv, twitch
+	// Possible types: bttv, twitch, ffz
 	Type string `json:"type"`
 
 	// Size in pixels
@@ -13,4 +15,33 @@ type Emote struct {
 
 	IsGif bool `json:"is_gif"`
 	Count int  `json:"count"`
+}
+
+// ExtensionEmotes is an object which contains emotes that are shared between all channels
+type ExtensionEmotes struct {
+	// Global BTTV Emotes
+	Bttv           map[string]Emote
+	BttvLastUpdate time.Time
+
+	// Global FrankerFaceZ Emotes
+	FrankerFaceZ           map[string]Emote
+	FrankerFaceZLastUpdate time.Time
+}
+
+// EmoteByName implements sort.Interface by emote name
+type EmoteByName []Emote
+
+// Len implements sort.Interface
+func (a EmoteByName) Len() int {
+	return len(a)
+}
+
+// Swap implements sort.Interface
+func (a EmoteByName) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+// Less implements sort.Interface
+func (a EmoteByName) Less(i, j int) bool {
+	return a[i].Name < a[j].Name
 }

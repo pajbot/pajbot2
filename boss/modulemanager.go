@@ -29,6 +29,7 @@ func modulesInit(b *bot.Bot) {
 		&modules.SubAnnounce{},
 		&modules.Test{},
 		&modules.Top{},
+		&modules.Emotes{},
 	}
 }
 

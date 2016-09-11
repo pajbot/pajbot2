@@ -55,8 +55,7 @@ NewBot instansiates a new Bot object with the given Config object
 */
 func NewBot(cfg Config) *Bot {
 	channel := common.Channel{
-		Name:       cfg.Channel,
-		BttvEmotes: make(map[string]common.Emote),
+		Name: cfg.Channel,
 	}
 	b := &Bot{
 		Quit:    cfg.Quit,
@@ -76,6 +75,8 @@ func NewBot(cfg Config) *Bot {
 /*
 Init starts the bots
 
+ * Load channel-specific BTTV emotes
+ * Load channel-specific FFZ emotes
 Connects to irc, joins channel etc
 starts channels?
 idk
@@ -83,6 +84,7 @@ idk
 func (bot *Bot) Init() {
 	log.Infof("new bot in %s", bot.Channel)
 	go bot.LoadBttvEmotes()
+	go bot.LoadFFZEmotes()
 	go bot.readChat()
 	go bot.readTweets()
 

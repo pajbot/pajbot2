@@ -150,6 +150,7 @@ func runCmd() {
 	}()
 	config.Quit = make(chan string)
 	b := boss.Init(config)
+	go bot.LoadGlobalEmotes()
 	var bots []map[string]*bot.Bot
 	for _, ircConnection := range b.IRCConnections {
 		bots = append(bots, ircConnection.Bots)
