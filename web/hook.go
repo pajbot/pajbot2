@@ -1,52 +1,91 @@
 package web
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
 
-// Commit github json to go
-type Commit struct {
-	ID        string    `json:"id"`
-	TreeID    string    `json:"tree_id"`
-	Distinct  bool      `json:"distinct"`
-	Message   string    `json:"message"`
-	Timestamp time.Time `json:"timestamp"`
-	URL       string    `json:"url"`
-	Author    struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
-	} `json:"author"`
-	Committer struct {
-		Name     string `json:"name"`
-		Email    string `json:"email"`
-		Username string `json:"username"`
-	} `json:"committer"`
+	"github.com/gorilla/mux"
+	"github.com/pajlada/pajbot2/bot"
+)
+
+func apiHook(w http.ResponseWriter, r *http.Request) {
+	p := customPayload{}
+	v := mux.Vars(r)
+	hookType := r.Header.Get("x-github-event")
+	hookSignature := r.Header.Get("x-hub-signature")
+	channel := v["channel"]
+
+	// Get hook from config according to channel
+	channelHook, ok := hooks[channel]
+	if !ok {
+		// No hook for this channel found
+		p.Add("error", "No hook found for given channel")
+		write(w, p.data)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		p.Add("error", "Internal error")
+		write(w, p.data)
+		return
+	}
+
+	verified := verifySignature(channelHook.Secret, hookSignature, body)
+
+	if !verified {
+		p.Add("error", "Invalid secret")
+		write(w, p.data)
+		return
+	}
+
+	var b *bot.Bot
+	for _, botMap := range bots {
+		b, ok = botMap[channel]
+		if ok {
+			break
+		}
+	}
+
+	if b == nil {
+		// no bot found for channel
+		p.Add("error", "No bot found for channel "+channel)
+		write(w, p.data)
+		return
+	}
+
+	switch hookType {
+	case "push":
+		handlePush(b, body, &p)
+	}
+
+	write(w, p.data)
 }
 
-// RepositoryData xD
-type RepositoryData struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	Owner    struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"owner"`
-	HTMLURL string `json:"html_url"`
-	URL     string `json:"url"`
+func handlePush(b *bot.Bot, body []byte, p *customPayload) {
+	var pushData PushHookResponse
+
+	err := json.Unmarshal(body, &pushData)
+	if err != nil {
+		p.Add("error", "Json Unmarshal error: "+err.Error())
+		return
+	}
+
+	delay := 100
+
+	for _, commit := range pushData.Commits {
+		func(iCommit Commit) {
+			time.AfterFunc(time.Millisecond*time.Duration(delay), func() { writeCommit(b, iCommit, pushData.Repository) })
+		}(commit)
+		delay += 250
+	}
+	p.Add("success", true)
 }
 
-// PushHookResponse github json to go
-type PushHookResponse struct {
-	Commits    []Commit       `json:"commits"`
-	HeadCommit Commit         `json:"head_commit"`
-	Repository RepositoryData `json:"repository"`
-	Pusher     struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"pusher"`
-	Sender struct {
-		Login string `json:"login"`
-		ID    int    `json:"id"`
-		URL   string `json:"url"`
-	} `json:"sender"`
+func writeCommit(b *bot.Bot, commit Commit, repository RepositoryData) {
+	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
+	b.SaySafef(msg)
 }

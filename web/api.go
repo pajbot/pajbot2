@@ -1,15 +1,10 @@
 package web
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
@@ -112,100 +107,6 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("Bot: %#v", bot)
 	write(w, p)
-}
-
-func apiHook(w http.ResponseWriter, r *http.Request) {
-	p := customPayload{}
-	v := mux.Vars(r)
-	hookType := r.Header.Get("x-github-event")
-	hookSignature := r.Header.Get("x-hub-signature")
-	channel := v["channel"]
-
-	// Get hook from config according to channel
-	channelHook, ok := hooks[channel]
-	if !ok {
-		// No hook for this channel found
-		p.Add("error", "No hook found for given channel")
-		write(w, p.data)
-		return
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		p.Add("error", "Internal error")
-		write(w, p.data)
-		return
-	}
-
-	verified := verifySignature(channelHook.Secret, hookSignature, body)
-
-	if !verified {
-		p.Add("error", "Invalid secret")
-		write(w, p.data)
-		return
-	}
-
-	switch hookType {
-	case "push":
-		var pushData PushHookResponse
-		err = json.Unmarshal(body, &pushData)
-		if err != nil {
-			p.Add("error", "Json Unmarshal error: "+err.Error())
-			write(w, p.data)
-			return
-		}
-		var b *bot.Bot
-		for _, botMap := range bots {
-			b, ok = botMap[channel]
-			if ok {
-				break
-			}
-		}
-		if b == nil {
-			// no bot found for channel
-			p.Add("error", "No bot found for channel "+channel)
-			write(w, p.data)
-			return
-		}
-
-		delay := 100
-
-		for _, commit := range pushData.Commits {
-			func(iCommit Commit) {
-				time.AfterFunc(time.Millisecond*time.Duration(delay), func() { writeCommit(b, iCommit, pushData.Repository) })
-			}(commit)
-			delay += 250
-		}
-		p.Add("success", true)
-	}
-
-	write(w, p.data)
-}
-
-func writeCommit(b *bot.Bot, commit Commit, repository RepositoryData) {
-	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
-	b.SaySafef(msg)
-}
-
-func signBody(secret, body []byte) []byte {
-	computed := hmac.New(sha1.New, secret)
-	computed.Write(body)
-	return []byte(computed.Sum(nil))
-}
-
-func verifySignature(secretString string, signature string, body []byte) bool {
-	const signaturePrefix = "sha1="
-	const signatureLength = 45
-
-	if len(signature) != signatureLength || !strings.HasPrefix(signature, signaturePrefix) {
-		return false
-	}
-
-	secret := []byte(secretString)
-	actual := make([]byte, 20)
-	hex.Decode(actual, []byte(signature[5:]))
-
-	return hmac.Equal(signBody(secret, body), actual)
 }
 
 func apiRootHandler(w http.ResponseWriter, r *http.Request) {
