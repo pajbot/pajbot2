@@ -60,6 +60,8 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 	switch hookType {
 	case "push":
 		handlePush(b, body, &p)
+	case "status":
+		handleStatus(b, body, &p)
 	}
 
 	write(w, p.data)
@@ -88,4 +90,30 @@ func handlePush(b *bot.Bot, body []byte, p *customPayload) {
 func writeCommit(b *bot.Bot, commit Commit, repository RepositoryData) {
 	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
 	b.SaySafef(msg)
+}
+
+func handleStatus(b *bot.Bot, body []byte, p *customPayload) {
+	var data StatusHookResponse
+
+	err := json.Unmarshal(body, &data)
+	if err != nil {
+		p.Add("error", "Json Unmarshal error: "+err.Error())
+		return
+	}
+
+	switch data.State {
+	case "pending":
+		b.SaySafef("Build for %s just started", data.Repository.Name)
+
+	case "success":
+		b.SaySafef("Build for %s succeeded! FeelsGoodMan", data.Repository.Name)
+
+	case "error":
+		fallthrough
+
+	case "failure":
+		b.SaySafef("Build for %s failed: %s FeelsBadMan", data.Repository.Name, data.TargetURL)
+	}
+
+	p.Add("success", true)
 }

@@ -41,20 +41,39 @@ type RepositoryData struct {
 	URL     string `json:"url"`
 }
 
+type sender struct {
+	Login string `json:"login"`
+	ID    int    `json:"id"`
+	URL   string `json:"url"`
+}
+
+type pusher struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 // PushHookResponse github json to go
 type PushHookResponse struct {
 	Commits    []Commit       `json:"commits"`
 	HeadCommit Commit         `json:"head_commit"`
 	Repository RepositoryData `json:"repository"`
-	Pusher     struct {
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	} `json:"pusher"`
-	Sender struct {
-		Login string `json:"login"`
-		ID    int    `json:"id"`
-		URL   string `json:"url"`
-	} `json:"sender"`
+	Pusher     pusher         `json:"pusher"`
+	Sender     sender         `json:"sender"`
+}
+
+// StatusHookResponse json to struct
+type StatusHookResponse struct {
+	ID          int            `json:"id"`
+	Sha         string         `json:"sha"`
+	Name        string         `json:"name"`
+	TargetURL   string         `json:"target_url"`
+	Context     string         `json:"context"`
+	Description string         `json:"description"`
+	State       string         `json:"state"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	Repository  RepositoryData `json:"repository"`
+	Sender      sender         `json:"sender"`
 }
 
 func signBody(secret, body []byte) []byte {
