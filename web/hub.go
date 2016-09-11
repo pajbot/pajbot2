@@ -20,7 +20,7 @@ func (h *ConnectionHub) run() {
 	for {
 		select {
 		case conn := <-h.register:
-			log.Debugf("REGISTERING %#v", conn)
+			// log.Debugf("REGISTERING %#v", conn)
 			h.connections[conn] = true
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {
