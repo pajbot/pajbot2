@@ -53,8 +53,8 @@ func (b *Bot) SaySafef(format string, a ...interface{}) {
 	b.SaySafe(fmt.Sprintf(format, a...))
 }
 
-const maxLength = 400
-const maxSepLength = 350
+const maxLength = 499
+const maxSepLength = 450
 const delay = time.Millisecond * 100
 
 /*
