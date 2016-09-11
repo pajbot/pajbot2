@@ -48,6 +48,10 @@ type Config struct {
 		} `json:"twitter"`
 	} `json:"auth"`
 
+	Hooks map[string]struct {
+		Secret string `json:"secret"`
+	}
+
 	TLSKey  string `json:"tls_key"`
 	TLSCert string `json:"tls_cert"`
 

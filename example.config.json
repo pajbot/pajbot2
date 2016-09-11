@@ -25,5 +25,10 @@
             "access_token": "heiufheuifhuefheuofjiol",
             "access_secret": "hjukfehuighiurehgiurewhgiu"
         }
+    },
+    "hooks": {
+        "pajlada": {
+            "secret": "penis"
+        }
     }
 }

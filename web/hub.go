@@ -39,7 +39,7 @@ func (h *ConnectionHub) run() {
 
 				if wsMessage.MessageType != MessageTypeAll && conn.messageType != MessageTypeAll && wsMessage.MessageType != conn.messageType {
 					// Invalid message type
-					log.Debugf("Not sending %#v to %#v cuz message types differ", wsMessage, conn)
+					// log.Debugf("Not sending %#v to %#v cuz message types differ", wsMessage, conn)
 					continue
 				}
 				select {

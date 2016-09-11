@@ -31,6 +31,9 @@ var (
 	bots  []map[string]*bot.Bot
 	redis *redismanager.RedisManager
 	sql   *sqlmanager.SQLManager
+	hooks map[string]struct {
+		Secret string `json:"secret"`
+	}
 )
 
 var (
@@ -73,6 +76,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 	bots = webCfg.Bots
 	redis = webCfg.Redis
 	sql = webCfg.SQL
+	hooks = config.Hooks
 	return b
 }
 
