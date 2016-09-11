@@ -51,6 +51,17 @@ func (module *Emotes) bttvEmotes(b *bot.Bot, msg *common.Msg, action *bot.Action
 	}
 }
 
+func (module *Emotes) bttvGlobalEmotes(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	var activeEmotes []string
+
+	for _, emote := range bot.GlobalEmotes.Bttv {
+		activeEmotes = append(activeEmotes, emote.Name)
+	}
+	sort.Strings(activeEmotes)
+
+	b.SaySafef("BTTV global emotes: %s", strings.Join(activeEmotes, " "))
+}
+
 // Init xD
 func (module *Emotes) Init(bot *bot.Bot) (string, bool) {
 	module.SetDefaults("emotes")
@@ -65,6 +76,16 @@ func (module *Emotes) Init(bot *bot.Bot) (string, bool) {
 			},
 		},
 		Function: module.bttvEmotes,
+	}
+	emotesGlobalBttvCommand := &command.FuncCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"globalbttv",
+				"globalbettertwitchtv",
+			},
+			Level: 1000,
+		},
+		Function: module.bttvGlobalEmotes,
 	}
 
 	emotesFfzCommand := &command.FuncCommand{
@@ -86,6 +107,7 @@ func (module *Emotes) Init(bot *bot.Bot) (string, bool) {
 		Commands: []command.Command{
 			emotesBttvCommand,
 			emotesFfzCommand,
+			emotesGlobalBttvCommand,
 		},
 	}
 
