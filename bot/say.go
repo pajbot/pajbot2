@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pajlada/pajbot2/common"
 )
@@ -52,15 +53,22 @@ func (b *Bot) SaySafef(format string, a ...interface{}) {
 	b.SaySafe(fmt.Sprintf(format, a...))
 }
 
+const maxLength = 400
+const maxSepLength = 350
+const delay = time.Millisecond * 100
+
 /*
 SaySafe allows only harmless irc commands,
 this should be used for commands added by users
 */
 func (b *Bot) SaySafe(message string) {
-	if !strings.HasPrefix(message, "/") && !strings.HasPrefix(message, ".") {
+	l := len(message)
+	if !strings.HasPrefix(message, "/") && !strings.HasPrefix(message, ".") && l <= maxLength {
+		// Message is safe
 		b.Say(message)
 		return
 	}
+
 	m := strings.Split(message, " ")
 	cmd := m[0][1:] // remove "." or "/"
 	switch cmd {
@@ -74,5 +82,18 @@ func (b *Bot) SaySafe(message string) {
 	default:
 		message = " " + message
 	}
+
+	if l > maxLength {
+		secondIndex := maxLength
+		lastSpace := strings.LastIndex(message[:maxLength], " ")
+		if lastSpace > maxSepLength {
+			secondIndex = lastSpace
+		}
+		part1 := message[:secondIndex]
+		part2 := message[secondIndex:]
+		b.Say(part1)
+		time.AfterFunc(delay, func() { b.SaySafe(part2) })
+	}
+
 	b.Say(message)
 }
