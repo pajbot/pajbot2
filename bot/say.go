@@ -62,6 +62,8 @@ SaySafe allows only harmless irc commands,
 this should be used for commands added by users
 */
 func (b *Bot) SaySafe(message string) {
+	message = strings.Replace(message, "\n", " ", -1)
+	message = strings.Replace(message, "\r", " ", -1)
 	l := len(message)
 	if !strings.HasPrefix(message, "/") && !strings.HasPrefix(message, ".") && l <= maxLength {
 		// Message is safe
