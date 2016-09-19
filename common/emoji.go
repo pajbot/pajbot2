@@ -14,8 +14,6 @@ func ParseEmojis(msg *Msg) {
 	emoteCount := make(map[string]*Emote)
 	_ = parser.ReplaceAllStringFunc(msg.Text, func(s string) string {
 		byteArray := []byte(s)
-		log.Debug(byteArray)
-		log.Debug(bytes.Runes(byteArray))
 		if emote, ok := emoteCount[s]; ok {
 			emote.Count++
 		} else {
