@@ -8,6 +8,12 @@ import (
 	"github.com/pajlada/pajbot2/common"
 )
 
+// Whisper sends a whisper to `username`
+func (b *Bot) Whisper(username, message string) {
+	m := fmt.Sprintf("PRIVMSG #jtv :/w %s %s ", username, message)
+	b.Send <- m
+}
+
 /*
 Say sends a PRIVMSG to the bots given channel
 */

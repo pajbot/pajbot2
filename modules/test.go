@@ -80,6 +80,10 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 				b.Say("Usage: !testapi pajlada")
 			}
 		}
+		if m[0] == "!wme" {
+			log.Debugf("WHISPER %s", msg.User.Name)
+			b.Whisper(msg.User.Name, "TEST WHISPER")
+		}
 	}
 	if msg.User.Level > 1000 {
 		m := strings.Split(msg.Text, " ")
