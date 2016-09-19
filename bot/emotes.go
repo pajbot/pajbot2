@@ -112,13 +112,23 @@ func (bot *Bot) parseEmotes(msg *common.Msg) {
 
 // ParseFrankerFaceZEmote parses a FFZ emote into a common.Emote
 func ParseFrankerFaceZEmote(emote goffz.EmoteData) common.Emote {
+	maxScale := 1
+	var keyScale int
+	var err error
+	for k := range emote.Urls {
+		keyScale, err = strconv.Atoi(k)
+		if err == nil && keyScale > maxScale {
+			maxScale = keyScale
+		}
+	}
 	return common.Emote{
-		Name:  emote.Name,
-		ID:    strconv.Itoa(emote.ID),
-		Type:  "ffz",
-		SizeX: emote.Width,
-		SizeY: emote.Height,
-		Count: 1,
+		Name:     emote.Name,
+		ID:       strconv.Itoa(emote.ID),
+		Type:     "ffz",
+		SizeX:    emote.Width,
+		SizeY:    emote.Height,
+		Count:    1,
+		MaxScale: maxScale,
 	}
 }
 

@@ -15,6 +15,8 @@ type Emote struct {
 
 	IsGif bool `json:"is_gif"`
 	Count int  `json:"count"`
+
+	MaxScale int `json:"max_scale"`
 }
 
 // ExtensionEmotes is an object which contains emotes that are shared between all channels
