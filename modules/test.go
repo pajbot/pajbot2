@@ -73,6 +73,8 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 					},
 					func(statusCode int, statusMessage, errorMessage string) {
 						b.Sayf("ERROR: %d", statusCode)
+						b.Say(statusMessage)
+						b.Say(errorMessage)
 					}, func(err error) {
 						b.Say("Internal error")
 					})

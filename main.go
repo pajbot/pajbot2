@@ -10,10 +10,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/websocket"
 
 	_ "github.com/mattes/migrate/driver/mysql"
 	"github.com/mattes/migrate/migrate"
+	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/boss"
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
@@ -139,6 +141,9 @@ func runCmd() {
 	go func() {
 		log.Error(http.ListenAndServe(":11223", nil))
 	}()
+
+	// Initialize twitch API
+	apirequest.Twitch = gotwitch.New(config.Auth.Twitch.User.ClientID)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
