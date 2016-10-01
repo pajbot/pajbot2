@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -81,6 +82,11 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 			} else {
 				b.Say("Usage: !testapi pajlada")
 			}
+		}
+		if m[0] == "!testresub" {
+			b.Sayf("sending through test resub message")
+			testMessage := `@badges=staff/1,broadcaster/1,turbo/1;color=#008000;display-name=TWITCH_UserName;emotes=;mod=0;msg-id=resub;msg-param-months=6;room-id=1337;subscriber=1;system-msg=TWITCH_UserName\shas\ssubscribed\sfor\s6\smonths!;login=twitch_username;turbo=1;user-id=1337;user-type=staff :tmi.twitch.tv USERNOTICE #%s :Great stream -- keep it up!`
+			b.RawRead <- fmt.Sprintf(testMessage, b.Channel.Name)
 		}
 		if m[0] == "!wme" {
 			log.Debugf("WHISPER %s", msg.User.Name)
