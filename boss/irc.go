@@ -277,7 +277,7 @@ InitIRCConnection initalizes shit.
 TODO: This should just create the Irc object. You should have to call
 irc.Run() manually I think. or irc.Start()?
 */
-func InitIRCConnection(config IRCConfig, botAccount common.BotAccount) *Irc {
+func InitIRCConnection(config IRCConfig, botAccount common.DBUser) *Irc {
 	irc := &Irc{
 		BotAccountID: botAccount.ID,
 		brokerHost:   config.BrokerHost,
@@ -313,6 +313,8 @@ func InitIRCConnection(config IRCConfig, botAccount common.BotAccount) *Irc {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Debugf("Got %d channels", len(channels))
 
 	hasOwnChannel := false
 	for _, channel := range channels {

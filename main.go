@@ -209,7 +209,7 @@ func newbotCmd() {
 
 	fmt.Println("Creating a new bot with the given credentials")
 
-	common.CreateBotAccount(sql.Session, name, accessToken, refreshToken)
+	common.CreateDBUser(sql.Session, name, accessToken, refreshToken, "bot")
 }
 
 // Link a pb_channel to a pb_bot
@@ -231,7 +231,7 @@ func linkchannelCmd() {
 	fmt.Print("Bot name: ")
 	name = helper.ReadArg(reader)
 
-	b, err := common.GetBotAccount(sql.Session, name)
+	b, err := common.GetDBUser(sql.Session, name, "bot")
 	if err != nil {
 		log.Error(err)
 		return

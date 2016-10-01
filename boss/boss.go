@@ -37,7 +37,7 @@ func Init(config *config.Config) Boss {
 		Silent:     config.Silent,
 	}
 
-	botAccounts, err := common.GetAllBotAccounts(boss.SQL.Session)
+	botAccounts, err := common.GetDBUsersByType(boss.SQL.Session, "bot")
 	if err != nil {
 		log.Error(err)
 	}

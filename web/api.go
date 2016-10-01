@@ -147,7 +147,11 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("username", data.Token.UserName)
 			p.Add("token", token.AccessToken)
 			p.Add("refreshtoken", token.RefreshToken)
-			common.CreateBotAccount(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
+			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "bot")
+			if err != nil {
+				// XXX: handle this
+				log.Error(err)
+			}
 		}
 	}
 
@@ -196,7 +200,11 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("username", data.Token.UserName)
 			p.Add("token", token.AccessToken)
 			p.Add("refreshtoken", token.RefreshToken)
-			common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
+			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
+			if err != nil {
+				// XXX: handle this
+				log.Error(err)
+			}
 		}
 	}
 
