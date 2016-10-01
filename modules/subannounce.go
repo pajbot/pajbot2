@@ -75,7 +75,7 @@ func (module *SubAnnounce) Check(b *bot.Bot, m *common.Msg, action *bot.Action) 
 	} else if m.Type == common.MsgReSub {
 		data := map[string]string{
 			"username": m.User.Name,
-			"months":   "1337",
+			"months":   m.Tags["msg-param-months"],
 		}
 
 		if module.ResubMessage != "" {
