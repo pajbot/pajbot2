@@ -50,6 +50,7 @@ type Irc struct {
 	join         chan string
 	ReadChan     chan string
 	SendChan     chan string
+	RawReadChan  chan string
 	Bots         map[string]*bot.Bot
 	Redis        *redismanager.RedisManager
 	SQL          *sqlmanager.SQLManager
@@ -116,12 +117,11 @@ func (irc *Irc) GetGlobalUser(m *common.Msg) {
 func (irc *Irc) readConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	tp := textproto.NewReader(reader)
-	readChan := make(chan string)
 	running := true
 	go func() {
 		var line string
 		for running {
-			line = <-readChan
+			line = <-irc.RawReadChan
 			if strings.HasPrefix(line, "PING") {
 				irc.SendRaw(conn, strings.Replace(line, "PING", "PONG", 1))
 			} else {
@@ -176,7 +176,6 @@ func (irc *Irc) readConnection(conn net.Conn) {
 	}()
 	defer func() {
 		running = false
-		close(readChan)
 	}()
 	for {
 		line, err := tp.ReadLine()
@@ -186,7 +185,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 			//irc.JoinChannels(irc.readConn[conn])
 			return
 		}
-		readChan <- line
+		irc.RawReadChan <- line
 	}
 }
 
@@ -204,6 +203,7 @@ func (irc *Irc) NewBot(channel string) {
 		Channel:      channel,
 		ReadChan:     read,
 		SendChan:     irc.SendChan,
+		RawReadChan:  irc.RawReadChan,
 		Join:         irc.join,
 		Redis:        irc.Redis,
 		SQL:          irc.SQL,
@@ -287,6 +287,7 @@ func InitIRCConnection(config IRCConfig, botAccount common.DBUser) *Irc {
 		nick:         botAccount.Name,
 		ReadChan:     make(chan string, 10),
 		SendChan:     make(chan string, 10),
+		RawReadChan:  make(chan string),
 		join:         make(chan string, 5),
 		Bots:         make(map[string]*bot.Bot),
 		Redis:        config.Redis,

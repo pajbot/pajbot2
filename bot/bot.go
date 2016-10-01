@@ -18,6 +18,7 @@ type Config struct {
 	Quit         chan string
 	ReadChan     chan common.Msg
 	SendChan     chan string
+	RawReadChan  chan string
 	Join         chan string
 	Channel      string
 	Redis        *redismanager.RedisManager
@@ -34,11 +35,15 @@ type Bot struct {
 	Quit         chan string
 	Read         chan common.Msg
 	Send         chan string
-	Join         chan string
-	Channel      common.Channel
-	Redis        *redismanager.RedisManager
-	SQL          *sqlmanager.SQLManager
-	Twitter      *pbtwitter.Bot
+
+	// IRC Raw read channel in case we want to parse our own messages
+	RawRead chan string
+
+	Join    chan string
+	Channel common.Channel
+	Redis   *redismanager.RedisManager
+	SQL     *sqlmanager.SQLManager
+	Twitter *pbtwitter.Bot
 
 	// List of all available modules
 	AllModules []Module
@@ -61,6 +66,7 @@ func NewBot(cfg Config) *Bot {
 		Quit:    cfg.Quit,
 		Read:    cfg.ReadChan,
 		Send:    cfg.SendChan,
+		RawRead: cfg.RawReadChan,
 		Join:    cfg.Join,
 		Channel: channel,
 		Redis:   cfg.Redis,
