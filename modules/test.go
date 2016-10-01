@@ -13,6 +13,7 @@ import (
 	"github.com/pajlada/pajbot2/command"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/basemodule"
+	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/web"
 )
 
@@ -27,11 +28,79 @@ type Test struct {
 // Ensure the module implements the interface properly
 var _ Module = (*Test)(nil)
 
+func cmdTest(b *bot.Bot, msg *common.Msg, action *bot.Action) {
+	m := helper.GetTriggersN(msg.Text, 1)
+
+	if len(m) == 0 {
+		// missing argument to !test
+		return
+	}
+
+	switch m[0] {
+	case "say":
+		b.Say(strings.Join(m[1:], " "))
+	case "lasttweet":
+		if len(m) > 1 {
+			tweet := b.Twitter.LastTweetString(m[1])
+			b.Sayf("last tweet from %s ", tweet)
+		} else {
+			b.Say("Usage: !test lasttweet pajlada")
+		}
+	case "follow":
+		if len(m) > 1 {
+			b.Twitter.Follow(m[1])
+			b.Sayf("now streaming %s's timeline", m[1])
+		} else {
+			b.Say("Usage: !test follow pajlada")
+		}
+	case "unfollow":
+		b.Say("not implemented yet")
+	case "api":
+		if len(m) > 1 {
+			apirequest.Twitch.GetStream(m[1],
+				func(stream gotwitch.Stream) {
+					b.Sayf("Stream info: %+v", stream)
+				},
+				func(statusCode int, statusMessage, errorMessage string) {
+					b.Sayf("ERROR: %d", statusCode)
+					b.Say(statusMessage)
+					b.Say(errorMessage)
+				}, func(err error) {
+					b.Say("Internal error")
+				})
+		} else {
+			b.Say("Usage: !test api pajlada")
+		}
+	case "resub":
+		testMessage := `@badges=staff/1,broadcaster/1,turbo/1;color=#008000;display-name=TWITCH_UserName;emotes=;mod=0;msg-id=resub;msg-param-months=6;room-id=1337;subscriber=1;system-msg=TWITCH_UserName\shas\ssubscribed\sfor\s6\smonths!;login=twitch_username;turbo=1;user-id=1337;user-type=staff :tmi.twitch.tv USERNOTICE #%s :Great stream -- keep it up!`
+		b.RawRead <- fmt.Sprintf(testMessage, b.Channel.Name)
+
+	case "whisper":
+		log.Debugf("WHISPER %s", msg.User.Name)
+		b.Whisper(msg.User.Name, "TEST WHISPER")
+
+	default:
+		b.Sayf("Unhandled action %s", m[0])
+		return
+	}
+}
+
 // Init xD
 func (module *Test) Init(bot *bot.Bot) (string, bool) {
 	module.SetDefaults("test")
 	module.EnabledDefault = true
 	module.ParseState(bot.Redis, bot.Channel.Name)
+
+	testCommand := command.FuncCommand{
+		BaseCommand: command.BaseCommand{
+			Triggers: []string{
+				"test",
+			},
+			Level: 1000,
+		},
+		Function: cmdTest,
+	}
+	module.commandHandler.AddCommand(&testCommand)
 
 	return "test", true
 }
@@ -56,84 +125,6 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 				log.Error(err)
 			}
 			b.SaySafe(string(bs))
-		}
-	}
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!say" {
-			b.SayFormat(msg.Text[5:], msg)
-		}
-	}
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!testapi" {
-			if len(m) > 1 {
-				apirequest.Twitch.GetStream(m[1],
-					func(stream gotwitch.Stream) {
-						b.Sayf("Stream info: %+v", stream)
-					},
-					func(statusCode int, statusMessage, errorMessage string) {
-						b.Sayf("ERROR: %d", statusCode)
-						b.Say(statusMessage)
-						b.Say(errorMessage)
-					}, func(err error) {
-						b.Say("Internal error")
-					})
-			} else {
-				b.Say("Usage: !testapi pajlada")
-			}
-		}
-		if m[0] == "!testresub" {
-			b.Sayf("sending through test resub message")
-			testMessage := `@badges=staff/1,broadcaster/1,turbo/1;color=#008000;display-name=TWITCH_UserName;emotes=;mod=0;msg-id=resub;msg-param-months=6;room-id=1337;subscriber=1;system-msg=TWITCH_UserName\shas\ssubscribed\sfor\s6\smonths!;login=twitch_username;turbo=1;user-id=1337;user-type=staff :tmi.twitch.tv USERNOTICE #%s :Great stream -- keep it up!`
-			b.RawRead <- fmt.Sprintf(testMessage, b.Channel.Name)
-		}
-		if m[0] == "!wme" {
-			log.Debugf("WHISPER %s", msg.User.Name)
-			b.Whisper(msg.User.Name, "TEST WHISPER")
-		}
-	}
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!follow" {
-			b.Twitter.Follow(m[1])
-			b.Sayf("now streaming %s's timeline", m[1])
-		}
-	}
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!lasttweet" {
-			tweet := b.Twitter.LastTweetString(m[1])
-			b.Sayf("last tweet from %s ", tweet)
-		}
-	}
-
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!joinchannel" {
-			b.Join <- m[1]
-		}
-	}
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!part" {
-			b.Join <- "PART " + m[1]
-		}
-	}
-
-	if msg.User.Level > 1000 {
-		m := strings.Split(msg.Text, " ")
-		if m[0] == "!spam" {
-			loops, err := strconv.ParseUint(m[1], 10, 64)
-			if err != nil {
-				b.Sayf("%v", err)
-			}
-			text := strings.Join(m[2:], " ")
-			var i uint64
-			for i < loops {
-				b.Say(text)
-				i++
-			}
 		}
 	}
 
