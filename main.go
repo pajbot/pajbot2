@@ -128,15 +128,14 @@ func runCmd() {
 	// Run database migrations
 	allErrors, ok := migrate.UpSync("mysql://"+config.SQLDSN, "./migrations")
 	if !ok {
-		log.Debug("An error occured while trying to run database migrations")
+		log.Error("An error occured while trying to run database migrations")
 		for _, err := range allErrors {
-			log.Debug(err)
+			log.Error(err)
 		}
 		os.Exit(1)
 	}
 
 	// Start web server
-
 	go func() {
 		log.Error(http.ListenAndServe(":11223", nil))
 	}()

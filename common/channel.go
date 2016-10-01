@@ -8,7 +8,7 @@ import (
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
-const channelQ = "SELECT id, name, nickname, enabled, twitch_channel_id, bot_id FROM pb_channel"
+const channelQ = "SELECT id, name, nickname, enabled, bot_id FROM pb_channel"
 
 // Channel contains data about the channel
 type Channel struct {
@@ -102,7 +102,7 @@ func (c *Channel) FetchFromWrapper(w ChannelSQLWrapper) {
 func (c *Channel) FetchFromSQL(row *sql.Rows) error {
 	w := ChannelSQLWrapper{}
 
-	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.TwitchChannelID, &w.BotID)
+	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.BotID)
 
 	if err != nil {
 		log.Error(err)
@@ -119,7 +119,7 @@ func (c *Channel) FetchFromSQL(row *sql.Rows) error {
 func (c *Channel) FetchFromSQLRow(row *sql.Row) error {
 	w := ChannelSQLWrapper{}
 
-	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.TwitchChannelID, &w.BotID)
+	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.BotID)
 
 	if err != nil {
 		return err
