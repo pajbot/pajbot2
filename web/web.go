@@ -71,7 +71,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 	}
 	b := &Boss{
 		Host:   config.WebHost,
-		WSHost: "ws://" + config.WebDomain + "/ws",
+		WSHost: "wss://" + config.WebDomain + "/ws",
 	}
 	bots = webCfg.Bots
 	redis = webCfg.Redis
