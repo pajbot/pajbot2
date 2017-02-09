@@ -165,7 +165,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 	}
 	switch msg.Type {
 	case common.MsgTimeoutSuccess:
-		b.Sayf("MsgTimeoutSuccess triggered: %#v", msg.Tags)
+		// b.Sayf("MsgTimeoutSuccess triggered: %#v", msg.Tags)
 	case common.MsgRoomState:
 		log.Debug("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
 		r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
