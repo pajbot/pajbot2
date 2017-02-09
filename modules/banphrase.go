@@ -50,6 +50,7 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 
 	// load banned words and links
 	module.BannedLinks = []filter.BannedLink{
+		/*
 		filter.BannedLink{
 			Link:  "www.com",
 			Level: 5,
@@ -62,8 +63,10 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 			Link:  "google.com",
 			Level: 6,
 		},
+		*/
 	}
 	module.BannedWords = []filter.BannedWord{
+		/*
 		filter.BannedWord{
 			Word:  "forsenpuke",
 			Level: 2,
@@ -76,6 +79,7 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 			Word:  "minik",
 			Level: 1,
 		},
+		*/
 	}
 
 	// default values
