@@ -45,6 +45,7 @@ const (
 	MsgHostOn
 	MsgHostOff
 	MsgTimeoutSuccess
+	MsgReconnect
 )
 
 /*

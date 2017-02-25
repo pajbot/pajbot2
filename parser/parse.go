@@ -5,7 +5,10 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/plog"
 )
+
+var log = plog.GetLogger()
 
 /*
 Parse parses an IRC message into a more readable bot.Msg
@@ -36,6 +39,12 @@ func Parse(line string) common.Msg {
 	// Parse message type
 	splitLine = strings.SplitN(msg, " ", 2)
 	parseMsgType(m, splitLine[0])
+
+	if m.Type == common.MsgReconnect {
+		// Special case for RECONNECT for now. This should be handled differently maybe?
+		return *m
+	}
+
 	msg = splitLine[1]
 
 	if m.Type == common.MsgUnknown {
@@ -232,6 +241,9 @@ func parseMsgType(m *common.Msg, msg string) {
 
 	case "ROOMSTATE":
 		m.Type = common.MsgRoomState
+
+	case "RECONNECT":
+		m.Type = common.MsgReconnect
 	}
 }
 
