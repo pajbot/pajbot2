@@ -12,9 +12,8 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/websocket"
+	"github.com/mattes/migrate"
 
-	_ "github.com/mattes/migrate/driver/mysql"
-	"github.com/mattes/migrate/migrate"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/boss"
 	"github.com/pajlada/pajbot2/bot"
@@ -128,13 +127,13 @@ func runCmd() {
 	}
 
 	// Run database migrations
-	allErrors, ok := migrate.UpSync("mysql://"+config.SQLDSN, "./migrations")
-	if !ok {
-		log.Error("An error occured while trying to run database migrations")
-		for _, err := range allErrors {
-			log.Error(err)
-		}
-		os.Exit(1)
+	m, err := migrate.New("file://./migrations", "mysql://"+config.SQLDSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := m.Up(); err != nil {
+		log.Fatal(err)
 	}
 
 	// Start web server
