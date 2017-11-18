@@ -23,7 +23,7 @@ const userQ = "SELECT id, name, twitch_access_token, twitch_refresh_token FROM p
 
 // CreateDBUser creates a bot in the pb_bot table
 func CreateDBUser(session *sql.DB, name string, accessToken string, refreshToken string, userType string) error {
-	const queryF = `INSERT INTO pb_user(name, type, twitch_access_token, twitch_refresh_token) VALUES (?, ?, ?, ?)`
+	const queryF = `INSERT INTO pb_bot(name, twitch_access_token, twitch_refresh_token) VALUES (?, ?, ?, ?)`
 
 	stmt, err := session.Prepare(queryF)
 	if err != nil {
@@ -31,6 +31,24 @@ func CreateDBUser(session *sql.DB, name string, accessToken string, refreshToken
 		return err
 	}
 	_, err = stmt.Exec(name, userType, accessToken, refreshToken)
+	if err != nil {
+		log.Printf("error: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+// CreateBot xD
+func CreateBot(session *sql.DB, name string, accessToken string, refreshToken string) error {
+	const queryF = `INSERT INTO pb_bot(name, twitch_access_token, twitch_refresh_token) VALUES (?, ?, ?)`
+
+	stmt, err := session.Prepare(queryF)
+	if err != nil {
+		log.Printf("error: %s", err)
+		return err
+	}
+	_, err = stmt.Exec(name, accessToken, refreshToken)
 	if err != nil {
 		log.Printf("error: %s", err)
 		return err

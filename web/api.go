@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/dankeroni/gotwitch"
+	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/apirequest"
-	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"golang.org/x/oauth2"
 )
@@ -93,18 +93,16 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: route http methods
 	v := mux.Vars(r)
 	channel := v["channel"]
-	var bot *bot.Bot
+	var bot *twitch.Client
 	var ok bool
 	var p interface{}
-	for _, _bots := range bots {
-		if bot, ok = _bots[channel]; !ok {
-			p = apiError{
-				Err: "channel not found",
-			}
-		} else {
-			ep, _rest := getEndPoint(v["rest"])
-			p = exec(channel, ep, _rest)
+	if bot, ok = bots[channel]; !ok {
+		p = apiError{
+			Err: "channel not found",
 		}
+	} else {
+		ep, _rest := getEndPoint(v["rest"])
+		p = exec(channel, ep, _rest)
 	}
 	log.Printf("Bot: %#v", bot)
 	write(w, p)
@@ -138,10 +136,12 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Code exchange failed with %s", err)
 	}
+	write(w, "Access token: "+token.AccessToken)
 
 	p := customPayload{}
 
 	onSuccess := func(data gotwitch.Self) {
+		log.Println("Success!!!!!!!!!!")
 		p.Add("data", data)
 
 		if data.Identified && data.Token.Valid {
@@ -162,6 +162,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	// Right now this is useful for new apps that need access.
 	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
 	write(w, p.data)
+	log.Println("hehe")
 
 	//common.CreateBotAccount(sql.Session, )
 }
@@ -195,6 +196,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	onSuccess := func(data gotwitch.Self) {
+		log.Println("Success!")
 		p.Add("data", data)
 
 		if data.Identified && data.Token.Valid {
@@ -209,7 +211,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	apirequest.Twitch.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
+	apirequest.TwitchV3.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
 
 	// We should, instead of returning the data raw, do something about it.
 	// Right now this is useful for new apps that need access.
@@ -218,7 +220,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	// log.Println("HTTPERROR")
+	log.Println("HTTPERROR: ", errorMessage)
 }
 
 func onInternalError(err error) {

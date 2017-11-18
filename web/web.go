@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/oauth2"
 
+	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
@@ -19,7 +19,7 @@ import (
 type Config struct {
 	Redis *redismanager.RedisManager
 	SQL   *sqlmanager.SQLManager
-	Bots  []map[string]*bot.Bot
+	Bots  map[string]*twitch.Client
 }
 
 // Boss xD
@@ -29,7 +29,7 @@ type Boss struct {
 }
 
 var (
-	bots  []map[string]*bot.Bot
+	bots  map[string]*twitch.Client
 	redis *redismanager.RedisManager
 	sql   *sqlmanager.SQLManager
 	hooks map[string]struct {
@@ -72,7 +72,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 	}
 	b := &Boss{
 		Host:   config.WebHost,
-		WSHost: "wss://" + config.WebDomain + "/ws",
+		WSHost: "ws://" + config.WebDomain + "/ws",
 	}
 	bots = webCfg.Bots
 	redis = webCfg.Redis
@@ -118,6 +118,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("wsHandler...")
 	vars := mux.Vars(r)
 	messageTypeString := vars["type"]
 	messageType := MessageTypeNone
@@ -139,6 +140,8 @@ func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Upgrader error: %v", err)
 		return
 	}
+
+	log.Println("Got message!")
 
 	// Create a custom connection
 	conn := &WSConn{

@@ -42,13 +42,7 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var b *bot.Bot
-	for _, botMap := range bots {
-		b, ok = botMap[channel]
-		if ok {
-			break
-		}
-	}
+	b, _ := bots[channel]
 
 	if b == nil {
 		// no bot found for channel
@@ -59,9 +53,9 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 
 	switch hookType {
 	case "push":
-		handlePush(b, body, &p)
+		//handlePush(b, body, &p)
 	case "status":
-		handleStatus(b, body, &p)
+		//handleStatus(b, body, &p)
 	}
 
 	write(w, p.data)

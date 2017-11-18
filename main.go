@@ -5,28 +5,22 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/dankeroni/gotwitch"
-	"github.com/gorilla/websocket"
-	"github.com/mattes/migrate"
+	twitch "github.com/gempir/go-twitch-irc"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattes/migrate/source/file"
 
-	"github.com/pajlada/pajbot2/apirequest"
-	"github.com/pajlada/pajbot2/boss"
-	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/sqlmanager"
-	"github.com/pajlada/pajbot2/web"
 )
 
-func cleanup() {
-	// TODO: Perform cleanups
+// TwitchBot xd
+type TwitchBot struct {
+	Client *twitch.Client
 }
 
 var buildTime string
@@ -82,7 +76,7 @@ func main() {
 }
 
 func helpCmd() {
-	os.Stderr.WriteString(
+	_, err := os.Stderr.WriteString(
 		`usage: pajbot2 <command> [<args>]
 Commands:
    run            Run the bot (Default)
@@ -92,90 +86,63 @@ Commands:
    newbot         Create a new bot
    linkchannel    Link a channel to a bot ID
 `)
-}
-
-type msg struct {
-	Num int
-}
-
-func wsHandler(conn *websocket.Conn) {
-	for {
-		m := msg{}
-
-		err := conn.ReadJSON(&m)
-		if err != nil {
-			log.Println("Error reading json.", err)
-		}
-
-		log.Printf("Got message: %#v\n", m)
-
-		if err = conn.WriteJSON(m); err != nil {
-			log.Println(err)
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func runCmd() {
-	// TODO: Use config path from system arguments
-	config, err := config.LoadConfig(*configPath)
+	application := NewApplication()
+
+	err := application.LoadConfig(*configPath)
 	if err != nil {
-		log.Fatal("An error occured while loading the config file:", err)
+		log.Fatal("An error occured while loading the config file: ", err)
 	}
 
-	// Run database migrations
-	m, err := migrate.New("file://./migrations", "mysql://"+config.SQLDSN)
+	err = application.RunDatabaseMigrations()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("An error occured while running database migrations: ", err)
 	}
 
-	if err := m.Up(); err != nil {
-		log.Fatal(err)
+	err = application.InitializeAPIs()
+	if err != nil {
+		log.Fatal("An error occured while initializing APIs: ", err)
 	}
 
-	// Start web server
-	go func() {
-		log.Println(http.ListenAndServe(":11223", nil))
-	}()
-
-	// Initialize twitch API
-	apirequest.Twitch = gotwitch.New(config.Auth.Twitch.User.ClientID)
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-	go func() {
-		<-c
-		config.Quit <- "Quitting due to SIGTERM/SIGINT"
-	}()
-	config.Quit = make(chan string)
-	b := boss.Init(config)
-	go bot.LoadGlobalEmotes()
-	var bots []map[string]*bot.Bot
-	for _, ircConnection := range b.IRCConnections {
-		bots = append(bots, ircConnection.Bots)
+	err = application.StartWebServer()
+	if err != nil {
+		log.Fatal("An error occured while starting the web server: ", err)
 	}
-	webCfg := &web.Config{
-		Bots:  bots,
-		Redis: b.Redis,
-		SQL:   b.SQL,
+
+	err = application.LoadBots()
+	if err != nil {
+		log.Fatal("An error occured while loading bots: ", err)
 	}
-	webBoss := web.Init(config, webCfg)
-	go webBoss.Run()
-	q := <-config.Quit
-	cleanup()
-	log.Fatal(q)
+
+	err = application.StartBots()
+	if err != nil {
+		log.Fatal("An error occured while starting bots: ", err)
+	}
+
+	log.Fatal(application.Run())
 }
 
 func installCmd() {
-	os.Stderr.WriteString(
+	_, err := os.Stderr.WriteString(
 		`"install" not yet implemented
 `)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func createCmd() {
-	os.Stderr.WriteString(
+	_, err := os.Stderr.WriteString(
 		`"create" not yet implemented
 `)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // add a new bot to pb_bot
@@ -204,7 +171,10 @@ func newbotCmd() {
 
 	fmt.Println("Creating a new bot with the given credentials")
 
-	common.CreateDBUser(sql.Session, name, accessToken, refreshToken, "bot")
+	err = common.CreateBot(sql.Session, name, accessToken, refreshToken)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Link a pb_channel to a pb_bot
@@ -240,7 +210,10 @@ func linkchannelCmd() {
 		return
 	}
 
-	c.SQLSetBotID(sql, b.ID)
+	err = c.SQLSetBotID(sql, b.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Printf("Linked channel %s to bot %s\n", channelName, name)
 }
