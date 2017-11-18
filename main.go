@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -20,12 +21,9 @@ import (
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/helper"
-	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
 )
-
-var log = plog.GetLogger()
 
 func cleanup() {
 	// TODO: Perform cleanups
@@ -37,8 +35,6 @@ var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
 
 func main() {
-	plog.InitLogging()
-
 	common.BuildTime = buildTime
 
 	flag.Usage = func() {
@@ -56,10 +52,10 @@ func main() {
 	case "check":
 		_, err := config.LoadConfig(*configPath)
 		if err != nil {
-			log.Error("An error occured while loading the config file:", err)
+			log.Println("An error occured while loading the config file:", err)
 			os.Exit(1)
 		} else {
-			log.Debug("No errors found in the config file")
+			log.Println("No errors found in the config file")
 			os.Exit(0)
 		}
 
@@ -108,13 +104,13 @@ func wsHandler(conn *websocket.Conn) {
 
 		err := conn.ReadJSON(&m)
 		if err != nil {
-			log.Error("Error reading json.", err)
+			log.Println("Error reading json.", err)
 		}
 
-		log.Infof("Got message: %#v\n", m)
+		log.Printf("Got message: %#v\n", m)
 
 		if err = conn.WriteJSON(m); err != nil {
-			log.Error(err)
+			log.Println(err)
 		}
 	}
 }
@@ -138,7 +134,7 @@ func runCmd() {
 
 	// Start web server
 	go func() {
-		log.Error(http.ListenAndServe(":11223", nil))
+		log.Println(http.ListenAndServe(":11223", nil))
 	}()
 
 	// Initialize twitch API
@@ -232,7 +228,7 @@ func linkchannelCmd() {
 
 	b, err := common.GetDBUser(sql.Session, name, "bot")
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return
 	}
 	fmt.Print("Channel name: ")

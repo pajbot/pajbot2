@@ -5,11 +5,8 @@ import (
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 )
-
-var log = plog.GetLogger()
 
 // TwitterTimeFormat xD
 const TwitterTimeFormat = time.RubyDate

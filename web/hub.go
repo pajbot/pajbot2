@@ -1,5 +1,7 @@
 package web
 
+import "log"
+
 // ConnectionHub xD
 type ConnectionHub struct {
 	connections map[*WSConn]bool
@@ -20,7 +22,7 @@ func (h *ConnectionHub) run() {
 	for {
 		select {
 		case conn := <-h.register:
-			// log.Debugf("REGISTERING %#v", conn)
+			// log.Printf("REGISTERING %#v", conn)
 			h.connections[conn] = true
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {
@@ -33,13 +35,13 @@ func (h *ConnectionHub) run() {
 				// Figure out if this connection should even be sent this message
 				if wsMessage.LevelRequired > 0 && (conn.user == nil || conn.user.Level < wsMessage.LevelRequired) {
 					// The user did not fulfill the message Level Requirement
-					log.Debugf("Not sending %#v to %#v", wsMessage, conn)
+					log.Printf("Not sending %#v to %#v", wsMessage, conn)
 					continue
 				}
 
 				if wsMessage.MessageType != MessageTypeAll && conn.messageType != MessageTypeAll && wsMessage.MessageType != conn.messageType {
 					// Invalid message type
-					// log.Debugf("Not sending %#v to %#v cuz message types differ", wsMessage, conn)
+					// log.Printf("Not sending %#v to %#v cuz message types differ", wsMessage, conn)
 					continue
 				}
 				select {

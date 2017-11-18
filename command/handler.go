@@ -1,6 +1,7 @@
 package command
 
 import (
+	"log"
 	"strings"
 	"time"
 
@@ -63,12 +64,12 @@ func (h *Handler) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 		// Is the user high level enough to use this command?
 		bc := c.GetBaseCommand()
 		if bc.Level > msg.User.Level {
-			log.Warningf("%s tried to use %s, which requires level %d (he is level %d)",
+			log.Printf("%s tried to use %s, which requires level %d (he is level %d)",
 				msg.User.DisplayName, strings.Join(m, " "), bc.Level, msg.User.Level)
 			return nil
 		}
 		if c.OnCooldown(&msg.User) {
-			log.Debug("COMMAND IS ON COOLDOWN XDDD")
+			log.Println("COMMAND IS ON COOLDOWN XDDD")
 			return nil
 		}
 		// TODO: Get response first, and skip if the response is nil or something of that sort
@@ -77,7 +78,7 @@ func (h *Handler) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error {
 			args := strings.Split(msg.Text, " ")
 			if len(args) > 1 {
 				msg.Args = args[1:]
-				log.Debug(msg.Args)
+				log.Println(msg.Args)
 			}
 			b.SayFormat(r, msg)
 		}

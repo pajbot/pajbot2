@@ -5,14 +5,9 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/plog"
 )
 
-var log = plog.GetLogger()
-
-/*
-Parse parses an IRC message into a more readable bot.Msg
-*/
+// Parse parses an IRC message into a more readable bot.Msg
 func Parse(line string) common.Msg {
 	m := &common.Msg{
 		User: common.User{},

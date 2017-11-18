@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/pajlada/pajbot2/common"
@@ -88,7 +89,7 @@ starts channels?
 idk
 */
 func (bot *Bot) Init() {
-	log.Infof("new bot in %s", bot.Channel)
+	log.Printf("new bot in %s", bot.Channel)
 	go bot.LoadBttvEmotes()
 	go bot.LoadFFZEmotes()
 	go bot.readChat()

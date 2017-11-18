@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"log"
+
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/basemodule"
 )
@@ -57,7 +59,7 @@ func (b *Bot) DisableModule(module Module) {
 	if moduleIndex != -1 {
 		b.EnabledModules = append(b.EnabledModules[:moduleIndex], b.EnabledModules[moduleIndex+1:]...)
 	} else {
-		log.Error("Something went wrong when disabling module")
+		log.Println("Something went wrong when disabling module")
 		return
 	}
 

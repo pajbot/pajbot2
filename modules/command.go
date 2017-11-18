@@ -2,6 +2,7 @@ package modules
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -28,7 +29,7 @@ func (module *Command) loadCommands(sql *sqlmanager.SQLManager, channel common.C
 	rows, err := sql.Session.Query("SELECT id, channel_id, triggers, response, response_type FROM pb_command")
 
 	if err != nil {
-		log.Error("Error fetching commands:", err)
+		log.Println("Error fetching commands:", err)
 		return 0
 	}
 
@@ -41,7 +42,7 @@ func (module *Command) loadCommand(sql *sqlmanager.SQLManager, commandID int64) 
 	rows, err := sql.Session.Query("SELECT id, channel_id, triggers, response, response_type FROM pb_command WHERE `id`=?", commandID)
 
 	if err != nil {
-		log.Error("Error fetching commands:", err)
+		log.Println("Error fetching commands:", err)
 		return 0
 	}
 

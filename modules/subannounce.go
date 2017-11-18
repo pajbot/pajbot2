@@ -2,6 +2,7 @@ package modules
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/pajlada/pajbot2/bot"
@@ -34,7 +35,7 @@ func (module *SubAnnounce) parseSettings(jsonData []byte) {
 		}
 	*/
 	if err := json.Unmarshal(jsonData, module); err != nil {
-		log.Error(err)
+		log.Println(err)
 	}
 }
 

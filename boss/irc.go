@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/textproto"
 	"strconv"
@@ -13,15 +14,12 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/pajlada/pajbot2/parser"
 	"github.com/pajlada/pajbot2/pbtwitter"
-	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 
 	"github.com/pajlada/pajbot2/bot"
 	"github.com/pajlada/pajbot2/common"
 )
-
-var log = plog.GetLogger()
 
 // IRCConfig xD
 type IRCConfig struct {
@@ -85,7 +83,7 @@ func (irc *Irc) newConn() error {
 	irc.SendRaw(conn, "NICK "+irc.nick)
 	go irc.readConnection(conn)
 	irc.conn = conn
-	log.Debug("connected")
+	log.Println("connected")
 	return nil
 }
 
@@ -93,7 +91,7 @@ func (irc *Irc) send() {
 	for {
 		msg := <-irc.SendChan
 		irc.SendRaw(irc.conn, msg)
-		log.Debugf("sent: %s", msg)
+		log.Printf("sent: %s", msg)
 	}
 }
 
@@ -137,15 +135,15 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					if b := irc.getBot(m.Channel); b != nil {
 						b.Read <- m
 					} else {
-						log.Debugf("No channel for message (chan: %s)", m.Channel)
+						log.Printf("No channel for message (chan: %s)", m.Channel)
 					}
 				case common.MsgSub:
 					// Post sub to sub channel
-					log.Debugf("%s just subbed!", m.User.DisplayName)
+					log.Printf("%s just subbed!", m.User.DisplayName)
 					if b := irc.getBot(m.Channel); b != nil {
 						b.Read <- m
 					} else {
-						log.Debugf("MsgSub No channel for message (chan: %s)", m.Channel)
+						log.Printf("MsgSub No channel for message (chan: %s)", m.Channel)
 					}
 				case common.MsgReSub:
 					months, err := strconv.Atoi(m.Tags["msg-param-months"])
@@ -154,12 +152,12 @@ func (irc *Irc) readConnection(conn net.Conn) {
 						break
 					}
 					// TODO: check room-id
-					log.Debugf("%s just resubbed for %d months", m.User.DisplayName, months)
+					log.Printf("%s just resubbed for %d months", m.User.DisplayName, months)
 
 					if b := irc.getBot(m.Channel); b != nil {
 						b.Read <- m
 					} else {
-						log.Debugf("MsgReSub No channel for message (chan: %s)", m.Channel)
+						log.Printf("MsgReSub No channel for message (chan: %s)", m.Channel)
 					}
 				case common.MsgThrowAway:
 					// Do nothing
@@ -168,7 +166,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 					if b := irc.getBot(m.Channel); b != nil {
 						b.Read <- m
 					} else {
-						log.Debugf("default No channel for message (chan: %s)", m.Channel)
+						log.Printf("default No channel for message (chan: %s)", m.Channel)
 					}
 				}
 			}
@@ -180,7 +178,7 @@ func (irc *Irc) readConnection(conn net.Conn) {
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
-			log.Debug("connection died", err)
+			log.Println("connection died", err)
 			irc.newConn()
 			//irc.JoinChannels(irc.readConn[conn])
 			return
@@ -248,7 +246,7 @@ func (irc *Irc) PartChannel(channel string) {
 		delete(irc.Bots, channel)
 		irc.SendRaw(irc.conn, "PART #"+channel)
 		close(bot.Read)
-		log.Debug("CLOSED BOT IN", channel)
+		log.Println("CLOSED BOT IN", channel)
 
 	}
 }
@@ -260,11 +258,11 @@ If the message starts with "PART" we instead leave that channel.
 */
 func (irc *Irc) JoinChannels() {
 	for line := range irc.join {
-		log.Debug(line)
+		log.Println(line)
 		if strings.HasPrefix(line, "PART ") {
 			channel := strings.Split(line, " ")[1]
 			irc.PartChannel(channel)
-			log.Debug("PART CHANNEL", channel)
+			log.Println("PART CHANNEL", channel)
 		} else {
 			irc.JoinChannel(line)
 		}
@@ -315,17 +313,17 @@ func InitIRCConnection(config IRCConfig, botAccount common.DBUser) *Irc {
 		log.Fatal(err)
 	}
 
-	log.Debugf("Got %d channels", len(channels))
+	log.Printf("Got %d channels", len(channels))
 
 	hasOwnChannel := false
 	for _, channel := range channels {
-		log.Debug(channel.Name)
+		log.Println(channel.Name)
 		if channel.Name == botAccount.Name {
 			hasOwnChannel = true
 		}
 
 		if !channel.Enabled {
-			log.Debugf("Skipping %s cuz not enabled", channel.Name)
+			log.Printf("Skipping %s cuz not enabled", channel.Name)
 			continue
 		}
 

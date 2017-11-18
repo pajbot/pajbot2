@@ -1,6 +1,7 @@
 package pbtwitter
 
 import (
+	"log"
 	"strings"
 
 	"github.com/dghubble/go-twitter/twitter"
@@ -24,7 +25,7 @@ func (bot *Bot) Follow(user string) {
 }
 
 func (c *Client) streamToBots(tweet *twitter.Tweet) {
-	log.Debug(tweet.Text)
+	log.Println(tweet.Text)
 	if tweet.RetweetedStatus != nil || tweet.QuotedStatus != nil {
 		return
 	}

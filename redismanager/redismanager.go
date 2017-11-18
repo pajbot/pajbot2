@@ -1,6 +1,7 @@
 package redismanager
 
 import (
+	"log"
 	"strings"
 	"time"
 
@@ -35,7 +36,7 @@ func Init(config *config.Config) *RedisManager {
 	}, 69)
 	// forsenGASM
 	r.Pool = pool
-	log.Debug("connected to redis")
+	log.Println("connected to redis")
 	return r
 }
 
@@ -93,7 +94,7 @@ func (r *RedisManager) IsValidUser(channel string, _user string) bool {
 	user := strings.ToLower(_user)
 	res, err := redis.Bool(conn.Do("HEXISTS", channel+":users:lastseen", user))
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 	}
 	return res
 }

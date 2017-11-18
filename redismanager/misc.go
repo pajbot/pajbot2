@@ -3,6 +3,7 @@ package redismanager
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -36,7 +37,7 @@ func (r *RedisManager) SaveTwitterFollows(users []string) {
 	defer conn.Close()
 	bs, err := json.Marshal(users)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return
 	}
 	conn.Send("DEL", "twitterfollows")

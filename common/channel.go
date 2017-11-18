@@ -3,6 +3,7 @@ package common
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/pajlada/pajbot2/sqlmanager"
@@ -66,7 +67,7 @@ func FetchAllChannels(sql *sqlmanager.SQLManager, botID int) ([]Channel, error) 
 		c := Channel{}
 		err = c.FetchFromSQL(rows)
 		if err != nil {
-			log.Error(err)
+			fmt.Println("Error fetching from SQL", err)
 		} else {
 			// The channel was fetched properly
 			channels = append(channels, c)
@@ -105,7 +106,7 @@ func (c *Channel) FetchFromSQL(row *sql.Rows) error {
 	err := row.Scan(&w.ID, &w.Name, &w.Nickname, &w.Enabled, &w.BotID)
 
 	if err != nil {
-		log.Error(err)
+		// log.Println(err)
 		return err
 	}
 
@@ -137,7 +138,7 @@ func (c *Channel) InsertNewToSQL(sql *sqlmanager.SQLManager) error {
 	stmt, err := sql.Session.Prepare(queryF)
 	if err != nil {
 		// XXX
-		log.Fatal(err)
+		// log.Fatal(err)
 		return err
 	}
 
@@ -208,11 +209,11 @@ func GetChannel(session *sql.DB, name string) (Channel, error) {
 
 	switch {
 	case err == sql.ErrNoRows:
-		log.Error(err)
+		// log.Println(err)
 		return Channel{}, fmt.Errorf("No channel with the name %s", name)
 
 	case err != nil:
-		log.Error(err)
+		// log.Println(err)
 		return Channel{}, err
 	}
 

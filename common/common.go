@@ -4,11 +4,7 @@ package common
 
 import (
 	"time"
-
-	"github.com/pajlada/pajbot2/plog"
 )
-
-var log = plog.GetLogger()
 
 // BuildTime is the time when the binary was built
 // filled in with ./build.sh (ldflags)

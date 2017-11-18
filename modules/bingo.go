@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"log"
 	"strconv"
 	"strings"
 
@@ -72,13 +73,13 @@ func (module *Bingo) bingoNumber(b *bot.Bot, msg *common.Msg, action *bot.Action
 
 	numLow, err := strconv.Atoi(lowHigh[0])
 	if err != nil {
-		log.Errorf("Error in bingoNumbeR: %s", err)
+		log.Printf("Error in bingoNumbeR: %s", err)
 		return
 	}
 
 	numHigh, err = strconv.Atoi(lowHigh[1])
 	if err != nil {
-		log.Errorf("Error in bingoNumbeR: %s", err)
+		log.Printf("Error in bingoNumbeR: %s", err)
 		return
 	}
 
@@ -94,7 +95,7 @@ func (module *Bingo) bingoNumber(b *bot.Bot, msg *common.Msg, action *bot.Action
 
 	pointReward, err := strconv.Atoi(arguments[1])
 	if err != nil {
-		log.Errorf("Error convinerting pointReward: %s", err)
+		log.Printf("Error convinerting pointReward: %s", err)
 		return
 	}
 

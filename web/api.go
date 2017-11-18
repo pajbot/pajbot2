@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -48,7 +49,7 @@ func newError(err string) interface{} {
 func write(w http.ResponseWriter, data interface{}) {
 	bs, err := json.Marshal(data)
 	if err != nil {
-		log.Errorf("Error in web write: %s", err)
+		log.Printf("Error in web write: %s", err)
 		bs, _ = json.Marshal(newError("internal server error"))
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -105,7 +106,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 			p = exec(channel, ep, _rest)
 		}
 	}
-	log.Debugf("Bot: %#v", bot)
+	log.Printf("Bot: %#v", bot)
 	write(w, p)
 }
 
@@ -135,7 +136,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	token, err := twitchBotOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		log.Errorf("Code exchange failed with %s", err)
+		log.Printf("Code exchange failed with %s", err)
 	}
 
 	p := customPayload{}
@@ -150,7 +151,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "bot")
 			if err != nil {
 				// XXX: handle this
-				log.Error(err)
+				log.Println(err)
 			}
 		}
 	}
@@ -190,7 +191,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := twitchUserOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		log.Errorf("Code exchange failed with %s", err)
+		log.Printf("Code exchange failed with %s", err)
 	}
 
 	onSuccess := func(data gotwitch.Self) {
@@ -203,7 +204,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
 			if err != nil {
 				// XXX: handle this
-				log.Error(err)
+				log.Println(err)
 			}
 		}
 	}
@@ -217,11 +218,11 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 }
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	// log.Debug("HTTPERROR")
+	// log.Println("HTTPERROR")
 }
 
 func onInternalError(err error) {
-	log.Debugf("internal error: %s", err)
+	log.Printf("internal error: %s", err)
 }
 
 // InitAPI adds routes to the given subrouter

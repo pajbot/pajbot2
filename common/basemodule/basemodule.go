@@ -2,14 +2,12 @@ package basemodule
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/pajlada/pajbot2/helper"
-	"github.com/pajlada/pajbot2/plog"
 	"github.com/pajlada/pajbot2/redismanager"
 )
-
-var log = plog.GetLogger()
 
 // BaseModule includes information on whether it's enabled or not
 type BaseModule struct {
@@ -116,7 +114,7 @@ func (m *BaseModule) ParseState(r *redismanager.RedisManager, channelName string
 
 	err = json.Unmarshal(data, m)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return
 	}
 }
@@ -127,7 +125,7 @@ func (m *BaseModule) SaveState(r *redismanager.RedisManager, channelName string)
 	defer conn.Close()
 	data, err := json.Marshal(m)
 	if err != nil {
-		log.Errorf("Error while marshalling BaseModule: %s", err)
+		log.Printf("Error while marshalling BaseModule: %s", err)
 		return
 	}
 	_, err = conn.Do("HSET", channelName+":modules:state", m.ID, data)
@@ -146,7 +144,7 @@ func (m *BaseModule) ParseSettings(r *redismanager.RedisManager, channelName str
 
 	err := json.Unmarshal(data, m)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return
 	}
 }

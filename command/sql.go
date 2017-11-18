@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -61,7 +62,7 @@ func ReadSQLCommand(rows *sql.Rows) Command {
 	err := rows.Scan(&sqlCommand.ID, &sqlCommand.ChannelID, &sqlCommand.Triggers,
 		&sqlCommand.Response, &sqlCommand.ResponseType)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return nil
 	}
 	c := TextCommand{
@@ -93,7 +94,7 @@ func (command *SQLCommand) Insert(session *sql.DB) int64 {
 		// XXX
 		log.Fatal(err)
 	}
-	log.Debugf("Added new command with ID %d", lastID)
+	log.Printf("Added new command with ID %d", lastID)
 	return lastID
 }
 

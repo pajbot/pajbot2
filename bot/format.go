@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"log"
+
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/format"
 )
@@ -10,7 +12,7 @@ func (bot *Bot) Format(line string, msg *common.Msg) string {
 	// catch all errors until we have proper error handling
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error(r)
+			log.Println(r)
 		}
 	}()
 	fmtline, rawCommands := format.ParseLine(line)

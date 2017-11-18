@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -96,7 +97,7 @@ func (b *Boss) Run() {
 	// Serve files statically from ./web/static in /static
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
 
-	log.Infof("Starting web on host %s", b.Host)
+	log.Printf("Starting web on host %s", b.Host)
 	InitAPI(api)
 	err := http.ListenAndServe(b.Host, r)
 	if err != nil {
@@ -135,7 +136,7 @@ func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
-		log.Errorf("Upgrader error: %v", err)
+		log.Printf("Upgrader error: %v", err)
 		return
 	}
 

@@ -1,7 +1,7 @@
 package bot
 
 import (
-	_ "log" // go-imports pajaSWA
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -26,12 +26,12 @@ func loadGlobalBttvEmotes() {
 			}
 		},
 		func(statusCode int, statusMessage, errorMessage string) {
-			log.Errorf("Error fetching Global BTTV Emotes")
-			log.Errorf("Status code: %d", statusCode)
-			log.Errorf("Status message: %s", statusMessage)
-			log.Errorf("Error message: %s", errorMessage)
+			log.Printf("Error fetching Global BTTV Emotes")
+			log.Printf("Status code: %d", statusCode)
+			log.Printf("Status message: %s", statusMessage)
+			log.Printf("Error message: %s", errorMessage)
 		}, func(err error) {
-			log.Errorf("Internal error: %s", err)
+			log.Printf("Internal error: %s", err)
 		})
 }
 
@@ -48,12 +48,12 @@ func loadGlobalFrankerFaceZEmotes() {
 			}
 		},
 		func(statusCode int, statusMessage, errorMessage string) {
-			log.Errorf("Error fetching Global FFZ Emotes")
-			log.Errorf("Status code: %d", statusCode)
-			log.Errorf("Status message: %s", statusMessage)
-			log.Errorf("Error message: %s", errorMessage)
+			log.Printf("Error fetching Global FFZ Emotes")
+			log.Printf("Status code: %d", statusCode)
+			log.Printf("Status message: %s", statusMessage)
+			log.Printf("Error message: %s", errorMessage)
 		}, func(err error) {
-			log.Errorf("Internal error: %s", err)
+			log.Printf("Internal error: %s", err)
 		})
 }
 
@@ -77,13 +77,13 @@ func (bot *Bot) LoadBttvEmotes() {
 		func(statusCode int, statusMessage, errorMessage string) {
 			// We ignore 404 errors, it just means he doesn't have a BTTV account
 			if statusCode != 404 {
-				log.Errorf("Error fetching Channel BTTV Emotes (%s)", bot.Channel.Name)
-				log.Errorf("Status code: %d", statusCode)
-				log.Errorf("Status message: %s", statusMessage)
-				log.Errorf("Error message: %s", errorMessage)
+				log.Printf("Error fetching Channel BTTV Emotes (%s)", bot.Channel.Name)
+				log.Printf("Status code: %d", statusCode)
+				log.Printf("Status message: %s", statusMessage)
+				log.Printf("Error message: %s", errorMessage)
 			}
 		}, func(err error) {
-			log.Errorf("Internal error: %s", err)
+			log.Printf("Internal error: %s", err)
 		})
 }
 
@@ -178,12 +178,12 @@ func (bot *Bot) LoadFFZEmotes() {
 		func(statusCode int, statusMessage, errorMessage string) {
 			// We ignore 404 errors, it just means he doesn't have a FFZ account
 			if statusCode != 404 {
-				log.Errorf("Error fetching Channel FFZ Emotes (%s)", bot.Channel.Name)
-				log.Errorf("Status code: %d", statusCode)
-				log.Errorf("Status message: %s", statusMessage)
-				log.Errorf("Error message: %s", errorMessage)
+				log.Printf("Error fetching Channel FFZ Emotes (%s)", bot.Channel.Name)
+				log.Printf("Status code: %d", statusCode)
+				log.Printf("Status message: %s", statusMessage)
+				log.Printf("Error message: %s", errorMessage)
 			}
 		}, func(err error) {
-			log.Errorf("Internal error: %s", err)
+			log.Printf("Internal error: %s", err)
 		})
 }

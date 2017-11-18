@@ -5,10 +5,7 @@ import (
 	"unicode"
 
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/plog"
 )
-
-var log = plog.GetLogger()
 
 // MessageLength , should this be a module?
 // if not we need filter settings
@@ -25,7 +22,6 @@ func MessageLength(msg *common.Msg) int {
 		emoteLength = emoteLength * emote.Count
 		m = strings.Replace(m, emote.Name, "", -1)
 		// TODO: parse emote names
-		// log.Debugf("Emote: %s [Length: %d]", emote.Name, emoteLength)
 		msgLength += emoteLength
 	}
 	runes := []rune(m)

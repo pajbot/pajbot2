@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -50,7 +51,7 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 
 	// load banned words and links
 	module.BannedLinks = []filter.BannedLink{
-		/*
+	/*
 		filter.BannedLink{
 			Link:  "www.com",
 			Level: 5,
@@ -63,10 +64,10 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 			Link:  "google.com",
 			Level: 6,
 		},
-		*/
+	*/
 	}
 	module.BannedWords = []filter.BannedWord{
-		/*
+	/*
 		filter.BannedWord{
 			Word:  "forsenpuke",
 			Level: 2,
@@ -79,7 +80,7 @@ func (module *Banphrase) Init(bot *bot.Bot) (string, bool) {
 			Word:  "minik",
 			Level: 1,
 		},
-		*/
+	*/
 	}
 
 	// default values
@@ -150,8 +151,8 @@ func (module *Banphrase) getTimeoutLevel(user string, oldLvl int) int {
 	reset := true
 	if u, ok = module.timeoutHistory[user]; ok {
 		reset = time.Now().After(u.time.Add(module.ResetDuration))
-		log.Debug(u)
-		log.Debug(oldLvl)
+		log.Println(u)
+		log.Println(oldLvl)
 		if u.current+1 < oldLvl {
 			reset = true
 		} else if u.start+3 > u.current {
@@ -161,7 +162,7 @@ func (module *Banphrase) getTimeoutLevel(user string, oldLvl int) int {
 		}
 	}
 	if reset {
-		log.Debug("RESET LEVEL")
+		log.Println("RESET LEVEL")
 		u = userHistory{
 			start:   oldLvl,
 			current: oldLvl,
@@ -179,7 +180,7 @@ func (module *Banphrase) runFilters(msg *common.Msg) (int, string) {
 	var reason string
 	m := msg.Text // TODO: confusables, github.com/FiloSottile/tr39-confusables this is kinda shitty
 	links := filter.LinkFilter(m)
-	//log.Debug(links)
+	//log.Println(links)
 	if msg.User.Level < 250 && len(links) > 0 {
 		lvl = module.Level[Link]
 		reason = "matched link filter"
@@ -208,7 +209,7 @@ func (module *Banphrase) gc() {
 			if time.Now().After(data.time.Add(module.ResetDuration)) {
 				module.Lock()
 				delete(module.timeoutHistory, user)
-				log.Debug("removed user: ", user)
+				log.Println("removed user: ", user)
 				module.Unlock()
 			}
 		}

@@ -1,6 +1,8 @@
 package boss
 
 import (
+	"log"
+
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/pbtwitter"
@@ -39,12 +41,12 @@ func Init(config *config.Config) Boss {
 
 	botAccounts, err := common.GetDBUsersByType(boss.SQL.Session, "bot")
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 	}
 
 	for _, botAccount := range botAccounts {
 		c.BrokerLogin = config.BrokerLogin + "-" + botAccount.Name
-		log.Debugf("Starting bot %s", botAccount.Name)
+		log.Printf("Starting bot %s", botAccount.Name)
 		ircConnection := InitIRCConnection(c, botAccount)
 		boss.IRCConnections[botAccount.Name] = ircConnection
 	}

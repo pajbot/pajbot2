@@ -1,6 +1,9 @@
 package common
 
-import "database/sql"
+import (
+	"database/sql"
+	"log"
+)
 
 // DBUser xD
 type DBUser struct {
@@ -24,12 +27,12 @@ func CreateDBUser(session *sql.DB, name string, accessToken string, refreshToken
 
 	stmt, err := session.Prepare(queryF)
 	if err != nil {
-		log.Debugf("error: %s", err)
+		log.Printf("error: %s", err)
 		return err
 	}
 	_, err = stmt.Exec(name, userType, accessToken, refreshToken)
 	if err != nil {
-		log.Debugf("error: %s", err)
+		log.Printf("error: %s", err)
 		return err
 	}
 
@@ -94,7 +97,7 @@ func GetDBUsersByType(session *sql.DB, userType string) ([]DBUser, error) {
 	for rows.Next() {
 		err = rows.Scan(&outID, &outName, &outTwitchAccessToken, &outTwitchRefreshToken)
 		if err != nil {
-			log.Error(err)
+			log.Println(err)
 		} else {
 			ba := DBUser{
 				ID:   outID,

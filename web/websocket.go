@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"log"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -37,7 +38,7 @@ func (c *WSConn) pongHandler(string) error {
 // TODO: Fix proper authentication
 // TODO: load user from db/redis/cache
 func (c *WSConn) authenticate(username string) {
-	log.Debugf("Attempting to authenticate as %s", username)
+	log.Printf("Attempting to authenticate as %s", username)
 }
 
 func (c *WSConn) readPump() {
@@ -53,14 +54,14 @@ func (c *WSConn) readPump() {
 		_, message, err := c.ws.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				log.Errorf("error: %v", err)
+				log.Printf("error: %v", err)
 			}
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 		payload, err := createPayload(message)
 		if err != nil {
-			log.Error(err)
+			log.Println(err)
 			continue
 		}
 		// TODO: re-enable the following things when authentication is done

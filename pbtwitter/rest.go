@@ -2,6 +2,7 @@ package pbtwitter
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -21,13 +22,13 @@ func (c *Client) Follow(targetUser string) error {
 	}
 	for !c.doneLoading {
 		time.Sleep(5 * time.Second)
-		log.Debug("waiting to load all users before following new ones")
+		log.Println("waiting to load all users before following new ones")
 	}
 	user, err := c.Rest.FollowUser(targetUser)
 	if err != nil {
 		return err
 	}
-	log.Debug("followed ", user.Name)
+	log.Println("followed ", user.Name)
 	c.followedUsers = append(c.followedUsers, targetUser)
 	c.redis.SaveTwitterFollows(c.followedUsers)
 	return nil
@@ -77,7 +78,7 @@ or *anaconda.Tweet if it wasnt
 func (c *Client) LastTweet(user string) (*twitter.Tweet, *anaconda.Tweet) {
 	user = strings.ToLower(user)
 	if tweet, ok := c.lastTweets[user]; ok {
-		log.Debug("found cached tweet")
+		log.Println("found cached tweet")
 		return tweet, nil
 	}
 	v := url.Values{}
@@ -87,7 +88,7 @@ func (c *Client) LastTweet(user string) (*twitter.Tweet, *anaconda.Tweet) {
 	v.Add("include_rts", "false")
 	tweets, err := c.Rest.GetUserTimeline(v)
 	if err != nil {
-		log.Error(err)
+		log.Println(err)
 		return nil, nil
 	}
 	tweet := tweets[0]

@@ -1,6 +1,10 @@
 package bot
 
-import "github.com/pajlada/pajbot2/common"
+import (
+	"log"
+
+	"github.com/pajlada/pajbot2/common"
+)
 
 /*
 Handle attempts to handle the given message
@@ -11,7 +15,7 @@ func (b *Bot) Handle(msg common.Msg) {
 	oldUser := msg.User
 	defer b.Redis.UpdateUser(b.Channel.Name, &msg.User, &oldUser)
 	action := &Action{}
-	log.Debugf("%s # %s :%s", msg.Channel, msg.User.DisplayName, msg.Text)
+	log.Printf("%s # %s :%s", msg.Channel, msg.User.DisplayName, msg.Text)
 	for _, module := range b.EnabledModules {
 		// If user level is above module bypass level
 		//   then don't call Check here

@@ -3,6 +3,7 @@ package modules
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -76,7 +77,7 @@ func cmdTest(b *bot.Bot, msg *common.Msg, action *bot.Action) {
 		b.RawRead <- fmt.Sprintf(testMessage, b.Channel.Name)
 
 	case "whisper":
-		log.Debugf("WHISPER %s", msg.User.Name)
+		log.Printf("WHISPER %s", msg.User.Name)
 		b.Whisper(msg.User.Name, "TEST WHISPER")
 
 	default:
@@ -117,12 +118,12 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 		if strings.ToLower(trigger) == "!relaybroker" {
 			req, err := http.Get("http://localhost:9002/stats")
 			if err != nil {
-				log.Error(err)
+				log.Println(err)
 				return nil
 			}
 			bs, err := ioutil.ReadAll(req.Body)
 			if err != nil {
-				log.Error(err)
+				log.Println(err)
 			}
 			b.SaySafe(string(bs))
 		}
@@ -167,7 +168,7 @@ func (module *Test) Check(b *bot.Bot, msg *common.Msg, action *bot.Action) error
 	case common.MsgTimeoutSuccess:
 		// b.Sayf("MsgTimeoutSuccess triggered: %#v", msg.Tags)
 	case common.MsgRoomState:
-		log.Debug("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
+		log.Println("GOT MSG ROOMSTATE MESSAGE: %s", msg.Tags)
 		r9k, slow, sub := msg.Tags["r9k"], msg.Tags["slow"], msg.Tags["subs-only"]
 		if r9k != "" && slow != "" {
 			// Initial channel join

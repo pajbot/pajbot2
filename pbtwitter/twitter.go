@@ -1,6 +1,7 @@
 package pbtwitter
 
 import (
+	"log"
 	"net/url"
 	"strings"
 
@@ -42,20 +43,20 @@ func (c *Client) loadAllFollowed() {
 	if err == nil {
 		c.followedUsers = all
 		c.doneLoading = true
-		log.Debug("loaded twitter follows form redis")
+		log.Println("loaded twitter follows form redis")
 		return
 	}
-	log.Error(err)
+	log.Println(err)
 	v := url.Values{}
 	v.Add("count", "200")
 	pages := c.Rest.GetFriendsListAll(v)
 	for page := range pages {
 		if page.Error != nil {
-			log.Error(page.Error)
+			log.Println(page.Error)
 		}
 		for _, user := range page.Friends {
 			all = append(all, strings.ToLower(user.ScreenName))
-			log.Debug(user.ScreenName)
+			log.Println(user.ScreenName)
 		}
 	}
 	c.followedUsers = all

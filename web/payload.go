@@ -1,6 +1,9 @@
 package web
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"log"
+)
 
 // Payload xD
 type Payload struct {
@@ -12,7 +15,7 @@ type Payload struct {
 func (p *Payload) ToJSON() (ret []byte) {
 	ret, err := json.Marshal(p)
 	if err != nil {
-		log.Error("Error marshalling payload:", err)
+		log.Println("Error marshalling payload:", err)
 	}
 	return
 }
