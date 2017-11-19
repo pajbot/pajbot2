@@ -8,7 +8,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattes/migrate/source/file"
 
@@ -17,11 +16,6 @@ import (
 	"github.com/pajlada/pajbot2/helper"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
-
-// TwitchBot xd
-type TwitchBot struct {
-	Client *twitch.Client
-}
 
 var buildTime string
 
@@ -107,6 +101,11 @@ func runCmd() {
 	err = application.InitializeAPIs()
 	if err != nil {
 		log.Fatal("An error occured while initializing APIs: ", err)
+	}
+
+	err = application.LoadExternalEmotes()
+	if err != nil {
+		log.Fatal("An error occured while loading external emotes: ", err)
 	}
 
 	err = application.StartWebServer()

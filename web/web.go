@@ -7,9 +7,9 @@ import (
 
 	"golang.org/x/oauth2"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
@@ -19,7 +19,7 @@ import (
 type Config struct {
 	Redis *redismanager.RedisManager
 	SQL   *sqlmanager.SQLManager
-	Bots  map[string]*twitch.Client
+	Bots  map[string]*bots.TwitchBot
 }
 
 // Boss xD
@@ -29,10 +29,10 @@ type Boss struct {
 }
 
 var (
-	bots  map[string]*twitch.Client
-	redis *redismanager.RedisManager
-	sql   *sqlmanager.SQLManager
-	hooks map[string]struct {
+	twitchBots map[string]*bots.TwitchBot
+	redis      *redismanager.RedisManager
+	sql        *sqlmanager.SQLManager
+	hooks      map[string]struct {
 		Secret string `json:"secret"`
 	}
 )
@@ -74,7 +74,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 		Host:   config.WebHost,
 		WSHost: "ws://" + config.WebDomain + "/ws",
 	}
-	bots = webCfg.Bots
+	twitchBots = webCfg.Bots
 	redis = webCfg.Redis
 	sql = webCfg.SQL
 	hooks = config.Hooks

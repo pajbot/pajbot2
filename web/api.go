@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/dankeroni/gotwitch"
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/apirequest"
+	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/common"
 	"golang.org/x/oauth2"
 )
@@ -93,10 +93,10 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: route http methods
 	v := mux.Vars(r)
 	channel := v["channel"]
-	var bot *twitch.Client
+	var bot *bots.TwitchBot
 	var ok bool
 	var p interface{}
-	if bot, ok = bots[channel]; !ok {
+	if bot, ok = twitchBots[channel]; !ok {
 		p = apiError{
 			Err: "channel not found",
 		}

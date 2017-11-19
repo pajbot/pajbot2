@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/dankeroni/gotwitch"
@@ -13,7 +14,10 @@ import (
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/mysql"
 	"github.com/pajlada/pajbot2/apirequest"
+	"github.com/pajlada/pajbot2/bots"
+	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/emotes"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
@@ -25,7 +29,7 @@ const migrationsPath = "file://migrations"
 // It keeps the functions to initialize, start, and stop pajbot
 type Application struct {
 	config     *config.Config
-	TwitchBots map[string]*twitch.Client
+	TwitchBots map[string]*bots.TwitchBot
 	Redis      *redismanager.RedisManager
 	SQL        *sqlmanager.SQLManager
 }
@@ -34,7 +38,7 @@ type Application struct {
 func NewApplication() *Application {
 	ret := Application{}
 
-	ret.TwitchBots = make(map[string]*twitch.Client)
+	ret.TwitchBots = make(map[string]*bots.TwitchBot)
 
 	return &ret
 }
@@ -51,11 +55,11 @@ func (a *Application) LoadConfig(path string) error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	signal.Notify(c, syscall.SIGTERM)
+	a.config.Quit = make(chan string)
 	go func() {
 		<-c
 		a.config.Quit <- "Quitting due to SIGTERM/SIGINT"
 	}()
-	a.config.Quit = make(chan string)
 
 	return nil
 }
@@ -97,7 +101,7 @@ func (a *Application) RunDatabaseMigrations() error {
 	return nil
 }
 
-// InitializeAPIs initializeds various APIs that are needed for pajbot
+// InitializeAPIs initializes various APIs that are needed for pajbot
 func (a *Application) InitializeAPIs() error {
 	// Twitch APIs
 	apirequest.Twitch = gotwitch.New(a.config.Auth.Twitch.User.ClientID)
@@ -108,6 +112,16 @@ func (a *Application) InitializeAPIs() error {
 	return nil
 }
 
+// LoadExternalEmotes xd
+func (a *Application) LoadExternalEmotes() error {
+	log.Println("Loading globalemotes...")
+	go emotes.LoadGlobalEmotes()
+	log.Println("Done!")
+
+	return nil
+}
+
+// StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
 	a.Redis = redismanager.Init(a.config)
 	a.SQL = sqlmanager.Init(a.config)
@@ -122,6 +136,37 @@ func (a *Application) StartWebServer() error {
 	go webBoss.Run()
 
 	return nil
+}
+
+func addHeheToMessageText(next bots.Handler) bots.Handler {
+	return bots.HandlerFunc(func(channel string, user twitch.User, message *bots.TwitchMessage) {
+		message.Text = message.Text + " hehe"
+		next.HandleMessage(channel, user, message)
+	})
+}
+
+func parseBTTVEmotes(next bots.Handler) bots.Handler {
+	return bots.HandlerFunc(func(channel string, user twitch.User, message *bots.TwitchMessage) {
+		m := strings.Split(message.Text, " ")
+		emoteCount := make(map[string]*common.Emote)
+		for _, word := range m {
+			if emote, ok := emoteCount[word]; ok {
+				emote.Count++
+			} else if emote, ok := emotes.GlobalEmotes.Bttv[word]; ok {
+				emoteCount[word] = &emote
+			}
+		}
+
+		for _, emote := range emoteCount {
+			message.BTTVEmotes = append(message.BTTVEmotes, *emote)
+		}
+
+		next.HandleMessage(channel, user, message)
+	})
+}
+
+func finalMiddleware(channel string, user twitch.User, message *bots.TwitchMessage) {
+	log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
 
 // LoadBots loads bots from the database
@@ -143,15 +188,25 @@ func (a *Application) LoadBots() error {
 		return err
 	}
 
+	defer func() {
+		dErr := rows.Close()
+		if dErr != nil {
+			log.Println("Error in deferred rows close:", dErr)
+		}
+	}()
+
 	for rows.Next() {
 		var name string
 		var twitchAccessToken string
 		if err := rows.Scan(&name, &twitchAccessToken); err != nil {
-			log.Fatal("Error scanning values: ", err)
+			return err
 		}
 
-		log.Println("Got bot", name)
-		a.TwitchBots[name] = twitch.NewClient(name, "oauth:"+twitchAccessToken)
+		finalHandler := bots.HandlerFunc(finalMiddleware)
+
+		a.TwitchBots[name] = &bots.TwitchBot{Client: twitch.NewClient(name, "oauth:"+twitchAccessToken)}
+		a.TwitchBots[name].AddHandler(addHeheToMessageText(parseBTTVEmotes(finalHandler)))
+		// a.TwitchBots[name].AddHandler(addHeheToMessageText(finalHandler))
 	}
 
 	return nil
@@ -160,7 +215,9 @@ func (a *Application) LoadBots() error {
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
 	for _, bot := range a.TwitchBots {
-		bot.OnNewMessage(func(channel string, user twitch.User, message twitch.Message) {
+		bot.OnNewMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
+			message := bots.TwitchMessage{Message: rawMessage}
+			bot.HandleMessage(channel, user, &message)
 			log.Printf("%s(%s): %s", user.DisplayName, user.Username, message.Text)
 			if message.Text == "!xd" && user.Username == "pajlada" {
 				bot.Say(channel, "XDDDDDDDDDD")
@@ -173,7 +230,7 @@ func (a *Application) StartBots() error {
 
 		bot.Join("pajlada")
 
-		go func(bot *twitch.Client) {
+		go func(bot *bots.TwitchBot) {
 			log.Println("Connecting...")
 			err := bot.Connect()
 			if err != nil {
@@ -187,14 +244,6 @@ func (a *Application) StartBots() error {
 
 // Run blocks the current thread, waiting for something to put an exit string into the Quit channel
 func (a *Application) Run() error {
-	/*
-		b := boss.Init(config)
-		go bot.LoadGlobalEmotes()
-		for _, ircConnection := range b.IRCConnections {
-			bots = append(bots, ircConnection.Bots)
-		}
-		log.Fatal(q)
-	*/
 
 	quitString := <-a.config.Quit
 

@@ -42,7 +42,7 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, _ := bots[channel]
+	b, _ := twitchBots[channel]
 
 	if b == nil {
 		// no bot found for channel
