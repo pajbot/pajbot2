@@ -9,7 +9,9 @@ import (
 type TwitchBot struct {
 	*twitch.Client
 
-	handlers []Handler
+	handler Handler
+
+	QuitChannel chan string
 }
 
 // TwitchMessage is a wrapper for twitch.Message with some extra stuff
@@ -24,14 +26,28 @@ type TwitchMessage struct {
 	// TODO: Emojis
 }
 
-// AddHandler adds a handler to message at the bottom of the list
-func (b *TwitchBot) AddHandler(handler Handler) {
-	b.handlers = append(b.handlers, handler)
+// Reply will reply to the message in the same way it received the message
+// If the message was received in a twitch channel, reply in that twitch channel.
+// IF the message was received in a twitch whisper, reply using twitch whispers.
+func (b *TwitchBot) Reply(channel string, user twitch.User, message string) {
+	if channel == "" {
+		b.Whisper(user.Username, message)
+	} else {
+		b.Say(channel, message)
+	}
+}
+
+// SetHandler sets the handler to message at the bottom of the list
+func (b *TwitchBot) SetHandler(handler Handler) {
+	b.handler = handler
 }
 
 // HandleMessage goes through all of the bot handlers in the correct order and figures out if anything was triggered
 func (b *TwitchBot) HandleMessage(channel string, user twitch.User, message *TwitchMessage) {
-	for _, handler := range b.handlers {
-		handler.HandleMessage(channel, user, message)
-	}
+	b.handler.HandleMessage(b, channel, user, message)
+}
+
+// Quit quits the entire application
+func (b *TwitchBot) Quit(message string) {
+	b.QuitChannel <- message
 }

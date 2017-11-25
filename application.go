@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc"
@@ -139,14 +140,14 @@ func (a *Application) StartWebServer() error {
 }
 
 func addHeheToMessageText(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(channel string, user twitch.User, message *bots.TwitchMessage) {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
 		message.Text = message.Text + " hehe"
-		next.HandleMessage(channel, user, message)
+		next.HandleMessage(bot, channel, user, message)
 	})
 }
 
 func parseBTTVEmotes(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(channel string, user twitch.User, message *bots.TwitchMessage) {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
 		m := strings.Split(message.Text, " ")
 		emoteCount := make(map[string]*common.Emote)
 		for _, word := range m {
@@ -161,11 +162,39 @@ func parseBTTVEmotes(next bots.Handler) bots.Handler {
 			message.BTTVEmotes = append(message.BTTVEmotes, *emote)
 		}
 
-		next.HandleMessage(channel, user, message)
+		next.HandleMessage(bot, channel, user, message)
 	})
 }
 
-func finalMiddleware(channel string, user twitch.User, message *bots.TwitchMessage) {
+func handleCommands(next bots.Handler) bots.Handler {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
+		if user.Username == "pajlada" {
+			if strings.HasPrefix(message.Text, "!xd") {
+				bot.Reply(channel, user, "XDDDDDDDDDD")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!whisperme") {
+				log.Printf("Send whisper!")
+				// bot.Say(channel, "XDDDDDDDDDD")
+				bot.Whisper("pajlada", "hehe")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!pb2quit") {
+				bot.Reply(channel, user, "Quitting...")
+				time.AfterFunc(time.Millisecond*500, func() {
+					bot.Quit("Quit because pajlada said so")
+				})
+				return
+			}
+		}
+
+		next.HandleMessage(bot, channel, user, message)
+	})
+}
+
+func finalMiddleware(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
 	log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
 
@@ -204,9 +233,11 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := bots.HandlerFunc(finalMiddleware)
 
-		a.TwitchBots[name] = &bots.TwitchBot{Client: twitch.NewClient(name, "oauth:"+twitchAccessToken)}
-		a.TwitchBots[name].AddHandler(addHeheToMessageText(parseBTTVEmotes(finalHandler)))
-		// a.TwitchBots[name].AddHandler(addHeheToMessageText(finalHandler))
+		a.TwitchBots[name] = &bots.TwitchBot{
+			Client:      twitch.NewClient(name, "oauth:"+twitchAccessToken),
+			QuitChannel: a.config.Quit,
+		}
+		a.TwitchBots[name].SetHandler(addHeheToMessageText(parseBTTVEmotes(handleCommands(finalHandler))))
 	}
 
 	return nil
@@ -215,17 +246,21 @@ func (a *Application) LoadBots() error {
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
 	for _, bot := range a.TwitchBots {
+		bot.OnNewWhisper(func(user twitch.User, rawMessage twitch.Message) {
+			message := bots.TwitchMessage{Message: rawMessage}
+
+			log.Printf("GOT WHISPER! %s(%s): %s", user.DisplayName, user.Username, message.Text)
+
+			bot.HandleMessage("", user, &message)
+		})
+
 		bot.OnNewMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
 			message := bots.TwitchMessage{Message: rawMessage}
-			bot.HandleMessage(channel, user, &message)
-			log.Printf("%s(%s): %s", user.DisplayName, user.Username, message.Text)
-			if message.Text == "!xd" && user.Username == "pajlada" {
-				bot.Say(channel, "XDDDDDDDDDD")
-			}
 
-			if message.Text == "!pb2quit" && user.Username == "pajlada" {
-				a.config.Quit <- "Quit because pajlada said so"
-			}
+			bot.HandleMessage(channel, user, &message)
+
+			log.Printf("%s(%s): %s", user.DisplayName, user.Username, message.Text)
+
 		})
 
 		bot.Join("pajlada")
