@@ -14,10 +14,10 @@ type SQLManager struct {
 }
 
 // Init creates an instance of the SQL Manager
-func Init(config *config.Config) *SQLManager {
+func Init(config config.SQLConfig) *SQLManager {
 	m := &SQLManager{}
 
-	db, err := sql.Open("mysql", config.SQLDSN)
+	db, err := sql.Open("mysql", config.DSN)
 	if err != nil {
 		log.Fatal("Error connecting to MySQL:", err)
 	}

@@ -17,24 +17,25 @@ type RedisManager struct {
 }
 
 // Init connects to redis and returns redis client
-func Init(config *config.Config) *RedisManager {
+func Init(config config.RedisConfig) *RedisManager {
 	r := &RedisManager{}
-	pool := redis.NewPool(func() (redis.Conn, error) {
-		c, err := redis.Dial("tcp", config.RedisHost)
-		if err != nil {
-			log.Fatal("An error occured while connecting to redis: ", err)
-			return nil, err
-		}
-		if config.RedisDatabase >= 0 {
-			_, err = c.Do("SELECT", config.RedisDatabase)
+	pool := &redis.Pool{
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", config.Host)
 			if err != nil {
-				log.Fatal("Error while selecting redis db:", err)
+				log.Fatal("An error occured while connecting to redis: ", err)
 				return nil, err
 			}
-		}
-		return c, err
-	}, 69)
-	// forsenGASM
+			if config.Database >= 0 {
+				_, err = c.Do("SELECT", config.Database)
+				if err != nil {
+					log.Fatal("Error while selecting redis db:", err)
+					return nil, err
+				}
+			}
+			return c, err
+		},
+	}
 	r.Pool = pool
 	log.Println("connected to redis")
 	return r

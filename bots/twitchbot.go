@@ -1,17 +1,33 @@
 package bots
 
 import (
+	"fmt"
+
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/filter"
+	"github.com/pajlada/pajbot2/redismanager"
 )
+
+type botFlags struct {
+	PermaSubMode bool
+}
 
 // TwitchBot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
 type TwitchBot struct {
 	*twitch.Client
 
+	Name    string
 	handler Handler
 
 	QuitChannel chan string
+
+	Flags botFlags
+
+	Redis *redismanager.RedisManager
+
+	// Filters
+	TransparentList *filter.TransparentList
 }
 
 // TwitchMessage is a wrapper for twitch.Message with some extra stuff
@@ -34,6 +50,17 @@ func (b *TwitchBot) Reply(channel string, user twitch.User, message string) {
 		b.Whisper(user.Username, message)
 	} else {
 		b.Say(channel, message)
+	}
+}
+
+func (b *TwitchBot) Timeout(channel string, user twitch.User, duration int, reason string) {
+	if channel == "" {
+		return
+	}
+
+	// Empty string in UserType means a normal user
+	if user.UserType == "" {
+		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.Username, duration, reason))
 	}
 }
 

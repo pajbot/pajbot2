@@ -2,63 +2,104 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 )
+
+type RedisConfig struct {
+	Host     string
+	Password string
+	Database int
+}
+
+type WebConfig struct {
+	Host   string
+	Domain string
+}
+
+type SQLConfig struct {
+	DSN string
+}
+
+type authTwitchConfig struct {
+	Bot struct {
+		// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
+		ClientID     string
+		ClientSecret string
+		RedirectURI  string
+	}
+
+	User struct {
+		ClientID     string
+		ClientSecret string
+		RedirectURI  string
+	}
+}
+
+type authTwitterConfig struct {
+	ConsumerKey    string
+	ConsumerSecret string
+	AccessToken    string
+	AccessSecret   string
+}
+
+type authConfig struct {
+	Twitch authTwitchConfig
+
+	Twitter authTwitterConfig
+}
+
+type grpcServiceConfig struct {
+	Host string
+}
+
+type pubsubConfig struct {
+	ChannelID string
+	UserID    string
+	UserToken string
+}
+
+type Pajbot1Config struct {
+	SQL SQLConfig
+}
 
 /*
 The Config contains all the data required to connect
 to the twitch IRC servers
 */
 type Config struct {
-	BrokerHost  *string `json:"broker_host"`
-	BrokerPass  *string `json:"broker_pass"`
-	BrokerLogin string  `json:"broker_login"`
-	Silent      bool    `json:"silent"`
+	Redis RedisConfig
 
-	RedisHost     string `json:"redis_host"`
-	RedisPassword string `json:"redis_password"`
-	RedisDatabase int    `json:"redis_database"`
+	Web WebConfig
 
-	WebHost   string `json:"web_host"`
-	WebDomain string `json:"web_domain"`
+	SQL SQLConfig
 
-	SQLDSN string `json:"sql_dsn"`
-
-	Auth struct {
-		Twitch struct {
-			Bot struct {
-				// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
-				ClientID     string `json:"client_id"`
-				ClientSecret string `json:"client_secret"`
-				RedirectURI  string `json:"redirect_uri"`
-			} `json:"bot"`
-			User struct {
-				ClientID     string `json:"client_id"`
-				ClientSecret string `json:"client_secret"`
-				RedirectURI  string `json:"redirect_uri"`
-			} `json:"user"`
-		} `json:"twitch"`
-
-		Twitter struct {
-			ConsumerKey    string `json:"consumer_key"`
-			ConsumerSecret string `json:"consumer_secret"`
-			AccessToken    string `json:"access_token"`
-			AccessSecret   string `json:"access_secret"`
-		} `json:"twitter"`
-	} `json:"auth"`
+	Auth authConfig
 
 	Hooks map[string]struct {
-		Secret string `json:"secret"`
+		Secret string
 	}
 
-	TLSKey  string `json:"tls_key"`
-	TLSCert string `json:"tls_cert"`
+	TLSKey  string
+	TLSCert string
 
-	Quit chan string
+	GRPCService grpcServiceConfig
 
-	ToWeb   chan map[string]interface{}
-	FromWeb chan map[string]interface{}
+	PubSub pubsubConfig
+
+	Pajbot1 Pajbot1Config
+}
+
+var defaultConfig = Config{
+	Redis: RedisConfig{
+		Host: "localhost:6379",
+	},
+	Web: WebConfig{
+		Host:   "localhost:2355",
+		Domain: "localhost:2355",
+	},
+	GRPCService: grpcServiceConfig{
+		Host: ":50052",
+	},
 }
 
 /*
@@ -70,21 +111,11 @@ func LoadConfig(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	config := &Config{
-		RedisDatabase: -1,
-	}
-	err = json.Unmarshal(file, config)
+	config := defaultConfig
+	err = json.Unmarshal(file, &config)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check for missing fields
-	if config.BrokerHost == nil {
-		return nil, errors.New("Missing field broker_host in config file")
-	}
-	if config.BrokerPass == nil {
-		return nil, errors.New("Missing field broker_pass in config file")
-	}
-
-	return config, nil
+	return &config, nil
 }

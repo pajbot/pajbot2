@@ -22,6 +22,23 @@ var buildTime string
 var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
 
+var validURLs = []string{
+	"imgur.com",        // Image host
+	"twitter.com",      // Social media
+	"twimg.com",        // Twitter image host
+	"forsen.tv",        // Bot website
+	"pajlada.se",       // Bot creator website
+	"pajlada.com",      // Bot creator website
+	"pajbot.com",       // Bot website
+	"youtube.com",      // Video hosting website
+	"youtu.be",         // Youtube short-url
+	"prntscr.com",      // Image host
+	"prnt.sc",          // prntscr short-url
+	"steampowered.com", // Game shop
+	"gyazo.com",        // Image host
+	"www.com",          // Meme
+}
+
 func main() {
 	common.BuildTime = buildTime
 
@@ -32,7 +49,7 @@ func main() {
 	command := flag.Arg(0)
 
 	if *version {
-		fmt.Println(Version)
+		fmt.Println(*version)
 		os.Exit(0)
 	}
 
@@ -113,14 +130,41 @@ func runCmd() {
 		log.Fatal("An error occured while starting the web server: ", err)
 	}
 
+	err = application.LoadOldPajbot()
+	if err != nil {
+		log.Fatal("An error occured while loading old pajbot: ", err)
+	}
+
 	err = application.LoadBots()
 	if err != nil {
 		log.Fatal("An error occured while loading bots: ", err)
 	}
 
+	/*
+		err = application.StartContextBot()
+		if err != nil {
+			log.Fatal("An error occured while starting context bot: ", err)
+		}
+	*/
+
 	err = application.StartBots()
 	if err != nil {
 		log.Fatal("An error occured while starting bots: ", err)
+	}
+
+	err = application.StartGRPCService()
+	if err != nil {
+		log.Fatal("An error occured while starting GRPC service", err)
+	}
+
+	err = application.StartGRPCClient()
+	if err != nil {
+		log.Fatal("An error occured while starting GRPC client", err)
+	}
+
+	err = application.StartPubSubClient()
+	if err != nil {
+		log.Fatal("An error occured while starting pubsub client", err)
 	}
 
 	log.Fatal(application.Run())
@@ -151,7 +195,7 @@ func newbotCmd() {
 		log.Fatal("An error occured while loading the config file:", err)
 	}
 
-	sql := sqlmanager.Init(config)
+	sql := sqlmanager.Init(config.SQL)
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -183,8 +227,7 @@ func linkchannelCmd() {
 		log.Fatal("An error occured while loading the config file:", err)
 	}
 
-	sql := sqlmanager.Init(config)
-
+	sql := sqlmanager.Init(config.SQL)
 	reader := bufio.NewReader(os.Stdin)
 
 	var name string

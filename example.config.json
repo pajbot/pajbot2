@@ -1,34 +1,8 @@
 {
-    "redis_host": "localhost:6379",
-    "sql_dsn": "pajbot2:password@tcp(localhost:3306)/pajbot2_test",
-    "broker_host": "localhost:7353",
-    "broker_pass": "test",
-    "broker_login": "pajbot2",
-    "web_host": "localhost:2355",
-    "web_domain": "pajlada.com:2355",
-    "auth": {
-        "twitch": {
-            "bot": {
-                "client_id": "id123",
-                "client_secret": "secret123",
-                "redirect_uri": "http://pajlada.com:2355/api/auth/twitch/bot/callback"
-            },
-            "user": {
-                "client_id": "id321",
-                "client_secret": "secret321",
-                "redirect_uri": "http://pajlada.com:2355/api/auth/twitch/user/callback"
-            }
-        },
-        "twitter": {
-            "consumer_key": "uhurehhiukewhfkjuerwh",
-            "consumer_secret": "uiswdhuioefhouiehfouie",
-            "access_token": "heiufheuifhuefheuofjiol",
-            "access_secret": "hjukfehuighiurehgiurewhgiu"
-        }
+    "Redis": {
+        "Host":"localhost:6379"
     },
-    "hooks": {
-        "pajlada": {
-            "secret": "penis"
-        }
+    "SQL": {
+        "DSN": "root:penis123@tcp(localhost:3306)/pajbot2_test"
     }
 }

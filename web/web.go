@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/bots"
@@ -33,7 +34,7 @@ var (
 	redis      *redismanager.RedisManager
 	sql        *sqlmanager.SQLManager
 	hooks      map[string]struct {
-		Secret string `json:"secret"`
+		Secret string
 	}
 )
 
@@ -71,8 +72,8 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
 	}
 	b := &Boss{
-		Host:   config.WebHost,
-		WSHost: "ws://" + config.WebDomain + "/ws",
+		Host:   config.Web.Host,
+		WSHost: "ws://" + config.Web.Domain + "/ws",
 	}
 	twitchBots = webCfg.Bots
 	redis = webCfg.Redis
@@ -99,7 +100,8 @@ func (b *Boss) Run() {
 
 	log.Printf("Starting web on host %s", b.Host)
 	InitAPI(api)
-	err := http.ListenAndServe(b.Host, r)
+	corsObj := handlers.AllowedOrigins([]string{"*"})
+	err := http.ListenAndServe(b.Host, handlers.CORS(corsObj)(r))
 	if err != nil {
 		log.Fatal(err)
 	}

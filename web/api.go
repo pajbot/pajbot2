@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"time"
+
 	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/apirequest"
@@ -44,6 +46,21 @@ func newError(err string) interface{} {
 	return apiError{
 		Err: err,
 	}
+}
+
+func writeError(w http.ResponseWriter, message string) {
+	data := struct {
+		Message string
+	}{
+		message,
+	}
+	bs, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Error in web write: %s", err)
+		bs, _ = json.Marshal(newError("internal server error"))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(bs)
 }
 
 func write(w http.ResponseWriter, data interface{}) {
@@ -118,6 +135,11 @@ func apiRootHandler(w http.ResponseWriter, r *http.Request) {
 var oauthStateString = "penis"
 
 func apiTwitchBotLogin(w http.ResponseWriter, r *http.Request) {
+	if twitchBotOauthConfig.ClientID == "" {
+		writeError(w, "Missing client ID for Twitch bot")
+		return
+	}
+
 	url := twitchBotOauthConfig.AuthCodeURL(oauthStateString)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
@@ -148,7 +170,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("username", data.Token.UserName)
 			p.Add("token", token.AccessToken)
 			p.Add("refreshtoken", token.RefreshToken)
-			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "bot")
+			err = common.CreateBot(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
 			if err != nil {
 				// XXX: handle this
 				log.Println(err)
@@ -156,7 +178,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	apirequest.Twitch.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
+	apirequest.TwitchBotV3.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
 
 	// We should, instead of returning the data raw, do something about it.
 	// Right now this is useful for new apps that need access.
@@ -219,6 +241,71 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	write(w, p.data)
 }
 
+const ActionUnknown = 0
+const ActionTimeout = 1
+const ActionBan = 2
+const ActionUnban = 3
+
+func getActionString(action int) string {
+	switch action {
+	case ActionTimeout:
+		return "timeout"
+
+	case ActionBan:
+		return "ban"
+
+	case ActionUnban:
+		return "unban"
+	}
+
+	return ""
+}
+
+type moderationAction struct {
+	UserID    string
+	Action    string
+	Duration  int
+	TargetID  string
+	Reason    string
+	Timestamp time.Time
+	Context   *string
+}
+
+type moderationResponse struct {
+	ChannelID string
+
+	Actions []moderationAction
+}
+
+func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	response := moderationResponse{}
+
+	response.ChannelID = vars["channelID"]
+
+	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
+
+	rows, err := sql.Session.Query(queryF, response.ChannelID)
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		action := moderationAction{}
+		actionIndex := 0
+		if err := rows.Scan(&action.UserID, &actionIndex, &action.Duration, &action.TargetID, &action.Reason, &action.Timestamp, &action.Context); err != nil {
+			panic(err)
+		}
+		action.Action = getActionString(actionIndex)
+
+		response.Actions = append(response.Actions, action)
+	}
+
+	write(w, response)
+}
+
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
 	log.Println("HTTPERROR: ", errorMessage)
 }
@@ -234,6 +321,7 @@ func InitAPI(m *mux.Router) {
 	m.HandleFunc("/auth/twitch/user", apiTwitchUserLogin)
 	m.HandleFunc("/auth/twitch/bot/callback", apiTwitchBotCallback)
 	m.HandleFunc("/auth/twitch/user/callback", apiTwitchUserCallback)
-	m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
+	// m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
+	m.HandleFunc(`/channel/{channelID}/moderation/latest`, apiChannelModerationLatest)
 	m.HandleFunc(`/hook/{channel:\w+}`, apiHook)
 }
