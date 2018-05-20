@@ -130,10 +130,12 @@ func runCmd() {
 		log.Fatal("An error occured while starting the web server: ", err)
 	}
 
-	err = application.LoadOldPajbot()
-	if err != nil {
-		log.Fatal("An error occured while loading old pajbot: ", err)
-	}
+	/*
+		err = application.LoadOldPajbot()
+		if err != nil {
+			log.Fatal("An error occured while loading old pajbot: ", err)
+		}
+	*/
 
 	err = application.LoadBots()
 	if err != nil {

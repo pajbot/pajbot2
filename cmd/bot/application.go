@@ -29,9 +29,8 @@ import (
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/emotes"
-	"github.com/pajlada/pajbot2/filter"
 	pb "github.com/pajlada/pajbot2/grpc"
-	"github.com/pajlada/pajbot2/pajbot1"
+	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
@@ -132,8 +131,6 @@ type Application struct {
 	SQL          *sqlmanager.SQLManager
 	TwitchPubSub *twitch_pubsub.Client
 	GRPCClient   pb.ClientClient
-
-	OldPajbot *pajbot1.Pajbot1
 
 	// key = user ID
 	UserContext map[string]*channelContext
@@ -363,86 +360,13 @@ type UnicodeRange struct {
 	End   rune
 }
 
-var unicodeWhitelist []UnicodeRange
-
-func addToWhitelist(start, end rune) {
-	unicodeWhitelist = append(unicodeWhitelist, UnicodeRange{start, end})
-}
-
-func addRunesToWhitelist(runes ...rune) {
-	for _, r := range runes {
-		unicodeWhitelist = append(unicodeWhitelist, UnicodeRange{r, r})
-	}
-}
-
-func simplifyMessageText(next bots.Handler) bots.Handler {
+func checkModules(next bots.Handler) bots.Handler {
 	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		next.HandleMessage(bot, channel, user, message)
-	})
-}
-
-func tryLatinWhitelist(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		if user.UserType == "" || true {
-			lol := struct {
-				FullMessage   string
-				Message       string
-				BadCharacters []rune
-				Username      string
-				Channel       string
-				Timestamp     time.Time
-			}{
-				FullMessage: message.Text,
-				Username:    user.Username,
-				Channel:     channel,
-				Timestamp:   time.Now().UTC(),
-			}
-			messageRunes := []rune(message.Text)
-			transparentSkipRange := bot.TransparentList.Find(messageRunes)
-			messageLength := len(messageRunes)
-			for i := 0; i < messageLength; {
-				if skipLength := transparentSkipRange.ShouldSkip(i); skipLength > 0 {
-					i = i + skipLength
-					continue
-				}
-
-				r := messageRunes[i]
-				allowed := false
-
-				for _, allowedRange := range unicodeWhitelist {
-					if r >= allowedRange.Start && r <= allowedRange.End {
-						allowed = true
-						break
-					}
-				}
-
-				if !allowed {
-					if lol.Message == "" {
-						lol.Message = message.Text[maxpenis(0, i-2):len(message.Text)]
-					}
-
-					alreadySet := false
-					for _, bc := range lol.BadCharacters {
-						if bc == r {
-							alreadySet = true
-							break
-						}
-					}
-
-					if !alreadySet {
-						lol.BadCharacters = append(lol.BadCharacters, r)
-					}
-
-				}
-				i++
-			}
-
-			if lol.Message != "" {
-				c := bot.Redis.Pool.Get()
-				bytes, _ := json.Marshal(&lol)
-				c.Do("LPUSH", "karl_kons", bytes)
-				c.Close()
-				// log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.Username, channel)
+		for _, module := range bot.Modules {
+			err := module.OnMessage(channel, user, message.Message)
+			if err != nil {
+				log.Println(err)
+				return
 			}
 		}
 
@@ -480,29 +404,10 @@ func (a *Application) LoadBots() error {
 	 Sorry :( To prevent racism we only allow basic Latin Letters with some exceptions. If you think your message should not have been timed out, please send a link to YOUR chatlogs for the MONTH with a TIMESTAMP of the offending message to "omgscoods@gmail.com" and we'll review it.
 	*/
 
-	addToWhitelist(0x20, 0x7e)       // Basic latin
-	addToWhitelist(0x1f600, 0x1f64f) // Emojis
-	addToWhitelist(0x1f300, 0x1f5ff) // "Miscellaneous symbols and pictographs". Includes some emojis like 100
-	addToWhitelist(0x1f44c, 0x1f44c) // Chatterino?
-	addToWhitelist(0x206d, 0x206d)   // Chatterino?
-	addToWhitelist(0x2660, 0x2765)   // Chatterino?
-
-	addToWhitelist(0x1f171, 0x1f171) // B emoji
-	addToWhitelist(0x1f900, 0x1f9ff) // More emojis
-
-	// Rain
-	addToWhitelist(0x30fd, 0x30fd)
-	addToWhitelist(0xff40, 0xff40)
-	addToWhitelist(0x3001, 0x3001)
-	addToWhitelist(0x2602, 0x2602)
-
-	// From Karl
-	addToWhitelist(0x1d100, 0x1d1ff)
-	addToWhitelist(0x1f680, 0x1f6ff)
-	addToWhitelist(0x2600, 0x26ff)
-	addToWhitelist(0xfe00, 0xfe0f) // Emoji variation selector 1 to 16
-	addToWhitelist(0x2012, 0x2015) // Various dashes
-	addToWhitelist(0x3010, 0x3011) // 【 and 】
+	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1)
+	if err != nil {
+		return err
+	}
 
 	for rows.Next() {
 		var name string
@@ -514,48 +419,24 @@ func (a *Application) LoadBots() error {
 		finalHandler := bots.HandlerFunc(finalMiddleware)
 
 		bot := &bots.TwitchBot{
-			Client:          twitch.NewClient(name, "oauth:"+twitchAccessToken),
-			Name:            name,
-			QuitChannel:     a.Quit,
-			Redis:           a.Redis,
-			TransparentList: filter.NewTransparentList(),
+			Client:      twitch.NewClient(name, "oauth:"+twitchAccessToken),
+			Name:        name,
+			QuitChannel: a.Quit,
+			Redis:       a.Redis,
 		}
 
-		bot.TransparentList.Add("(/ﾟДﾟ)/")
-		bot.TransparentList.Add("(╯°□°）╯︵ ┻━┻")
-		bot.TransparentList.Add("(╯°Д°）╯︵/(.□ . )")
-		bot.TransparentList.Add("(ノಠ益ಠ)ノ彡┻━┻")
-		bot.TransparentList.Add("୧༼ಠ益ಠ༽୨")
-		bot.TransparentList.Add("༼ ºل͟º ༽")
-		bot.TransparentList.Add("༼つಠ益ಠ༽つ")
-		bot.TransparentList.Add("( ° ͜ʖ͡°)╭∩╮")
-		bot.TransparentList.Add("ᕙ༼ຈل͜ຈ༽ᕗ")
-		bot.TransparentList.Add("ʕ•ᴥ•ʔ")
-		bot.TransparentList.Add("༼▀̿ Ĺ̯▀̿༽")
-		bot.TransparentList.Add("( ͡° ͜🔴 ͡°)")
+		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
+		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter())
 
-		err = bot.TransparentList.Build()
+		err := bot.RegisterModules()
 		if err != nil {
 			return err
 		}
 
-		bot.SetHandler(tryLatinWhitelist(a.OldPajbot.CheckBanphrases(timeoutBadCharacters(addHeheToMessageText(parseBTTVEmotes(handleCommands(finalHandler)))))))
+		bot.SetHandler(checkModules(timeoutBadCharacters(addHeheToMessageText(parseBTTVEmotes(handleCommands(finalHandler))))))
 
 		a.TwitchBots[name] = bot
 	}
-
-	return nil
-}
-
-func (a *Application) LoadOldPajbot() error {
-	a.OldPajbot = pajbot1.Init(a.config.Pajbot1)
-
-	err := a.OldPajbot.LoadBanphrases()
-	if err != nil {
-		return err
-	}
-
-	log.Println("Loaded", len(a.OldPajbot.EnabledBanphrases), "banphrases")
 
 	return nil
 }

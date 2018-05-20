@@ -5,7 +5,7 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/filter"
+	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/redismanager"
 )
 
@@ -26,8 +26,7 @@ type TwitchBot struct {
 
 	Redis *redismanager.RedisManager
 
-	// Filters
-	TransparentList *filter.TransparentList
+	Modules []pkg.Module
 }
 
 // TwitchMessage is a wrapper for twitch.Message with some extra stuff
@@ -40,6 +39,17 @@ type TwitchMessage struct {
 	// TODO: FFZ Emotes
 
 	// TODO: Emojis
+}
+
+func (b *TwitchBot) RegisterModules() error {
+	for _, m := range b.Modules {
+		err := m.Register()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Reply will reply to the message in the same way it received the message
