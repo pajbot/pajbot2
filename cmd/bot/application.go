@@ -18,11 +18,15 @@ import (
 	"errors"
 	"strconv"
 
+	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/mysql"
+	_ "github.com/golang-migrate/migrate/source/file"
+
 	"github.com/dankeroni/gotwitch"
 	"github.com/gempir/go-twitch-irc"
 	"github.com/goware/urlx"
-	"github.com/mattes/migrate"
-	"github.com/mattes/migrate/database/mysql"
 	"github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bots"
@@ -38,8 +42,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"mvdan.cc/xurls"
 )
-
-const migrationsPath = "file://migrations"
 
 func maxpenis(a, b int) int {
 	if a > b {
@@ -196,7 +198,7 @@ func (a *Application) RunDatabaseMigrations() error {
 		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "mysql", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://migrations", "mysql", driver)
 	if err != nil {
 		return err
 	}

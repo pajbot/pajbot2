@@ -8,9 +8,6 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/mattes/migrate/source/file"
-
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/helper"
