@@ -2,6 +2,7 @@ package modules
 
 import (
 	"encoding/json"
+	"log"
 	"time"
 
 	twitch "github.com/gempir/go-twitch-irc"
@@ -14,11 +15,14 @@ type Pajbot1BanphraseFilter struct {
 	server *server
 
 	banphrases []pkg.Banphrase
+
+	Sender pkg.Channel
 }
 
-func NewPajbot1BanphraseFilter() *Pajbot1BanphraseFilter {
+func NewPajbot1BanphraseFilter(sender pkg.Channel) *Pajbot1BanphraseFilter {
 	return &Pajbot1BanphraseFilter{
 		server: &_server,
+		Sender: sender,
 	}
 }
 
@@ -88,25 +92,26 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user twitch.User, mess
 		for _, variation := range *variations {
 			if bp.Triggers(variation) {
 				// fmt.Printf("Banphrase triggered: %#v\n", bp)
-				if !bp.IsAdvanced() {
-					return nil
+				if bp.IsAdvanced() && channel == "forsen" {
+					lol := TimeoutData{
+						FullMessage: message.Text,
+						Banphrase:   bp,
+						Username:    user.Username,
+						Channel:     channel,
+						Timestamp:   time.Now().UTC(),
+					}
+					c := m.server.redis.Pool.Get()
+					bytes, _ := json.Marshal(&lol)
+					c.Do("LPUSH", "pajbot2:timeouts", bytes)
+					c.Close()
 				}
 
-				lol := TimeoutData{
-					FullMessage: message.Text,
-					Banphrase:   bp,
-					Username:    user.Username,
-					Channel:     channel,
-					Timestamp:   time.Now().UTC(),
+				if channel == "krakenbul" && user.UserType == "" {
+					m.Sender.Timeout(channel, user, bp.GetLength(), "Matched banphrase with name \""+bp.GetName()+"\"")
+					// m.Sender.Say(channel, user.Username+" matched banphrase with name "+bp.GetName())
+					log.Println("Matched banphrase with name \"" + bp.GetName() + "\"")
+					// banphrase triggered
 				}
-				c := m.server.redis.Pool.Get()
-				bytes, _ := json.Marshal(&lol)
-				c.Do("LPUSH", "pajbot2:timeouts", bytes)
-				c.Close()
-				// bot.Timeout(channel, user, bp.Length, "Matched banphrase with name \""+bp.Name+"\"")
-				// bot.Say(channel, user.Username+" matched banphrase with name "+bp.Name)
-				// log.Println("Matched banphrase with name \"" + bp.Name + "\"")
-				// banphrase triggered
 				return nil
 			}
 

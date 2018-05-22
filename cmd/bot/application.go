@@ -299,7 +299,7 @@ func parseBTTVEmotes(next bots.Handler) bots.Handler {
 
 func handleCommands(next bots.Handler) bots.Handler {
 	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		if user.UserType == "mod" {
+		if (user.UserType == "mod" || user.Username == channel) || user.Username == "pajlada" {
 			if strings.HasPrefix(message.Text, "!xd") {
 				bot.Reply(channel, user, "XDDDDDDDDDD")
 				return
@@ -426,7 +426,9 @@ func (a *Application) LoadBots() error {
 		}
 
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
-		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter())
+		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter(bot))
+
+		log.Printf("Loaded bot: %#v\n", bot)
 
 		err := bot.RegisterModules()
 		if err != nil {
@@ -480,62 +482,68 @@ const (
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
 	for _, bot := range a.TwitchBots {
-		if bot.Name != "snusbot" {
-			continue
-		}
-
-		bot.OnNewWhisper(func(user twitch.User, rawMessage twitch.Message) {
-			message := bots.TwitchMessage{Message: rawMessage}
-
-			// log.Printf("GOT WHISPER! %s(%s): %s", user.DisplayName, user.Username, message.Text)
-
-			bot.HandleMessage("", user, &message)
-		})
-
-		bot.OnNewMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
-			message := bots.TwitchMessage{Message: rawMessage}
-
-			bot.HandleMessage(channel, user, &message)
-
-			// log.Printf("#%s: %s(%s): %s", channel, user.DisplayName, user.Username, message.Text)
-		})
-
-		bot.OnNewRoomstateMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
-			subMode := ModeUnset
-
-			if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
-				if readSubMode == "1" {
-					log.Println("xd")
-					subMode = ModeEnabled
-				} else {
-					subMode = ModeDisabled
-				}
+		go func(bot *bots.TwitchBot) {
+			if bot.Name != "snusbot" {
+				// continue
 			}
 
-			if subMode != ModeUnset {
-				if subMode == ModeEnabled {
-					log.Printf("Submode enabled")
-				} else {
-					log.Printf("Submode disabled")
+			bot.OnNewWhisper(func(user twitch.User, rawMessage twitch.Message) {
+				message := bots.TwitchMessage{Message: rawMessage}
 
-					if bot.Flags.PermaSubMode {
-						bot.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
-						bot.Say(channel, ".subscribers")
+				// log.Printf("GOT WHISPER! %s(%s): %s", user.DisplayName, user.Username, message.Text)
+
+				bot.HandleMessage("", user, &message)
+			})
+
+			bot.OnNewMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
+				message := bots.TwitchMessage{Message: rawMessage}
+
+				bot.HandleMessage(channel, user, &message)
+
+				log.Printf("%s - #%s: %s(%s): %s", bot.Name, channel, user.DisplayName, user.Username, message.Text)
+			})
+
+			bot.OnNewRoomstateMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
+				subMode := ModeUnset
+
+				if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
+					if readSubMode == "1" {
+						log.Println("xd")
+						subMode = ModeEnabled
+					} else {
+						subMode = ModeDisabled
 					}
 				}
+
+				if subMode != ModeUnset {
+					if subMode == ModeEnabled {
+						log.Printf("Submode enabled")
+					} else {
+						log.Printf("Submode disabled")
+
+						if bot.Flags.PermaSubMode {
+							bot.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
+							bot.Say(channel, ".subscribers")
+						}
+					}
+				}
+
+				log.Printf("%s - #%s: %#v: %#v", bot.Name, channel, user, rawMessage)
+			})
+
+			if bot.Name == "snusbot" {
+				log.Printf("Joining forsen with %#v\n", bot)
+				bot.Join("forsen")
 			}
 
-			log.Printf("#%s: %#v: %#v", channel, user, rawMessage)
-		})
+			if bot.Name == "pajbot" {
+				log.Printf("Joining krakenbul with %#v\n", bot)
+				bot.Join("krakenbul")
+			}
 
-		if bot.Name == "snusbot" {
-			bot.Join("forsen")
-		}
+			bot.Join(bot.Name)
 
-		bot.Join(bot.Name)
-
-		go func(bot *bots.TwitchBot) {
-			log.Println("Connecting...")
+			log.Printf("Connecting... %#v", bot)
 			err := bot.Connect()
 			if err != nil {
 				log.Fatal(err)
