@@ -71,6 +71,8 @@ func (m *LatinFilter) Register() error {
 	m.addToWhitelist(0x1f171, 0x1f171) // B emoji
 	m.addToWhitelist(0x1f900, 0x1f9ff) // More emojis
 
+	m.addToWhitelist(0x2019, 0x2019) // Scuffed '
+
 	// Rain
 	m.addToWhitelist(0x30fd, 0x30fd)
 	m.addToWhitelist(0xff40, 0xff40)
