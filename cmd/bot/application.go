@@ -257,32 +257,6 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
-func addHeheToMessageText(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		message.Text = message.Text + " hehe"
-		next.HandleMessage(bot, channel, user, message)
-	})
-}
-
-var badCharacters = []string{
-	"\x01",
-}
-
-const badCharacterTimeoutLength = 300
-
-func timeoutBadCharacters(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		for _, badCharacter := range badCharacters {
-			if strings.Contains(message.Text, badCharacter) {
-				bot.Timeout(channel, user, badCharacterTimeoutLength, "Message contains a forbidden character")
-				return
-			}
-		}
-
-		next.HandleMessage(bot, channel, user, message)
-	})
-}
-
 func parseBTTVEmotes(next bots.Handler) bots.Handler {
 	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
 		m := strings.Split(message.Text, " ")
@@ -431,6 +405,7 @@ func (a *Application) LoadBots() error {
 			Redis:       a.Redis,
 		}
 
+		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter(bot))
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
 		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter(bot))
 
@@ -441,7 +416,7 @@ func (a *Application) LoadBots() error {
 			return err
 		}
 
-		bot.SetHandler(checkModules(timeoutBadCharacters(addHeheToMessageText(parseBTTVEmotes(handleCommands(finalHandler))))))
+		bot.SetHandler(checkModules(parseBTTVEmotes(handleCommands(finalHandler))))
 
 		a.TwitchBots[name] = bot
 	}
