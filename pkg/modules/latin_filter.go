@@ -110,7 +110,10 @@ func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(message.Text)
+		transparentStart := time.Now()
 		transparentSkipRange := m.transparentList.Find(messageRunes)
+		transparentEnd := time.Now()
+		log.Printf("[% 26s] %s", "TransparentList", transparentEnd.Sub(transparentStart))
 		messageLength := len(messageRunes)
 		for i := 0; i < messageLength; {
 			if skipLength := transparentSkipRange.ShouldSkip(i); skipLength > 0 {
@@ -150,11 +153,13 @@ func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.
 		}
 
 		if lol.Message != "" {
-			c := m.server.redis.Pool.Get()
-			bytes, _ := json.Marshal(&lol)
-			c.Do("LPUSH", "karl_kons", bytes)
-			c.Close()
-			log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.Username, channel)
+			go func() {
+				c := m.server.redis.Pool.Get()
+				bytes, _ := json.Marshal(&lol)
+				c.Do("LPUSH", "karl_kons", bytes)
+				c.Close()
+				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.Username, channel)
+			}()
 		}
 	}
 
