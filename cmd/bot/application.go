@@ -309,8 +309,8 @@ func handleCommands(next bots.Handler) bots.Handler {
 
 			if strings.HasPrefix(message.Text, "!whisperme") {
 				log.Printf("Send whisper!")
-				// bot.Say(channel, "XDDDDDDDDDD")
-				bot.Whisper("pajlada", "hehe")
+				bot.Say(channel, "@"+user.Username+", I just sent you a whisper with the text \"hehe\" :D")
+				bot.Whisper(user.Username, "hehe")
 				return
 			}
 
