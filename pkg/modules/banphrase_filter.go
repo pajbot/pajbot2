@@ -54,7 +54,6 @@ func (m *Pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 	}
 
 	return nil
-
 }
 
 func (m *Pajbot1BanphraseFilter) Register() error {
@@ -64,6 +63,10 @@ func (m *Pajbot1BanphraseFilter) Register() error {
 	}
 
 	return nil
+}
+
+func (m Pajbot1BanphraseFilter) Name() string {
+	return "Pajbot1BanphraseFilter"
 }
 
 type TimeoutData struct {

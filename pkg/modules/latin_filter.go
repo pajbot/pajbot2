@@ -90,6 +90,10 @@ func (m *LatinFilter) Register() error {
 	return nil
 }
 
+func (m LatinFilter) Name() string {
+	return "LatinFilter"
+}
+
 func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.Message) error {
 	if user.UserType == "" || true {
 		lol := struct {

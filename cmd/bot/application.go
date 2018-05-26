@@ -342,8 +342,18 @@ type UnicodeRange struct {
 
 func checkModules(next bots.Handler) bots.Handler {
 	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
+		modulesStart := time.Now()
+		defer func() {
+			modulesEnd := time.Now()
+
+			log.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
+		}()
+
 		for _, module := range bot.Modules {
+			moduleStart := time.Now()
 			err := module.OnMessage(channel, user, message.Message)
+			moduleEnd := time.Now()
+			log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
 			if err != nil {
 				log.Println(err)
 				return
@@ -408,8 +418,7 @@ func (a *Application) LoadBots() error {
 		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter(bot))
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
 		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter(bot))
-
-		log.Printf("Loaded bot: %#v\n", bot)
+		bot.Modules = append(bot.Modules, modules.NewPajbot1Commands(bot))
 
 		err := bot.RegisterModules()
 		if err != nil {
