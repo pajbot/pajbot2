@@ -17,7 +17,7 @@ type RedisManager struct {
 }
 
 // Init connects to redis and returns redis client
-func Init(config config.RedisConfig) *RedisManager {
+func Init(config config.RedisConfig) (*RedisManager, error) {
 	r := &RedisManager{}
 	pool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
@@ -37,8 +37,15 @@ func Init(config config.RedisConfig) *RedisManager {
 		},
 	}
 	r.Pool = pool
-	log.Println("connected to redis")
-	return r
+
+	// Ensure that the redis connection works
+	conn := r.Pool.Get()
+	err := conn.Send("PING")
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
 }
 
 // UpdateGlobalUser sets global values for a user (in other words, values that transcend channels)

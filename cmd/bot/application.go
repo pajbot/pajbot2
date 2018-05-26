@@ -238,7 +238,11 @@ func (a *Application) LoadExternalEmotes() error {
 
 // StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
-	a.Redis = redismanager.Init(a.config.Redis)
+	var err error
+	a.Redis, err = redismanager.Init(a.config.Redis)
+	if err != nil {
+		return err
+	}
 	a.SQL = sqlmanager.Init(a.config.SQL)
 
 	webCfg := &web.Config{
