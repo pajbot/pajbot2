@@ -8,5 +8,6 @@ type Banphrase interface {
 	IsAdvanced() bool
 
 	GetName() string
+	GetID() int
 	GetLength() int
 }

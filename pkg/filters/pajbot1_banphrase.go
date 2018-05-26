@@ -92,6 +92,10 @@ func (f *Pajbot1Banphrase) GetName() string {
 	return f.Name
 }
 
+func (f *Pajbot1Banphrase) GetID() int {
+	return f.ID
+}
+
 func (f *Pajbot1Banphrase) LoadScan(rows *sql.Rows) error {
 	var operatorString string
 	err := rows.Scan(&f.ID, &f.Name, &f.Phrase, &f.Length, &f.Permanent, &f.Warning, &f.Notify, &f.CaseSensitive, &f.Enabled, &operatorString, &f.SubImmunity, &f.RemoveAccents)

@@ -2,6 +2,7 @@ package modules
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -110,7 +111,8 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user twitch.User, mess
 				}
 
 				if channel == "krakenbul" && user.UserType == "" {
-					m.Sender.Timeout(channel, user, bp.GetLength(), "Matched banphrase with name \""+bp.GetName()+"\"")
+					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
+					m.Sender.Timeout(channel, user, bp.GetLength(), reason)
 					// m.Sender.Say(channel, user.Username+" matched banphrase with name "+bp.GetName())
 					log.Println("Matched banphrase with name \"" + bp.GetName() + "\"")
 					// banphrase triggered
