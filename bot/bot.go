@@ -89,7 +89,7 @@ starts channels?
 idk
 */
 func (bot *Bot) Init() {
-	log.Printf("new bot in %s", bot.Channel)
+	log.Printf("new bot in %s", bot.Channel.Name)
 	go bot.LoadBttvEmotes()
 	go bot.LoadFFZEmotes()
 	go bot.readChat()
