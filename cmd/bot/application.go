@@ -285,6 +285,11 @@ func handleCommands(next bots.Handler) bots.Handler {
 				return
 			}
 
+			if strings.HasPrefix(message.Text, "!myuserid") {
+				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.Username, message.Tags["user-id"]))
+				return
+			}
+
 			if strings.HasPrefix(message.Text, "!whisperme") {
 				log.Printf("Send whisper!")
 				bot.Say(channel, "@"+user.Username+", I just sent you a whisper with the text \"hehe\" :D")
