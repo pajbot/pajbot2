@@ -76,5 +76,9 @@ func (c *Pajbot1Command) IsTriggered(parts []string) bool {
 func (c *Pajbot1Command) Trigger(channel string, user pkg.User, parts []string, sender pkg.Channel) error {
 	sender.Say(channel, c.Action)
 
+	if user.HasPermission(pkg.PermissionReport) {
+		sender.Say(channel, "You have report permissions!")
+	}
+
 	return nil
 }

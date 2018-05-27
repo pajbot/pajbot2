@@ -1,7 +1,7 @@
 package pkg
 
-type Permission uint
+type Permission uint64
 
 const (
-	PermissionReport Permission = 1 << 1
+	PermissionReport Permission = 1 << 0
 )
