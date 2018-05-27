@@ -78,7 +78,7 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m Pajbot1BanphraseFilter) OnMessage(channel string, user twitch.User, message twitch.Message) error {
+func (m Pajbot1BanphraseFilter) OnMessage(channel string, user pkg.User, message twitch.Message) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(message.Text, true)
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user twitch.User, mess
 					lol := TimeoutData{
 						FullMessage: message.Text,
 						Banphrase:   bp,
-						Username:    user.Username,
+						Username:    user.GetName(),
 						Channel:     channel,
 						Timestamp:   time.Now().UTC(),
 					}
@@ -110,7 +110,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user twitch.User, mess
 					c.Close()
 				}
 
-				if channel == "krakenbul" && user.UserType == "" {
+				if channel == "krakenbul" && !user.IsModerator() {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
 					m.Sender.Timeout(channel, user, bp.GetLength(), reason)
 					// m.Sender.Say(channel, user.Username+" matched banphrase with name "+bp.GetName())

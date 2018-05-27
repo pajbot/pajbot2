@@ -34,7 +34,9 @@ import (
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/emotes"
 	pb "github.com/pajlada/pajbot2/grpc"
+	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/modules"
+	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
@@ -258,7 +260,7 @@ func (a *Application) StartWebServer() error {
 }
 
 func parseBTTVEmotes(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
 		m := strings.Split(message.Text, " ")
 		emoteCount := make(map[string]*common.Emote)
 		for _, word := range m {
@@ -278,22 +280,22 @@ func parseBTTVEmotes(next bots.Handler) bots.Handler {
 }
 
 func handleCommands(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
-		if (user.UserType == "mod" || user.Username == channel) || user.Username == "pajlada" {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
+		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" {
 			if strings.HasPrefix(message.Text, "!xd") {
 				bot.Reply(channel, user, "XDDDDDDDDDD")
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!myuserid") {
-				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.Username, message.Tags["user-id"]))
+				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!whisperme") {
 				log.Printf("Send whisper!")
-				bot.Say(channel, "@"+user.Username+", I just sent you a whisper with the text \"hehe\" :D")
-				bot.Whisper(user.Username, "hehe")
+				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
+				bot.Whisper(user.GetName(), "hehe")
 				return
 			}
 
@@ -336,7 +338,7 @@ func handleCommands(next bots.Handler) bots.Handler {
 	})
 }
 
-func finalMiddleware(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
+func finalMiddleware(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
 	// log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
 
@@ -346,7 +348,7 @@ type UnicodeRange struct {
 }
 
 func checkModules(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user twitch.User, message *bots.TwitchMessage) {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
 		modulesStart := time.Now()
 		defer func() {
 			modulesEnd := time.Now()
@@ -400,6 +402,11 @@ func (a *Application) LoadBots() error {
 	*/
 
 	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1)
+	if err != nil {
+		return err
+	}
+
+	err = users.InitServer(a.SQL)
 	if err != nil {
 		return err
 	}

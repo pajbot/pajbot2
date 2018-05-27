@@ -74,7 +74,7 @@ func (m Pajbot1Commands) Name() string {
 	return "Pajbot1Commands"
 }
 
-func (m Pajbot1Commands) OnMessage(channel string, user twitch.User, message twitch.Message) error {
+func (m Pajbot1Commands) OnMessage(channel string, user pkg.User, message twitch.Message) error {
 	if channel != "snusbot" {
 		return nil
 	}

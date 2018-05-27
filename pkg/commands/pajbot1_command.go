@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/pkg"
 )
 
@@ -74,7 +73,7 @@ func (c *Pajbot1Command) IsTriggered(parts []string) bool {
 	return false
 }
 
-func (c *Pajbot1Command) Trigger(channel string, user twitch.User, parts []string, sender pkg.Channel) error {
+func (c *Pajbot1Command) Trigger(channel string, user pkg.User, parts []string, sender pkg.Channel) error {
 	sender.Say(channel, c.Action)
 
 	return nil

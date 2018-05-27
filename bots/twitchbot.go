@@ -6,6 +6,7 @@ import (
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
 )
 
@@ -55,22 +56,22 @@ func (b *TwitchBot) RegisterModules() error {
 // Reply will reply to the message in the same way it received the message
 // If the message was received in a twitch channel, reply in that twitch channel.
 // IF the message was received in a twitch whisper, reply using twitch whispers.
-func (b *TwitchBot) Reply(channel string, user twitch.User, message string) {
+func (b *TwitchBot) Reply(channel string, user pkg.User, message string) {
 	if channel == "" {
-		b.Whisper(user.Username, message)
+		b.Whisper(user.GetName(), message)
 	} else {
 		b.Say(channel, message)
 	}
 }
 
-func (b *TwitchBot) Timeout(channel string, user twitch.User, duration int, reason string) {
+func (b *TwitchBot) Timeout(channel string, user pkg.User, duration int, reason string) {
 	if channel == "" {
 		return
 	}
 
 	// Empty string in UserType means a normal user
-	if user.UserType == "" {
-		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.Username, duration, reason))
+	if !user.IsModerator() {
+		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
 	}
 }
 
@@ -81,7 +82,13 @@ func (b *TwitchBot) SetHandler(handler Handler) {
 
 // HandleMessage goes through all of the bot handlers in the correct order and figures out if anything was triggered
 func (b *TwitchBot) HandleMessage(channel string, user twitch.User, message *TwitchMessage) {
-	b.handler.HandleMessage(b, channel, user, message)
+	twitchUser := &users.TwitchUser{
+		User: user,
+
+		ID: message.Tags["user-id"],
+	}
+
+	b.handler.HandleMessage(b, channel, twitchUser, message)
 }
 
 // Quit quits the entire application

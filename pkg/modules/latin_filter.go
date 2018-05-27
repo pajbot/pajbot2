@@ -7,6 +7,7 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/filter"
+	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pkg/errors"
 )
 
@@ -94,8 +95,8 @@ func (m LatinFilter) Name() string {
 	return "LatinFilter"
 }
 
-func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.Message) error {
-	if user.UserType == "" || true {
+func (m LatinFilter) OnMessage(channel string, user pkg.User, message twitch.Message) error {
+	if !user.IsModerator() || true {
 		lol := struct {
 			FullMessage   string
 			Message       string
@@ -105,7 +106,7 @@ func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.
 			Timestamp     time.Time
 		}{
 			FullMessage: message.Text,
-			Username:    user.Username,
+			Username:    user.GetName(),
 			Channel:     channel,
 			Timestamp:   time.Now().UTC(),
 		}
@@ -158,7 +159,7 @@ func (m LatinFilter) OnMessage(channel string, user twitch.User, message twitch.
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
-				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.Username, channel)
+				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.GetName(), channel)
 			}()
 		}
 	}

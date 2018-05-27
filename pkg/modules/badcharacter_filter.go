@@ -30,7 +30,7 @@ func (m BadCharacterFilter) Name() string {
 	return "BadCharacterFilter"
 }
 
-func (m BadCharacterFilter) OnMessage(channel string, user twitch.User, message twitch.Message) error {
+func (m BadCharacterFilter) OnMessage(channel string, user pkg.User, message twitch.Message) error {
 	for _, r := range message.Text {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {

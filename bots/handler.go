@@ -1,16 +1,16 @@
 package bots
 
-import twitch "github.com/gempir/go-twitch-irc"
+import "github.com/pajlada/pajbot2/pkg"
 
 // Handler xD
 type Handler interface {
-	HandleMessage(*TwitchBot, string, twitch.User, *TwitchMessage)
+	HandleMessage(*TwitchBot, string, pkg.User, *TwitchMessage)
 }
 
 // HandlerFunc xD
-type HandlerFunc func(*TwitchBot, string, twitch.User, *TwitchMessage)
+type HandlerFunc func(*TwitchBot, string, pkg.User, *TwitchMessage)
 
 // HandleMessage ADAPTER xD
-func (f HandlerFunc) HandleMessage(bot *TwitchBot, channel string, user twitch.User, message *TwitchMessage) {
+func (f HandlerFunc) HandleMessage(bot *TwitchBot, channel string, user pkg.User, message *TwitchMessage) {
 	f(bot, channel, user, message)
 }
