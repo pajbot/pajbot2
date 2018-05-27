@@ -114,7 +114,9 @@ func (m LatinFilter) OnMessage(channel string, user pkg.User, message twitch.Mes
 		transparentStart := time.Now()
 		transparentSkipRange := m.transparentList.Find(messageRunes)
 		transparentEnd := time.Now()
-		log.Printf("[% 26s] %s", "TransparentList", transparentEnd.Sub(transparentStart))
+		if pkg.VerboseBenchmark {
+			log.Printf("[% 26s] %s", "TransparentList", transparentEnd.Sub(transparentStart))
+		}
 		messageLength := len(messageRunes)
 		for i := 0; i < messageLength; {
 			if skipLength := transparentSkipRange.ShouldSkip(i); skipLength > 0 {

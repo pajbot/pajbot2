@@ -353,14 +353,18 @@ func checkModules(next bots.Handler) bots.Handler {
 		defer func() {
 			modulesEnd := time.Now()
 
-			log.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
+			if pkg.VerboseBenchmark {
+				log.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
+			}
 		}()
 
 		for _, module := range bot.Modules {
 			moduleStart := time.Now()
 			err := module.OnMessage(channel, user, message.Message)
 			moduleEnd := time.Now()
-			log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
+			if pkg.VerboseBenchmark {
+				log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
+			}
 			if err != nil {
 				log.Println(err)
 				return
@@ -502,7 +506,9 @@ func (a *Application) StartBots() error {
 
 				bot.HandleMessage(channel, user, &message)
 
-				log.Printf("%s - #%s: %s(%s): %s", bot.Name, channel, user.DisplayName, user.Username, message.Text)
+				if pkg.VerboseMessages {
+					log.Printf("%s - #%s: %s(%s): %s", bot.Name, channel, user.DisplayName, user.Username, message.Text)
+				}
 			})
 
 			bot.OnNewRoomstateMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
@@ -510,7 +516,6 @@ func (a *Application) StartBots() error {
 
 				if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
 					if readSubMode == "1" {
-						log.Println("xd")
 						subMode = ModeEnabled
 					} else {
 						subMode = ModeDisabled
