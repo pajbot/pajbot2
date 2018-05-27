@@ -3,7 +3,6 @@ package modules
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	twitch "github.com/gempir/go-twitch-irc"
@@ -17,10 +16,10 @@ type Pajbot1BanphraseFilter struct {
 
 	banphrases []pkg.Banphrase
 
-	Sender pkg.Channel
+	Sender pkg.Sender
 }
 
-func NewPajbot1BanphraseFilter(sender pkg.Channel) *Pajbot1BanphraseFilter {
+func NewPajbot1BanphraseFilter(sender pkg.Sender) *Pajbot1BanphraseFilter {
 	return &Pajbot1BanphraseFilter{
 		server: &_server,
 		Sender: sender,
@@ -78,7 +77,11 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m Pajbot1BanphraseFilter) OnMessage(channel string, user pkg.User, message twitch.Message) error {
+func (m Pajbot1BanphraseFilter) OnWhisper(source pkg.User, message twitch.Message) error {
+	return nil
+}
+
+func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(message.Text, true)
 	if err != nil {
 		return err
@@ -96,12 +99,12 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user pkg.User, message
 		for _, variation := range *variations {
 			if bp.Triggers(variation) {
 				// fmt.Printf("Banphrase triggered: %#v\n", bp)
-				if bp.IsAdvanced() && channel == "forsen" {
+				if bp.IsAdvanced() && source.GetChannel() == "forsen" {
 					lol := TimeoutData{
 						FullMessage: message.Text,
 						Banphrase:   bp,
 						Username:    user.GetName(),
-						Channel:     channel,
+						Channel:     source.GetChannel(),
 						Timestamp:   time.Now().UTC(),
 					}
 					c := m.server.redis.Pool.Get()
@@ -110,12 +113,9 @@ func (m Pajbot1BanphraseFilter) OnMessage(channel string, user pkg.User, message
 					c.Close()
 				}
 
-				if channel == "krakenbul" && !user.IsModerator() {
+				if source.GetChannel() == "krakenbul" && !user.IsModerator() {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
-					m.Sender.Timeout(channel, user, bp.GetLength(), reason)
-					// m.Sender.Say(channel, user.Username+" matched banphrase with name "+bp.GetName())
-					log.Println("Matched banphrase with name \"" + bp.GetName() + "\"")
-					// banphrase triggered
+					m.Sender.Timeout(source, user, bp.GetLength(), reason)
 				}
 				return nil
 			}

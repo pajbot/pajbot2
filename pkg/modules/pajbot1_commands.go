@@ -14,10 +14,10 @@ type Pajbot1Commands struct {
 
 	commands []*commands.Pajbot1Command
 
-	Sender pkg.Channel
+	Sender pkg.Sender
 }
 
-func NewPajbot1Commands(sender pkg.Channel) *Pajbot1Commands {
+func NewPajbot1Commands(sender pkg.Sender) *Pajbot1Commands {
 	return &Pajbot1Commands{
 		server: &_server,
 		Sender: sender,
@@ -74,8 +74,12 @@ func (m Pajbot1Commands) Name() string {
 	return "Pajbot1Commands"
 }
 
-func (m Pajbot1Commands) OnMessage(channel string, user pkg.User, message twitch.Message) error {
-	if channel != "snusbot" {
+func (m Pajbot1Commands) OnWhisper(source pkg.User, message twitch.Message) error {
+	return nil
+}
+
+func (m Pajbot1Commands) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
+	if source.GetChannel() != "snusbot" {
 		return nil
 	}
 
@@ -86,7 +90,7 @@ func (m Pajbot1Commands) OnMessage(channel string, user pkg.User, message twitch
 
 	for _, command := range m.commands {
 		if command.IsTriggered(parts) {
-			err := command.Trigger(channel, user, parts, m.Sender)
+			err := command.Trigger(source, user, parts, m.Sender)
 			if err != nil {
 				return err
 			}

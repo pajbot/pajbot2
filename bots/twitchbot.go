@@ -58,17 +58,21 @@ func (b *TwitchBot) RegisterModules() error {
 // IF the message was received in a twitch whisper, reply using twitch whispers.
 func (b *TwitchBot) Reply(channel string, user pkg.User, message string) {
 	if channel == "" {
-		b.Whisper(user.GetName(), message)
+		b.Client.Whisper(user.GetName(), message)
 	} else {
-		b.Say(channel, message)
+		b.Client.Say(channel, message)
 	}
 }
 
-func (b *TwitchBot) Timeout(channel string, user pkg.User, duration int, reason string) {
-	if channel == "" {
-		return
-	}
+func (b *TwitchBot) Say(channel pkg.Channel, message string) {
+	b.Client.Say(channel.GetChannel(), message)
+}
 
+func (b *TwitchBot) SaySimple(channel string, message string) {
+	b.Client.Say(channel, message)
+}
+
+func (b *TwitchBot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
 	// Empty string in UserType means a normal user
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))

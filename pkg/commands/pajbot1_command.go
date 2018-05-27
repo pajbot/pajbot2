@@ -73,11 +73,11 @@ func (c *Pajbot1Command) IsTriggered(parts []string) bool {
 	return false
 }
 
-func (c *Pajbot1Command) Trigger(channel string, user pkg.User, parts []string, sender pkg.Channel) error {
-	sender.Say(channel, c.Action)
+func (c *Pajbot1Command) Trigger(source pkg.Channel, user pkg.User, parts []string, sender pkg.Sender) error {
+	sender.Say(source, c.Action)
 
 	if user.HasPermission(pkg.PermissionReport) {
-		sender.Say(channel, "You have report permissions!")
+		sender.Say(source, "You have report permissions!")
 	}
 
 	return nil

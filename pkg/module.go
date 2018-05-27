@@ -7,5 +7,6 @@ import (
 type Module interface {
 	Name() string
 	Register() error
-	OnMessage(channel string, user User, message twitch.Message) error
+	OnWhisper(source User, message twitch.Message) error
+	OnMessage(source Channel, user User, message twitch.Message) error
 }

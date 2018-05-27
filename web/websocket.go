@@ -67,7 +67,7 @@ func (c *WSConn) readPump() {
 		// TODO: re-enable the following things when authentication is done
 		switch payload.Event {
 		case "chat":
-			twitchBots["testaccount_420"].Say("pajlada", payload.Data["text"].(string))
+			// twitchBots["testaccount_420"].Say("pajlada", payload.Data["text"].(string))
 			//bot.Bots["pajlada"].Say(payload.Data["text"])
 		case "quit":
 			//bot.Bots["pajlada"].Quit <- "quit from websocket xD"

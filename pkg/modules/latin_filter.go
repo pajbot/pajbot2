@@ -95,7 +95,11 @@ func (m LatinFilter) Name() string {
 	return "LatinFilter"
 }
 
-func (m LatinFilter) OnMessage(channel string, user pkg.User, message twitch.Message) error {
+func (m LatinFilter) OnWhisper(source pkg.User, message twitch.Message) error {
+	return nil
+}
+
+func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
 	if !user.IsModerator() || true {
 		lol := struct {
 			FullMessage   string
@@ -107,7 +111,7 @@ func (m LatinFilter) OnMessage(channel string, user pkg.User, message twitch.Mes
 		}{
 			FullMessage: message.Text,
 			Username:    user.GetName(),
-			Channel:     channel,
+			Channel:     source.GetChannel(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(message.Text)
@@ -161,7 +165,7 @@ func (m LatinFilter) OnMessage(channel string, user pkg.User, message twitch.Mes
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
-				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.GetName(), channel)
+				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.GetName(), source.GetChannel())
 			}()
 		}
 	}

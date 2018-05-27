@@ -35,6 +35,7 @@ import (
 	"github.com/pajlada/pajbot2/emotes"
 	pb "github.com/pajlada/pajbot2/grpc"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
@@ -288,13 +289,13 @@ func handleCommands(next bots.Handler) bots.Handler {
 			}
 
 			if strings.HasPrefix(message.Text, "!myuserid") {
-				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
+				bot.SaySimple(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!whisperme") {
 				log.Printf("Send whisper!")
-				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
+				bot.SaySimple(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
 				bot.Whisper(user.GetName(), "hehe")
 				return
 			}
@@ -309,27 +310,27 @@ func handleCommands(next bots.Handler) bots.Handler {
 
 			if strings.HasPrefix(message.Text, "!subon") {
 				if bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is already enabled")
+					bot.SaySimple(channel, "Permanent subscribers mode is already enabled")
 					return
 				}
 
 				bot.Flags.PermaSubMode = true
 
-				bot.Say(channel, ".subscribers")
-				bot.Say(channel, "Permanent subscribers mode has been enabled")
+				bot.SaySimple(channel, ".subscribers")
+				bot.SaySimple(channel, "Permanent subscribers mode has been enabled")
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!suboff") {
 				if !bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is not enabled")
+					bot.SaySimple(channel, "Permanent subscribers mode is not enabled")
 					return
 				}
 
 				bot.Flags.PermaSubMode = false
 
-				bot.Say(channel, ".subscribersoff")
-				bot.Say(channel, "Permanent subscribers mode has been disabled")
+				bot.SaySimple(channel, ".subscribersoff")
+				bot.SaySimple(channel, "Permanent subscribers mode has been disabled")
 				return
 			}
 		}
@@ -358,9 +359,18 @@ func checkModules(next bots.Handler) bots.Handler {
 			}
 		}()
 
+		twitchChannel := &channels.TwitchChannel{
+			Channel: channel,
+		}
+
 		for _, module := range bot.Modules {
 			moduleStart := time.Now()
-			err := module.OnMessage(channel, user, message.Message)
+			var err error
+			if channel == "" {
+				err = module.OnWhisper(user, message.Message)
+			} else {
+				err = module.OnMessage(twitchChannel, user, message.Message)
+			}
 			moduleEnd := time.Now()
 			if pkg.VerboseBenchmark {
 				log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
@@ -471,7 +481,10 @@ func (a *Application) StartContextBot() error {
 	contextBot.Join("pajlada")
 
 	go func() {
-		contextBot.Connect()
+		err := contextBot.Connect()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}()
 
 	return nil
@@ -529,8 +542,8 @@ func (a *Application) StartBots() error {
 						log.Printf("Submode disabled")
 
 						if bot.Flags.PermaSubMode {
-							bot.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
-							bot.Say(channel, ".subscribers")
+							bot.SaySimple(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
+							bot.SaySimple(channel, ".subscribers")
 						}
 					}
 				}
