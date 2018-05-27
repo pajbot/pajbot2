@@ -441,6 +441,7 @@ func (a *Application) LoadBots() error {
 			Redis:       a.Redis,
 		}
 
+		bot.Modules = append(bot.Modules, modules.NewReportModule())
 		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter(bot))
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
 		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter(bot))
