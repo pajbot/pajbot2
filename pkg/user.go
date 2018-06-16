@@ -6,5 +6,5 @@ type User interface {
 	GetDisplayName() string
 	GetID() string
 	IsModerator() bool
-	IsBroadcaster(string) bool
+	IsBroadcaster(Channel) bool
 }

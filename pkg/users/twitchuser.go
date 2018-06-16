@@ -74,7 +74,11 @@ func (u TwitchUser) IsModerator() bool {
 	return u.UserType == "mod"
 }
 
-func (u TwitchUser) IsBroadcaster(channel string) bool {
+func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
+	if channel == nil {
+		return false
+	}
+
 	// TODO: tolower?
-	return u.GetName() == channel
+	return u.GetName() == channel.GetChannel()
 }

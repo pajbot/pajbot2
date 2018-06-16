@@ -1,7 +1,6 @@
 package modules
 
 import (
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/pkg"
 )
 
@@ -9,14 +8,11 @@ type BadCharacterFilter struct {
 	server *server
 
 	badCharacters []rune
-
-	Sender pkg.Sender
 }
 
-func NewBadCharacterFilter(sender pkg.Sender) *BadCharacterFilter {
+func NewBadCharacterFilter() *BadCharacterFilter {
 	return &BadCharacterFilter{
 		server: &_server,
-		Sender: sender,
 	}
 }
 
@@ -30,15 +26,15 @@ func (m BadCharacterFilter) Name() string {
 	return "BadCharacterFilter"
 }
 
-func (m BadCharacterFilter) OnWhisper(source pkg.User, message twitch.Message) error {
+func (m BadCharacterFilter) OnWhisper(source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m BadCharacterFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
-	for _, r := range message.Text {
+func (m BadCharacterFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {
-				m.Sender.Timeout(source, user, 300, "Message contains a banned character")
+				action.SetTimeout(300, "Your message contains a banned character")
 				return nil
 			}
 		}

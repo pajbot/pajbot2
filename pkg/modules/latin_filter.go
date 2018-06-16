@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/filter"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pkg/errors"
@@ -95,12 +94,14 @@ func (m LatinFilter) Name() string {
 	return "LatinFilter"
 }
 
-func (m LatinFilter) OnWhisper(source pkg.User, message twitch.Message) error {
+func (m LatinFilter) OnWhisper(source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
+func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !user.IsModerator() || true {
+		text := message.GetText()
+
 		lol := struct {
 			FullMessage   string
 			Message       string
@@ -109,12 +110,12 @@ func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch
 			Channel       string
 			Timestamp     time.Time
 		}{
-			FullMessage: message.Text,
+			FullMessage: text,
 			Username:    user.GetName(),
 			Channel:     source.GetChannel(),
 			Timestamp:   time.Now().UTC(),
 		}
-		messageRunes := []rune(message.Text)
+		messageRunes := []rune(text)
 		transparentStart := time.Now()
 		transparentSkipRange := m.transparentList.Find(messageRunes)
 		transparentEnd := time.Now()
@@ -140,7 +141,7 @@ func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch
 
 			if !allowed {
 				if lol.Message == "" {
-					lol.Message = message.Text[maxpenis(0, i-2):len(message.Text)]
+					lol.Message = text[maxpenis(0, i-2):len(text)]
 				}
 
 				alreadySet := false
@@ -165,7 +166,7 @@ func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
-				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], message.Text, user.GetName(), source.GetChannel())
+				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
 			}()
 		}
 	}

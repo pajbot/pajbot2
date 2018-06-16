@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/filters"
 	"github.com/pajlada/pajbot2/pkg/utils"
@@ -15,14 +14,11 @@ type Pajbot1BanphraseFilter struct {
 	server *server
 
 	banphrases []pkg.Banphrase
-
-	Sender pkg.Sender
 }
 
-func NewPajbot1BanphraseFilter(sender pkg.Sender) *Pajbot1BanphraseFilter {
+func NewPajbot1BanphraseFilter() *Pajbot1BanphraseFilter {
 	return &Pajbot1BanphraseFilter{
 		server: &_server,
-		Sender: sender,
 	}
 }
 
@@ -77,12 +73,12 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m Pajbot1BanphraseFilter) OnWhisper(source pkg.User, message twitch.Message) error {
+func (m Pajbot1BanphraseFilter) OnWhisper(source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
-	originalVariations, lowercaseVariations, err := utils.MakeVariations(message.Text, true)
+func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	originalVariations, lowercaseVariations, err := utils.MakeVariations(message.GetText(), true)
 	if err != nil {
 		return err
 	}
@@ -101,7 +97,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, mes
 				// fmt.Printf("Banphrase triggered: %#v\n", bp)
 				if bp.IsAdvanced() && source.GetChannel() == "forsen" {
 					lol := TimeoutData{
-						FullMessage: message.Text,
+						FullMessage: message.GetText(),
 						Banphrase:   bp,
 						Username:    user.GetName(),
 						Channel:     source.GetChannel(),
@@ -115,7 +111,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, mes
 
 				if source.GetChannel() == "krakenbul" && !user.IsModerator() {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
-					m.Sender.Timeout(source, user, bp.GetLength(), reason)
+					action.SetTimeout(bp.GetLength(), reason)
 				}
 				return nil
 			}

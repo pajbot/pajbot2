@@ -47,3 +47,19 @@ func (a EmoteByName) Swap(i, j int) {
 func (a EmoteByName) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
 }
+
+func (e Emote) GetID() string {
+	return e.ID
+}
+
+func (e Emote) GetName() string {
+	return e.Name
+}
+
+func (e Emote) GetType() string {
+	return e.Type
+}
+
+func (e Emote) GetCount() int {
+	return e.Count
+}

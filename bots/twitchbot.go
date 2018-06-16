@@ -2,12 +2,22 @@ package bots
 
 import (
 	"fmt"
+	"log"
 
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
+)
+
+type ModeState int
+
+const (
+	ModeUnset = iota
+	ModeEnabled
+	ModeDisabled
 )
 
 type botFlags struct {
@@ -30,16 +40,85 @@ type TwitchBot struct {
 	Modules []pkg.Module
 }
 
+type emoteReader struct {
+	index int
+
+	emotes *[]*common.Emote
+
+	started bool
+}
+
+func newEmoteHolder(emotes *[]*common.Emote) *emoteReader {
+	return &emoteReader{
+		index:  0,
+		emotes: emotes,
+	}
+}
+
+func (h *emoteReader) Next() bool {
+	if !h.started {
+		h.started = true
+
+		if len(*h.emotes) == 0 {
+			return false
+		}
+
+		return true
+	}
+
+	h.index++
+
+	if h.index >= len(*h.emotes) {
+		return false
+	}
+
+	return true
+}
+
+func (h *emoteReader) Get() pkg.Emote {
+	return (*h.emotes)[h.index]
+}
+
 // TwitchMessage is a wrapper for twitch.Message with some extra stuff
 type TwitchMessage struct {
 	twitch.Message
 
-	BTTVEmotes []common.Emote
+	twitchEmotes      []*common.Emote
+	twitchEmoteReader *emoteReader
+
+	bttvEmotes      []*common.Emote
+	bttvEmoteReader *emoteReader
 	// TODO: BTTV Emotes
 
 	// TODO: FFZ Emotes
 
 	// TODO: Emojis
+}
+
+func NewTwitchMessage(message twitch.Message) *TwitchMessage {
+	msg := &TwitchMessage{
+		Message: message,
+	}
+	msg.twitchEmoteReader = newEmoteHolder(&msg.twitchEmotes)
+	msg.bttvEmoteReader = newEmoteHolder(&msg.bttvEmotes)
+
+	return msg
+}
+
+func (m TwitchMessage) GetText() string {
+	return m.Text
+}
+
+func (m TwitchMessage) GetTwitchReader() pkg.EmoteReader {
+	return m.twitchEmoteReader
+}
+
+func (m TwitchMessage) GetBTTVReader() pkg.EmoteReader {
+	return m.bttvEmoteReader
+}
+
+func (m *TwitchMessage) AddBTTVEmote(emote pkg.Emote) {
+	m.bttvEmotes = append(m.bttvEmotes, emote.(*common.Emote))
 }
 
 func (b *TwitchBot) RegisterModules() error {
@@ -56,11 +135,11 @@ func (b *TwitchBot) RegisterModules() error {
 // Reply will reply to the message in the same way it received the message
 // If the message was received in a twitch channel, reply in that twitch channel.
 // IF the message was received in a twitch whisper, reply using twitch whispers.
-func (b *TwitchBot) Reply(channel string, user pkg.User, message string) {
-	if channel == "" {
-		b.Client.Whisper(user.GetName(), message)
+func (b *TwitchBot) Reply(channel pkg.Channel, user pkg.User, message string) {
+	if channel == nil {
+		b.Whisper(user, message)
 	} else {
-		b.Client.Say(channel, message)
+		b.Say(channel, message)
 	}
 }
 
@@ -68,8 +147,8 @@ func (b *TwitchBot) Say(channel pkg.Channel, message string) {
 	b.Client.Say(channel.GetChannel(), message)
 }
 
-func (b *TwitchBot) SaySimple(channel string, message string) {
-	b.Client.Say(channel, message)
+func (b *TwitchBot) Whisper(user pkg.User, message string) {
+	b.Client.Whisper(user.GetName(), message)
 }
 
 func (b *TwitchBot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
@@ -84,15 +163,82 @@ func (b *TwitchBot) SetHandler(handler Handler) {
 	b.handler = handler
 }
 
-// HandleMessage goes through all of the bot handlers in the correct order and figures out if anything was triggered
-func (b *TwitchBot) HandleMessage(channel string, user twitch.User, message *TwitchMessage) {
+func (b *TwitchBot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
+	message := NewTwitchMessage(rawMessage)
+
 	twitchUser := &users.TwitchUser{
 		User: user,
 
 		ID: message.Tags["user-id"],
 	}
 
-	b.handler.HandleMessage(b, channel, twitchUser, message)
+	action := &pkg.TwitchAction{
+		Sender: b,
+		User:   twitchUser,
+	}
+
+	b.handler.HandleMessage(b, nil, twitchUser, message, action)
+
+	if pkg.VerboseMessages {
+		log.Printf("%s - @%s(%s): %s", b.Name, twitchUser.DisplayName, twitchUser.Username, message.Text)
+	}
+}
+
+func (b *TwitchBot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+	message := NewTwitchMessage(rawMessage)
+
+	twitchUser := &users.TwitchUser{
+		User: user,
+
+		ID: message.Tags["user-id"],
+	}
+
+	channel := &channels.TwitchChannel{
+		Channel: channelName,
+	}
+
+	action := &pkg.TwitchAction{
+		Sender:  b,
+		Channel: channel,
+		User:    twitchUser,
+	}
+
+	b.handler.HandleMessage(b, channel, twitchUser, message, action)
+
+	if pkg.VerboseMessages {
+		log.Printf("%s - #%s: %s(%s): %s", b.Name, channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
+	}
+}
+
+func (b *TwitchBot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+	subMode := ModeUnset
+
+	channel := &channels.TwitchChannel{
+		Channel: channelName,
+	}
+
+	if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
+		if readSubMode == "1" {
+			subMode = ModeEnabled
+		} else {
+			subMode = ModeDisabled
+		}
+	}
+
+	if subMode != ModeUnset {
+		if subMode == ModeEnabled {
+			log.Printf("Submode enabled")
+		} else {
+			log.Printf("Submode disabled")
+
+			if b.Flags.PermaSubMode {
+				b.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
+				b.Say(channel, ".subscribers")
+			}
+		}
+	}
+
+	log.Printf("%s - #%s: %#v: %#v", b.Name, channel, user, rawMessage)
 }
 
 // Quit quits the entire application

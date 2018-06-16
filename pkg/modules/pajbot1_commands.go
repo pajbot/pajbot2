@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/commands"
 )
@@ -74,16 +73,16 @@ func (m Pajbot1Commands) Name() string {
 	return "Pajbot1Commands"
 }
 
-func (m Pajbot1Commands) OnWhisper(source pkg.User, message twitch.Message) error {
+func (m Pajbot1Commands) OnWhisper(source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Pajbot1Commands) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
+func (m Pajbot1Commands) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if source.GetChannel() != "snusbot" {
 		return nil
 	}
 
-	parts := strings.Split(message.Text, " ")
+	parts := strings.Split(message.GetText(), " ")
 	if len(parts) == 0 {
 		return nil
 	}

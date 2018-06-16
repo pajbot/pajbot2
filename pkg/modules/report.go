@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/pkg"
 )
 
@@ -26,8 +25,8 @@ func (m *Report) Register() error {
 	return nil
 }
 
-func (m *Report) OnWhisper(source pkg.User, message twitch.Message) error {
-	parts := strings.Split(message.Text, " ")
+func (m *Report) OnWhisper(source pkg.User, message pkg.Message) error {
+	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}
@@ -65,8 +64,8 @@ func (m *Report) OnWhisper(source pkg.User, message twitch.Message) error {
 
 }
 
-func (m *Report) OnMessage(source pkg.Channel, user pkg.User, message twitch.Message) error {
-	parts := strings.Split(message.Text, " ")
+func (m *Report) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}

@@ -30,12 +30,10 @@ import (
 	"github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bots"
-	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/emotes"
 	pb "github.com/pajlada/pajbot2/grpc"
 	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
@@ -260,43 +258,23 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
-func parseBTTVEmotes(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
-		m := strings.Split(message.Text, " ")
-		emoteCount := make(map[string]*common.Emote)
-		for _, word := range m {
-			if emote, ok := emoteCount[word]; ok {
-				emote.Count++
-			} else if emote, ok := emotes.GlobalEmotes.Bttv[word]; ok {
-				emoteCount[word] = &emote
-			}
-		}
-
-		for _, emote := range emoteCount {
-			message.BTTVEmotes = append(message.BTTVEmotes, *emote)
-		}
-
-		next.HandleMessage(bot, channel, user, message)
-	})
-}
-
 func handleCommands(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
-		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
+		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" {
 			if strings.HasPrefix(message.Text, "!xd") {
 				bot.Reply(channel, user, "XDDDDDDDDDD")
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!myuserid") {
-				bot.SaySimple(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
+				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!whisperme") {
 				log.Printf("Send whisper!")
-				bot.SaySimple(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
-				bot.Whisper(user.GetName(), "hehe")
+				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
+				bot.Whisper(user, "hehe")
 				return
 			}
 
@@ -308,38 +286,48 @@ func handleCommands(next bots.Handler) bots.Handler {
 				return
 			}
 
+			if strings.HasPrefix(message.Text, "!emoteonly") {
+				bot.Say(channel, ".emoteonly")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!emoteonlyoff") || message.Text == "TriHard TriHard TriHard forsenE pajaCool TriHard" {
+				bot.Say(channel, ".emoteonlyoff")
+				return
+			}
+
 			if strings.HasPrefix(message.Text, "!subon") {
 				if bot.Flags.PermaSubMode {
-					bot.SaySimple(channel, "Permanent subscribers mode is already enabled")
+					bot.Say(channel, "Permanent subscribers mode is already enabled")
 					return
 				}
 
 				bot.Flags.PermaSubMode = true
 
-				bot.SaySimple(channel, ".subscribers")
-				bot.SaySimple(channel, "Permanent subscribers mode has been enabled")
+				bot.Say(channel, ".subscribers")
+				bot.Say(channel, "Permanent subscribers mode has been enabled")
 				return
 			}
 
 			if strings.HasPrefix(message.Text, "!suboff") {
 				if !bot.Flags.PermaSubMode {
-					bot.SaySimple(channel, "Permanent subscribers mode is not enabled")
+					bot.Say(channel, "Permanent subscribers mode is not enabled")
 					return
 				}
 
 				bot.Flags.PermaSubMode = false
 
-				bot.SaySimple(channel, ".subscribersoff")
-				bot.SaySimple(channel, "Permanent subscribers mode has been disabled")
+				bot.Say(channel, ".subscribersoff")
+				bot.Say(channel, "Permanent subscribers mode has been disabled")
 				return
 			}
 		}
 
-		next.HandleMessage(bot, channel, user, message)
+		next.HandleMessage(bot, channel, user, message, action)
 	})
 }
 
-func finalMiddleware(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
+func finalMiddleware(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
 	// log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
 
@@ -349,7 +337,7 @@ type UnicodeRange struct {
 }
 
 func checkModules(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel string, user pkg.User, message *bots.TwitchMessage) {
+	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
 		modulesStart := time.Now()
 		defer func() {
 			modulesEnd := time.Now()
@@ -359,29 +347,24 @@ func checkModules(next bots.Handler) bots.Handler {
 			}
 		}()
 
-		twitchChannel := &channels.TwitchChannel{
-			Channel: channel,
-		}
-
 		for _, module := range bot.Modules {
 			moduleStart := time.Now()
 			var err error
-			if channel == "" {
-				err = module.OnWhisper(user, message.Message)
+			if channel == nil {
+				err = module.OnWhisper(user, message)
 			} else {
-				err = module.OnMessage(twitchChannel, user, message.Message)
+				err = module.OnMessage(channel, user, message, action)
 			}
 			moduleEnd := time.Now()
 			if pkg.VerboseBenchmark {
 				log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
 			}
 			if err != nil {
-				log.Println(err)
-				return
+				log.Printf("%s: %s\n", module.Name(), err)
 			}
 		}
 
-		next.HandleMessage(bot, channel, user, message)
+		next.HandleMessage(bot, channel, user, message, action)
 	})
 }
 
@@ -441,63 +424,38 @@ func (a *Application) LoadBots() error {
 			Redis:       a.Redis,
 		}
 
+		// Parsing
+		bot.Modules = append(bot.Modules, modules.NewBTTVEmoteParser())
+
+		// Report module/Admin commands
 		bot.Modules = append(bot.Modules, modules.NewReportModule())
-		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter(bot))
+
+		// Filtering
+		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter())
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
-		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter(bot))
+		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter())
+		bot.Modules = append(bot.Modules, modules.NewEmoteFilter())
+		bot.Modules = append(bot.Modules, modules.NewMessageLengthLimit())
+
+		// Actions
+		bot.Modules = append(bot.Modules, modules.NewActionPerformer())
+
+		// Commands
 		bot.Modules = append(bot.Modules, modules.NewPajbot1Commands(bot))
+		bot.Modules = append(bot.Modules, modules.NewGiveaway(bot))
 
 		err := bot.RegisterModules()
 		if err != nil {
 			return err
 		}
 
-		bot.SetHandler(checkModules(parseBTTVEmotes(handleCommands(finalHandler))))
+		bot.SetHandler(checkModules(handleCommands(finalHandler)))
 
 		a.TwitchBots[name] = bot
 	}
 
 	return nil
 }
-
-func (a *Application) StartContextBot() error {
-	contextBot := &bots.TwitchBot{
-		Client:      twitch.NewClient("justinfan64932", "oauth:b00b5"),
-		QuitChannel: a.Quit,
-	}
-
-	contextBot.OnNewMessage(func(channel string, user twitch.User, message twitch.Message) {
-		if userID, ok := message.Tags["user-id"]; ok {
-			if roomID, ok := message.Tags["room-id"]; ok {
-				uc, ok := a.UserContext[userID]
-				if !ok {
-					uc = NewChannelContext()
-					a.UserContext[userID] = uc
-				}
-				uc.Channels[roomID] = append(uc.Channels[roomID], message.Text)
-			}
-		}
-	})
-
-	contextBot.Join("pajlada")
-
-	go func() {
-		err := contextBot.Connect()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	return nil
-}
-
-type ModeState int
-
-const (
-	ModeUnset = iota
-	ModeEnabled
-	ModeDisabled
-)
 
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
@@ -507,50 +465,11 @@ func (a *Application) StartBots() error {
 				// continue
 			}
 
-			bot.OnNewWhisper(func(user twitch.User, rawMessage twitch.Message) {
-				message := bots.TwitchMessage{Message: rawMessage}
+			bot.OnNewWhisper(bot.HandleWhisper)
 
-				// log.Printf("GOT WHISPER! %s(%s): %s", user.DisplayName, user.Username, message.Text)
+			bot.OnNewMessage(bot.HandleMessage)
 
-				bot.HandleMessage("", user, &message)
-			})
-
-			bot.OnNewMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
-				message := bots.TwitchMessage{Message: rawMessage}
-
-				bot.HandleMessage(channel, user, &message)
-
-				if pkg.VerboseMessages {
-					log.Printf("%s - #%s: %s(%s): %s", bot.Name, channel, user.DisplayName, user.Username, message.Text)
-				}
-			})
-
-			bot.OnNewRoomstateMessage(func(channel string, user twitch.User, rawMessage twitch.Message) {
-				subMode := ModeUnset
-
-				if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
-					if readSubMode == "1" {
-						subMode = ModeEnabled
-					} else {
-						subMode = ModeDisabled
-					}
-				}
-
-				if subMode != ModeUnset {
-					if subMode == ModeEnabled {
-						log.Printf("Submode enabled")
-					} else {
-						log.Printf("Submode disabled")
-
-						if bot.Flags.PermaSubMode {
-							bot.SaySimple(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
-							bot.SaySimple(channel, ".subscribers")
-						}
-					}
-				}
-
-				log.Printf("%s - #%s: %#v: %#v", bot.Name, channel, user, rawMessage)
-			})
+			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
 			if bot.Name == "snusbot" {
 				log.Printf("Joining forsen with %#v\n", bot)
