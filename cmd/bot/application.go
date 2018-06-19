@@ -425,7 +425,7 @@ func (a *Application) LoadBots() error {
 		}
 
 		// Parsing
-		bot.Modules = append(bot.Modules, modules.NewBTTVEmoteParser())
+		bot.Modules = append(bot.Modules, modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
 
 		// Report module/Admin commands
 		bot.Modules = append(bot.Modules, modules.NewReportModule())

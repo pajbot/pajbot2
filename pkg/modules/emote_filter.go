@@ -78,7 +78,6 @@ func (m EmoteFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Me
 		emote := reader.Get()
 
 		if limit, ok := m.emoteLimits[emote.GetName()]; ok {
-			fmt.Printf("%d %s's", emote.GetCount(), emote.GetName())
 			if emote.GetCount() > limit.limit {
 				timeoutDuration += limit.baseDuration
 				timeoutDuration += (emote.GetCount() - limit.limit - 1) * limit.extraDuration

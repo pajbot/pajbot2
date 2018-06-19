@@ -2,19 +2,22 @@ package modules
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/emotes"
 	"github.com/pajlada/pajbot2/pkg"
 )
 
 type BTTVEmoteParser struct {
 	server *server
+
+	globalEmotes *map[string]common.Emote
 }
 
-func NewBTTVEmoteParser() *BTTVEmoteParser {
+func NewBTTVEmoteParser(globalEmotes *map[string]common.Emote) *BTTVEmoteParser {
 	return &BTTVEmoteParser{
-		server: &_server,
+		server:       &_server,
+		globalEmotes: globalEmotes,
 	}
 }
 
@@ -31,23 +34,15 @@ func (m BTTVEmoteParser) OnWhisper(user pkg.User, message pkg.Message) error {
 }
 
 func (m BTTVEmoteParser) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	cleanText := strings.Map(
-		func(r rune) rune {
-			if r <= 0xFF {
-				return r
-			}
-
-			return -1
-		}, message.GetText())
-
-	// parts := strings.Split(message.GetText(), " ")
-	// parts := strings.Fields(message.GetText())
-	parts := strings.Fields(cleanText)
+	parts := strings.FieldsFunc(message.GetText(), func(r rune) bool {
+		// TODO(pajlada): This needs better testing
+		return r > 0xFF || unicode.IsSpace(r)
+	})
 	emoteCount := make(map[string]*common.Emote)
 	for _, word := range parts {
 		if emote, ok := emoteCount[word]; ok {
 			emote.Count++
-		} else if emote, ok := emotes.GlobalEmotes.Bttv[word]; ok {
+		} else if emote, ok := (*m.globalEmotes)[word]; ok {
 			emoteCount[word] = &emote
 		}
 	}
