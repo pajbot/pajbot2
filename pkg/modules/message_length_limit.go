@@ -31,6 +31,14 @@ func (m MessageLengthLimit) OnMessage(channel pkg.Channel, user pkg.User, messag
 		return nil
 	}
 
+	if user.GetName() == "gazatu2" {
+		return nil
+	}
+
+	if user.GetName() == "supibot" {
+		return nil
+	}
+
 	messageLength := len(message.GetText())
 	if messageLength > 140 {
 		if messageLength > 420 {
