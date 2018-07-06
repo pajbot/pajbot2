@@ -36,7 +36,7 @@ func (m BTTVEmoteParser) OnWhisper(user pkg.User, message pkg.Message) error {
 func (m BTTVEmoteParser) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.FieldsFunc(message.GetText(), func(r rune) bool {
 		// TODO(pajlada): This needs better testing
-		return r > 0xFF || unicode.IsSpace(r)
+		return r > 0xFF || unicode.IsSpace(r) || r == '!' || r == '.' || r == '$' || r == '^' || r == '#' || r == '*' || r == '@' || r == ')' || r == '%' || r == '&' || r > 0x7a || r < 0x30 || (r > 0x39 && r < 0x41) || (r > 0x5a && r < 0x61)
 	})
 	emoteCount := make(map[string]*common.Emote)
 	for _, word := range parts {
