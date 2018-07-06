@@ -446,7 +446,8 @@ func (a *Application) LoadBots() error {
 		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter())
 		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
 		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter())
-		bot.Modules = append(bot.Modules, modules.NewEmoteFilter())
+		bot.Modules = append(bot.Modules, modules.NewEmoteFilter(bot))
+
 		bot.Modules = append(bot.Modules, modules.NewMessageLengthLimit())
 
 		// Actions

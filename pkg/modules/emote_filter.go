@@ -20,13 +20,15 @@ type EmoteFilter struct {
 
 	emoteLimits    map[string]limitConsequence
 	combinedLimits int
+	Sender         pkg.Sender
 }
 
-func NewEmoteFilter() *EmoteFilter {
+func NewEmoteFilter(sender pkg.Sender) *EmoteFilter {
 	return &EmoteFilter{
 		server: &_server,
 
 		emoteLimits: make(map[string]limitConsequence),
+		Sender:      sender,
 	}
 }
 
