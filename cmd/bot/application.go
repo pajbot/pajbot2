@@ -260,7 +260,7 @@ func (a *Application) StartWebServer() error {
 
 func handleCommands(next bots.Handler) bots.Handler {
 	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
-		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" {
+		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" || user.GetName() == "fourtf" {
 			if strings.HasPrefix(message.Text, "!xd") {
 				bot.Reply(channel, user, "XDDDDDDDDDD")
 				return
