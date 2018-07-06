@@ -278,6 +278,18 @@ func handleCommands(next bots.Handler) bots.Handler {
 				return
 			}
 
+			if strings.HasPrefix(message.Text, "!modme") {
+				bot.Say(channel, ".mod "+user.GetName())
+				bot.Say(channel, "Modded")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!unmodme") {
+				bot.Say(channel, ".unmod "+user.GetName())
+				bot.Say(channel, "Unmodded")
+				return
+			}
+
 			if strings.HasPrefix(message.Text, "!pb2quit") {
 				bot.Reply(channel, user, "Quitting...")
 				time.AfterFunc(time.Millisecond*500, func() {
