@@ -326,4 +326,6 @@ func InitAPI(m *mux.Router) {
 	// m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
 	m.HandleFunc(`/channel/{channelID}/moderation/latest`, apiChannelModerationLatest)
 	m.HandleFunc(`/hook/{channel:\w+}`, apiHook)
+	m.HandleFunc(`/callbacks/follow`, apiCallbacksFollow)
+	m.HandleFunc(`/callbacks/streams`, apiCallbacksStreams)
 }

@@ -217,6 +217,14 @@ func (a *Application) RunDatabaseMigrations() error {
 	return nil
 }
 
+func onHTTPError(statusCode int, statusMessage, errorMessage string) {
+	log.Println("HTTPERROR: ", errorMessage)
+}
+
+func onInternalError(err error) {
+	log.Printf("internal error: %s", err)
+}
+
 // InitializeAPIs initializes various APIs that are needed for pajbot
 func (a *Application) InitializeAPIs() error {
 	// Twitch APIs
@@ -224,6 +232,32 @@ func (a *Application) InitializeAPIs() error {
 	apirequest.TwitchBot = gotwitch.New(a.config.Auth.Twitch.Bot.ClientID)
 	apirequest.TwitchV3 = gotwitch.NewV3(a.config.Auth.Twitch.User.ClientID)
 	apirequest.TwitchBotV3 = gotwitch.NewV3(a.config.Auth.Twitch.Bot.ClientID)
+
+	onSuccess := func(data []gotwitch.User) {
+		fmt.Printf("%#v\n", data)
+	}
+
+	apirequest.Twitch.GetUsersByLogin([]string{"bajlada"}, onSuccess, onHTTPError, onInternalError)
+
+	/*
+		apirequest.Twitch.SubscribeFollows("19571641", "http://57552418.ngrok.io/api/callbacks/follow", func() {
+			fmt.Println("success")
+		}, func() {
+			fmt.Println("error")
+		})
+	*/
+
+	apirequest.Twitch.SubscribeStreams("159849156", "http://57552418.ngrok.io/api/callbacks/streams", func() {
+		fmt.Println("streams success")
+	}, func() {
+		fmt.Println("streams error")
+	})
+
+	apirequest.Twitch.SubscribeStreams("11148817", "http://57552418.ngrok.io/api/callbacks/streams", func() {
+		fmt.Println("streams success")
+	}, func() {
+		fmt.Println("streams error")
+	})
 
 	return nil
 }
