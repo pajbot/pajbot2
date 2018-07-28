@@ -492,6 +492,7 @@ func (a *Application) StartBots() error {
 			if bot.Name == "pajbot" {
 				log.Printf("Joining krakenbul with %#v\n", bot)
 				bot.Join("krakenbul")
+				bot.Join("nani")
 			}
 
 			bot.Join(bot.Name)

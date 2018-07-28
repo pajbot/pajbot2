@@ -33,7 +33,7 @@ func (m Giveaway) Register() error {
 	return nil
 }
 
-const forsen25ID = "997065"
+const forsen25ID = "1072584"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
@@ -42,9 +42,9 @@ func (m Giveaway) OnWhisper(user pkg.User, message pkg.Message) error {
 }
 
 func (m *Giveaway) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if channel.GetChannel() != "forsen" {
-		return nil
-	}
+	// if channel.GetChannel() != "forsen" {
+	// 	return nil
+	// }
 
 	const giveawayEmote = forsen25ID
 

@@ -203,6 +203,16 @@ func (b *TwitchBot) HandleMessage(channelName string, user twitch.User, rawMessa
 		User:    twitchUser,
 	}
 
+	for _, emote := range rawMessage.Emotes {
+		parsedEmote := &common.Emote{
+			Name:  emote.Name,
+			ID:    emote.ID,
+			Count: emote.Count,
+			Type:  "twitch",
+		}
+		message.twitchEmotes = append(message.twitchEmotes, parsedEmote)
+	}
+
 	b.handler.HandleMessage(b, channel, twitchUser, message, action)
 
 	if pkg.VerboseMessages {

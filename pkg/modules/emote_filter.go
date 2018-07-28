@@ -58,6 +58,11 @@ func (m *EmoteFilter) Register() error {
 		baseDuration:  300,
 		extraDuration: 60,
 	}
+	m.emoteLimits["bttvNice"] = limitConsequence{
+		limit:         3,
+		baseDuration:  300,
+		extraDuration: 50,
+	}
 	m.combinedLimits = 4
 	return nil
 }

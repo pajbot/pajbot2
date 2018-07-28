@@ -225,6 +225,8 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("username", data.Token.UserName)
 			p.Add("token", token.AccessToken)
 			p.Add("refreshtoken", token.RefreshToken)
+
+			fmt.Printf("Username: %s - Access token: %s\n", data.Token.UserName, token.AccessToken)
 			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
 			if err != nil {
 				// XXX: handle this
@@ -238,7 +240,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	// We should, instead of returning the data raw, do something about it.
 	// Right now this is useful for new apps that need access.
 	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
-	write(w, p.data)
+	fmt.Fprintf(w, "ok done")
 }
 
 const ActionUnknown = 0
