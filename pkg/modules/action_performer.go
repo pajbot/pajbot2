@@ -22,10 +22,10 @@ func (m *ActionPerformer) Name() string {
 	return "ActionPerformer"
 }
 
-func (m ActionPerformer) OnWhisper(user pkg.User, message pkg.Message) error {
+func (m ActionPerformer) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m ActionPerformer) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m ActionPerformer) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return action.Do()
 }

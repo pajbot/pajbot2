@@ -73,11 +73,11 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m Pajbot1BanphraseFilter) OnWhisper(source pkg.User, message pkg.Message) error {
+func (m Pajbot1BanphraseFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Pajbot1BanphraseFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m Pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(message.GetText(), true)
 	if err != nil {
 		return err

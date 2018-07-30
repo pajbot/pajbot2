@@ -34,6 +34,7 @@ import (
 	"github.com/pajlada/pajbot2/emotes"
 	pb "github.com/pajlada/pajbot2/grpc"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/commands"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
@@ -397,9 +398,9 @@ func checkModules(next bots.Handler) bots.Handler {
 			moduleStart := time.Now()
 			var err error
 			if channel == nil {
-				err = module.OnWhisper(user, message)
+				err = module.OnWhisper(bot, user, message)
 			} else {
-				err = module.OnMessage(channel, user, message, action)
+				err = module.OnMessage(bot, channel, user, message, action)
 			}
 			moduleEnd := time.Now()
 			if pkg.VerboseBenchmark {
@@ -454,6 +455,12 @@ func (a *Application) LoadBots() error {
 		return err
 	}
 
+	customCommands := modules.NewCustomCommands()
+	customCommands.RegisterCommand([]string{"!userid"}, &commands.GetUserID{})
+	customCommands.RegisterCommand([]string{"!pb2points"}, &commands.GetPoints{})
+	customCommands.RegisterCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
+	customCommands.RegisterCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
+
 	for rows.Next() {
 		var name string
 		var twitchAccessToken string
@@ -489,6 +496,9 @@ func (a *Application) LoadBots() error {
 
 		// Commands
 		bot.Modules = append(bot.Modules, modules.NewPajbot1Commands(bot))
+
+		bot.Modules = append(bot.Modules, customCommands)
+
 		bot.Modules = append(bot.Modules, modules.NewGiveaway(bot))
 
 		err := bot.RegisterModules()

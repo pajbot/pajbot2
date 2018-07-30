@@ -37,11 +37,11 @@ const forsen25ID = "1072584"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
-func (m Giveaway) OnWhisper(user pkg.User, message pkg.Message) error {
+func (m Giveaway) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *Giveaway) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *Giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	// if channel.GetChannel() != "forsen" {
 	// 	return nil
 	// }

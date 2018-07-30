@@ -71,11 +71,11 @@ func (m EmoteFilter) Name() string {
 	return "EmoteFilter"
 }
 
-func (m EmoteFilter) OnWhisper(source pkg.User, message pkg.Message) error {
+func (m EmoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m EmoteFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m EmoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	// BTTV Emotes
 	reader := message.GetBTTVReader()
 	timeoutDuration := 0

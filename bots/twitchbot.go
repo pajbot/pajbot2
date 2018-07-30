@@ -1,14 +1,19 @@
 package bots
 
 import (
+	"bufio"
+	"encoding/binary"
 	"fmt"
+	"io"
 	"log"
+	"net"
 
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/users"
+	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/redismanager"
 )
 
@@ -38,6 +43,9 @@ type TwitchBot struct {
 	Redis *redismanager.RedisManager
 
 	Modules []pkg.Module
+
+	// TODO: Store one point server per channel the bot is in. share between bots
+	pointServer *PointServer
 }
 
 type emoteReader struct {
@@ -147,6 +155,10 @@ func (b *TwitchBot) Say(channel pkg.Channel, message string) {
 	b.Client.Say(channel.GetChannel(), message)
 }
 
+func (b *TwitchBot) Mention(channel pkg.Channel, user pkg.User, message string) {
+	b.Client.Say(channel.GetChannel(), "@"+user.GetName()+", "+message)
+}
+
 func (b *TwitchBot) Whisper(user pkg.User, message string) {
 	b.Client.Whisper(user.GetName(), message)
 }
@@ -254,4 +266,79 @@ func (b *TwitchBot) HandleRoomstateMessage(channelName string, user twitch.User,
 // Quit quits the entire application
 func (b *TwitchBot) Quit(message string) {
 	b.QuitChannel <- message
+}
+
+type PointServer struct {
+	conn net.Conn
+}
+
+func (p *PointServer) Send(command uint8, body []byte) {
+	bodyLength := make([]byte, 4)
+	binary.BigEndian.PutUint32(bodyLength, uint32(len(body)))
+
+	// Write header (Command + Body length)
+	p.conn.Write(append([]byte{command}, bodyLength...))
+
+	// Write body
+	p.conn.Write(body)
+}
+
+func (p *PointServer) Read(size int) []byte {
+	reader := bufio.NewReader(p.conn)
+
+	response := make([]byte, size)
+
+	io.ReadFull(reader, response)
+
+	return response
+}
+
+func newPointServer(host string) (*PointServer, error) {
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PointServer{
+		conn: conn,
+	}, nil
+}
+
+func (b *TwitchBot) ConnectToPointServer() (err error) {
+	// TODO: read from config file
+	b.pointServer, err = newPointServer("localhost:54321")
+	if err != nil {
+		return
+	}
+
+	// TODO: connect once per channel
+	b.pointServer.Send(CommandConnect, []byte("pajlada"))
+
+	return
+}
+
+const (
+	CommandConnect    = 0x01
+	CommandGetPoints  = 0x02
+	CommandEditPoints = 0x03
+)
+
+func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
+	bodyPayload := []byte(user.GetID())
+
+	b.pointServer.Send(CommandGetPoints, bodyPayload)
+	response := b.pointServer.Read(8)
+
+	return binary.BigEndian.Uint64(response)
+}
+
+func (b *TwitchBot) EditPoints(channel pkg.Channel, user pkg.User, points int32) uint64 {
+	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, utils.Int32ToBytes(points)...)
+	bodyPayload = append(bodyPayload, []byte(user.GetID())...)
+
+	b.pointServer.Send(CommandEditPoints, bodyPayload)
+	response := b.pointServer.Read(8)
+
+	return binary.BigEndian.Uint64(response)
 }

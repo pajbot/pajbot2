@@ -26,11 +26,11 @@ func (m BadCharacterFilter) Name() string {
 	return "BadCharacterFilter"
 }
 
-func (m BadCharacterFilter) OnWhisper(source pkg.User, message pkg.Message) error {
+func (m BadCharacterFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m BadCharacterFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m BadCharacterFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {

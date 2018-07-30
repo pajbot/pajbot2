@@ -22,11 +22,11 @@ func (m *MessageLengthLimit) Name() string {
 	return "MessageLengthLimit"
 }
 
-func (m MessageLengthLimit) OnWhisper(user pkg.User, message pkg.Message) error {
+func (m MessageLengthLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m MessageLengthLimit) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m MessageLengthLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if channel.GetChannel() != "forsen" {
 		return nil
 	}

@@ -72,6 +72,7 @@ func (m *LatinFilter) Register() error {
 	m.addToWhitelist(0x1f900, 0x1f9ff) // More emojis
 
 	m.addToWhitelist(0x2019, 0x2019) // Scuffed '
+	m.addToWhitelist(0xb0, 0xb0)     // degrees symbol
 
 	// Rain
 	m.addToWhitelist(0x30fd, 0x30fd)
@@ -94,11 +95,11 @@ func (m LatinFilter) Name() string {
 	return "LatinFilter"
 }
 
-func (m LatinFilter) OnWhisper(source pkg.User, message pkg.Message) error {
+func (m LatinFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m LatinFilter) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !user.IsModerator() || true {
 		text := message.GetText()
 

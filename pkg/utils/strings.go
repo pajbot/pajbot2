@@ -83,3 +83,26 @@ func MakeVariations(text string, doNormalize bool) ([]string, []string, error) {
 
 	return originalVariations, lowercaseAll(originalVariations), nil
 }
+
+func IsValidUsername(username string) bool {
+	for _, r := range username {
+		// Numbers || uppercase a-z || lowercase a-z || underscore
+		if (r >= 0x30 && r <= 0x39) || (r >= 0x41 && r <= 0x5A) || (r >= 0x61 && r <= 0x7A) || r == 0x5F {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
+func FilterUsernames(strings []string) (usernames []string) {
+	for _, s := range strings {
+		if IsValidUsername(s) {
+			usernames = append(usernames, s)
+		}
+	}
+
+	return
+}

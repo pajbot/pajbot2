@@ -22,10 +22,10 @@ func (m *Test) Name() string {
 	return "Test"
 }
 
-func (m Test) OnWhisper(user pkg.User, message pkg.Message) error {
+func (m Test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Test) OnMessage(channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m Test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return nil
 }

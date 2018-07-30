@@ -25,7 +25,7 @@ func (m *Report) Register() error {
 	return nil
 }
 
-func (m *Report) OnWhisper(source pkg.User, message pkg.Message) error {
+func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
@@ -64,7 +64,7 @@ func (m *Report) OnWhisper(source pkg.User, message pkg.Message) error {
 
 }
 
-func (m *Report) OnMessage(source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
