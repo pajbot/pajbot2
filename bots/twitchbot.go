@@ -7,17 +7,22 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 
+	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
+	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/redismanager"
 )
 
 type ModeState int
+
+var _ pkg.Sender = &TwitchBot{}
 
 const (
 	ModeUnset = iota
@@ -46,6 +51,23 @@ type TwitchBot struct {
 
 	// TODO: Store one point server per channel the bot is in. share between bots
 	pointServer *PointServer
+
+	ticker *time.Ticker
+
+	userStore *pb2twitch.UserStore
+}
+
+func NewTwitchBot(client *twitch.Client) *TwitchBot {
+	// TODO(pajlada): share user store between twitch bots
+	// TODO(pajlada): mutex lock user store
+	return &TwitchBot{
+		Client:    client,
+		userStore: pb2twitch.NewUserStore(),
+	}
+}
+
+func (b *TwitchBot) GetUserStore() pkg.UserStore {
+	return b.userStore
 }
 
 type emoteReader struct {
@@ -267,20 +289,88 @@ func (b *TwitchBot) HandleRoomstateMessage(channelName string, user twitch.User,
 func (b *TwitchBot) Quit(message string) {
 	b.QuitChannel <- message
 }
-
-type PointServer struct {
-	conn net.Conn
+func onHTTPError(statusCode int, statusMessage, errorMessage string) {
+	log.Println("HTTPERROR: ", errorMessage)
 }
 
-func (p *PointServer) Send(command uint8, body []byte) {
+func onInternalError(err error) {
+	log.Printf("internal error: %s", err)
+}
+
+func (b *TwitchBot) StartChatterPoller() {
+	b.ticker = time.NewTicker(15 * time.Second)
+	// defer close ticker lol
+
+	go func() {
+		for {
+			select {
+			case <-b.ticker.C:
+				onSuccess := func(chatters gotwitch.Chatters) {
+					usernames := []string{}
+					usernames = append(usernames, chatters.Moderators...)
+					usernames = append(usernames, chatters.Staff...)
+					usernames = append(usernames, chatters.Admins...)
+					usernames = append(usernames, chatters.GlobalMods...)
+					usernames = append(usernames, chatters.Viewers...)
+					userIDs := b.GetUserStore().GetIDs(usernames)
+
+					userIDsSlice := make([]string, len(userIDs))
+					i := 0
+					for _, userID := range userIDs {
+						userIDsSlice[i] = userID
+						i++
+					}
+
+					b.BulkEdit("pajlada", userIDsSlice, 5)
+					log.Println("Gave points to chatters")
+				}
+
+				log.Println("Getting chatters...")
+				gotwitch.GetChatters("pajlada", onSuccess, onHTTPError, onInternalError)
+			}
+		}
+	}()
+}
+
+type PointServer struct {
+	host string
+
+	conn net.Conn
+
+	ReconnectChannel chan (bool)
+
+	bufferedPayloads [][]byte
+}
+
+func (p *PointServer) Write(payload []byte) bool {
+	if p.conn != nil {
+		_, err := p.conn.Write(payload)
+		if err == nil {
+			return true
+		}
+
+		log.Println("Reconnect????????")
+		p.ReconnectChannel <- true
+	}
+
+	p.bufferedPayloads = append(p.bufferedPayloads, payload)
+
+	return false
+}
+
+func (p *PointServer) Send(command uint8, body []byte) bool {
 	bodyLength := make([]byte, 4)
 	binary.BigEndian.PutUint32(bodyLength, uint32(len(body)))
 
+	instant := false
+
 	// Write header (Command + Body length)
-	p.conn.Write(append([]byte{command}, bodyLength...))
+	instant = p.Write(append([]byte{command}, bodyLength...))
 
 	// Write body
-	p.conn.Write(body)
+	instant = p.Write(body)
+
+	return instant
 }
 
 func (p *PointServer) Read(size int) []byte {
@@ -288,20 +378,58 @@ func (p *PointServer) Read(size int) []byte {
 
 	response := make([]byte, size)
 
-	io.ReadFull(reader, response)
+	_, err := io.ReadFull(reader, response)
+	if err != nil {
+		p.ReconnectChannel <- true
+		return nil
+	}
 
 	return response
 }
 
 func newPointServer(host string) (*PointServer, error) {
-	conn, err := net.Dial("tcp", host)
-	if err != nil {
-		return nil, err
+	pointServer := &PointServer{
+		host:             host,
+		ReconnectChannel: make(chan bool),
 	}
 
-	return &PointServer{
-		conn: conn,
-	}, nil
+	go pointServer.connect()
+
+	return pointServer, nil
+}
+
+func (p *PointServer) tryConnect() net.Conn {
+	for {
+		log.Println("Trying to connect to", p.host)
+		conn, err := net.Dial("tcp", p.host)
+
+		if err != nil {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		// TODO: Send any buffered messages?
+
+		for _, p := range p.bufferedPayloads {
+			conn.Write(p)
+		}
+
+		return conn
+	}
+}
+
+func (p *PointServer) connect() {
+	for {
+		p.conn = p.tryConnect()
+
+		log.Println("Wait for reconnect channel to proc...")
+		<-p.ReconnectChannel
+		log.Println("Reconnect... xd")
+
+		p.conn = nil
+		log.Println("Reconnect...")
+	}
+
 }
 
 func (b *TwitchBot) ConnectToPointServer() (err error) {
@@ -317,10 +445,13 @@ func (b *TwitchBot) ConnectToPointServer() (err error) {
 	return
 }
 
+const DELIMETER_BYTE = ';'
+
 const (
 	CommandConnect    = 0x01
 	CommandGetPoints  = 0x02
 	CommandEditPoints = 0x03
+	CommandBulkEdit   = 0x04
 )
 
 func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
@@ -329,7 +460,11 @@ func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
 	b.pointServer.Send(CommandGetPoints, bodyPayload)
 	response := b.pointServer.Read(8)
 
-	return binary.BigEndian.Uint64(response)
+	if response != nil {
+		return binary.BigEndian.Uint64(response)
+	}
+
+	return 0
 }
 
 func (b *TwitchBot) EditPoints(channel pkg.Channel, user pkg.User, points int32) uint64 {
@@ -341,4 +476,15 @@ func (b *TwitchBot) EditPoints(channel pkg.Channel, user pkg.User, points int32)
 	response := b.pointServer.Read(8)
 
 	return binary.BigEndian.Uint64(response)
+}
+
+func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
+	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, utils.Int32ToBytes(points)...)
+	for _, userID := range userIDs {
+		bodyPayload = append(bodyPayload, []byte(userID)...)
+		bodyPayload = append(bodyPayload, DELIMETER_BYTE)
+	}
+
+	b.pointServer.Send(CommandBulkEdit, bodyPayload)
 }

@@ -1,13 +1,10 @@
 package commands
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
 
-	"github.com/dankeroni/gotwitch"
-	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -23,29 +20,44 @@ func (c GetUserID) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, 
 		return
 	}
 
-	onHTTPError := func(statusCode int, statusMessage, errorMessage string) {
-		bot.Say(channel, "@"+source.GetName()+", an error occursed processing your command ("+errorMessage+", "+statusMessage+")")
-	}
-
-	onInternalError := func(err error) {
-		bot.Say(channel, "@"+source.GetName()+", an internal error occursed processing your command ("+err.Error()+")")
-	}
-
-	onSuccess := func(data []gotwitch.User) {
-		if len(data) == 0 {
-			bot.Say(channel, "@"+source.GetName()+", no valid usernames were given")
-			return
-		}
-		var results []string
-		for _, d := range data {
-			results = append(results, d.Login+"="+d.ID)
+	/*
+		onHTTPError := func(statusCode int, statusMessage, errorMessage string) {
+			bot.Say(channel, "@"+source.GetName()+", an error occursed processing your command ("+errorMessage+", "+statusMessage+")")
 		}
 
-		bot.Say(channel, "@"+source.GetName()+", "+strings.Join(results, ", "))
-		fmt.Printf("%#v\n", data)
+		onInternalError := func(err error) {
+			bot.Say(channel, "@"+source.GetName()+", an internal error occursed processing your command ("+err.Error()+")")
+		}
+
+		onSuccess := func(data []gotwitch.User) {
+			if len(data) == 0 {
+				bot.Say(channel, "@"+source.GetName()+", no valid usernames were given")
+				return
+			}
+			var results []string
+			for _, d := range data {
+				results = append(results, d.Login+"="+d.ID)
+			}
+
+			bot.Say(channel, "@"+source.GetName()+", "+strings.Join(results, ", "))
+			fmt.Printf("%#v\n", data)
+		}
+	*/
+
+	userIDs := bot.GetUserStore().GetIDs(usernames)
+	var results []string
+	for username, userID := range userIDs {
+		results = append(results, username+"="+userID)
 	}
 
-	apirequest.Twitch.GetUsersByLogin(usernames, onSuccess, onHTTPError, onInternalError)
+	if len(results) == 0 {
+		bot.Mention(channel, source, "no valid usernames were given")
+		return
+	}
+
+	bot.Mention(channel, source, strings.Join(results, ", "))
+
+	// apirequest.Twitch.GetUsersByLogin(usernames, onSuccess, onHTTPError, onInternalError)
 }
 
 type GetPoints struct {

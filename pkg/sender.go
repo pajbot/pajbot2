@@ -8,4 +8,7 @@ type Sender interface {
 
 	// give or remove points from user in channel
 	EditPoints(Channel, User, int32) uint64
+	BulkEdit(string, []string, int32)
+
+	GetUserStore() UserStore
 }

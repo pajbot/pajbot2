@@ -470,12 +470,10 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := bots.HandlerFunc(finalMiddleware)
 
-		bot := &bots.TwitchBot{
-			Client:      twitch.NewClient(name, "oauth:"+twitchAccessToken),
-			Name:        name,
-			QuitChannel: a.Quit,
-			Redis:       a.Redis,
-		}
+		bot := bots.NewTwitchBot(twitch.NewClient(name, "oauth:"+twitchAccessToken))
+		bot.Name = name
+		bot.QuitChannel = a.Quit
+		bot.Redis = a.Redis
 
 		// Parsing
 		bot.Modules = append(bot.Modules, modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
@@ -530,13 +528,19 @@ func (a *Application) StartBots() error {
 
 			if bot.Name == "snusbot" {
 				log.Printf("Joining forsen with %#v\n", bot)
-				bot.Join("forsen")
+				// bot.Join("forsen")
 			}
 
 			if bot.Name == "pajbot" {
 				log.Printf("Joining krakenbul with %#v\n", bot)
-				bot.Join("krakenbul")
-				bot.Join("nani")
+				// bot.Join("krakenbul")
+				// bot.Join("nani")
+				bot.Join("pajlada")
+				err := bot.ConnectToPointServer()
+				if err != nil {
+					log.Fatal(err)
+				}
+				bot.StartChatterPoller()
 			}
 
 			bot.Join(bot.Name)

@@ -97,10 +97,10 @@ func IsValidUsername(username string) bool {
 	return true
 }
 
-func FilterUsernames(strings []string) (usernames []string) {
-	for _, s := range strings {
+func FilterUsernames(potentialUsernames []string) (usernames []string) {
+	for _, s := range potentialUsernames {
 		if IsValidUsername(s) {
-			usernames = append(usernames, s)
+			usernames = append(usernames, strings.ToLower(s))
 		}
 	}
 
