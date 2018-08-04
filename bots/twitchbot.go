@@ -448,10 +448,11 @@ func (b *TwitchBot) ConnectToPointServer() (err error) {
 const DELIMETER_BYTE = ';'
 
 const (
-	CommandConnect    = 0x01
-	CommandGetPoints  = 0x02
-	CommandEditPoints = 0x03
-	CommandBulkEdit   = 0x04
+	CommandConnect   = 0x01
+	CommandGetPoints = 0x02
+	CommandBulkEdit  = 0x03
+	CommandAdd       = 0x04
+	CommandRemove    = 0x05
 )
 
 func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
@@ -467,15 +468,21 @@ func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
 	return 0
 }
 
-func (b *TwitchBot) EditPoints(channel pkg.Channel, user pkg.User, points int32) uint64 {
+func (b *TwitchBot) AddPoints(channel pkg.Channel, user pkg.User, points uint64) (bool, uint64) {
 	var bodyPayload []byte
-	bodyPayload = append(bodyPayload, utils.Int32ToBytes(points)...)
+	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
 	bodyPayload = append(bodyPayload, []byte(user.GetID())...)
 
-	b.pointServer.Send(CommandEditPoints, bodyPayload)
-	response := b.pointServer.Read(8)
+	b.pointServer.Send(CommandAdd, bodyPayload)
 
-	return binary.BigEndian.Uint64(response)
+	response := b.pointServer.Read(9)
+	userPoints := binary.BigEndian.Uint64(response[1:])
+
+	if response[0] > 0 {
+		return false, userPoints
+	}
+
+	return true, userPoints
 }
 
 func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
@@ -487,4 +494,21 @@ func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
 	}
 
 	b.pointServer.Send(CommandBulkEdit, bodyPayload)
+}
+
+func (b *TwitchBot) RemovePoints(channel pkg.Channel, user pkg.User, points uint64) (bool, uint64) {
+	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
+	bodyPayload = append(bodyPayload, []byte(user.GetID())...)
+
+	b.pointServer.Send(CommandRemove, bodyPayload)
+
+	response := b.pointServer.Read(9)
+	userPoints := binary.BigEndian.Uint64(response[1:])
+
+	if response[0] > 0 {
+		return false, userPoints
+	}
+
+	return true, userPoints
 }

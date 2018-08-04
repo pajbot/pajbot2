@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -72,7 +73,7 @@ type AddPoints struct {
 }
 
 func (c AddPoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	points := bot.EditPoints(channel, source, rand.Int31n(50))
+	_, points := bot.AddPoints(channel, source, uint64(rand.Int31n(50)))
 	bot.Mention(channel, source, "you now have "+strconv.FormatUint(points, 10)+" points")
 }
 
@@ -80,6 +81,52 @@ type RemovePoints struct {
 }
 
 func (c RemovePoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	points := bot.EditPoints(channel, source, -rand.Int31n(50))
+	_, points := bot.RemovePoints(channel, source, uint64(rand.Int31n(50)))
 	bot.Mention(channel, source, "you now have "+strconv.FormatUint(points, 10)+" points")
+}
+
+type Roulette struct {
+}
+
+func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	if len(parts) == 0 {
+		bot.Mention(channel, source, "usage: !roulette 500 or !roulette all")
+		return
+	}
+
+	var pointsToRoulette uint64
+
+	if strings.ToLower(parts[0]) == "all" {
+		pointsToRoulette = bot.GetPoints(channel, source)
+	} else {
+		var err error
+		pointsToRoulette, err = strconv.ParseUint(parts[0], 10, 64)
+
+		if err != nil {
+			bot.Mention(channel, source, "usage: !roulette 500 or !roulette all")
+			return
+		}
+	}
+
+	if pointsToRoulette == 0 {
+		bot.Mention(channel, source, "you have 0 points, you can't roulette ResidentSleeper")
+		return
+	}
+
+	fmt.Printf("Rouletting %d points\n", pointsToRoulette)
+
+	if result, _ := bot.RemovePoints(channel, source, pointsToRoulette); !result {
+		bot.Mention(channel, source, "you don't have enough points ResidentSleeper")
+		return
+	}
+
+	if rand.Int31n(2) == 0 {
+		// loss
+		bot.Mention(channel, source, "you lost OMEGALUL")
+	} else {
+		// win
+		// TODO: Check for integer overflow?
+		_, newPoints := bot.AddPoints(channel, source, pointsToRoulette*2)
+		bot.Mention(channel, source, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
+	}
 }
