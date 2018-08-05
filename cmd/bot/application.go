@@ -470,24 +470,24 @@ func (a *Application) LoadBots() error {
 		bot.Redis = a.Redis
 
 		// Parsing
-		bot.Modules = append(bot.Modules, modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
+		bot.AddModule(modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
 
 		// Report module/Admin commands
-		bot.Modules = append(bot.Modules, modules.NewReportModule())
+		bot.AddModule(modules.NewReportModule())
 
 		// Filtering
-		bot.Modules = append(bot.Modules, modules.NewBadCharacterFilter())
-		bot.Modules = append(bot.Modules, modules.NewLatinFilter())
-		bot.Modules = append(bot.Modules, modules.NewPajbot1BanphraseFilter())
-		bot.Modules = append(bot.Modules, modules.NewEmoteFilter(bot))
+		bot.AddModule(modules.NewBadCharacterFilter())
+		bot.AddModule(modules.NewLatinFilter())
+		bot.AddModule(modules.NewPajbot1BanphraseFilter())
+		bot.AddModule(modules.NewEmoteFilter(bot))
 
-		bot.Modules = append(bot.Modules, modules.NewMessageLengthLimit())
+		bot.AddModule(modules.NewMessageLengthLimit())
 
 		// Actions
-		bot.Modules = append(bot.Modules, modules.NewActionPerformer())
+		bot.AddModule(modules.NewActionPerformer())
 
 		// Commands
-		bot.Modules = append(bot.Modules, modules.NewPajbot1Commands(bot))
+		bot.AddModule(modules.NewPajbot1Commands(bot))
 
 		customCommands := modules.NewCustomCommands()
 		customCommands.RegisterCommand([]string{"!userid"}, &commands.GetUserID{})
@@ -498,14 +498,9 @@ func (a *Application) LoadBots() error {
 		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
 		customCommands.RegisterCommand([]string{"!user"}, &commands.User{})
 
-		bot.Modules = append(bot.Modules, customCommands)
+		bot.AddModule(customCommands)
 
-		bot.Modules = append(bot.Modules, modules.NewGiveaway(bot))
-
-		err := bot.RegisterModules()
-		if err != nil {
-			return err
-		}
+		bot.AddModule(modules.NewGiveaway(bot))
 
 		bot.SetHandler(checkModules(handleCommands(finalHandler)))
 

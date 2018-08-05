@@ -151,17 +151,6 @@ func (m *TwitchMessage) AddBTTVEmote(emote pkg.Emote) {
 	m.bttvEmotes = append(m.bttvEmotes, emote.(*common.Emote))
 }
 
-func (b *TwitchBot) RegisterModules() error {
-	for _, m := range b.Modules {
-		err := m.Register()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Reply will reply to the message in the same way it received the message
 // If the message was received in a twitch channel, reply in that twitch channel.
 // IF the message was received in a twitch whisper, reply using twitch whispers.
@@ -519,4 +508,17 @@ func (b *TwitchBot) ForceRemovePoints(channel pkg.Channel, userID string, points
 	userPoints := binary.BigEndian.Uint64(response[1:])
 
 	return userPoints
+}
+
+func (b *TwitchBot) AddModule(module pkg.Module) {
+	if module == nil {
+		return
+	}
+
+	if err := module.Register(); err != nil {
+		log.Printf("Error registering module(%s): %s\n", module.Name(), err.Error())
+		return
+	}
+
+	b.Modules = append(b.Modules, module)
 }
