@@ -146,3 +146,53 @@ func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 		bot.Mention(channel, source, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
 	}
 }
+
+type GivePoints struct {
+}
+
+func (c GivePoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	const USAGE = `usage: !givepoints USER POINTS`
+	if len(parts) < 3 {
+		bot.Mention(channel, source, USAGE)
+		return
+	}
+
+	target := utils.FilterUsername(parts[1])
+	if target == "" {
+		// Invalid username
+		return
+	}
+
+	targetID := bot.GetUserStore().GetID(target)
+	if targetID == "" {
+		// Invalid username
+		return
+	}
+
+	var pointsToGive uint64
+
+	if strings.ToLower(parts[2]) == "all" {
+		pointsToGive = bot.GetPoints(channel, source.GetID())
+	} else {
+		var err error
+		pointsToGive, err = strconv.ParseUint(parts[2], 10, 64)
+
+		if err != nil {
+			bot.Mention(channel, source, USAGE)
+			return
+		}
+	}
+
+	if pointsToGive == 0 {
+		bot.Mention(channel, source, USAGE)
+		return
+	}
+
+	if result, _ := bot.RemovePoints(channel, source.GetID(), pointsToGive); !result {
+		bot.Mention(channel, source, "you don't have enough points ResidentSleeper")
+		return
+	}
+
+	bot.AddPoints(channel, targetID, pointsToGive)
+	bot.Mention(channel, source, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
+}

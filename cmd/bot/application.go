@@ -493,6 +493,7 @@ func (a *Application) LoadBots() error {
 		customCommands.RegisterCommand([]string{"!userid"}, &commands.GetUserID{})
 		customCommands.RegisterCommand([]string{"!pb2points"}, &commands.GetPoints{})
 		customCommands.RegisterCommand([]string{"!pb2roulette"}, &commands.Roulette{})
+		customCommands.RegisterCommand([]string{"!pb2givepoints"}, &commands.GivePoints{})
 		// customCommands.RegisterCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
 		// customCommands.RegisterCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
 		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
