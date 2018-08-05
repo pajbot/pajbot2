@@ -36,7 +36,7 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	}
 
 	// XXX: Channel-specific permissions
-	if !source.HasPermission(pkg.PermissionReport) {
+	if !source.HasGlobalPermission(pkg.PermissionReport) {
 		return nil
 	}
 
@@ -74,7 +74,7 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		return nil
 	}
 
-	if !user.HasPermission(pkg.PermissionReport) {
+	if !user.HasGlobalPermission(pkg.PermissionReport) {
 		return nil
 	}
 

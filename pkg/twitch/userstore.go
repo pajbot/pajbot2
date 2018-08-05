@@ -3,6 +3,7 @@ package twitch
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/pajlada/pajbot2/apirequest"
@@ -70,4 +71,27 @@ func (s *UserStore) GetIDs(usernames []string) map[string]string {
 	}
 
 	return userIDs
+}
+
+func (s *UserStore) GetID(username string) string {
+	username = strings.ToLower(username)
+
+	if userID, ok := s.userIDMap[username]; ok {
+		return userID
+	}
+
+	var retUserID string
+
+	onSuccess := func(data []gotwitch.User) {
+		if len(data) == 0 {
+			// :(
+			return
+		}
+
+		retUserID = data[0].ID
+	}
+
+	apirequest.Twitch.GetUsersByLogin([]string{username}, onSuccess, onHTTPError, onInternalError)
+
+	return retUserID
 }

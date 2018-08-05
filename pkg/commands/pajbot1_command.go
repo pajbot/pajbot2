@@ -76,7 +76,7 @@ func (c *Pajbot1Command) IsTriggered(parts []string) bool {
 func (c *Pajbot1Command) Trigger(source pkg.Channel, user pkg.User, parts []string, sender pkg.Sender) error {
 	sender.Say(source, c.Action)
 
-	if user.HasPermission(pkg.PermissionReport) {
+	if user.HasGlobalPermission(pkg.PermissionReport) {
 		sender.Say(source, "You have report permissions!")
 	}
 

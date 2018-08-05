@@ -97,6 +97,16 @@ func IsValidUsername(username string) bool {
 	return true
 }
 
+func FilterUsername(username string) string {
+	username = strings.TrimPrefix(username, "@")
+
+	if IsValidUsername(username) {
+		return username
+	}
+
+	return ""
+}
+
 func FilterUsernames(potentialUsernames []string) (usernames []string) {
 	for _, s := range potentialUsernames {
 		if IsValidUsername(s) {

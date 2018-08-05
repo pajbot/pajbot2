@@ -29,6 +29,11 @@ func (c *Raffle) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, so
 	cmd := strings.ToLower(parts[0])
 
 	if cmd == "!roffle" {
+		if !source.HasChannelPermission(channel, pkg.PermissionRaffle) {
+			bot.Mention(channel, source, "you do not have the permission to start a raffle")
+			return
+		}
+
 		if c.running {
 			bot.Mention(channel, source, "a raffle is already running xd")
 			return

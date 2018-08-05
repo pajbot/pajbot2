@@ -200,11 +200,7 @@ func (b *TwitchBot) SetHandler(handler Handler) {
 func (b *TwitchBot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	message := NewTwitchMessage(rawMessage)
 
-	twitchUser := &users.TwitchUser{
-		User: user,
-
-		ID: message.Tags["user-id"],
-	}
+	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
 
 	action := &pkg.TwitchAction{
 		Sender: b,
@@ -221,14 +217,11 @@ func (b *TwitchBot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 func (b *TwitchBot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
 	message := NewTwitchMessage(rawMessage)
 
-	twitchUser := &users.TwitchUser{
-		User: user,
-
-		ID: message.Tags["user-id"],
-	}
+	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
 
 	channel := &channels.TwitchChannel{
 		Channel: channelName,
+		ID:      rawMessage.Tags["room-id"],
 	}
 
 	action := &pkg.TwitchAction{

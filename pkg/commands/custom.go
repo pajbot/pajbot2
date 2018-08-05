@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -14,7 +13,7 @@ type GetUserID struct {
 }
 
 func (c GetUserID) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	usernames := utils.FilterUsernames(parts)
+	usernames := utils.FilterUsernames(parts[1:])
 
 	if len(usernames) == 0 {
 		bot.Say(channel, "@"+source.GetName()+", usage: !userid USERNAME (i.e. !userid pajlada)")
@@ -89,18 +88,18 @@ type Roulette struct {
 }
 
 func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	if len(parts) == 0 {
+	if len(parts) < 2 {
 		bot.Mention(channel, source, "usage: !roulette 500 or !roulette all")
 		return
 	}
 
 	var pointsToRoulette uint64
 
-	if strings.ToLower(parts[0]) == "all" {
+	if strings.ToLower(parts[1]) == "all" {
 		pointsToRoulette = bot.GetPoints(channel, source)
 	} else {
 		var err error
-		pointsToRoulette, err = strconv.ParseUint(parts[0], 10, 64)
+		pointsToRoulette, err = strconv.ParseUint(parts[1], 10, 64)
 
 		if err != nil {
 			bot.Mention(channel, source, "usage: !roulette 500 or !roulette all")
@@ -112,8 +111,6 @@ func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 		bot.Mention(channel, source, "you have 0 points, you can't roulette ResidentSleeper")
 		return
 	}
-
-	fmt.Printf("Rouletting %d points\n", pointsToRoulette)
 
 	if result, _ := bot.RemovePoints(channel, source.GetID(), pointsToRoulette); !result {
 		bot.Mention(channel, source, "you don't have enough points ResidentSleeper")

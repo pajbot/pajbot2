@@ -32,5 +32,38 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 		return
 	}
 
+	if subCommand == "toggle_permission" {
+		if !source.HasChannelPermission(channel, pkg.PermissionAdmin) && !source.HasGlobalPermission(pkg.PermissionAdmin) {
+			bot.Mention(channel, source, "you do not have permission to use this command")
+			return
+		}
+
+		if len(parts) < 4 {
+			bot.Mention(channel, source, "usage: !user USERNAME toggle_permission PERMISSION")
+			return
+		}
+
+		permission := pkg.GetPermissionBit(strings.ToLower(parts[3]))
+		if permission == pkg.PermissionNone {
+			bot.Mention(channel, source, "invalid permission")
+			return
+		}
+
+		userID := bot.GetUserStore().GetID(target)
+
+		oldPermission, err := users.GetUserChannelPermissions(userID, channel.GetID())
+		if err != nil {
+			bot.Mention(channel, source, "error getting permission: "+err.Error())
+			return
+		}
+
+		err = users.SetUserChannelPermissions(bot.GetUserStore().GetID(target), channel.GetID(), oldPermission^permission)
+		if err != nil {
+			bot.Mention(channel, source, "error setting permission: "+err.Error())
+		}
+
+		return
+	}
+
 	bot.Mention(channel, source, "unhandled subcommand in user command: '"+subCommand+"'")
 }

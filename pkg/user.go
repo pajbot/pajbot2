@@ -1,7 +1,8 @@
 package pkg
 
 type User interface {
-	HasPermission(Permission) bool
+	HasGlobalPermission(Permission) bool
+	HasChannelPermission(Channel, Permission) bool
 	GetName() string
 	GetDisplayName() string
 	GetID() string
