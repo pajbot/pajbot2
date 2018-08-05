@@ -304,10 +304,8 @@ func (b *TwitchBot) StartChatterPoller() {
 					}
 
 					b.BulkEdit("pajlada", userIDsSlice, 5)
-					log.Println("Gave points to chatters")
 				}
 
-				log.Println("Getting chatters...")
 				gotwitch.GetChatters("pajlada", onSuccess, onHTTPError, onInternalError)
 			}
 		}

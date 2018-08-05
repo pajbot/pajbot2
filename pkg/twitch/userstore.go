@@ -1,7 +1,6 @@
 package twitch
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -66,7 +65,6 @@ func (s *UserStore) GetIDs(usernames []string) map[string]string {
 			batch = nil
 		}
 
-		fmt.Printf("Sending request for %v\n", batch)
 		apirequest.Twitch.GetUsersByLogin(batch, onSuccess, onHTTPError, onInternalError)
 	}
 
