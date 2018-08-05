@@ -73,7 +73,7 @@ type AddPoints struct {
 }
 
 func (c AddPoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	_, points := bot.AddPoints(channel, source, uint64(rand.Int31n(50)))
+	_, points := bot.AddPoints(channel, source.GetID(), uint64(rand.Int31n(50)))
 	bot.Mention(channel, source, "you now have "+strconv.FormatUint(points, 10)+" points")
 }
 
@@ -81,7 +81,7 @@ type RemovePoints struct {
 }
 
 func (c RemovePoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	_, points := bot.RemovePoints(channel, source, uint64(rand.Int31n(50)))
+	_, points := bot.RemovePoints(channel, source.GetID(), uint64(rand.Int31n(50)))
 	bot.Mention(channel, source, "you now have "+strconv.FormatUint(points, 10)+" points")
 }
 
@@ -115,7 +115,7 @@ func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 
 	fmt.Printf("Rouletting %d points\n", pointsToRoulette)
 
-	if result, _ := bot.RemovePoints(channel, source, pointsToRoulette); !result {
+	if result, _ := bot.RemovePoints(channel, source.GetID(), pointsToRoulette); !result {
 		bot.Mention(channel, source, "you don't have enough points ResidentSleeper")
 		return
 	}
@@ -126,7 +126,7 @@ func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 	} else {
 		// win
 		// TODO: Check for integer overflow?
-		_, newPoints := bot.AddPoints(channel, source, pointsToRoulette*2)
+		_, newPoints := bot.AddPoints(channel, source.GetID(), pointsToRoulette*2)
 		bot.Mention(channel, source, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
 	}
 }

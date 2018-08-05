@@ -468,10 +468,10 @@ func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
 	return 0
 }
 
-func (b *TwitchBot) AddPoints(channel pkg.Channel, user pkg.User, points uint64) (bool, uint64) {
+func (b *TwitchBot) AddPoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
-	bodyPayload = append(bodyPayload, []byte(user.GetID())...)
+	bodyPayload = append(bodyPayload, []byte(userID)...)
 
 	b.pointServer.Send(CommandAdd, bodyPayload)
 
@@ -496,10 +496,11 @@ func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
 	b.pointServer.Send(CommandBulkEdit, bodyPayload)
 }
 
-func (b *TwitchBot) RemovePoints(channel pkg.Channel, user pkg.User, points uint64) (bool, uint64) {
+func (b *TwitchBot) RemovePoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
 	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, 0x00)
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
-	bodyPayload = append(bodyPayload, []byte(user.GetID())...)
+	bodyPayload = append(bodyPayload, []byte(userID)...)
 
 	b.pointServer.Send(CommandRemove, bodyPayload)
 
@@ -511,4 +512,18 @@ func (b *TwitchBot) RemovePoints(channel pkg.Channel, user pkg.User, points uint
 	}
 
 	return true, userPoints
+}
+
+func (b *TwitchBot) ForceRemovePoints(channel pkg.Channel, userID string, points uint64) uint64 {
+	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, 0x01)
+	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
+	bodyPayload = append(bodyPayload, []byte(userID)...)
+
+	b.pointServer.Send(CommandRemove, bodyPayload)
+
+	response := b.pointServer.Read(9)
+	userPoints := binary.BigEndian.Uint64(response[1:])
+
+	return userPoints
 }
