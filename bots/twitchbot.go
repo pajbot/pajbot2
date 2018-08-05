@@ -435,8 +435,8 @@ const (
 	CommandRemove    = 0x05
 )
 
-func (b *TwitchBot) GetPoints(channel pkg.Channel, user pkg.User) uint64 {
-	bodyPayload := []byte(user.GetID())
+func (b *TwitchBot) GetPoints(channel pkg.Channel, userID string) uint64 {
+	bodyPayload := []byte(userID)
 
 	b.pointServer.Send(CommandGetPoints, bodyPayload)
 	response := b.pointServer.Read(8)

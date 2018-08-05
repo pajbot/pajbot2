@@ -64,8 +64,27 @@ type GetPoints struct {
 }
 
 func (c GetPoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
-	points := bot.GetPoints(channel, source)
-	bot.Mention(channel, source, "you have "+strconv.FormatUint(points, 10)+" points")
+	var potentialTarget string
+	targetID := source.GetID()
+
+	if len(parts) >= 2 {
+		potentialTarget = utils.FilterUsername(parts[1])
+		if potentialTarget != "" {
+			potentialTargetID := bot.GetUserStore().GetID(potentialTarget)
+			if potentialTargetID != "" {
+				targetID = potentialTargetID
+			} else {
+				potentialTarget = ""
+			}
+		}
+	}
+
+	points := bot.GetPoints(channel, targetID)
+	if potentialTarget == "" {
+		bot.Mention(channel, source, "you have "+strconv.FormatUint(points, 10)+" points")
+	} else {
+		bot.Mention(channel, source, potentialTarget+" has "+strconv.FormatUint(points, 10)+" points")
+	}
 }
 
 type AddPoints struct {
@@ -96,7 +115,7 @@ func (c Roulette) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 	var pointsToRoulette uint64
 
 	if strings.ToLower(parts[1]) == "all" {
-		pointsToRoulette = bot.GetPoints(channel, source)
+		pointsToRoulette = bot.GetPoints(channel, source.GetID())
 	} else {
 		var err error
 		pointsToRoulette, err = strconv.ParseUint(parts[1], 10, 64)
