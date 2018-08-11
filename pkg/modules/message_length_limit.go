@@ -42,11 +42,11 @@ func (m MessageLengthLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user 
 	messageLength := len(message.GetText())
 	if messageLength > 140 {
 		if messageLength > 420 {
-			action.SetTimeout(600, "Your message is way too long")
+			action.Set(pkg.Timeout{600, "Your message is way too long"})
 			return nil
 		}
 
-		action.SetTimeout(300, "Your message is too long, shorten it")
+		action.Set(pkg.Timeout{300, "Your message is too long, shorten it"})
 		return nil
 	}
 

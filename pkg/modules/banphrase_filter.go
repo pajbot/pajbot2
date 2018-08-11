@@ -111,7 +111,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, us
 
 				if source.GetChannel() == "krakenbul" && !user.IsModerator() {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
-					action.SetTimeout(bp.GetLength(), reason)
+					action.Set(pkg.Timeout{bp.GetLength(), reason})
 				}
 				return nil
 			}

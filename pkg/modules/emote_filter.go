@@ -96,9 +96,9 @@ func (m EmoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 	}
 
 	if timeoutDuration > 0 {
-		action.SetTimeout(timeoutDuration, "Don't overuse "+strings.Join(overusedEmotes, ", "))
+		action.Set(pkg.Timeout{timeoutDuration, "Don't overuse " + strings.Join(overusedEmotes, ", ")})
 	} else if combinedLimits > m.combinedLimits {
-		action.SetTimeout(combinedLimits*120, "Don't overuse big emotes")
+		action.Set(pkg.Timeout{combinedLimits * 120, "Don't overuse big emotes"})
 	}
 
 	return nil

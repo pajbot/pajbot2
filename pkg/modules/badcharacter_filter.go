@@ -34,7 +34,7 @@ func (m BadCharacterFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user p
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {
-				action.SetTimeout(300, "Your message contains a banned character")
+				action.Set(pkg.Timeout{300, "Your message contains a banned character"})
 				return nil
 			}
 		}

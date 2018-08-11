@@ -1,13 +1,13 @@
 package pkg
 
-type Timeout struct {
-	duration int
-	reason   string
+type ActionType interface {
+	Do(Sender, Channel, User) error
+	Priority() int
 }
 
 type Action interface {
 	Do() error
-	SetTimeout(int, string)
+	Set(ActionType)
 }
 
 var _ Action = &TwitchAction{}
@@ -19,20 +19,38 @@ type TwitchAction struct {
 
 	User User
 
-	timeout Timeout
+	action ActionType
+}
+
+type Timeout struct {
+	Duration int
+	Reason   string
+}
+
+func (a Timeout) Do(sender Sender, channel Channel, user User) error {
+	sender.Timeout(channel, user, a.Duration, a.Reason)
+
+	return nil
+}
+
+func (a Timeout) Priority() int {
+	return 100 + a.Duration
 }
 
 func (a TwitchAction) Do() error {
-	if a.timeout.duration > 0 {
-		a.Sender.Timeout(a.Channel, a.User, a.timeout.duration, a.timeout.reason)
+	if a.action != nil {
+		return a.action.Do(a.Sender, a.Channel, a.User)
 	}
 
 	return nil
 }
 
-func (a *TwitchAction) SetTimeout(duration int, reason string) {
-	if duration > a.timeout.duration {
-		a.timeout.duration = duration
-		a.timeout.reason = reason
+func (a *TwitchAction) Set(action ActionType) {
+	if a.action == nil {
+		a.action = action
+	} else {
+		if a.action.Priority() > action.Priority() {
+			a.action = action
+		}
 	}
 }
