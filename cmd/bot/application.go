@@ -480,6 +480,7 @@ func (a *Application) LoadBots() error {
 		bot.AddModule(modules.NewLatinFilter())
 		bot.AddModule(modules.NewPajbot1BanphraseFilter())
 		bot.AddModule(modules.NewEmoteFilter(bot))
+		bot.AddModule(modules.NewBannedNames())
 
 		bot.AddModule(modules.NewMessageLengthLimit())
 
