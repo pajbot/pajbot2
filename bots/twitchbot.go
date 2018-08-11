@@ -280,7 +280,7 @@ func onInternalError(err error) {
 }
 
 func (b *TwitchBot) StartChatterPoller() {
-	b.ticker = time.NewTicker(15 * time.Second)
+	b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol
 
 	go func() {
@@ -303,7 +303,7 @@ func (b *TwitchBot) StartChatterPoller() {
 						i++
 					}
 
-					b.BulkEdit("pajlada", userIDsSlice, 5)
+					b.BulkEdit("pajlada", userIDsSlice, 25)
 				}
 
 				gotwitch.GetChatters("pajlada", onSuccess, onHTTPError, onInternalError)
