@@ -175,9 +175,14 @@ func (b *TwitchBot) Whisper(user pkg.User, message string) {
 }
 
 func (b *TwitchBot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
-	// Empty string in UserType means a normal user
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
+	}
+}
+
+func (b *TwitchBot) Ban(channel pkg.Channel, user pkg.User, reason string) {
+	if !user.IsModerator() {
+		b.Say(channel, fmt.Sprintf(".ban %s %s", user.GetName(), reason))
 	}
 }
 

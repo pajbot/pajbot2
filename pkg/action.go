@@ -37,6 +37,20 @@ func (a Timeout) Priority() int {
 	return 100 + a.Duration
 }
 
+type Ban struct {
+	Reason string
+}
+
+func (a Ban) Do(sender Sender, channel Channel, user User) error {
+	sender.Ban(channel, user, a.Reason)
+
+	return nil
+}
+
+func (a Ban) Priority() int {
+	return 0
+}
+
 func (a TwitchAction) Do() error {
 	if a.action != nil {
 		return a.action.Do(a.Sender, a.Channel, a.User)

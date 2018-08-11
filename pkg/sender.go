@@ -4,6 +4,8 @@ type Sender interface {
 	Say(Channel, string)
 	Mention(Channel, User, string)
 	Timeout(Channel, User, int, string)
+	Ban(Channel, User, string)
+
 	GetPoints(Channel, string) uint64
 
 	// give or remove points from user in channel
