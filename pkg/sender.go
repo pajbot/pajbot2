@@ -13,5 +13,7 @@ type Sender interface {
 	RemovePoints(Channel, string, uint64) (bool, uint64)
 	ForceRemovePoints(Channel, string, uint64) uint64
 
+	PointRank(Channel, string) uint64
+
 	GetUserStore() UserStore
 }

@@ -433,6 +433,7 @@ const (
 	CommandBulkEdit  = 0x03
 	CommandAdd       = 0x04
 	CommandRemove    = 0x05
+	CommandRank      = 0x06
 )
 
 func (b *TwitchBot) GetPoints(channel pkg.Channel, userID string) uint64 {
@@ -506,6 +507,18 @@ func (b *TwitchBot) ForceRemovePoints(channel pkg.Channel, userID string, points
 	userPoints := binary.BigEndian.Uint64(response[1:])
 
 	return userPoints
+}
+
+func (b *TwitchBot) PointRank(channel pkg.Channel, userID string) uint64 {
+	var bodyPayload []byte
+	bodyPayload = append(bodyPayload, []byte(userID)...)
+
+	b.pointServer.Send(CommandRank, bodyPayload)
+
+	response := b.pointServer.Read(8)
+	rank := binary.BigEndian.Uint64(response)
+
+	return rank
 }
 
 func (b *TwitchBot) AddModule(module pkg.Module) {

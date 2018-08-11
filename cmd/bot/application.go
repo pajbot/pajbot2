@@ -498,6 +498,7 @@ func (a *Application) LoadBots() error {
 		// customCommands.RegisterCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
 		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
 		customCommands.RegisterCommand([]string{"!user"}, &commands.User{})
+		customCommands.RegisterCommand([]string{"!pb2rank"}, &commands.Rank{})
 
 		bot.AddModule(customCommands)
 
