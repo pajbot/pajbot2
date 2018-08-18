@@ -3,7 +3,7 @@ package modules
 import (
 	"database/sql"
 
-	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )

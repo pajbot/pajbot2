@@ -1,3 +1,0 @@
-package bot
-
-// Test actions

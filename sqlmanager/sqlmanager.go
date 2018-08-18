@@ -5,7 +5,7 @@ import (
 	"log"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
-	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/pkg/common/config"
 )
 
 // SQLManager keeps a pool of sql connections or some shit like that

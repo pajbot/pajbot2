@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"strings"
 	"unicode"
 
@@ -115,4 +116,51 @@ func FilterUsernames(potentialUsernames []string) (usernames []string) {
 	}
 
 	return
+}
+
+const noPing = string("\u05C4")
+
+func UnpingifyUsername(username string) string {
+	return string(username[0]) + noPing + username[1:]
+}
+
+// ReadArg reads a string until \n and trims all whitespace
+func ReadArg(reader *bufio.Reader) string {
+	untrimmed, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(untrimmed)
+}
+
+// GetTriggersKC returns a list of strings that have been parsed in accordance
+// to the command rules, but keeps the case
+func GetTriggersKC(message string) []string {
+	return strings.Split(strings.Replace(message, "!", "", 1), " ")
+}
+
+// RemoveNewlines replaces all \r and \n with spaces
+func RemoveNewlines(s string) string {
+	s = strings.Replace(s, "\r", " ", -1)
+	s = strings.Replace(s, "\n", " ", -1)
+	return s
+}
+
+// GetTriggers returns a list of strings that have been parsed in accordance
+// to the command rules
+func GetTriggers(message string) []string {
+	return strings.Split(strings.Replace(strings.ToLower(message), "!", "", 1), " ")
+}
+
+// GetTriggersN returns a list of strings that have been parsed in accordance
+// to the command rules. Offset by N
+func GetTriggersN(message string, n int) []string {
+	triggers := GetTriggers(message)
+	if len(triggers) >= n {
+		return triggers[n:]
+	}
+	return []string{}
+}
+
+// NewStringPtr returns the pointer to the given string
+func NewStringPtr(s string) *string {
+	return &s
 }

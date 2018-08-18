@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/bot"
+	"github.com/pajlada/pajbot2/pkg"
 )
 
 func apiHook(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +175,7 @@ func apiCallbacksStreams(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handlePush(b *bot.Bot, body []byte, p *customPayload) {
+func handlePush(b pkg.Sender, body []byte, p *customPayload) {
 	var pushData PushHookResponse
 
 	err := json.Unmarshal(body, &pushData)
@@ -195,12 +195,13 @@ func handlePush(b *bot.Bot, body []byte, p *customPayload) {
 	p.Add("success", true)
 }
 
-func writeCommit(b *bot.Bot, commit Commit, repository RepositoryData) {
-	msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
-	b.SaySafef(msg)
+func writeCommit(b pkg.Sender, commit Commit, repository RepositoryData) {
+	// msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
+	// XXX: Missing channel
+	// b.Say(msg)
 }
 
-func handleStatus(b *bot.Bot, body []byte, p *customPayload) {
+func handleStatus(b pkg.Sender, body []byte, p *customPayload) {
 	var data StatusHookResponse
 
 	err := json.Unmarshal(body, &data)
@@ -211,16 +212,19 @@ func handleStatus(b *bot.Bot, body []byte, p *customPayload) {
 
 	switch data.State {
 	case "pending":
-		b.SaySafef("Build for %s just started", data.Repository.Name)
+		// TODO: Re-implement
+		// b.SaySafef("Build for %s just started", data.Repository.Name)
 
 	case "success":
-		b.SaySafef("Build for %s succeeded! FeelsGoodMan", data.Repository.Name)
+		// TODO: Re-implement
+		// b.SaySafef("Build for %s succeeded! FeelsGoodMan", data.Repository.Name)
 
 	case "error":
 		fallthrough
 
 	case "failure":
-		b.SaySafef("Build for %s failed: %s FeelsBadMan", data.Repository.Name, data.TargetURL)
+		// TODO: Re-implement
+		// b.SaySafef("Build for %s failed: %s FeelsBadMan", data.Repository.Name, data.TargetURL)
 	}
 
 	p.Add("success", true)

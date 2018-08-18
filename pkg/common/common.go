@@ -43,18 +43,3 @@ const (
 	MsgTimeoutSuccess
 	MsgReconnect
 )
-
-/*
-Msg contains all the information about an IRC message.
-This included already-parsed ircv3-tags and the User object
-*/
-type Msg struct {
-	User    User
-	Text    string
-	Channel string
-	Type    MsgType // PRIVMSG , WHISPER, (SUB?)
-	Me      bool
-	Emotes  []Emote
-	Tags    map[string]string
-	Args    []string // needed for bot.Format for now
-}

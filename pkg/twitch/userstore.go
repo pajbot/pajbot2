@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/dankeroni/gotwitch"
-	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/apirequest"
 )
 
 var _ pkg.UserStore = &UserStore{}

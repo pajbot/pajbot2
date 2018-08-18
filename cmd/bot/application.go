@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -10,8 +9,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"net"
 
 	"encoding/json"
 
@@ -26,93 +23,19 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/gempir/go-twitch-irc"
-	"github.com/goware/urlx"
 	"github.com/pajlada/go-twitch-pubsub"
-	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bots"
-	"github.com/pajlada/pajbot2/common/config"
 	"github.com/pajlada/pajbot2/emotes"
-	pb "github.com/pajlada/pajbot2/grpc"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/commands"
+	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-	"mvdan.cc/xurls"
 )
-
-func maxpenis(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
-type pajbotServer struct{}
-
-func (s *pajbotServer) CheckMessage(ctx context.Context, in *pb.MessageRequest) (*pb.MessageAction, error) {
-	action := &pb.MessageAction{}
-
-	// url checker
-	matchedURLs := xurls.Relaxed().FindAllString(in.GetMessage(), -1)
-	for _, matchedURL := range matchedURLs {
-
-		parsedURL, err := urlx.Parse(matchedURL)
-		if err != nil {
-			return nil, err
-		}
-
-		badURL := true
-
-		hostname := "." + parsedURL.Hostname()
-
-		for _, goodURL := range validURLs {
-			if strings.HasSuffix(hostname, goodURL) {
-				badURL = false
-				break
-			}
-		}
-
-		if badURL {
-			/*
-				msg := fmt.Sprintf("%s, that's a bad url 😡 FeelsWeirdMan", in.Source.GetDisplayName())
-				sayAction := &pb.Action_SayAction{
-					SayAction: &pb.SayAction{
-						Message: msg,
-					},
-				}
-				action.Actions = append(action.Actions, &pb.Action{Action: sayAction})
-
-				timeoutAction := &pb.Action_TimeoutAction{
-					TimeoutAction: &pb.TimeoutAction{
-						Target:   in.Source.LoginName,
-						Duration: 5,
-						Reason:   "Bad link 😡",
-					},
-				}
-				action.Actions = append(action.Actions, &pb.Action{Action: timeoutAction})
-			*/
-			break
-		}
-	}
-
-	if strings.Contains(in.GetMessage(), "LOOOOOL 4HEad") {
-		msg := fmt.Sprintf("%s, JUST GET A HOUSE 4House", in.Source.GetDisplayName())
-		sayAction := &pb.Action_SayAction{
-			SayAction: &pb.SayAction{
-				Message: msg,
-			},
-		}
-		action.Actions = append(action.Actions, &pb.Action{Action: sayAction})
-	}
-
-	return action, nil
-}
 
 type channelContext struct {
 	// TODO: replace []string with some 5 message long fifo queue
@@ -134,7 +57,6 @@ type Application struct {
 	Redis        *redismanager.RedisManager
 	SQL          *sqlmanager.SQLManager
 	TwitchPubSub *twitch_pubsub.Client
-	GRPCClient   pb.ClientClient
 
 	// key = user ID
 	UserContext map[string]*channelContext
@@ -560,24 +482,6 @@ func (a *Application) StartBots() error {
 	return nil
 }
 
-func (a *Application) StartGRPCService() error {
-	// Start GRPC Server on :50052
-	lis, err := net.Listen("tcp", a.config.GRPCService.Host)
-	if err != nil {
-		return err
-	}
-	s := grpc.NewServer()
-	pb.RegisterMessageCheckerServer(s, &pajbotServer{})
-	reflection.Register(s)
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Failed to serve %v", err)
-		}
-	}()
-
-	return nil
-}
-
 func (a *Application) StartPubSubClient() error {
 	cfg := &a.config.PubSub
 	a.TwitchPubSub = twitch_pubsub.NewClient()
@@ -660,30 +564,8 @@ func (a *Application) StartPubSubClient() error {
 			}
 		}
 
-		sayAction := &pb.Action_SayAction{
-			SayAction: &pb.SayAction{
-				Message: content,
-			},
-		}
-		messageAction := &pb.MessageAction{}
-		messageAction.Actions = append(messageAction.Actions, &pb.Action{Action: sayAction})
-
-		// a.GRPCClient.PerformActions(context.Background(), messageAction)
 		return nil
 	})
-
-	return nil
-}
-
-func (a *Application) StartGRPCClient() error {
-	// Connect to GRPC Client on :50051
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
-	if err != nil {
-		return err
-	}
-
-	// defer conn.Close()
-	a.GRPCClient = pb.NewClientClient(conn)
 
 	return nil
 }

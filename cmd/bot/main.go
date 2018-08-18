@@ -8,9 +8,9 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	"github.com/pajlada/pajbot2/common"
-	"github.com/pajlada/pajbot2/common/config"
-	"github.com/pajlada/pajbot2/helper"
+	"github.com/pajlada/pajbot2/pkg/common"
+	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
@@ -69,9 +69,6 @@ func main() {
 
 	case "newbot":
 		newbotCmd()
-
-	case "linkchannel":
-		linkchannelCmd()
 
 	case "help":
 		helpCmd()
@@ -151,16 +148,6 @@ func runCmd() {
 		log.Fatal("An error occured while starting bots: ", err)
 	}
 
-	err = application.StartGRPCService()
-	if err != nil {
-		log.Fatal("An error occured while starting GRPC service", err)
-	}
-
-	err = application.StartGRPCClient()
-	if err != nil {
-		log.Fatal("An error occured while starting GRPC client", err)
-	}
-
 	err = application.StartPubSubClient()
 	if err != nil {
 		log.Fatal("An error occured while starting pubsub client", err)
@@ -205,11 +192,11 @@ func newbotCmd() {
 	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
 
 	fmt.Print("Bot name: ")
-	name = helper.ReadArg(reader)
+	name = utils.ReadArg(reader)
 	fmt.Print("Bot access token: ")
-	accessToken = helper.ReadArg(reader)
+	accessToken = utils.ReadArg(reader)
 	fmt.Print("Bot refresh token: ")
-	refreshToken = helper.ReadArg(reader)
+	refreshToken = utils.ReadArg(reader)
 
 	fmt.Println("Creating a new bot with the given credentials")
 
@@ -217,44 +204,4 @@ func newbotCmd() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-// Link a pb_channel to a pb_bot
-func linkchannelCmd() {
-	config, err := config.LoadConfig(*configPath)
-	if err != nil {
-		log.Fatal("An error occured while loading the config file:", err)
-	}
-
-	sql := sqlmanager.Init(config.SQL)
-	reader := bufio.NewReader(os.Stdin)
-
-	var name string
-	var channelName string
-
-	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
-
-	fmt.Print("Bot name: ")
-	name = helper.ReadArg(reader)
-
-	b, err := common.GetDBUser(sql.Session, name, "bot")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	fmt.Print("Channel name: ")
-	channelName = helper.ReadArg(reader)
-
-	c, err := common.GetChannel(sql.Session, channelName)
-	if err != nil {
-		fmt.Println("No channel with the name " + channelName)
-		return
-	}
-
-	err = c.SQLSetBotID(sql, b.ID)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Linked channel %s to bot %s\n", channelName, name)
 }

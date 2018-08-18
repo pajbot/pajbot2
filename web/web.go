@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/bots"
-	"github.com/pajlada/pajbot2/common/config"
+	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
@@ -84,11 +84,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 
 // Run xD
 func (b *Boss) Run() {
-	// start the hub
-	go Hub.run()
-
 	r := mux.NewRouter()
-	r.HandleFunc("/ws/{type}", b.wsHandler)
 	r.HandleFunc("/", b.rootHandler)
 	r.HandleFunc("/dashboard", b.dashboardHandler)
 	// i would like to use a subdomain for this but it might be annoying for you pajaHop
@@ -117,41 +113,4 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
-}
-
-func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("wsHandler...")
-	vars := mux.Vars(r)
-	messageTypeString := vars["type"]
-	messageType := MessageTypeNone
-	switch messageTypeString {
-	case "clr":
-		messageType = MessageTypeCLR
-	case "dashboard":
-		messageType = MessageTypeDashboard
-	}
-
-	if messageType == MessageTypeNone {
-		http.Error(w, "Invalid url. Valid urls: /ws/clr and /ws/dashboard", http.StatusBadRequest)
-		return
-	}
-
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
-		log.Printf("Upgrader error: %v", err)
-		return
-	}
-
-	log.Println("Got message!")
-
-	// Create a custom connection
-	conn := &WSConn{
-		send:        make(chan []byte, 256),
-		ws:          ws,
-		messageType: messageType,
-	}
-	Hub.register <- conn
-	go conn.writePump()
-	conn.readPump()
 }

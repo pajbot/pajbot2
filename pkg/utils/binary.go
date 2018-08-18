@@ -48,3 +48,16 @@ func Uint64ToBytes(value uint64) (bytes []byte) {
 
 	return bytes
 }
+
+// SplitUint64 spits a uint64 value into two uint32 values
+func SplitUint64(val uint64) (uint32, uint32) {
+	return uint32(val >> 32), uint32(val)
+}
+
+// CombineUint32 returns the packed uint64 value of two uint32's
+func CombineUint32(val1 uint32, val2 uint32) uint64 {
+	r := uint64(val1)
+	r = r << 32
+	r += uint64(val2)
+	return r
+}

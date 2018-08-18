@@ -1,15 +1,13 @@
 package common
 
 import (
-	"bytes"
-	"fmt"
-
 	"github.com/urakozz/go-emoji"
 )
 
 var parser = emoji.NewEmojiParser()
 
 // ParseEmojis prases emojis from the message Text
+/*
 func ParseEmojis(msg *Msg) {
 	emoteCount := make(map[string]*Emote)
 	_ = parser.ReplaceAllStringFunc(msg.Text, func(s string) string {
@@ -33,3 +31,4 @@ func ParseEmojis(msg *Msg) {
 		msg.Emotes = append(msg.Emotes, *emote)
 	}
 }
+*/

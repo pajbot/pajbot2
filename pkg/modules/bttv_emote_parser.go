@@ -4,8 +4,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/common"
 )
 
 type BTTVEmoteParser struct {

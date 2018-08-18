@@ -11,9 +11,9 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/apirequest"
 	"github.com/pajlada/pajbot2/bots"
-	"github.com/pajlada/pajbot2/common"
+	"github.com/pajlada/pajbot2/pkg/apirequest"
+	"github.com/pajlada/pajbot2/pkg/common"
 	"golang.org/x/oauth2"
 )
 
@@ -97,7 +97,7 @@ func exec(channel, endpoint, rest string) interface{} {
 		if !isValidUserName(rest) {
 			return newError(ErrInvalidUserName)
 		}
-		p = getUserPayload(channel, rest)
+		p = newError("unimplemented")
 	default:
 		p = newError("invalid endpoint")
 	}

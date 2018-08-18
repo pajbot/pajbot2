@@ -11,9 +11,9 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc"
-	"github.com/pajlada/pajbot2/common"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
+	"github.com/pajlada/pajbot2/pkg/common"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
