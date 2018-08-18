@@ -1,4 +1,4 @@
-package filter
+package datastructures
 
 import (
 	"errors"

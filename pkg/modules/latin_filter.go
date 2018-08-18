@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/pajlada/pajbot2/filter"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/modules/datastructures"
 	"github.com/pkg/errors"
 )
 
@@ -26,7 +26,7 @@ type UnicodeRange struct {
 type LatinFilter struct {
 	server *server
 
-	transparentList  *filter.TransparentList
+	transparentList  *datastructures.TransparentList
 	unicodeWhitelist []UnicodeRange
 }
 
@@ -34,7 +34,7 @@ func NewLatinFilter() *LatinFilter {
 	return &LatinFilter{
 		server: &_server,
 
-		transparentList: filter.NewTransparentList(),
+		transparentList: datastructures.NewTransparentList(),
 	}
 }
 
