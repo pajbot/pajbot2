@@ -126,8 +126,10 @@ func (m *Nuke) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase
 		timeoutDuration = 24 * time.Hour
 	}
 
+	lowercasePhrase := strings.ToLower(phrase)
+
 	matcher := func(msg *nukeMessage) bool {
-		return strings.Contains(msg.message.GetText(), phrase)
+		return strings.Contains(strings.ToLower(msg.message.GetText()), lowercasePhrase)
 	}
 
 	reason := "Nuked '" + phrase + "'"
