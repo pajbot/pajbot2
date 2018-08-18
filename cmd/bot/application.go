@@ -505,6 +505,9 @@ func (a *Application) LoadBots() error {
 
 		bot.AddModule(modules.NewGiveaway(bot))
 
+		// Moderation
+		bot.AddModule(modules.NewNuke())
+
 		bot.SetHandler(checkModules(handleCommands(finalHandler)))
 
 		a.TwitchBots[name] = bot
