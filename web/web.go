@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/pajlada/pajbot2/bots"
+	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 )
 
@@ -20,7 +20,7 @@ import (
 type Config struct {
 	Redis *redis.Pool
 	SQL   *sql.DB
-	Bots  map[string]*bots.TwitchBot
+	Bots  map[string]pkg.Sender
 }
 
 // Boss xD
@@ -30,7 +30,7 @@ type Boss struct {
 }
 
 var (
-	twitchBots  map[string]*bots.TwitchBot
+	twitchBots  map[string]pkg.Sender
 	redisClient *redis.Pool
 	sqlClient   *sql.DB
 	hooks       map[string]struct {

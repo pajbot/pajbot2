@@ -11,7 +11,6 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/common"
 	"golang.org/x/oauth2"
@@ -106,23 +105,26 @@ func exec(channel, endpoint, rest string) interface{} {
 
 // APIHandler xD
 func APIHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: check user auth and permissions
-	// TODO: route http methods
-	v := mux.Vars(r)
-	channel := v["channel"]
-	var bot *bots.TwitchBot
-	var ok bool
-	var p interface{}
-	if bot, ok = twitchBots[channel]; !ok {
-		p = apiError{
-			Err: "channel not found",
+	return
+	/*
+		// TODO: check user auth and permissions
+		// TODO: route http methods
+		v := mux.Vars(r)
+		channel := v["channel"]
+		var bot *bots.TwitchBot
+		var ok bool
+		var p interface{}
+		if bot, ok = twitchBots[channel]; !ok {
+			p = apiError{
+				Err: "channel not found",
+			}
+		} else {
+			ep, _rest := getEndPoint(v["rest"])
+			p = exec(channel, ep, _rest)
 		}
-	} else {
-		ep, _rest := getEndPoint(v["rest"])
-		p = exec(channel, ep, _rest)
-	}
-	log.Printf("Bot: %#v", bot)
-	write(w, p)
+		log.Printf("Bot: %#v", bot)
+		write(w, p)
+	*/
 }
 
 func apiRootHandler(w http.ResponseWriter, r *http.Request) {

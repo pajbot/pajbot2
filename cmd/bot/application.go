@@ -27,13 +27,13 @@ import (
 	"github.com/dankeroni/gotwitch"
 	"github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/go-twitch-pubsub"
-	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/emotes"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/commands"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
+	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/web"
 )
@@ -54,7 +54,7 @@ func NewChannelContext() *channelContext {
 type Application struct {
 	config *config.Config
 
-	TwitchBots   map[string]*bots.TwitchBot
+	TwitchBots   map[string]*pb2twitch.Bot
 	Redis        *redis.Pool
 	SQL          *sql.DB
 	TwitchPubSub *twitch_pubsub.Client
@@ -85,7 +85,7 @@ func (a *Application) GetUserMessages(channelID, userID string) ([]string, error
 func NewApplication() *Application {
 	a := Application{}
 
-	a.TwitchBots = make(map[string]*bots.TwitchBot)
+	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
 	a.UserContext = make(map[string]*channelContext)
 
@@ -229,7 +229,6 @@ func (a *Application) StartSQLClient() error {
 // StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
 	webCfg := &web.Config{
-		Bots:  a.TwitchBots,
 		Redis: a.Redis,
 		SQL:   a.SQL,
 	}
@@ -240,98 +239,13 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
-func handleCommands(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
-		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" || user.GetName() == "fourtf" {
-			if strings.HasPrefix(message.Text, "!xd") {
-				bot.Reply(channel, user, "XDDDDDDDDDD")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!myuserid") {
-				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!whisperme") {
-				log.Printf("Send whisper!")
-				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
-				bot.Whisper(user, "hehe")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!modme") {
-				bot.Say(channel, ".mod "+user.GetName())
-				bot.Say(channel, "Modded")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!unmodme") {
-				bot.Say(channel, ".unmod "+user.GetName())
-				bot.Say(channel, "Unmodded")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!pb2quit") {
-				bot.Reply(channel, user, "Quitting...")
-				time.AfterFunc(time.Millisecond*500, func() {
-					bot.Quit("Quit because pajlada said so")
-				})
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!emoteonly") {
-				bot.Say(channel, ".emoteonly")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!emoteonlyoff") || message.Text == "TriHard TriHard TriHard forsenE pajaCool TriHard" {
-				bot.Say(channel, ".emoteonlyoff")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!subon") {
-				if bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is already enabled")
-					return
-				}
-
-				bot.Flags.PermaSubMode = true
-
-				bot.Say(channel, ".subscribers")
-				bot.Say(channel, "Permanent subscribers mode has been enabled")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!suboff") {
-				if !bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is not enabled")
-					return
-				}
-
-				bot.Flags.PermaSubMode = false
-
-				bot.Say(channel, ".subscribersoff")
-				bot.Say(channel, "Permanent subscribers mode has been disabled")
-				return
-			}
-		}
-
-		next.HandleMessage(bot, channel, user, message, action)
-	})
-}
-
-func finalMiddleware(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
-	// log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
-}
-
 type UnicodeRange struct {
 	Start rune
 	End   rune
 }
 
-func checkModules(next bots.Handler) bots.Handler {
-	return bots.HandlerFunc(func(bot *bots.TwitchBot, channel pkg.Channel, user pkg.User, message *bots.TwitchMessage, action pkg.Action) {
+func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
+	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
 		modulesStart := time.Now()
 		defer func() {
 			modulesEnd := time.Now()
@@ -409,9 +323,9 @@ func (a *Application) LoadBots() error {
 			return err
 		}
 
-		finalHandler := bots.HandlerFunc(finalMiddleware)
+		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := bots.NewTwitchBot(twitch.NewClient(name, "oauth:"+twitchAccessToken))
+		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken))
 		bot.Name = name
 		bot.QuitChannel = a.Quit
 
@@ -454,7 +368,7 @@ func (a *Application) LoadBots() error {
 		// Moderation
 		bot.AddModule(modules.NewNuke())
 
-		bot.SetHandler(checkModules(handleCommands(finalHandler)))
+		bot.SetHandler(checkModules(pb2twitch.HandleCommands(finalHandler)))
 
 		a.TwitchBots[name] = bot
 	}
@@ -465,7 +379,7 @@ func (a *Application) LoadBots() error {
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
 	for _, bot := range a.TwitchBots {
-		go func(bot *bots.TwitchBot) {
+		go func(bot *pb2twitch.Bot) {
 			if bot.Name != "snusbot" {
 				// continue
 			}

@@ -1,7 +1,6 @@
 package twitch
 
 import (
-	"log"
 	"strings"
 
 	"github.com/dankeroni/gotwitch"
@@ -19,14 +18,6 @@ func NewUserStore() *UserStore {
 	return &UserStore{
 		userIDMap: make(map[string]string),
 	}
-}
-
-func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	log.Println("HTTPERROR: ", errorMessage)
-}
-
-func onInternalError(err error) {
-	log.Printf("internal error: %s", err)
 }
 
 func min(a, b int) int {

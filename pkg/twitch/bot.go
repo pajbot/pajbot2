@@ -1,4 +1,4 @@
-package bots
+package twitch
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/dankeroni/gotwitch"
@@ -14,14 +15,13 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/common"
-	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 type ModeState int
 
-var _ pkg.Sender = &TwitchBot{}
+var _ pkg.Sender = &Bot{}
 
 const (
 	ModeUnset = iota
@@ -33,8 +33,8 @@ type botFlags struct {
 	PermaSubMode bool
 }
 
-// TwitchBot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
-type TwitchBot struct {
+// Bot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
+type Bot struct {
 	*twitch.Client
 
 	Name    string
@@ -51,19 +51,19 @@ type TwitchBot struct {
 
 	ticker *time.Ticker
 
-	userStore *pb2twitch.UserStore
+	userStore *UserStore
 }
 
-func NewTwitchBot(client *twitch.Client) *TwitchBot {
+func NewBot(client *twitch.Client) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
-	return &TwitchBot{
+	return &Bot{
 		Client:    client,
-		userStore: pb2twitch.NewUserStore(),
+		userStore: NewUserStore(),
 	}
 }
 
-func (b *TwitchBot) GetUserStore() pkg.UserStore {
+func (b *Bot) GetUserStore() pkg.UserStore {
 	return b.userStore
 }
 
@@ -151,7 +151,7 @@ func (m *TwitchMessage) AddBTTVEmote(emote pkg.Emote) {
 // Reply will reply to the message in the same way it received the message
 // If the message was received in a twitch channel, reply in that twitch channel.
 // IF the message was received in a twitch whisper, reply using twitch whispers.
-func (b *TwitchBot) Reply(channel pkg.Channel, user pkg.User, message string) {
+func (b *Bot) Reply(channel pkg.Channel, user pkg.User, message string) {
 	if channel == nil {
 		b.Whisper(user, message)
 	} else {
@@ -159,36 +159,36 @@ func (b *TwitchBot) Reply(channel pkg.Channel, user pkg.User, message string) {
 	}
 }
 
-func (b *TwitchBot) Say(channel pkg.Channel, message string) {
+func (b *Bot) Say(channel pkg.Channel, message string) {
 	b.Client.Say(channel.GetChannel(), message)
 }
 
-func (b *TwitchBot) Mention(channel pkg.Channel, user pkg.User, message string) {
+func (b *Bot) Mention(channel pkg.Channel, user pkg.User, message string) {
 	b.Client.Say(channel.GetChannel(), "@"+user.GetName()+", "+message)
 }
 
-func (b *TwitchBot) Whisper(user pkg.User, message string) {
+func (b *Bot) Whisper(user pkg.User, message string) {
 	b.Client.Whisper(user.GetName(), message)
 }
 
-func (b *TwitchBot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
+func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
 	}
 }
 
-func (b *TwitchBot) Ban(channel pkg.Channel, user pkg.User, reason string) {
+func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".ban %s %s", user.GetName(), reason))
 	}
 }
 
 // SetHandler sets the handler to message at the bottom of the list
-func (b *TwitchBot) SetHandler(handler Handler) {
+func (b *Bot) SetHandler(handler Handler) {
 	b.handler = handler
 }
 
-func (b *TwitchBot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
+func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	message := NewTwitchMessage(rawMessage)
 
 	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
@@ -205,7 +205,7 @@ func (b *TwitchBot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	}
 }
 
-func (b *TwitchBot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
 	message := NewTwitchMessage(rawMessage)
 
 	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
@@ -238,7 +238,7 @@ func (b *TwitchBot) HandleMessage(channelName string, user twitch.User, rawMessa
 	}
 }
 
-func (b *TwitchBot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
 	subMode := ModeUnset
 
 	channel := &channels.TwitchChannel{
@@ -270,7 +270,7 @@ func (b *TwitchBot) HandleRoomstateMessage(channelName string, user twitch.User,
 }
 
 // Quit quits the entire application
-func (b *TwitchBot) Quit(message string) {
+func (b *Bot) Quit(message string) {
 	b.QuitChannel <- message
 }
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
@@ -281,7 +281,7 @@ func onInternalError(err error) {
 	log.Printf("internal error: %s", err)
 }
 
-func (b *TwitchBot) StartChatterPoller() {
+func (b *Bot) StartChatterPoller() {
 	b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol
 
@@ -413,7 +413,7 @@ func (p *PointServer) connect() {
 
 }
 
-func (b *TwitchBot) ConnectToPointServer() (err error) {
+func (b *Bot) ConnectToPointServer() (err error) {
 	// TODO: read from config file
 	b.pointServer, err = newPointServer("localhost:54321")
 	if err != nil {
@@ -437,7 +437,7 @@ const (
 	CommandRank      = 0x06
 )
 
-func (b *TwitchBot) GetPoints(channel pkg.Channel, userID string) uint64 {
+func (b *Bot) GetPoints(channel pkg.Channel, userID string) uint64 {
 	bodyPayload := []byte(userID)
 
 	b.pointServer.Send(CommandGetPoints, bodyPayload)
@@ -450,7 +450,7 @@ func (b *TwitchBot) GetPoints(channel pkg.Channel, userID string) uint64 {
 	return 0
 }
 
-func (b *TwitchBot) AddPoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
+func (b *Bot) AddPoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
 	bodyPayload = append(bodyPayload, []byte(userID)...)
@@ -467,7 +467,7 @@ func (b *TwitchBot) AddPoints(channel pkg.Channel, userID string, points uint64)
 	return true, userPoints
 }
 
-func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
+func (b *Bot) BulkEdit(channel string, userIDs []string, points int32) {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, utils.Int32ToBytes(points)...)
 	for _, userID := range userIDs {
@@ -478,7 +478,7 @@ func (b *TwitchBot) BulkEdit(channel string, userIDs []string, points int32) {
 	b.pointServer.Send(CommandBulkEdit, bodyPayload)
 }
 
-func (b *TwitchBot) RemovePoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
+func (b *Bot) RemovePoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, 0x00)
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
@@ -496,7 +496,7 @@ func (b *TwitchBot) RemovePoints(channel pkg.Channel, userID string, points uint
 	return true, userPoints
 }
 
-func (b *TwitchBot) ForceRemovePoints(channel pkg.Channel, userID string, points uint64) uint64 {
+func (b *Bot) ForceRemovePoints(channel pkg.Channel, userID string, points uint64) uint64 {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, 0x01)
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
@@ -510,7 +510,7 @@ func (b *TwitchBot) ForceRemovePoints(channel pkg.Channel, userID string, points
 	return userPoints
 }
 
-func (b *TwitchBot) PointRank(channel pkg.Channel, userID string) uint64 {
+func (b *Bot) PointRank(channel pkg.Channel, userID string) uint64 {
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, []byte(userID)...)
 
@@ -522,7 +522,7 @@ func (b *TwitchBot) PointRank(channel pkg.Channel, userID string) uint64 {
 	return rank
 }
 
-func (b *TwitchBot) AddModule(module pkg.Module) {
+func (b *Bot) AddModule(module pkg.Module) {
 	if module == nil {
 		return
 	}
@@ -533,4 +533,90 @@ func (b *TwitchBot) AddModule(module pkg.Module) {
 	}
 
 	b.Modules = append(b.Modules, module)
+}
+
+// TODO: Code under here should be generalized, or moved into their own module
+func HandleCommands(next Handler) Handler {
+	return HandlerFunc(func(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
+		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" || user.GetName() == "fourtf" {
+			if strings.HasPrefix(message.Text, "!xd") {
+				bot.Reply(channel, user, "XDDDDDDDDDD")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!myuserid") {
+				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!whisperme") {
+				log.Printf("Send whisper!")
+				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
+				bot.Whisper(user, "hehe")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!modme") {
+				bot.Say(channel, ".mod "+user.GetName())
+				bot.Say(channel, "Modded")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!unmodme") {
+				bot.Say(channel, ".unmod "+user.GetName())
+				bot.Say(channel, "Unmodded")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!pb2quit") {
+				bot.Reply(channel, user, "Quitting...")
+				time.AfterFunc(time.Millisecond*500, func() {
+					bot.Quit("Quit because pajlada said so")
+				})
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!emoteonly") {
+				bot.Say(channel, ".emoteonly")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!emoteonlyoff") || message.Text == "TriHard TriHard TriHard forsenE pajaCool TriHard" {
+				bot.Say(channel, ".emoteonlyoff")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!subon") {
+				if bot.Flags.PermaSubMode {
+					bot.Say(channel, "Permanent subscribers mode is already enabled")
+					return
+				}
+
+				bot.Flags.PermaSubMode = true
+
+				bot.Say(channel, ".subscribers")
+				bot.Say(channel, "Permanent subscribers mode has been enabled")
+				return
+			}
+
+			if strings.HasPrefix(message.Text, "!suboff") {
+				if !bot.Flags.PermaSubMode {
+					bot.Say(channel, "Permanent subscribers mode is not enabled")
+					return
+				}
+
+				bot.Flags.PermaSubMode = false
+
+				bot.Say(channel, ".subscribersoff")
+				bot.Say(channel, "Permanent subscribers mode has been disabled")
+				return
+			}
+		}
+
+		next.HandleMessage(bot, channel, user, message, action)
+	})
+}
+
+func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
+	// log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
