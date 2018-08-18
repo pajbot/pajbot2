@@ -17,7 +17,6 @@ const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
 type nukeMessage struct {
-	channel   pkg.Channel
 	user      pkg.User
 	message   pkg.Message
 	timestamp time.Time
@@ -25,7 +24,7 @@ type nukeMessage struct {
 
 type Nuke struct {
 	server        *server
-	messages      []nukeMessage
+	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
 
 	ticker *time.Ticker
@@ -33,7 +32,8 @@ type Nuke struct {
 
 func NewNuke() *Nuke {
 	m := &Nuke{
-		server: &_server,
+		server:   &_server,
+		messages: make(map[string][]nukeMessage),
 	}
 
 	m.ticker = time.NewTicker(garbageCollectionInterval)
@@ -112,11 +112,13 @@ func (m *Nuke) garbageCollect() {
 
 	now := time.Now()
 
-	for i := 0; i < len(m.messages); i++ {
-		diff := now.Sub(m.messages[i].timestamp)
-		if diff < maxMessageAge {
-			m.messages = m.messages[i:]
-			break
+	for channelID := range m.messages {
+		for i := 0; i < len(m.messages[channelID]); i++ {
+			diff := now.Sub(m.messages[channelID][i].timestamp)
+			if diff < maxMessageAge {
+				m.messages[channelID] = m.messages[channelID][i:]
+				break
+			}
 		}
 	}
 }
@@ -158,15 +160,17 @@ func (m *Nuke) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
 
-	for i := len(m.messages) - 1; i >= 0; i-- {
-		diff := now.Sub(m.messages[i].timestamp)
+	messages := m.messages[channel.GetID()]
+
+	for i := len(messages) - 1; i >= 0; i-- {
+		diff := now.Sub(messages[i].timestamp)
 		if diff > scrollbackLength {
 			// We've gone far enough in the buffer, time to exit
 			break
 		}
 
-		if matcher(&m.messages[i]) {
-			targets[m.messages[i].user.GetID()] = m.messages[i].user
+		if matcher(&messages[i]) {
+			targets[messages[i].user.GetID()] = messages[i].user
 		}
 	}
 
@@ -180,8 +184,8 @@ func (m *Nuke) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase
 func (m *Nuke) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
-	m.messages = append(m.messages, nukeMessage{
-		channel:   channel,
+
+	m.messages[channel.GetID()] = append(m.messages[channel.GetID()], nukeMessage{
 		user:      user,
 		message:   message,
 		timestamp: time.Now(),
