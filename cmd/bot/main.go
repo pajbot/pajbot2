@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -10,8 +9,6 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg/common"
 	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 var buildTime string
@@ -67,9 +64,6 @@ func main() {
 	case "create":
 		createCmd()
 
-	case "newbot":
-		newbotCmd()
-
 	case "help":
 		helpCmd()
 
@@ -112,6 +106,11 @@ func runCmd() {
 	err = application.StartRedisClient()
 	if err != nil {
 		log.Fatal("Error starting redis client:", err)
+	}
+
+	err = application.StartSQLClient()
+	if err != nil {
+		log.Fatal("Error starting SQL client:", err)
 	}
 
 	err = application.InitializeAPIs()
@@ -174,38 +173,6 @@ func createCmd() {
 	_, err := os.Stderr.WriteString(
 		`"create" not yet implemented
 `)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// add a new bot to pb_bot
-func newbotCmd() {
-	config, err := config.LoadConfig(*configPath)
-	if err != nil {
-		log.Fatal("An error occured while loading the config file:", err)
-	}
-
-	sql := sqlmanager.Init(config.SQL)
-
-	reader := bufio.NewReader(os.Stdin)
-
-	var name string
-	var accessToken string
-	var refreshToken string
-
-	fmt.Println("Enter proper values for the incoming questions to create a new bot in the pb_bot table")
-
-	fmt.Print("Bot name: ")
-	name = utils.ReadArg(reader)
-	fmt.Print("Bot access token: ")
-	accessToken = utils.ReadArg(reader)
-	fmt.Print("Bot refresh token: ")
-	refreshToken = utils.ReadArg(reader)
-
-	fmt.Println("Creating a new bot with the given credentials")
-
-	err = common.CreateBot(sql.Session, name, accessToken, refreshToken)
 	if err != nil {
 		log.Fatal(err)
 	}

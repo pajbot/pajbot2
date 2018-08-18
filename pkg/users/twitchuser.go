@@ -57,7 +57,7 @@ func (u *TwitchUser) loadPermissions() error {
 
 	u.permissionsLoaded = true
 
-	rows, err := _server.sql.Session.Query(queryF, u.GetID())
+	rows, err := _server.sql.Query(queryF, u.GetID())
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error)
 
 	const queryF = "SELECT permissions FROM `twitch_user_channel_permissions` WHERE `twitch_user_id`=? AND `channel_id`=?;"
 
-	rows, err := _server.sql.Session.Query(queryF, userID, channelID)
+	rows, err := _server.sql.Query(queryF, userID, channelID)
 	if err != nil {
 		return permissions, err
 	}
@@ -174,7 +174,7 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 
 	permissionBytes := utils.Uint64ToBytes(uint64(permission))
 
-	rows, err := _server.sql.Session.Query(queryF, userID, channelID, permissionBytes, permissionBytes)
+	rows, err := _server.sql.Query(queryF, userID, channelID, permissionBytes, permissionBytes)
 	if err != nil {
 		return err
 	}

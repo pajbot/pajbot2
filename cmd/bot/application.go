@@ -18,6 +18,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 
+	_ "github.com/go-sql-driver/mysql" // MySQL Driver
+
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
@@ -33,7 +35,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
 )
 
@@ -55,7 +56,7 @@ type Application struct {
 
 	TwitchBots   map[string]*bots.TwitchBot
 	Redis        *redis.Pool
-	SQL          *sqlmanager.SQLManager
+	SQL          *sql.DB
 	TwitchPubSub *twitch_pubsub.Client
 
 	// key = user ID
@@ -218,10 +219,15 @@ func (a *Application) StartRedisClient() error {
 	return conn.Send("PING")
 }
 
+func (a *Application) StartSQLClient() error {
+	var err error
+	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
+
+	return err
+}
+
 // StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
-	a.SQL = sqlmanager.Init(a.config.SQL)
-
 	webCfg := &web.Config{
 		Bots:  a.TwitchBots,
 		Redis: a.Redis,
@@ -572,7 +578,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 
 		if action != 0 {
-			stmt, err := a.SQL.Session.Prepare(queryF)
+			stmt, err := a.SQL.Prepare(queryF)
 			if err != nil {
 				return err
 			}

@@ -170,7 +170,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("username", data.Token.UserName)
 			p.Add("token", token.AccessToken)
 			p.Add("refreshtoken", token.RefreshToken)
-			err = common.CreateBot(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken)
+			err = common.CreateBot(sqlClient, data.Token.UserName, token.AccessToken, token.RefreshToken)
 			if err != nil {
 				// XXX: handle this
 				log.Println(err)
@@ -186,7 +186,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	write(w, p.data)
 	log.Println("hehe")
 
-	//common.CreateBotAccount(sql.Session, )
+	//common.CreateBotAccount(sqlClient, )
 }
 
 func apiTwitchUserLogin(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +227,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 			p.Add("refreshtoken", token.RefreshToken)
 
 			fmt.Printf("Username: %s - Access token: %s\n", data.Token.UserName, token.AccessToken)
-			err = common.CreateDBUser(sql.Session, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
+			err = common.CreateDBUser(sqlClient, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
 			if err != nil {
 				// XXX: handle this
 				log.Println(err)
@@ -287,7 +287,7 @@ func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 
 	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
 
-	rows, err := sql.Session.Query(queryF, response.ChannelID)
+	rows, err := sqlClient.Query(queryF, response.ChannelID)
 	if err != nil {
 		panic(err)
 	}

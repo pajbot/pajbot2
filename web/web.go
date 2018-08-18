@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,13 +14,12 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 // Config xD
 type Config struct {
 	Redis *redis.Pool
-	SQL   *sqlmanager.SQLManager
+	SQL   *sql.DB
 	Bots  map[string]*bots.TwitchBot
 }
 
@@ -32,7 +32,7 @@ type Boss struct {
 var (
 	twitchBots  map[string]*bots.TwitchBot
 	redisClient *redis.Pool
-	sql         *sqlmanager.SQLManager
+	sqlClient   *sql.DB
 	hooks       map[string]struct {
 		Secret string
 	}
@@ -77,7 +77,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 	}
 	twitchBots = webCfg.Bots
 	redisClient = webCfg.Redis
-	sql = webCfg.SQL
+	sqlClient = webCfg.SQL
 	hooks = config.Hooks
 	return b
 }
