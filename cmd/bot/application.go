@@ -15,6 +15,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/golang-migrate/migrate"
@@ -32,7 +33,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 	"github.com/pajlada/pajbot2/web"
 )
@@ -54,7 +54,7 @@ type Application struct {
 	config *config.Config
 
 	TwitchBots   map[string]*bots.TwitchBot
-	Redis        *redismanager.RedisManager
+	Redis        *redis.Pool
 	SQL          *sqlmanager.SQLManager
 	TwitchPubSub *twitch_pubsub.Client
 
@@ -194,13 +194,32 @@ func (a *Application) LoadExternalEmotes() error {
 	return nil
 }
 
+func (a *Application) StartRedisClient() error {
+	a.Redis = &redis.Pool{
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", a.config.Redis.Host)
+			if err != nil {
+				log.Fatal("An error occured while connecting to redis: ", err)
+				return nil, err
+			}
+			if a.config.Redis.Database >= 0 {
+				_, err = c.Do("SELECT", a.config.Redis.Database)
+				if err != nil {
+					log.Fatal("Error while selecting redis db:", err)
+					return nil, err
+				}
+			}
+			return c, err
+		},
+	}
+
+	// Ensure that the redis connection works
+	conn := a.Redis.Get()
+	return conn.Send("PING")
+}
+
 // StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
-	var err error
-	a.Redis, err = redismanager.Init(a.config.Redis)
-	if err != nil {
-		return err
-	}
 	a.SQL = sqlmanager.Init(a.config.SQL)
 
 	webCfg := &web.Config{
@@ -389,7 +408,6 @@ func (a *Application) LoadBots() error {
 		bot := bots.NewTwitchBot(twitch.NewClient(name, "oauth:"+twitchAccessToken))
 		bot.Name = name
 		bot.QuitChannel = a.Quit
-		bot.Redis = a.Redis
 
 		// Parsing
 		bot.AddModule(modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))

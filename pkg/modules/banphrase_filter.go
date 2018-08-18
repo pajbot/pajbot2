@@ -103,7 +103,7 @@ func (m Pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, us
 						Channel:     source.GetChannel(),
 						Timestamp:   time.Now().UTC(),
 					}
-					c := m.server.redis.Pool.Get()
+					c := m.server.redis.Get()
 					bytes, _ := json.Marshal(&lol)
 					c.Do("LPUSH", "pajbot2:timeouts", bytes)
 					c.Close()

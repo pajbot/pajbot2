@@ -7,18 +7,18 @@ import (
 
 	"golang.org/x/oauth2"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/bots"
 	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/redismanager"
 	"github.com/pajlada/pajbot2/sqlmanager"
 )
 
 // Config xD
 type Config struct {
-	Redis *redismanager.RedisManager
+	Redis *redis.Pool
 	SQL   *sqlmanager.SQLManager
 	Bots  map[string]*bots.TwitchBot
 }
@@ -30,10 +30,10 @@ type Boss struct {
 }
 
 var (
-	twitchBots map[string]*bots.TwitchBot
-	redis      *redismanager.RedisManager
-	sql        *sqlmanager.SQLManager
-	hooks      map[string]struct {
+	twitchBots  map[string]*bots.TwitchBot
+	redisClient *redis.Pool
+	sql         *sqlmanager.SQLManager
+	hooks       map[string]struct {
 		Secret string
 	}
 )
@@ -76,7 +76,7 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 		WSHost: "ws://" + config.Web.Domain + "/ws",
 	}
 	twitchBots = webCfg.Bots
-	redis = webCfg.Redis
+	redisClient = webCfg.Redis
 	sql = webCfg.SQL
 	hooks = config.Hooks
 	return b

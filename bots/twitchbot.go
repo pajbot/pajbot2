@@ -17,7 +17,6 @@ import (
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/redismanager"
 )
 
 type ModeState int
@@ -44,8 +43,6 @@ type TwitchBot struct {
 	QuitChannel chan string
 
 	Flags botFlags
-
-	Redis *redismanager.RedisManager
 
 	Modules []pkg.Module
 

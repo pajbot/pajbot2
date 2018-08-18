@@ -163,7 +163,7 @@ func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 
 		if lol.Message != "" {
 			go func() {
-				c := m.server.redis.Pool.Get()
+				c := m.server.redis.Get()
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
