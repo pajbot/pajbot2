@@ -385,7 +385,6 @@ func newPointServer(host string) (*PointServer, error) {
 
 func (p *PointServer) tryConnect() net.Conn {
 	for {
-		log.Println("Trying to connect to", p.host)
 		conn, err := net.Dial("tcp", p.host)
 
 		if err != nil {
