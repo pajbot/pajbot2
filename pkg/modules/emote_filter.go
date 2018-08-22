@@ -76,6 +76,10 @@ func (m EmoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Mess
 }
 
 func (m EmoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	if source.GetChannel() == "nymn" || source.GetChannel() == "narwhal_dave" {
+		return nil
+	}
+
 	// BTTV Emotes
 	reader := message.GetBTTVReader()
 	timeoutDuration := 0

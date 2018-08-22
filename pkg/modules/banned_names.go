@@ -37,6 +37,10 @@ func (m BannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Mess
 }
 
 func (m BannedNames) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	if source.GetChannel() != "forsen" {
+		return nil
+	}
+
 	usernameBytes := []byte(user.GetName())
 	for _, badUsername := range m.badUsernames {
 		if badUsername.Match(usernameBytes) {
