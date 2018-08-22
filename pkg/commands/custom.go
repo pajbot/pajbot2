@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mvdan/xurls"
 	normalize "github.com/pajlada/lidl-normalize"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
@@ -228,4 +229,21 @@ func (c Simplify) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 			bot.Mention(channel, source, fmt.Sprintf("normalized string: '%s'", normalizedMessage))
 		}
 	}
+}
+
+type Test struct {
+}
+
+func (c Test) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	if !source.IsModerator() && !source.IsBroadcaster(channel) {
+		return
+	}
+
+	if len(parts) <= 1 {
+		return
+	}
+
+	links := xurls.Relaxed.FindAllString(strings.Join(parts[1:], " "), -1)
+
+	bot.Mention(channel, source, fmt.Sprintf("found links %s", strings.Join(links, ",")))
 }

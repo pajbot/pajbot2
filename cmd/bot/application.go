@@ -363,6 +363,7 @@ func (a *Application) LoadBots() error {
 		customCommands.RegisterCommand([]string{"!pb2rank"}, &commands.Rank{})
 		customCommands.RegisterCommand([]string{"!pb2ping"}, &commands.Ping{})
 		customCommands.RegisterCommand([]string{"!pb2simplify"}, &commands.Simplify{})
+		customCommands.RegisterCommand([]string{"!pb2test"}, &commands.Test{})
 
 		bot.AddModule(customCommands)
 
