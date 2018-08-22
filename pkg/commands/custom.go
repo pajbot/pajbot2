@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	normalize "github.com/pajlada/lidl-normalize"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -210,4 +211,21 @@ type Ping struct {
 
 func (c Ping) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
 	bot.Mention(channel, source, fmt.Sprintf("pb2 has been running for %s", time.Since(startTime)))
+}
+
+type Simplify struct {
+}
+
+func (c Simplify) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	if source.IsModerator() || source.IsBroadcaster(channel) {
+		if len(parts) > 1 {
+			normalizedMessage, err := normalize.Normalize(strings.Join(parts[1:], " "))
+			if err != nil {
+				bot.Mention(channel, source, fmt.Sprintf("error normalizing string: %s", err.Error()))
+				return
+			}
+
+			bot.Mention(channel, source, fmt.Sprintf("normalized string: '%s'", normalizedMessage))
+		}
+	}
 }
