@@ -1,13 +1,21 @@
 package commands
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
+
+var startTime time.Time
+
+func init() {
+	startTime = time.Now()
+}
 
 type GetUserID struct {
 }
@@ -195,4 +203,11 @@ func (c GivePoints) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel,
 
 	bot.AddPoints(channel, targetID, pointsToGive)
 	bot.Mention(channel, source, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
+}
+
+type Ping struct {
+}
+
+func (c Ping) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	bot.Mention(channel, source, fmt.Sprintf("pb2 has been running for %s", time.Since(startTime)))
 }

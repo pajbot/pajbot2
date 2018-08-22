@@ -361,6 +361,7 @@ func (a *Application) LoadBots() error {
 		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
 		customCommands.RegisterCommand([]string{"!user"}, &commands.User{})
 		customCommands.RegisterCommand([]string{"!pb2rank"}, &commands.Rank{})
+		customCommands.RegisterCommand([]string{"!pb2ping"}, &commands.Ping{})
 
 		bot.AddModule(customCommands)
 
