@@ -114,7 +114,7 @@ func (a *Application) RunDatabaseMigrations() error {
 	defer func() {
 		dErr := db.Close()
 		if dErr != nil {
-			log.Println("Error in deferred close:", dErr)
+			fmt.Println("Error in deferred close:", dErr)
 		}
 	}()
 
@@ -142,11 +142,11 @@ func (a *Application) RunDatabaseMigrations() error {
 }
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	log.Println("HTTPERROR: ", errorMessage)
+	fmt.Println("HTTPERROR: ", errorMessage)
 }
 
 func onInternalError(err error) {
-	log.Printf("internal error: %s", err)
+	fmt.Printf("internal error: %s", err)
 }
 
 // InitializeAPIs initializes various APIs that are needed for pajbot
@@ -188,9 +188,9 @@ func (a *Application) InitializeAPIs() error {
 
 // LoadExternalEmotes xd
 func (a *Application) LoadExternalEmotes() error {
-	log.Println("Loading globalemotes...")
+	fmt.Println("Loading globalemotes...")
 	go emotes.LoadGlobalEmotes()
-	log.Println("Done!")
+	fmt.Println("Done!")
 
 	return nil
 }
@@ -251,7 +251,7 @@ func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
 			modulesEnd := time.Now()
 
 			if pkg.VerboseBenchmark {
-				log.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
+				fmt.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
 			}
 		}()
 
@@ -265,10 +265,10 @@ func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
 			}
 			moduleEnd := time.Now()
 			if pkg.VerboseBenchmark {
-				log.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
+				fmt.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
 			}
 			if err != nil {
-				log.Printf("%s: %s\n", module.Name(), err)
+				fmt.Printf("%s: %s\n", module.Name(), err)
 			}
 		}
 
@@ -286,7 +286,7 @@ func (a *Application) LoadBots() error {
 	defer func() {
 		dErr := db.Close()
 		if dErr != nil {
-			log.Println("Error in deferred close:", dErr)
+			fmt.Println("Error in deferred close:", dErr)
 		}
 	}()
 
@@ -298,7 +298,7 @@ func (a *Application) LoadBots() error {
 	defer func() {
 		dErr := rows.Close()
 		if dErr != nil {
-			log.Println("Error in deferred rows close:", dErr)
+			fmt.Println("Error in deferred rows close:", dErr)
 		}
 	}()
 
@@ -391,25 +391,28 @@ func (a *Application) StartBots() error {
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
 			if bot.Name == "snusbot" {
-				log.Printf("Joining forsen with %#v\n", bot)
-				// bot.Join("forsen")
+				bot.Join("forsen")
+			}
+
+			if bot.Name == "botnextdoor" {
+				bot.Join("nymn")
 			}
 
 			if bot.Name == "pajbot" {
-				log.Printf("Joining krakenbul with %#v\n", bot)
-				// bot.Join("krakenbul")
-				// bot.Join("nani")
+				bot.Join("krakenbul")
+				bot.Join("nani")
 				bot.Join("pajlada")
-				err := bot.ConnectToPointServer()
-				if err != nil {
-					log.Fatal(err)
-				}
-				bot.StartChatterPoller()
+				bot.Join("narwhal_dave")
+				// err := bot.ConnectToPointServer()
+				// if err != nil {
+				// 	log.Fatal(err)
+				// }
+				// bot.StartChatterPoller()
 			}
 
 			bot.Join(bot.Name)
 
-			log.Printf("Connecting... %#v", bot)
+			fmt.Printf("Connecting... %#v", bot)
 			err := bot.Connect()
 			if err != nil {
 				log.Fatal(err)

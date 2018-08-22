@@ -51,10 +51,10 @@ func main() {
 	case "check":
 		_, err := config.LoadConfig(*configPath)
 		if err != nil {
-			log.Println("An error occured while loading the config file:", err)
+			fmt.Println("An error occured while loading the config file:", err)
 			os.Exit(1)
 		} else {
-			log.Println("No errors found in the config file")
+			fmt.Println("No errors found in the config file")
 			os.Exit(0)
 		}
 

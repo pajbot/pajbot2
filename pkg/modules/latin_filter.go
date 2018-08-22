@@ -2,7 +2,7 @@ package modules
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/pajlada/pajbot2/pkg"
@@ -121,7 +121,7 @@ func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 		transparentSkipRange := m.transparentList.Find(messageRunes)
 		transparentEnd := time.Now()
 		if pkg.VerboseBenchmark {
-			log.Printf("[% 26s] %s", "TransparentList", transparentEnd.Sub(transparentStart))
+			fmt.Printf("[% 26s] %s", "TransparentList", transparentEnd.Sub(transparentStart))
 		}
 		messageLength := len(messageRunes)
 		for i := 0; i < messageLength; {
@@ -167,7 +167,7 @@ func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
-				log.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
+				fmt.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
 			}()
 		}
 	}

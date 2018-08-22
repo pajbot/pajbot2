@@ -201,7 +201,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	b.handler.HandleMessage(b, nil, twitchUser, message, action)
 
 	if pkg.VerboseMessages {
-		log.Printf("%s - @%s(%s): %s", b.Name, twitchUser.DisplayName, twitchUser.Username, message.Text)
+		fmt.Printf("%s - @%s(%s): %s", b.Name, twitchUser.DisplayName, twitchUser.Username, message.Text)
 	}
 }
 
@@ -234,7 +234,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 	b.handler.HandleMessage(b, channel, twitchUser, message, action)
 
 	if pkg.VerboseMessages {
-		log.Printf("%s - #%s: %s(%s): %s", b.Name, channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
+		fmt.Printf("%s - #%s: %s(%s): %s", b.Name, channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
 	}
 }
 
@@ -255,9 +255,9 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 
 	if subMode != ModeUnset {
 		if subMode == ModeEnabled {
-			log.Printf("Submode enabled")
+			fmt.Printf("Submode enabled")
 		} else {
-			log.Printf("Submode disabled")
+			fmt.Printf("Submode disabled")
 
 			if b.Flags.PermaSubMode {
 				b.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
@@ -266,7 +266,7 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 		}
 	}
 
-	log.Printf("%s - #%s: %#v: %#v", b.Name, channel, user, rawMessage)
+	fmt.Printf("%s - #%s: %#v: %#v", b.Name, channel, user, rawMessage)
 }
 
 // Quit quits the entire application
@@ -278,7 +278,7 @@ func onHTTPError(statusCode int, statusMessage, errorMessage string) {
 }
 
 func onInternalError(err error) {
-	log.Printf("internal error: %s", err)
+	fmt.Printf("internal error: %s", err)
 }
 
 func (b *Bot) StartChatterPoller() {
@@ -528,7 +528,7 @@ func (b *Bot) AddModule(module pkg.Module) {
 	}
 
 	if err := module.Register(); err != nil {
-		log.Printf("Error registering module(%s): %s\n", module.Name(), err.Error())
+		fmt.Printf("Error registering module(%s): %s\n", module.Name(), err.Error())
 		return
 	}
 
@@ -550,7 +550,7 @@ func HandleCommands(next Handler) Handler {
 			}
 
 			if strings.HasPrefix(message.Text, "!whisperme") {
-				log.Printf("Send whisper!")
+				fmt.Printf("Send whisper!")
 				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
 				bot.Whisper(user, "hehe")
 				return
@@ -618,5 +618,5 @@ func HandleCommands(next Handler) Handler {
 }
 
 func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
-	// log.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
+	// fmt.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }

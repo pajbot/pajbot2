@@ -1,7 +1,7 @@
 package emotes
 
 import (
-	"log"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -16,10 +16,10 @@ import (
 var GlobalEmotes common.ExtensionEmotes
 
 func loadGlobalBttvEmotes() {
-	log.Println("XD BTTV??")
+	fmt.Println("XD BTTV??")
 	apirequest.BTTV.GetEmotes(
 		func(emotesResponse gobttv.EmotesResponse) {
-			log.Println("XD BTTV")
+			fmt.Println("XD BTTV")
 			GlobalEmotes.Bttv = make(map[string]common.Emote)
 			GlobalEmotes.BttvLastUpdate = time.Now()
 
@@ -28,20 +28,20 @@ func loadGlobalBttvEmotes() {
 			}
 		},
 		func(statusCode int, statusMessage, errorMessage string) {
-			log.Printf("Error fetching Global BTTV Emotes")
-			log.Printf("Status code: %d", statusCode)
-			log.Printf("Status message: %s", statusMessage)
-			log.Printf("Error message: %s", errorMessage)
+			fmt.Printf("Error fetching Global BTTV Emotes")
+			fmt.Printf("Status code: %d", statusCode)
+			fmt.Printf("Status message: %s", statusMessage)
+			fmt.Printf("Error message: %s", errorMessage)
 		}, func(err error) {
-			log.Printf("Internal error: %s", err)
+			fmt.Printf("Internal error: %s", err)
 		})
 }
 
 func loadGlobalFrankerFaceZEmotes() {
-	log.Println("Loading FFZ Emotes...")
+	fmt.Println("Loading FFZ Emotes...")
 	apirequest.FFZ.GetSet("global",
 		func(rSet goffz.SetResponse) {
-			log.Println("Done loading FFZ emotes!")
+			fmt.Println("Done loading FFZ emotes!")
 			GlobalEmotes.FrankerFaceZ = make(map[string]common.Emote)
 			GlobalEmotes.FrankerFaceZLastUpdate = time.Now()
 
@@ -52,12 +52,12 @@ func loadGlobalFrankerFaceZEmotes() {
 			}
 		},
 		func(statusCode int, statusMessage, errorMessage string) {
-			log.Printf("Error fetching Global FFZ Emotes")
-			log.Printf("Status code: %d", statusCode)
-			log.Printf("Status message: %s", statusMessage)
-			log.Printf("Error message: %s", errorMessage)
+			fmt.Printf("Error fetching Global FFZ Emotes")
+			fmt.Printf("Status code: %d", statusCode)
+			fmt.Printf("Status message: %s", statusMessage)
+			fmt.Printf("Error message: %s", errorMessage)
 		}, func(err error) {
-			log.Printf("Internal error: %s", err)
+			fmt.Printf("Internal error: %s", err)
 		})
 }
 

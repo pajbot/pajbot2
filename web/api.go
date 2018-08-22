@@ -55,7 +55,7 @@ func writeError(w http.ResponseWriter, message string) {
 	}
 	bs, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Error in web write: %s", err)
+		fmt.Printf("Error in web write: %s", err)
 		bs, _ = json.Marshal(newError("internal server error"))
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -65,7 +65,7 @@ func writeError(w http.ResponseWriter, message string) {
 func write(w http.ResponseWriter, data interface{}) {
 	bs, err := json.Marshal(data)
 	if err != nil {
-		log.Printf("Error in web write: %s", err)
+		fmt.Printf("Error in web write: %s", err)
 		bs, _ = json.Marshal(newError("internal server error"))
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -122,7 +122,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 			ep, _rest := getEndPoint(v["rest"])
 			p = exec(channel, ep, _rest)
 		}
-		log.Printf("Bot: %#v", bot)
+		fmt.Printf("Bot: %#v", bot)
 		write(w, p)
 	*/
 }
@@ -158,7 +158,7 @@ func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.FormValue("code")
 	token, err := twitchBotOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		log.Printf("Code exchange failed with %s", err)
+		fmt.Printf("Code exchange failed with %s", err)
 	}
 	write(w, "Access token: "+token.AccessToken)
 
@@ -216,7 +216,7 @@ func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := twitchUserOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		log.Printf("Code exchange failed with %s", err)
+		fmt.Printf("Code exchange failed with %s", err)
 	}
 
 	onSuccess := func(data gotwitch.Self) {
@@ -315,7 +315,7 @@ func onHTTPError(statusCode int, statusMessage, errorMessage string) {
 }
 
 func onInternalError(err error) {
-	log.Printf("internal error: %s", err)
+	fmt.Printf("internal error: %s", err)
 }
 
 // InitAPI adds routes to the given subrouter
