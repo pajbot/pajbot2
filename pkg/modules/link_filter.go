@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"github.com/mvdan/xurls"
 	"github.com/pajlada/pajbot2/pkg"
+	"mvdan.cc/xurls"
 )
 
 type LinkFilter struct {
@@ -33,7 +33,7 @@ func (m LinkFilter) OnMessage(bot pkg.Sender, channel pkg.Channel, source pkg.Us
 		return nil
 	}
 
-	links := xurls.Relaxed.FindAllString(message.GetText(), -1)
+	links := xurls.Relaxed().FindAllString(message.GetText(), -1)
 	if len(links) > 0 {
 		action.Set(pkg.Timeout{180, "No links allowed"})
 	}

@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mvdan/xurls"
 	normalize "github.com/pajlada/lidl-normalize"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
+	"mvdan.cc/xurls"
 )
 
 var startTime time.Time
@@ -243,7 +243,7 @@ func (c Test) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sourc
 		return
 	}
 
-	links := xurls.Relaxed.FindAllString(strings.Join(parts[1:], " "), -1)
+	links := xurls.Relaxed().FindAllString(strings.Join(parts[1:], " "), -1)
 
 	bot.Mention(channel, source, fmt.Sprintf("found links %s", strings.Join(links, ",")))
 }
