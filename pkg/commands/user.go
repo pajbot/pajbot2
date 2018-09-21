@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pajlada/pajbot2/pkg"
@@ -18,7 +19,13 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 
 	target := utils.FilterUsername(parts[1])
 	if target == "" {
-		// Invalid username
+		bot.Mention(channel, source, "invalid username")
+		return
+	}
+
+	targetUserID := bot.GetUserStore().GetID(target)
+	if targetUserID == "" {
+		bot.Mention(channel, source, "no user with this ID")
 		return
 	}
 
@@ -28,7 +35,14 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 	}
 
 	if subCommand == "print" {
-		bot.Mention(channel, source, "print user "+target+" lol")
+		permissions, err := users.GetUserChannelPermissions(targetUserID, channel.GetID())
+		if err != nil {
+			bot.Mention(channel, source, "error getting permission: "+err.Error())
+			return
+		}
+
+		bot.Mention(channel, source, fmt.Sprintf("%s permissions: %b", target, permissions))
+
 		return
 	}
 
@@ -61,6 +75,14 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 		if err != nil {
 			bot.Mention(channel, source, "error setting permission: "+err.Error())
 		}
+
+		newPermission, err := users.GetUserChannelPermissions(userID, channel.GetID())
+		if err != nil {
+			bot.Mention(channel, source, "error getting permission: "+err.Error())
+			return
+		}
+
+		bot.Mention(channel, source, fmt.Sprintf("%s permissions changed from %b to %b", target, oldPermission, newPermission))
 
 		return
 	}

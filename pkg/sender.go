@@ -3,6 +3,7 @@ package pkg
 type Sender interface {
 	Say(Channel, string)
 	Mention(Channel, User, string)
+	Whisper(User, string)
 	Timeout(Channel, User, int, string)
 	Ban(Channel, User, string)
 
@@ -18,4 +19,7 @@ type Sender interface {
 	PointRank(Channel, string) uint64
 
 	GetUserStore() UserStore
+
+	MakeUser(string) User
+	MakeChannel(string) Channel
 }

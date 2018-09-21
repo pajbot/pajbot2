@@ -28,15 +28,12 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 
 	session := m.server.oldSession
 
-	stmt, err := session.Prepare(queryF)
+	rows, err := session.Query(queryF)
 	if err != nil {
 		return err
 	}
 
-	rows, err := stmt.Query()
-	if err != nil {
-		return err
-	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var command commands.Pajbot1Command

@@ -167,7 +167,7 @@ func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 				bytes, _ := json.Marshal(&lol)
 				c.Do("LPUSH", "karl_kons", bytes)
 				c.Close()
-				fmt.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
+				// fmt.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
 			}()
 		}
 	}

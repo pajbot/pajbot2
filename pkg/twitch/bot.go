@@ -620,3 +620,17 @@ func HandleCommands(next Handler) Handler {
 func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
 	// fmt.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
+
+func (b *Bot) MakeUser(username string) pkg.User {
+	return users.NewTwitchUser(twitch.User{
+		Username:    username,
+		DisplayName: username,
+	}, b.userStore.GetID(username))
+}
+
+func (b *Bot) MakeChannel(channel string) pkg.Channel {
+	return channels.TwitchChannel{
+		Channel: channel,
+		ID:      b.userStore.GetID(channel),
+	}
+}

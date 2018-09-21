@@ -14,13 +14,31 @@ const latinCapitalLetterEnd = 0x5A
 const latinSmallLetterBegin = 0x61
 const latinSmallLetterEnd = 0x7A
 
-func isNotLatinLetter(r rune) bool {
+const numbersBegin = 0x30
+const numbersEnd = 0x39
+
+func IsNotLatinLetter(r rune) bool {
 	return !((r >= latinSmallLetterBegin && r <= latinSmallLetterEnd) || (r >= latinCapitalLetterBegin && r <= latinCapitalLetterEnd))
 }
 
-type removeFunc func(rune) bool
+func IsNotAlphanumeric(r rune) bool {
+	if r >= latinSmallLetterBegin && r <= latinSmallLetterEnd {
+		return false
+	}
+	if r >= latinCapitalLetterBegin && r <= latinCapitalLetterEnd {
+		return false
+	}
 
-func removeInStringFunc(in string, predicate removeFunc) string {
+	if r >= numbersBegin && r <= numbersEnd {
+		return false
+	}
+
+	return true
+}
+
+type RemoveFunc func(rune) bool
+
+func RemoveInStringFunc(in string, predicate RemoveFunc) string {
 	outBytes := make([]rune, len(in))
 	length := 0
 	for _, r := range in {
@@ -62,10 +80,13 @@ func MakeVariations(text string, doNormalize bool) ([]string, []string, error) {
 	}
 
 	// Full message with all spaces removed
-	InsertUnique(removeInStringFunc(text, unicode.IsSpace), &originalVariations)
+	InsertUnique(RemoveInStringFunc(text, unicode.IsSpace), &originalVariations)
 
 	// Full message with all spaces and non-latin letters removed
-	InsertUnique(removeInStringFunc(text, isNotLatinLetter), &originalVariations)
+	InsertUnique(RemoveInStringFunc(text, IsNotLatinLetter), &originalVariations)
+
+	// Message with all non-alpha-numberic letters removed
+	InsertUnique(RemoveInStringFunc(text, IsNotAlphanumeric), &originalVariations)
 
 	if doNormalize {
 		normalizedMessage, err := normalize.Normalize(text)
@@ -76,10 +97,13 @@ func MakeVariations(text string, doNormalize bool) ([]string, []string, error) {
 		InsertUnique(normalizedMessage, &originalVariations)
 
 		// Normalized message with all spaces removed
-		InsertUnique(removeInStringFunc(normalizedMessage, unicode.IsSpace), &originalVariations)
+		InsertUnique(RemoveInStringFunc(normalizedMessage, unicode.IsSpace), &originalVariations)
 
 		// Normalized message with all spaces non-latin letters removed
-		InsertUnique(removeInStringFunc(normalizedMessage, isNotLatinLetter), &originalVariations)
+		InsertUnique(RemoveInStringFunc(normalizedMessage, IsNotLatinLetter), &originalVariations)
+
+		// Normalized message with all spaces non-alpha-numberic letters removed
+		InsertUnique(RemoveInStringFunc(normalizedMessage, IsNotAlphanumeric), &originalVariations)
 	}
 
 	return originalVariations, lowercaseAll(originalVariations), nil

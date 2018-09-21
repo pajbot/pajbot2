@@ -1,5 +1,7 @@
 package pkg
 
+import "fmt"
+
 type ActionType interface {
 	Do(Sender, Channel, User) error
 	Priority() int
@@ -8,6 +10,9 @@ type ActionType interface {
 type Action interface {
 	Do() error
 	Set(ActionType)
+
+	NotifyModerator() User
+	SetNotifyModerator(User)
 }
 
 var _ Action = &TwitchAction{}
@@ -20,6 +25,8 @@ type TwitchAction struct {
 	User User
 
 	action ActionType
+
+	notifyModerator User
 }
 
 type Timeout struct {
@@ -53,6 +60,9 @@ func (a Ban) Priority() int {
 
 func (a TwitchAction) Do() error {
 	if a.action != nil {
+		if a.NotifyModerator() != nil {
+			a.Sender.Whisper(a.NotifyModerator(), fmt.Sprintf("%s triggered bad banphrase in %s", a.User.GetName(), a.Channel.GetChannel()))
+		}
 		return a.action.Do(a.Sender, a.Channel, a.User)
 	}
 
@@ -67,4 +77,12 @@ func (a *TwitchAction) Set(action ActionType) {
 			a.action = action
 		}
 	}
+}
+
+func (a TwitchAction) NotifyModerator() User {
+	return a.notifyModerator
+}
+
+func (a *TwitchAction) SetNotifyModerator(user User) {
+	a.notifyModerator = user
 }

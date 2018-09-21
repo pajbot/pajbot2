@@ -24,6 +24,10 @@ func (m *BannedNames) Register() error {
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`trash_is_the_tos\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`terms_of_service_uncool\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`tos_i_love_mods_no_toxic\d+`))
+	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^kemper.+`))
+	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^pudele\d+`))
+	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^ninjal0ver\d+`))
+	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^trihard_account_\d+`))
 
 	return nil
 }

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -26,17 +27,19 @@ func (m *Report) Register() error {
 }
 
 func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+	const usageString = `Usage: !report username channel (reason) i.e. !report Karl_Kons forsen spamming stuff`
+
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}
 
-	if parts[0] != "!report" {
-		return nil
-	}
+	duration := 600
 
-	// XXX: Channel-specific permissions
-	if !source.HasGlobalPermission(pkg.PermissionReport) {
+	if parts[0] == "!report" {
+	} else if parts[0] == "!longreport" {
+		duration = 28800
+	} else {
 		return nil
 	}
 
@@ -50,7 +53,13 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	if len(parts) >= 3 {
 		reportedChannel = strings.ToLower(strings.TrimPrefix(parts[2], "#"))
 	} else {
-		// Reply with proper whisper usage
+		bot.Whisper(source, usageString)
+		return nil
+	}
+
+	channel := bot.MakeChannel(reportedChannel)
+	if !source.HasGlobalPermission(pkg.PermissionReport) && !source.HasChannelPermission(channel, pkg.PermissionReport) {
+		bot.Whisper(source, "you don't have permissions to use the !report command")
 		return nil
 	}
 
@@ -58,10 +67,17 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 		reason = strings.Join(parts[3:], " ")
 	}
 
-	log.Printf("%s reported %s in #%s (%s)", source.GetName(), reportedUsername, reportedChannel, reason)
+	m.report(bot, source, channel, reportedUsername, reason, duration)
 
 	return nil
+}
 
+func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) {
+	s := fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetChannel(), reason, targetUsername)
+	fmt.Println(s)
+	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
+
+	bot.Whisper(bot.MakeUser("pajlada"), s)
 }
 
 func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
@@ -70,16 +86,20 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		return nil
 	}
 
-	if parts[0] != "!report" {
+	duration := 600
+
+	if parts[0] == "!report" {
+	} else if parts[0] == "!longreport" {
+		duration = 28800
+	} else {
 		return nil
 	}
 
-	if !user.HasGlobalPermission(pkg.PermissionReport) {
+	if !user.HasGlobalPermission(pkg.PermissionReport) && !user.HasChannelPermission(source, pkg.PermissionReport) {
 		return nil
 	}
 
 	var reportedUsername string
-	reportedChannel := source.GetChannel()
 	var reason string
 
 	reportedUsername = strings.ToLower(parts[1])
@@ -88,7 +108,7 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		reason = strings.Join(parts[2:], " ")
 	}
 
-	log.Printf("%s reported %s in #%s (%s)", user.GetName(), reportedUsername, reportedChannel, reason)
+	m.report(bot, user, source, reportedUsername, reason, duration)
 
 	return nil
 }
