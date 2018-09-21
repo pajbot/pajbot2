@@ -94,7 +94,7 @@ func (b *Boss) Run() {
 	// Serve files statically from ./web/static in /static
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
 
-	fmt.Printf("Starting web on host %s", b.Host)
+	fmt.Printf("Starting web on host %s\n", b.Host)
 	InitAPI(api)
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	err := http.ListenAndServe(b.Host, handlers.CORS(corsObj)(r))

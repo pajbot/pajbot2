@@ -255,9 +255,9 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 
 	if subMode != ModeUnset {
 		if subMode == ModeEnabled {
-			fmt.Printf("Submode enabled")
+			fmt.Println("Submode enabled")
 		} else {
-			fmt.Printf("Submode disabled")
+			fmt.Println("Submode disabled")
 
 			if b.Flags.PermaSubMode {
 				b.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")
@@ -266,7 +266,7 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 		}
 	}
 
-	fmt.Printf("%s - #%s: %#v: %#v", b.Name, channel, user, rawMessage)
+	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name, channel, user, rawMessage)
 }
 
 // Quit quits the entire application

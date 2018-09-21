@@ -16,10 +16,8 @@ import (
 var GlobalEmotes common.ExtensionEmotes
 
 func loadGlobalBttvEmotes() {
-	fmt.Println("XD BTTV??")
 	apirequest.BTTV.GetEmotes(
 		func(emotesResponse gobttv.EmotesResponse) {
-			fmt.Println("XD BTTV")
 			GlobalEmotes.Bttv = make(map[string]common.Emote)
 			GlobalEmotes.BttvLastUpdate = time.Now()
 
@@ -38,10 +36,8 @@ func loadGlobalBttvEmotes() {
 }
 
 func loadGlobalFrankerFaceZEmotes() {
-	fmt.Println("Loading FFZ Emotes...")
 	apirequest.FFZ.GetSet("global",
 		func(rSet goffz.SetResponse) {
-			fmt.Println("Done loading FFZ emotes!")
 			GlobalEmotes.FrankerFaceZ = make(map[string]common.Emote)
 			GlobalEmotes.FrankerFaceZLastUpdate = time.Now()
 

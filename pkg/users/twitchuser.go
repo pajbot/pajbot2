@@ -2,7 +2,6 @@ package users
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	twitch "github.com/gempir/go-twitch-irc"
@@ -70,13 +69,7 @@ func (u *TwitchUser) loadPermissions() error {
 			return err
 		}
 
-		fmt.Printf("xd %#v\n", permissionsBytes)
-
 		u.permissions = pkg.Permission(utils.BytesToUint64(permissionsBytes))
-
-		// u.permissions = uint64(permissionsBytes)
-
-		fmt.Printf("user permissions: %#v\n", u.permissions)
 	}
 
 	return nil
