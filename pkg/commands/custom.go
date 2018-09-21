@@ -10,7 +10,6 @@ import (
 	normalize "github.com/pajlada/lidl-normalize"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
-	"mvdan.cc/xurls"
 )
 
 var startTime time.Time
@@ -231,6 +230,29 @@ func (c Simplify) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, s
 	}
 }
 
+type TimeMeOut struct {
+}
+
+func (c TimeMeOut) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+	if len(parts) < 2 {
+		return
+	}
+
+	timeoutDuration, err := time.ParseDuration(parts[1])
+	if err != nil {
+		bot.Mention(channel, source, "invalid duration format. use !timemeout 1s or !timemeout 5m")
+		return
+	}
+
+	var reason string
+
+	if len(parts) > 2 {
+		reason = strings.Join(parts[2:], " ")
+	}
+
+	bot.Timeout(channel, source, int(timeoutDuration.Seconds()), reason)
+}
+
 type Test struct {
 }
 
@@ -243,7 +265,13 @@ func (c Test) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sourc
 		return
 	}
 
-	links := xurls.Relaxed().FindAllString(strings.Join(parts[1:], " "), -1)
+	variations, _, err := utils.MakeVariations(strings.Join(parts[1:], " "), true)
+	if err != nil {
+		bot.Mention(channel, source, err.Error())
+		return
+	}
 
-	bot.Mention(channel, source, fmt.Sprintf("found links %s", strings.Join(links, ",")))
+	for _, variation := range variations {
+		bot.Mention(channel, source, fmt.Sprintf("variation %s", variation))
+	}
 }
