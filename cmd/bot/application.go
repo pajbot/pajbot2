@@ -554,7 +554,7 @@ func (a *Application) StartPubSubClient() error {
 		const ActionUnban = 3
 		duration := 0
 
-		content := fmt.Sprintf("lol %+v", timeoutData.Data)
+		content := fmt.Sprintf("Moderation action: %+v", timeoutData.Data)
 		fmt.Println(content)
 		var actionContext *string
 		action := 0
@@ -592,11 +592,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 
 		if action != 0 {
-			stmt, err := a.SQL.Prepare(queryF)
-			if err != nil {
-				return err
-			}
-			_, err = stmt.Exec(cfg.ChannelID, timeoutData.Data.CreatedByUserID, action, duration, timeoutData.Data.TargetUserID, reason, actionContext)
+			_, err := a.SQL.Exec(queryF, cfg.ChannelID, timeoutData.Data.CreatedByUserID, action, duration, timeoutData.Data.TargetUserID, reason, actionContext)
 			if err != nil {
 				return err
 			}
