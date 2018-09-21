@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -15,6 +16,8 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/ChimeraCoder/anaconda"
+	"github.com/dghubble/go-twitter/twitter"
 	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 
@@ -57,6 +60,7 @@ type Application struct {
 	TwitchBots   map[string]*pb2twitch.Bot
 	Redis        *redis.Pool
 	SQL          *sql.DB
+	Twitter      *twitter.Client
 	TwitchPubSub *twitch_pubsub.Client
 
 	// key = user ID
@@ -157,11 +161,11 @@ func (a *Application) InitializeAPIs() error {
 	apirequest.TwitchV3 = gotwitch.NewV3(a.config.Auth.Twitch.User.ClientID)
 	apirequest.TwitchBotV3 = gotwitch.NewV3(a.config.Auth.Twitch.Bot.ClientID)
 
-	onSuccess := func(data []gotwitch.User) {
-		fmt.Printf("%#v\n", data)
-	}
+	// onSuccess := func(data []gotwitch.User) {
+	// 	fmt.Printf("%#v\n", data)
+	// }
 
-	apirequest.Twitch.GetUsersByLogin([]string{"bajlada"}, onSuccess, onHTTPError, onInternalError)
+	// apirequest.Twitch.GetUsersByLogin([]string{"bajlada"}, onSuccess, onHTTPError, onInternalError)
 
 	/*
 		apirequest.Twitch.SubscribeFollows("19571641", "http://57552418.ngrok.io/api/callbacks/follow", func() {
@@ -224,6 +228,95 @@ func (a *Application) StartSQLClient() error {
 	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
 
 	return err
+}
+
+func (a *Application) StartTwitterStream() error {
+	localConfig := a.config.Auth.Twitter
+
+	// users lookup
+	// userLookupParams := &twitter.UserLookupParams{ScreenName: []string{"pajtest"}}
+	// users, _, _ := client.Users.Lookup(userLookupParams)
+	// fmt.Printf("USERS LOOKUP:\n%+v\n", users)
+
+	if localConfig.ConsumerKey == "" || localConfig.ConsumerSecret == "" || localConfig.AccessToken == "" || localConfig.AccessSecret == "" {
+		return errors.New("Missing twitter configuration fields")
+	}
+
+	api := anaconda.NewTwitterApiWithCredentials(localConfig.AccessToken, localConfig.AccessSecret, localConfig.ConsumerKey, localConfig.ConsumerSecret)
+
+	v := url.Values{}
+	s := api.UserStream(v)
+
+	for t := range s.C {
+		fmt.Printf("%#v\n", t)
+		switch v := t.(type) {
+		case anaconda.Tweet:
+			fmt.Printf("%-15s: %s\n", v.User.ScreenName, v.Text)
+		case anaconda.EventTweet:
+			switch v.Event.Event {
+			case "favorite":
+				sn := v.Source.ScreenName
+				tw := v.TargetObject.Text
+				fmt.Printf("Favorited by %-15s: %s\n", sn, tw)
+			case "unfavorite":
+				sn := v.Source.ScreenName
+				tw := v.TargetObject.Text
+				fmt.Printf("UnFavorited by %-15s: %s\n", sn, tw)
+			}
+		}
+	}
+
+	fmt.Println("????????")
+
+	/*
+		config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
+		token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
+
+		httpClient := config.Client(oauth1.NoContext, token)
+		client := twitter.NewClient(httpClient)
+
+		demux := twitter.NewSwitchDemux()
+		demux.All = func(x interface{}) {
+			fmt.Printf("x %#v\n", x)
+		}
+		demux.StreamDisconnect = func(disconnect *twitter.StreamDisconnect) {
+			fmt.Printf("disconnected %#v\n", disconnect)
+		}
+		demux.Tweet = func(tweet *twitter.Tweet) {
+			fmt.Println(tweet.Text)
+		}
+
+		demux.Event = func(event *twitter.Event) {
+			fmt.Printf("%#v\n", event)
+		}
+
+		filterParams := &twitter.StreamFilterParams{
+			// Follow:        []string{"81085011"},
+			// Track: []string{"cat"},
+			// StallWarnings: twitter.Bool(true),
+		}
+		stream, err := client.Streams.Filter(filterParams)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("stream is %#v\n", stream)
+		fmt.Printf("messages is is %#v\n", stream.Messages)
+
+		fmt.Println("start handling..")
+		for message := range stream.Messages {
+			fmt.Printf("got message %#v\n", message)
+			// demux.Handle(message)
+		}
+		_, xd := (<-stream.Messages)
+		if xd {
+			fmt.Println("channel is not closed")
+		}
+		fmt.Printf("messages is is %#v\n", stream.Messages)
+		fmt.Println("done")
+	*/
+
+	return nil
 }
 
 // StartWebServer starts the web server associated to the bot
@@ -395,18 +488,18 @@ func (a *Application) StartBots() error {
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
 			if bot.Name == "snusbot" {
-				bot.Join("forsen")
+				// bot.Join("forsen")
 			}
 
 			if bot.Name == "botnextdoor" {
-				bot.Join("nymn")
+				// bot.Join("nymn")
 			}
 
 			if bot.Name == "pajbot" {
-				bot.Join("krakenbul")
-				bot.Join("nani")
+				// bot.Join("krakenbul")
+				// bot.Join("nani")
 				bot.Join("pajlada")
-				bot.Join("narwhal_dave")
+				// bot.Join("narwhal_dave")
 				// err := bot.ConnectToPointServer()
 				// if err != nil {
 				// 	log.Fatal(err)
@@ -416,7 +509,6 @@ func (a *Application) StartBots() error {
 
 			bot.Join(bot.Name)
 
-			fmt.Printf("Connecting... %#v", bot)
 			err := bot.Connect()
 			if err != nil {
 				log.Fatal(err)

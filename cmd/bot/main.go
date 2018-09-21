@@ -123,6 +123,11 @@ func runCmd() {
 		log.Fatal("An error occured while loading external emotes: ", err)
 	}
 
+	err = application.StartTwitterStream()
+	if err != nil {
+		log.Fatal("Error starting twitter stream: ", err)
+	}
+
 	err = application.StartWebServer()
 	if err != nil {
 		log.Fatal("An error occured while starting the web server: ", err)
