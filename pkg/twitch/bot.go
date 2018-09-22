@@ -438,6 +438,10 @@ const (
 )
 
 func (b *Bot) GetPoints(channel pkg.Channel, userID string) uint64 {
+	if b.pointServer == nil {
+		return 0
+	}
+
 	bodyPayload := []byte(userID)
 
 	b.pointServer.Send(CommandGetPoints, bodyPayload)
@@ -451,6 +455,10 @@ func (b *Bot) GetPoints(channel pkg.Channel, userID string) uint64 {
 }
 
 func (b *Bot) AddPoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
+	if b.pointServer == nil {
+		return false, 0
+	}
+
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
 	bodyPayload = append(bodyPayload, []byte(userID)...)
@@ -468,6 +476,10 @@ func (b *Bot) AddPoints(channel pkg.Channel, userID string, points uint64) (bool
 }
 
 func (b *Bot) BulkEdit(channel string, userIDs []string, points int32) {
+	if b.pointServer == nil {
+		return
+	}
+
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, utils.Int32ToBytes(points)...)
 	for _, userID := range userIDs {
@@ -479,6 +491,10 @@ func (b *Bot) BulkEdit(channel string, userIDs []string, points int32) {
 }
 
 func (b *Bot) RemovePoints(channel pkg.Channel, userID string, points uint64) (bool, uint64) {
+	if b.pointServer == nil {
+		return false, 0
+	}
+
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, 0x00)
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
@@ -497,6 +513,10 @@ func (b *Bot) RemovePoints(channel pkg.Channel, userID string, points uint64) (b
 }
 
 func (b *Bot) ForceRemovePoints(channel pkg.Channel, userID string, points uint64) uint64 {
+	if b.pointServer == nil {
+		return 0
+	}
+
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, 0x01)
 	bodyPayload = append(bodyPayload, utils.Uint64ToBytes(points)...)
@@ -511,6 +531,10 @@ func (b *Bot) ForceRemovePoints(channel pkg.Channel, userID string, points uint6
 }
 
 func (b *Bot) PointRank(channel pkg.Channel, userID string) uint64 {
+	if b.pointServer == nil {
+		return 0
+	}
+
 	var bodyPayload []byte
 	bodyPayload = append(bodyPayload, []byte(userID)...)
 
