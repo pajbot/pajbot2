@@ -36,6 +36,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/commands"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
+	"github.com/pajlada/pajbot2/pkg/pubsub"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/web"
@@ -67,6 +68,8 @@ type Application struct {
 	UserContext map[string]*channelContext
 
 	Quit chan string
+
+	PubSub *pubsub.PubSub
 }
 
 func lol(xd string) *string {
@@ -92,6 +95,9 @@ func NewApplication() *Application {
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
 	a.UserContext = make(map[string]*channelContext)
+	a.PubSub = pubsub.New()
+
+	go a.PubSub.Run()
 
 	return &a
 }
@@ -326,7 +332,7 @@ func (a *Application) StartWebServer() error {
 		SQL:   a.SQL,
 	}
 
-	webBoss := web.Init(a.config, webCfg)
+	webBoss := web.Init(a.config, webCfg, a.PubSub)
 	go webBoss.Run()
 
 	return nil
@@ -365,6 +371,21 @@ func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
 			}
 		}
 
+		next.HandleMessage(bot, channel, user, message, action)
+	})
+}
+
+type messageReceivedData struct {
+	Sender  string
+	Message string
+}
+
+func (a *Application) notifyPubSub(next pb2twitch.Handler) pb2twitch.Handler {
+	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
+		a.PubSub.Publish("MessageReceived", &messageReceivedData{
+			Sender:  user.GetName(),
+			Message: message.Text,
+		})
 		next.HandleMessage(bot, channel, user, message, action)
 	})
 }
@@ -466,7 +487,7 @@ func (a *Application) LoadBots() error {
 		// Moderation
 		bot.AddModule(modules.NewNuke())
 
-		bot.SetHandler(checkModules(pb2twitch.HandleCommands(finalHandler)))
+		bot.SetHandler(a.notifyPubSub(checkModules(pb2twitch.HandleCommands(finalHandler))))
 
 		a.TwitchBots[name] = bot
 	}

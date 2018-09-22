@@ -125,7 +125,7 @@ func runCmd() {
 
 	err = application.StartTwitterStream()
 	if err != nil {
-		log.Fatal("Error starting twitter stream: ", err)
+		log.Println("Error starting twitter stream: ", err)
 	}
 
 	err = application.StartWebServer()

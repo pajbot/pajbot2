@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajlada/pajbot2/pkg/pubsub"
 )
 
 // Config xD
@@ -36,6 +37,7 @@ var (
 	hooks       map[string]struct {
 		Secret string
 	}
+	pubSub *pubsub.PubSub
 )
 
 var (
@@ -44,7 +46,8 @@ var (
 )
 
 // Init returns a webBoss which hosts the website
-func Init(config *config.Config, webCfg *Config) *Boss {
+func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub) *Boss {
+	pubSub = _pubSub
 	twitchBotOauthConfig.RedirectURL = config.Auth.Twitch.Bot.RedirectURI
 	twitchBotOauthConfig.ClientID = config.Auth.Twitch.Bot.ClientID
 	twitchBotOauthConfig.ClientSecret = config.Auth.Twitch.Bot.ClientSecret
@@ -84,15 +87,18 @@ func Init(config *config.Config, webCfg *Config) *Boss {
 
 // Run xD
 func (b *Boss) Run() {
+	go Hub.run()
+
 	r := mux.NewRouter()
 	r.HandleFunc("/", b.rootHandler)
+	r.HandleFunc("/ws/{type}", b.wsHandler)
 	r.HandleFunc("/dashboard", b.dashboardHandler)
 	// i would like to use a subdomain for this but it might be annoying for you pajaHop
 	r.HandleFunc("/api", apiRootHandler)
 	api := r.PathPrefix("/api").Subrouter()
 
 	// Serve files statically from ./web/static in /static
-	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
+	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../web/static/"))))
 
 	fmt.Printf("Starting web on host %s\n", b.Host)
 	InitAPI(api)
@@ -113,4 +119,42 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
+}
+
+func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("ws handler")
+	vars := mux.Vars(r)
+	messageTypeString := vars["type"]
+	messageType := MessageTypeNone
+	switch messageTypeString {
+	case "clr":
+		messageType = MessageTypeCLR
+	case "dashboard":
+		messageType = MessageTypeDashboard
+	}
+
+	if messageType == MessageTypeNone {
+		fmt.Println("ws handler error")
+		http.Error(w, "Invalid url. Valid urls: /ws/clr and /ws/dashboard", http.StatusBadRequest)
+		return
+	}
+
+	ws, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
+		fmt.Printf("Upgrader error: %v\n", err)
+		return
+	}
+
+	// Create a custom connection
+	conn := &WSConn{
+		send:        make(chan []byte, 256),
+		ws:          ws,
+		messageType: messageType,
+	}
+	fmt.Println("xd")
+	Hub.register <- conn
+	fmt.Println("loooooooooooool")
+	go conn.writePump()
+	conn.readPump()
 }
