@@ -24,12 +24,10 @@ func (h *ConnectionHub) run() {
 		case conn := <-h.register:
 			fmt.Printf("REGISTERING %#v\n", conn)
 			h.connections[conn] = true
-
-			pubSub.Subscribe(conn, "MessageReceived")
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {
 				delete(h.connections, conn)
-				close(conn.send)
+				conn.disconnect()
 			}
 		case wsMessage := <-h.broadcast:
 			message := wsMessage.Payload.ToJSON()

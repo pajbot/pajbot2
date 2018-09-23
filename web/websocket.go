@@ -2,12 +2,15 @@ package web
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
+	"github.com/tevino/abool"
 )
 
 const (
@@ -22,8 +25,9 @@ const (
 
 // WSConn xD
 type WSConn struct {
-	ws   *websocket.Conn
-	send chan []byte
+	ws         *websocket.Conn
+	send       chan []byte
+	connected_ *abool.AtomicBool
 
 	messageType MessageType
 
@@ -33,12 +37,44 @@ type WSConn struct {
 
 var _ pubsub.Connection = &WSConn{}
 
-func (c *WSConn) MessageReceived(topic string, bytes []byte) error {
-	switch topic {
-	case "MessageReceived":
-		c.send <- bytes
+func NewWSConn(ws *websocket.Conn, messageType MessageType) *WSConn {
+	return &WSConn{
+		send:        make(chan []byte, 256),
+		connected_:  abool.New(),
+		ws:          ws,
+		messageType: messageType,
 	}
-	fmt.Printf("ws conn received message on topic %s: %s\n", topic, string(bytes))
+}
+
+type pubsubMessage struct {
+	Type  string
+	Topic string
+	Data  json.RawMessage
+}
+
+func (c *WSConn) MessageReceived(topic string, bytes []byte) error {
+	if !c.connected() {
+		return errors.New("Connection no longer connected")
+	}
+
+	msg := pubsubMessage{
+		Type:  "Publish",
+		Topic: topic,
+		Data:  bytes,
+	}
+
+	msgBytes, err := json.Marshal(&msg)
+	if err != nil {
+		fmt.Println("error marshalling pubsub message", err)
+		return nil
+	}
+
+	select {
+	case c.send <- msgBytes:
+	default:
+		return errors.New("Connection no longer connected")
+	}
+
 	return nil
 }
 
@@ -47,10 +83,25 @@ func (c *WSConn) pongHandler(string) error {
 	return nil
 }
 
+func (c *WSConn) connected() bool {
+	return c.connected_.IsSet()
+}
+
 // TODO: Fix proper authentication
 // TODO: load user from db/redis/cache
 func (c *WSConn) authenticate(username string) {
 	fmt.Printf("Attempting to authenticate as %s\n", username)
+}
+
+func (c *WSConn) disconnect() {
+	c.connected_.UnSet()
+	close(c.send)
+}
+
+func (c *WSConn) onConnected() {
+	c.connected_.Set()
+	go c.writePump()
+	c.readPump()
 }
 
 func (c *WSConn) readPump() {
@@ -73,10 +124,11 @@ func (c *WSConn) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		fmt.Printf("Got the message %s\n", message)
 
-		// pubSub.Publish("penis", "aaaaaaaaa")
-		// TODO: Handle incoming messages
+		err = pubSub.HandleJSON(c, message)
+		if err != nil {
+			fmt.Println("Error calling HandleJSON for pubsub:", err)
+		}
 	}
 }
 
@@ -109,7 +161,7 @@ func (c *WSConn) writePump() {
 			// Add queued message to the current websocket message
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(newline)
+				w.Write(crlf)
 				w.Write(<-c.send)
 			}
 

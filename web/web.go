@@ -42,6 +42,7 @@ var (
 
 var (
 	newline = []byte{'\n'}
+	crlf    = []byte("\r\n")
 	space   = []byte{' '}
 )
 
@@ -146,15 +147,11 @@ func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	conn := NewWSConn(ws, messageType)
+
 	// Create a custom connection
-	conn := &WSConn{
-		send:        make(chan []byte, 256),
-		ws:          ws,
-		messageType: messageType,
-	}
 	fmt.Println("xd")
 	Hub.register <- conn
 	fmt.Println("loooooooooooool")
-	go conn.writePump()
-	conn.readPump()
+	conn.onConnected()
 }

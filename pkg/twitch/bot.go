@@ -3,6 +3,7 @@ package twitch
 import (
 	"bufio"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -15,6 +16,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/common"
+	"github.com/pajlada/pajbot2/pkg/pubsub"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -52,15 +54,26 @@ type Bot struct {
 	ticker *time.Ticker
 
 	userStore *UserStore
+
+	pubSub *pubsub.PubSub
 }
 
-func NewBot(client *twitch.Client) *Bot {
+var _ pubsub.Connection = &Bot{}
+
+func NewBot(client *twitch.Client, pubSub *pubsub.PubSub) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
-	return &Bot{
+	b := &Bot{
 		Client:    client,
 		userStore: NewUserStore(),
+
+		pubSub: pubSub,
 	}
+
+	pubSub.Subscribe(b, "Ban")
+	pubSub.Subscribe(b, "Untimeout")
+
+	return b
 }
 
 func (b *Bot) GetUserStore() pkg.UserStore {
@@ -180,6 +193,12 @@ func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason s
 func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".ban %s %s", user.GetName(), reason))
+	}
+}
+
+func (b *Bot) Untimeout(channel pkg.Channel, user pkg.User) {
+	if !user.IsModerator() {
+		b.Say(channel, fmt.Sprintf(".untimeout %s", user.GetName()))
 	}
 }
 
@@ -657,4 +676,25 @@ func (b *Bot) MakeChannel(channel string) pkg.Channel {
 		Channel: channel,
 		ID:      b.userStore.GetID(channel),
 	}
+}
+
+func (b *Bot) MessageReceived(topic string, data []byte) error {
+	switch topic {
+	case "Ban":
+		var msg pkg.PubSubBan
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			return err
+		}
+		b.Ban(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target), msg.Reason)
+	case "Untimeout":
+		fmt.Printf("untimeout %s\n", string(data))
+		var msg pkg.PubSubUntimeout
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			return err
+		}
+		b.Untimeout(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target))
+	}
+	return nil
 }

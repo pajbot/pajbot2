@@ -37,6 +37,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
+	"github.com/pajlada/pajbot2/pkg/report"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/web"
@@ -63,6 +64,8 @@ type Application struct {
 	SQL          *sql.DB
 	Twitter      *twitter.Client
 	TwitchPubSub *twitch_pubsub.Client
+
+	ReportHolder *report.Holder
 
 	// key = user ID
 	UserContext map[string]*channelContext
@@ -232,8 +235,17 @@ func (a *Application) StartRedisClient() error {
 func (a *Application) StartSQLClient() error {
 	var err error
 	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// TODO: move this to init
+	a.ReportHolder, err = report.New(a.SQL, a.PubSub)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Application) StartTwitterStream() error {
@@ -420,7 +432,7 @@ func (a *Application) LoadBots() error {
 	 Sorry :( To prevent racism we only allow basic Latin Letters with some exceptions. If you think your message should not have been timed out, please send a link to YOUR chatlogs for the MONTH with a TIMESTAMP of the offending message to "omgscoods@gmail.com" and we'll review it.
 	*/
 
-	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1)
+	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub)
 	if err != nil {
 		return err
 	}
@@ -439,7 +451,7 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken))
+		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub)
 		bot.Name = name
 		bot.QuitChannel = a.Quit
 
@@ -447,7 +459,7 @@ func (a *Application) LoadBots() error {
 		bot.AddModule(modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
 
 		// Report module/Admin commands
-		bot.AddModule(modules.NewReportModule())
+		bot.AddModule(modules.NewReportModule(a.ReportHolder))
 
 		// Filtering
 		bot.AddModule(modules.NewBadCharacterFilter())

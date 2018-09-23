@@ -1,112 +1,46 @@
-<html ng-app="dashboard">
-<head>
-<title>Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Angular Material style sheet -->
-<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
-<style>
-.chat-line {
-    overflow: hidden;
-}
-</style>
+<html>
+  <head>
+    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
-<script type="text/javascript">
-var ws_host = '[[.WSHost]]/dashboard';
-</script>
-<script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
-<!-- Angular Material requires Angular.js Libraries -->
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+    <script type="text/javascript">
+      var ws_host = '[[.WSHost]]/dashboard';
+    </script>
 
-<!-- Angular Material Library -->
-<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
-<script type="text/javascript" src="/static/scripts/app.js"></script>
-<script type="text/javascript">
-var isopen = false;
-var socket = null;
-$(document).ready(function() {
-    $('#messageText').keypress(function(e) {
-        if (e.which == 13) {
-            $('#sendMessage').click();
-            return false;
-        }
-    });
-    $('#sendMessage').click(function() {
-        var text = $('#messageText').val();
-        console.log(text);
-        $('#messageText').val('');
-        var payload = {
-            'event': 'chat',
-            'data': {
-                'text': text
-            }
-        };
-        socket.send(JSON.stringify(payload));
-    });
-});
-
-function connect_to_ws($scope)
-{
-    if (isopen) {
-        return;
-    }
-    console.log('Connecting to websocket....');
-    socket = new WebSocket(ws_host);
-    socket.binaryType = "arraybuffer";
-    socket.onopen = function() {
-        console.log('Connected!');
-        isopen = true;
-    }
-
-    socket.onmessage = function(e) {
-        if (typeof e.data == "string") {
-            var json_data = JSON.parse(e.data);
-            console.log(json_data);
-            if (json_data['event'] !== undefined) {
-                switch (json_data['event']) {
-                    case 'chat':
-                        $scope.$apply($scope.add_message(json_data['data']));
-                        break;
-                    case 'refresh':
-                    case 'reload':
-                        location.reload(true);
-                        break;
-                }
-            }
-        } else {
-            var arr = new Uint8Array(e.data);
-            var hex = '';
-            for (var i = 0; i < arr.length; i++) {
-                hex += ('00' + arr[i].toString(16)).substr(-2);
-            }
-            //add_row('Binary message received: ' + hex);
-        }
-    }
-
-    socket.onclose = function(e) {
-        socket = null;
-        isopen = false;
-        setTimeout(connect_to_ws, 2500);
-    }
-}
-</script>
-    </head>
-        <body ng-controller="dashboard" ng-cloak>
-
-            <h3>DASHBOARD</h3>
-            <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
-            <div><md-button class="md-raised md-primary" ng-click="send_quit()" id="btnQuit">Quit</md-button></div>
-            <div class="chatbox">
-                <ul class="chat">
-                    <div ng-repeat="line in lines">
-                        <div class="chat-line">
-                            <md-button style="float:left;overflow:hidden;" class="md-raised md-primary" ng-click="send_timeout(line.user)"> timeout </md-button>
-                            <div style="overflow:hidden;">{{ line.user }}: {{ line.msg }}</div>
-                        </div>
-                    </div>
-                </ul>
-            </div>
-    </body>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+    <script type="text/javascript" src="/static/scripts/knockout-3.4.2.js"></script>
+    <script type="text/javascript" src="/static/scripts/app.js"></script>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div id="reports" data-bind="foreach: { data: reports, as: 'report' }">
+        <div class="report card mb-3">
+          <div class="card-header">
+            <span class="channel" data-bind="text: Channel.Name, css: { 'twitch': Channel.Type == 'twitch', 'discord': Channel.Type == 'discord', }"></span>
+            <span class="reporter" data-bind="text: Reporter.Name, title: 'ID: ' + Reporter.ID"></span>
+            reported
+            <span class="target" data-bind="text: Target.Name, title: 'ID: ' + Target.ID"></span>
+          </div>
+          <div class="card-body">
+            <span data-bind="if: typeof Reason === 'string' && Reason.length > 0">Reason: <span class="reason" data-bind="text: Reason"></span></span>
+            <div data-bind="if: typeof Logs === 'string'"><pre class="logs" data-bind="text: Logs.join('\n')"></pre></div>
+              <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: $root.handleReport.bind($data, 'ban')">Ban</button>
+              <button class="card-link btn btn-danger" title="Dismiss this report for everyone" data-bind="click: $root.handleReport.bind($data, 'dismiss')">Dismiss</button>
+              <button class="card-link btn btn-danger" title="Undo and dismiss this report for everyone" data-bind="click: $root.handleReport.bind($data, 'undo')">Undo</button>
+              <button class="card-link btn btn-light" title="Hide this from your session" data-bind="click: $root.hideReport">Hide</button>
+          </div>
+        </div>
+      </div>
+      <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
+      <div class="chatbox">
+        <ul class="chat" data-bind="foreach: { data: messages, as: 'message'}">
+          <li class="message">
+            <span data-bind="text: message.Sender"></span>: <span data-bind="text: message.Message"></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
 </html>
