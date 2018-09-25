@@ -241,7 +241,7 @@ func (a *Application) StartSQLClient() error {
 	}
 
 	// TODO: move this to init
-	a.ReportHolder, err = report.New(a.SQL, a.PubSub)
+	a.ReportHolder, err = report.New(a.SQL, a.PubSub, a.TwitchUserStore)
 	if err != nil {
 		return err
 	}
@@ -567,9 +567,12 @@ func (a *Application) StartPubSubClient() error {
 		return errors.New("Missing PubSub configuration stuff")
 	}
 
-	moderationTopic := fmt.Sprintf("chat_moderator_actions.%s.%s", cfg.UserID, cfg.ChannelID)
-	fmt.Println("Moderation topic:", moderationTopic)
-	a.TwitchPubSub.Listen(moderationTopic, cfg.UserToken, func(bytes []byte) error {
+	return a.listenToModeratorActions(cfg.UserID, cfg.ChannelID, cfg.UserToken)
+}
+
+func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
+	moderationTopic := fmt.Sprintf("chat_moderator_actions.%s.%s", userID, channelID)
+	a.TwitchPubSub.Listen(moderationTopic, userToken, func(bytes []byte) error {
 		msg := twitch_pubsub.Message{}
 		err := json.Unmarshal(bytes, &msg)
 		if err != nil {
@@ -603,10 +606,28 @@ func (a *Application) StartPubSubClient() error {
 				reason = timeoutData.Data.Arguments[2]
 				content += " for reason: \"" + reason + "\""
 			}
-			msgs, err := a.GetUserMessages(cfg.ChannelID, timeoutData.Data.TargetUserID)
+			msgs, err := a.GetUserMessages(channelID, timeoutData.Data.TargetUserID)
 			if err == nil {
 				actionContext = lol(strings.Join(msgs, "\n"))
 			}
+
+			e := pkg.PubSubTimeoutEvent{
+				Channel: pkg.PubSubUser{
+					ID: channelID,
+				},
+				Target: pkg.PubSubUser{
+					ID:   timeoutData.Data.TargetUserID,
+					Name: timeoutData.Data.Arguments[0],
+				},
+				Source: pkg.PubSubUser{
+					ID:   timeoutData.Data.CreatedByUserID,
+					Name: timeoutData.Data.CreatedBy,
+				},
+				Duration: duration,
+				Reason:   reason,
+			}
+
+			a.PubSub.Publish("TimeoutEvent", e, pkg.PubSubAdminAuth())
 
 		case "ban":
 			action = ActionBan
@@ -615,10 +636,27 @@ func (a *Application) StartPubSubClient() error {
 				reason = timeoutData.Data.Arguments[1]
 				content += " for reason: \"" + reason + "\""
 			}
-			msgs, err := a.GetUserMessages(cfg.ChannelID, timeoutData.Data.TargetUserID)
+			msgs, err := a.GetUserMessages(channelID, timeoutData.Data.TargetUserID)
 			if err == nil {
 				actionContext = lol(strings.Join(msgs, "\n"))
 			}
+
+			e := pkg.PubSubBanEvent{
+				Channel: pkg.PubSubUser{
+					ID: channelID,
+				},
+				Target: pkg.PubSubUser{
+					ID:   timeoutData.Data.TargetUserID,
+					Name: timeoutData.Data.Arguments[0],
+				},
+				Source: pkg.PubSubUser{
+					ID:   timeoutData.Data.CreatedByUserID,
+					Name: timeoutData.Data.CreatedBy,
+				},
+				Reason: reason,
+			}
+
+			a.PubSub.Publish("BanEvent", e, pkg.PubSubAdminAuth())
 
 		case "unban", "untimeout":
 			action = ActionUnban
@@ -626,7 +664,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 
 		if action != 0 {
-			_, err := a.SQL.Exec(queryF, cfg.ChannelID, timeoutData.Data.CreatedByUserID, action, duration, timeoutData.Data.TargetUserID, reason, actionContext)
+			_, err := a.SQL.Exec(queryF, channelID, timeoutData.Data.CreatedByUserID, action, duration, timeoutData.Data.TargetUserID, reason, actionContext)
 			if err != nil {
 				return err
 			}

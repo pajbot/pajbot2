@@ -3,10 +3,10 @@ package report
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
@@ -26,11 +26,13 @@ type Report struct {
 	Target   ReportUser
 	Reason   string `json:",omitempty"`
 	Logs     []string
+	Time     time.Time
 }
 
 type Holder struct {
-	db     *sql.DB
-	pubSub *pubsub.PubSub
+	db        *sql.DB
+	pubSub    *pubsub.PubSub
+	userStore pkg.UserStore
 
 	reportsMutex *sync.Mutex
 	reports      map[uint32]Report
@@ -39,10 +41,11 @@ type Holder struct {
 var _ pubsub.Connection = &Holder{}
 var _ pubsub.SubscriptionHandler = &Holder{}
 
-func New(db *sql.DB, pubSub *pubsub.PubSub) (*Holder, error) {
+func New(db *sql.DB, pubSub *pubsub.PubSub, userStore pkg.UserStore) (*Holder, error) {
 	h := &Holder{
-		db:     db,
-		pubSub: pubSub,
+		db:        db,
+		pubSub:    pubSub,
+		userStore: userStore,
 
 		reportsMutex: &sync.Mutex{},
 		reports:      make(map[uint32]Report),
@@ -54,13 +57,15 @@ func New(db *sql.DB, pubSub *pubsub.PubSub) (*Holder, error) {
 	}
 
 	pubSub.Subscribe(h, "HandleReport", nil)
+	pubSub.Subscribe(h, "TimeoutEvent", nil)
+	pubSub.Subscribe(h, "BanEvent", nil)
 	pubSub.HandleSubscribe(h, "ReportReceived")
 
 	return h, nil
 }
 
 func (h *Holder) Load() error {
-	rows, err := h.db.Query("SELECT `id`, `channel_id`, `channel_name`, `channel_type`, `reporter_id`, `reporter_name`, `target_id`, `target_name`, `reason`, `logs` FROM `Report`")
+	rows, err := h.db.Query("SELECT `id`, `channel_id`, `channel_name`, `channel_type`, `reporter_id`, `reporter_name`, `target_id`, `target_name`, `reason`, `logs`, `time` FROM `Report`")
 	if err != nil {
 		return err
 	}
@@ -73,7 +78,7 @@ func (h *Holder) Load() error {
 		var report Report
 		var logsString string
 
-		if err := rows.Scan(&report.ID, &report.Channel.ID, &report.Channel.Name, &report.Channel.Type, &report.Reporter.ID, &report.Reporter.Name, &report.Target.ID, &report.Target.Name, &report.Reason, &logsString); err != nil {
+		if err := rows.Scan(&report.ID, &report.Channel.ID, &report.Channel.Name, &report.Channel.Type, &report.Reporter.ID, &report.Reporter.Name, &report.Target.ID, &report.Target.Name, &report.Reason, &logsString, &report.Time); err != nil {
 			return err
 		}
 
@@ -91,39 +96,44 @@ type handleReportMessage struct {
 	ReportID  uint32
 }
 
-func (h *Holder) Register(report Report) error {
+func (h *Holder) Register(report Report) (*time.Time, error) {
 	const queryF = `
 	INSERT INTO Report
 		(channel_id, channel_name, channel_type,
-		reporter_id, reporter_name, target_id, target_name, reason, logs)
+		reporter_id, reporter_name, target_id, target_name, reason, logs, time)
 	VALUES
-		(?, ?, ?, ?, ?, ?, ?, ?, ?)
+		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"))
+	h.reportsMutex.Lock()
+	defer h.reportsMutex.Unlock()
+
+	// Don't accept reports for users that have already been reported
+	for _, oldReport := range h.reports {
+		if oldReport.Channel.ID == report.Channel.ID && oldReport.Target.ID == report.Target.ID {
+			return &report.Time, nil
+		}
+	}
+
+	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), time.Now())
 	if err != nil {
 		fmt.Printf("Error inserting report %v into SQL: %s\n", report, err)
-		return err
+		return nil, err
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		fmt.Printf("Error getting last insert id forsenT: %s\n", err)
-		return err
+		fmt.Printf("Error getting last insert id: %s\n", err)
+		return nil, err
 	}
 
 	report.ID = uint32(id)
 
 	h.pubSub.Publish("ReportReceived", report, pkg.PubSubAdminAuth())
 
-	{
-		h.reportsMutex.Lock()
-		defer h.reportsMutex.Unlock()
+	h.reports[report.ID] = report
 
-		h.reports[report.ID] = report
-	}
-
-	return nil
+	return nil, nil
 }
 
 type reportHandled struct {
@@ -132,76 +142,116 @@ type reportHandled struct {
 	Action   string
 }
 
-func (h *Holder) handleReport(reportID uint32, action string) error {
+func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAuthorization) error {
 	h.reportsMutex.Lock()
 	defer h.reportsMutex.Unlock()
 
-	if report, ok := h.reports[reportID]; ok {
-		// Remove from SQL
-		const queryF = "DELETE FROM Report WHERE `id`=?"
+	if auth == nil {
+		fmt.Println("Missing auth in HandleReport")
+		return nil
+	}
 
-		res, err := h.db.Exec(queryF, report.ID)
-		if err != nil {
-			return err
+	report, ok := h.reports[reportID]
+	if !ok {
+		// No report found with this ID
+		return nil
+	}
+
+	// Remove report from SQL and our local map
+	err := h.dismissReport(report.ID)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Insert into new table: HandledReport
+
+	msg := reportHandled{
+		ReportID: report.ID,
+		Handler: ReportUser{
+			ID:   auth.TwitchUserID,
+			Name: h.userStore.GetName(auth.TwitchUserID),
+		},
+		Action: action,
+	}
+
+	h.pubSub.Publish("ReportHandled", &msg, pkg.PubSubAdminAuth())
+
+	switch action {
+	case "ban":
+		h.pubSub.Publish("Ban", &pkg.PubSubBan{
+			Channel: report.Channel.Name,
+			Target:  report.Target.Name,
+			Reason:  report.Reason,
+		}, pkg.PubSubAdminAuth())
+
+	case "undo":
+		h.pubSub.Publish("Untimeout", &pkg.PubSubUntimeout{
+			Channel: report.Channel.Name,
+			Target:  report.Target.Name,
+		}, pkg.PubSubAdminAuth())
+	}
+
+	return nil
+}
+
+// dismissReport assumes that reportsMutex has already been locked
+func (h *Holder) dismissReport(reportID uint32) error {
+	// Delete from SQL
+	const queryF = "DELETE FROM Report WHERE `id`=?"
+
+	_, err := h.db.Exec(queryF, reportID)
+	if err != nil {
+		return err
+	}
+
+	// Delete from our internal storage
+	delete(h.reports, reportID)
+
+	return nil
+}
+
+func (h *Holder) handleBanEvent(banEvent pkg.PubSubBanEvent) error {
+	h.reportsMutex.Lock()
+	defer h.reportsMutex.Unlock()
+
+	for reportID, report := range h.reports {
+		if report.Channel.ID == banEvent.Channel.ID && report.Target.ID == banEvent.Target.ID {
+			// Found matching report
+			h.dismissReport(reportID)
+
+			break
 		}
-
-		count, err := res.RowsAffected()
-		if err != nil {
-			return err
-		}
-		if count != 1 {
-			return errors.New("Report existed in internal storage, but not in SQL")
-		}
-
-		// TODO: Insert into new table: HandledReport
-
-		msg := reportHandled{
-			ReportID: report.ID,
-			Handler: ReportUser{
-				ID:   "11148817",
-				Name: "pajlada",
-			},
-			Action: action,
-		}
-
-		h.pubSub.Publish("ReportHandled", &msg, pkg.PubSubAdminAuth())
-
-		switch action {
-		case "ban":
-			h.pubSub.Publish("Ban", &pkg.PubSubBan{
-				Channel: report.Channel.Name,
-				Target:  report.Target.Name,
-				Reason:  report.Reason,
-			}, pkg.PubSubAdminAuth())
-
-		case "undo":
-			h.pubSub.Publish("Untimeout", &pkg.PubSubUntimeout{
-				Channel: report.Channel.Name,
-				Target:  report.Target.Name,
-			}, pkg.PubSubAdminAuth())
-		}
-
-		// Delete from our internal storage
-		delete(h.reports, report.ID)
-
-	} else {
-		fmt.Printf("No report with the id %d found\n", reportID)
 	}
 
 	return nil
 }
 
 func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {
-	var msg handleReportMessage
-	err := json.Unmarshal(data, &msg)
-	if err != nil {
-		fmt.Println("Error unmarshalling:", err)
-		return nil
+	switch topic {
+	case "HandleReport":
+		var msg handleReportMessage
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			fmt.Println("Error unmarshalling:", err)
+			return nil
+		}
+
+		fmt.Printf("Handle report: %#v\n", msg)
+
+		return h.handleReport(msg.ReportID, msg.Action, auth)
+
+	case "BanEvent":
+		var msg pkg.PubSubBanEvent
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			fmt.Println("Error unmarshalling:", err)
+			return nil
+		}
+
+		return h.handleBanEvent(msg)
 	}
 
-	fmt.Printf("Handle report: %#v\n", msg)
-
-	return h.handleReport(msg.ReportID, msg.Action)
+	return nil
 }
 
 func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string, authorization *pkg.PubSubAuthorization) (error, bool) {

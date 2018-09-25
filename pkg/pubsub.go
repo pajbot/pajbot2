@@ -26,3 +26,23 @@ type PubSubUntimeout struct {
 	Channel string
 	Target  string
 }
+
+type PubSubUser struct {
+	ID   string
+	Name string
+}
+
+type PubSubBanEvent struct {
+	Channel PubSubUser
+	Target  PubSubUser
+	Source  PubSubUser
+	Reason  string
+}
+
+type PubSubTimeoutEvent struct {
+	Channel  PubSubUser
+	Target   PubSubUser
+	Source   PubSubUser
+	Duration int
+	Reason   string
+}

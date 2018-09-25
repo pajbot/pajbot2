@@ -6,4 +6,6 @@ type UserStore interface {
 	GetIDs([]string) map[string]string
 
 	GetID(string) string
+
+	GetName(string) string
 }

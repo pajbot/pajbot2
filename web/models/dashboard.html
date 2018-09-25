@@ -22,8 +22,8 @@
         </div>
       </div>
       <h4>Reports</h4>
-      <div class="row" id="reports" data-bind="foreach: { data: reports, as: 'report' }">
-        <div class="col report card mb-3">
+      <div id="reports" data-bind="foreach: { data: reports, as: 'report' }">
+        <div class="report card mb-3">
           <div class="card-header">
             <span class="channel" data-bind="text: Channel.Name, css: { 'twitch': Channel.Type == 'twitch', 'discord': Channel.Type == 'discord', }"></span>
             <span class="reporter" data-bind="text: Reporter.Name, title: 'ID: ' + Reporter.ID"></span>
@@ -32,6 +32,7 @@
           </div>
           <div class="card-body">
             <span data-bind="if: typeof Reason === 'string' && Reason.length > 0">Reason: <span class="reason" data-bind="text: Reason"></span></span>
+            <a target="_blank" class="btn btn-link" data-bind="attr: { href: $root.makeLogLink(Channel.Name, Target.Name) }">logs</a>
             <div data-bind="if: typeof Logs === 'string'"><pre class="logs" data-bind="text: Logs.join('\n')"></pre></div>
               <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: $root.handleReport.bind($data, 'ban')">Ban</button>
               <button class="card-link btn btn-danger" title="Dismiss this report for everyone" data-bind="click: $root.handleReport.bind($data, 'dismiss')">Dismiss</button>

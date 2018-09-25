@@ -83,6 +83,10 @@ class pb2ViewModel {
   onConnected() {
     this.reports.removeAll();
   }
+
+  makeLogLink(channelName, targetName) {
+    return 'https://api.gempir.com/channel/' + channelName + '/user/' + targetName;
+  }
 }
 
 class pb2WebSocket {
