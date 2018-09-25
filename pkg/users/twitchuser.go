@@ -64,6 +64,14 @@ func (u *TwitchUser) loadPermissions() error {
 	return nil
 }
 
+func (u *TwitchUser) HasPermission(channel pkg.Channel, permission pkg.Permission) bool {
+	if u.HasChannelPermission(channel, permission) {
+		return true
+	}
+
+	return u.HasGlobalPermission(permission)
+}
+
 func (u *TwitchUser) HasGlobalPermission(permission pkg.Permission) bool {
 	if !u.permissionsLoaded {
 		err := u.loadPermissions()
