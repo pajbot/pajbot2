@@ -44,12 +44,6 @@ func updatePermissions(action, channelID string, target userTarget, parts []stri
 	}
 
 	return fmt.Sprintf("%s %s permissions changed from %b to %b (%s)", target.name, channelName, oldPermissions, newPermissions, action)
-
-	if err != nil {
-		return err.Error()
-	}
-
-	return ""
 }
 
 type subCommandFunc func(pkg.Sender, userTarget, pkg.Channel, pkg.User, []string) string
@@ -204,7 +198,5 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 		if response != "" {
 			bot.Mention(channel, source, response)
 		}
-	} else {
-		bot.Mention(channel, source, fmt.Sprintf("unknown subcommand '%s'", subCommandName))
 	}
 }
