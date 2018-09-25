@@ -63,7 +63,7 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	}
 
 	channel := bot.MakeChannel(reportedChannel)
-	if !source.HasGlobalPermission(pkg.PermissionReport) && !source.HasChannelPermission(channel, pkg.PermissionReport) {
+	if !source.HasPermission(channel, pkg.PermissionReport) {
 		bot.Whisper(source, "you don't have permissions to use the !report command")
 		return nil
 	}
@@ -119,7 +119,7 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		return nil
 	}
 
-	if !user.HasGlobalPermission(pkg.PermissionReport) && !user.HasChannelPermission(source, pkg.PermissionReport) {
+	if !user.HasPermission(source, pkg.PermissionReport) {
 		return nil
 	}
 
