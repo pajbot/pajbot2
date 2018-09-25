@@ -1,4 +1,4 @@
-package twitch
+package main
 
 import (
 	"strings"
@@ -11,6 +11,7 @@ import (
 var _ pkg.UserStore = &UserStore{}
 
 type UserStore struct {
+	// TODO: Mutex this map
 	userIDMap map[string]string
 }
 

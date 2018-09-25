@@ -53,19 +53,19 @@ type Bot struct {
 
 	ticker *time.Ticker
 
-	userStore *UserStore
+	userStore pkg.UserStore
 
 	pubSub *pubsub.PubSub
 }
 
 var _ pubsub.Connection = &Bot{}
 
-func NewBot(client *twitch.Client, pubSub *pubsub.PubSub) *Bot {
+func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
 		Client:    client,
-		userStore: NewUserStore(),
+		userStore: userStore,
 
 		pubSub: pubSub,
 	}

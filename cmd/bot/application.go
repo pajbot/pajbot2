@@ -72,7 +72,8 @@ type Application struct {
 
 	Quit chan string
 
-	PubSub *pubsub.PubSub
+	PubSub          *pubsub.PubSub
+	TwitchUserStore pkg.UserStore
 }
 
 func lol(xd string) *string {
@@ -345,6 +346,7 @@ func (a *Application) StartWebServer() error {
 	}
 
 	webBoss := web.Init(a.config, webCfg, a.PubSub)
+	a.TwitchUserStore = NewUserStore()
 	go webBoss.Run()
 
 	return nil
@@ -451,7 +453,7 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub)
+		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore)
 		bot.Name = name
 		bot.QuitChannel = a.Quit
 
