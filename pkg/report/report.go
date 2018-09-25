@@ -254,10 +254,10 @@ func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuth
 	return nil
 }
 
-func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string, authorization *pkg.PubSubAuthorization) (error, bool) {
+func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string, auth *pkg.PubSubAuthorization) (error, bool) {
 	switch topic {
 	case "ReportReceived":
-		if authorization == nil {
+		if auth == nil {
 			return nil, false
 		}
 
@@ -267,7 +267,7 @@ SELECT twitch_username FROM User
 	WHERE twitch_userid=? AND twitch_nonce=? LIMIT 1;
 `
 
-		rows, err := h.db.Query(queryF, authorization.TwitchUserID, authorization.Nonce)
+		rows, err := h.db.Query(queryF, auth.TwitchUserID, auth.Nonce)
 		if err != nil {
 			return err, true
 		}
@@ -277,7 +277,7 @@ SELECT twitch_username FROM User
 			return nil, false
 		}
 
-		hasPermission, err := users.HasGlobalPermission(authorization.TwitchUserID, pkg.PermissionModeration)
+		hasPermission, err := users.HasGlobalPermission(auth.TwitchUserID, pkg.PermissionModeration)
 		if err != nil {
 			return err, false
 		}

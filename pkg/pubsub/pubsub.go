@@ -133,10 +133,10 @@ func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
 	return nil
 }
 
-func (ps *PubSub) Subscribe(connection Connection, topic string, authorization *pkg.PubSubAuthorization) {
-	successfulAuthorization := ps.notifySubscriptionHandlers(connection, topic, authorization)
+func (ps *PubSub) Subscribe(connection Connection, topic string, auth *pkg.PubSubAuthorization) {
+	successfulAuthorization := ps.notifySubscriptionHandlers(connection, topic, auth)
 	if !successfulAuthorization {
-		fmt.Println("Failed authorization")
+		fmt.Printf("[%s] Failed authorization%+v\n", topic, auth)
 		return
 	}
 
@@ -149,12 +149,12 @@ func (ps *PubSub) Subscribe(connection Connection, topic string, authorization *
 	}
 }
 
-func (ps *PubSub) notifySubscriptionHandlers(connection Connection, topic string, authorization *pkg.PubSubAuthorization) bool {
+func (ps *PubSub) notifySubscriptionHandlers(connection Connection, topic string, auth *pkg.PubSubAuthorization) bool {
 	ps.onSubscribeMutex.Lock()
 	defer ps.onSubscribeMutex.Unlock()
 
 	for _, handler := range ps.onSubscribe[topic] {
-		err, successfulAuthorization := handler.ConnectionSubscribed(connection, topic, authorization)
+		err, successfulAuthorization := handler.ConnectionSubscribed(connection, topic, auth)
 		if err != nil {
 			fmt.Println("Error in subscription handler:", err)
 		}
