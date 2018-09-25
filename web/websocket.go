@@ -119,7 +119,6 @@ func (c *WSConn) readPump() {
 	c.ws.SetReadDeadline(time.Now().Add(pongWait))
 	c.ws.SetPongHandler(c.pongHandler)
 	for {
-		fmt.Println("Reading messages....")
 		_, message, err := c.ws.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {

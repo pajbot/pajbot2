@@ -22,7 +22,6 @@ func (h *ConnectionHub) run() {
 	for {
 		select {
 		case conn := <-h.register:
-			fmt.Printf("REGISTERING %#v\n", conn)
 			h.connections[conn] = true
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {

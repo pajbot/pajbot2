@@ -40,6 +40,10 @@ class pb2ViewModel {
     console.log('log in');
     window.location.href = "/api/auth/twitch/user?redirect=/dashboard";
   }
+
+  onConnected() {
+    this.reports.removeAll();
+  }
 }
 
 class pb2WebSocket {
@@ -113,6 +117,7 @@ class pb2WebSocket {
     console.log(this.socket);
     this.socket.binaryType = 'arraybuffer';
     this.socket.onopen = () => {
+      vm.onConnected();
       console.log('Connected to PB2');
       this.isOpen = true;
 

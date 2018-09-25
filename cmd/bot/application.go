@@ -285,8 +285,6 @@ func (a *Application) StartTwitterStream() error {
 		}
 	}
 
-	fmt.Println("????????")
-
 	/*
 		config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
 		token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)

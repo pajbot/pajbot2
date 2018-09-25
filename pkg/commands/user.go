@@ -71,17 +71,17 @@ func (c *subCommand) run(bot pkg.Sender, target userTarget, channel pkg.Channel,
 }
 
 type User struct {
-	subCommands       map[string]subCommand
+	subCommands       map[string]*subCommand
 	defaultSubCommand string
 }
 
 func NewUser() *User {
 	u := &User{
-		subCommands:       make(map[string]subCommand),
+		subCommands:       make(map[string]*subCommand),
 		defaultSubCommand: "print",
 	}
 
-	u.subCommands["print"] = subCommand{
+	u.subCommands["print"] = &subCommand{
 		permission: pkg.PermissionNone,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			channelPermissions, err := users.GetUserChannelPermissions(target.id, channel.GetID())
@@ -98,7 +98,7 @@ func NewUser() *User {
 		},
 	}
 
-	u.subCommands["set_global_permissions"] = subCommand{
+	u.addSC("set_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -107,9 +107,9 @@ func NewUser() *User {
 
 			return updatePermissions("set", "global", target, parts[3:])
 		},
-	}
+	})
 
-	u.subCommands["set_channel_permissions"] = subCommand{
+	u.addSC("set_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -118,9 +118,9 @@ func NewUser() *User {
 
 			return updatePermissions("set", channel.GetID(), target, parts[3:])
 		},
-	}
+	})
 
-	u.subCommands["add_global_permissions"] = subCommand{
+	u.addSC("add_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -129,9 +129,9 @@ func NewUser() *User {
 
 			return updatePermissions("add", "global", target, parts[3:])
 		},
-	}
+	})
 
-	u.subCommands["add_channel_permissions"] = subCommand{
+	u.addSC("add_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -140,9 +140,9 @@ func NewUser() *User {
 
 			return updatePermissions("add", channel.GetID(), target, parts[3:])
 		},
-	}
+	})
 
-	u.subCommands["remove_global_permissions"] = subCommand{
+	u.addSC("remove_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -151,9 +151,9 @@ func NewUser() *User {
 
 			return updatePermissions("remove", "global", target, parts[3:])
 		},
-	}
+	})
 
-	u.subCommands["remove_channel_permissions"] = subCommand{
+	u.addSC("remove_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -162,9 +162,14 @@ func NewUser() *User {
 
 			return updatePermissions("remove", channel.GetID(), target, parts[3:])
 		},
-	}
+	})
 
 	return u
+}
+
+func (c *User) addSC(name string, sc *subCommand) {
+	c.subCommands[name] = sc
+	c.subCommands[name+"s"] = sc
 }
 
 func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {

@@ -166,8 +166,6 @@ func (b *Boss) wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn := NewWSConn(ws, messageType)
 
 	// Create a custom connection
-	fmt.Println("xd")
 	Hub.register <- conn
-	fmt.Println("loooooooooooool")
 	conn.onConnected()
 }

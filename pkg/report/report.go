@@ -217,7 +217,6 @@ SELECT twitch_username FROM User
 	WHERE twitch_userid=? AND twitch_nonce=? LIMIT 1;
 `
 
-		fmt.Printf("user id: %#v, nonce: %#v\n", authorization.TwitchUserID, authorization.Nonce)
 		rows, err := h.db.Query(queryF, authorization.TwitchUserID, authorization.Nonce)
 		if err != nil {
 			return err, true
@@ -242,7 +241,7 @@ SELECT twitch_username FROM User
 			if err != nil {
 				return err, true
 			}
-			connection.MessageReceived(topic, bytes, authorization)
+			connection.MessageReceived(topic, bytes, pkg.PubSubAdminAuth())
 		}
 	}
 
