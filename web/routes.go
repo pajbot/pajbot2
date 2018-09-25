@@ -14,7 +14,7 @@ func init() {
 	tpl, err = hot.New(&hot.Config{
 		Watch:          true,
 		BaseName:       "base",
-		Dir:            "../../web/models/",
+		Dir:            "web/models/",
 		FilesExtension: []string{".html"},
 		LeftDelim:      "[[",
 		RightDelim:     "]]",

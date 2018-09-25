@@ -109,7 +109,7 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub, _twitch
 	initAPI(api, config)
 
 	// Serve files statically from ./web/static in /static
-	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../web/static/"))))
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("web/static/"))))
 
 	fmt.Printf("Starting web on host %s\n", b.Host)
 	return b
