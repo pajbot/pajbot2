@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"encoding/binary"
+	"math"
+)
+
 // NOTE: bytes must be 8 length here
 func BytesToUint64(bytes []uint8) (v uint64) {
 	if len(bytes) != 8 {
@@ -60,4 +65,14 @@ func CombineUint32(val1 uint32, val2 uint32) uint64 {
 	r = r << 32
 	r += uint64(val2)
 	return r
+}
+
+func BytesToFloat32(bytes []uint8) float32 {
+	if len(bytes) != 4 {
+		panic("Invalid bytes array length sent to BytesToFloat32")
+	}
+
+	bits := binary.LittleEndian.Uint32(bytes)
+	v := math.Float32frombits(bits)
+	return v
 }
