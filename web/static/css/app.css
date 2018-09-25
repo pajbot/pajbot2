@@ -1,5 +1,6 @@
 body {
     font-family: 'Arial', sans-serif;
+    padding-top: 1em;
 }
 
 .report .channel.twitch {
