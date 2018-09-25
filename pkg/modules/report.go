@@ -51,6 +51,10 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	var reason string
 
 	reportedUsername = strings.ToLower(parts[1])
+	if reportedUsername == source.GetName() {
+		return nil
+	}
+
 	if len(parts) >= 3 {
 		reportedChannel = strings.ToLower(strings.TrimPrefix(parts[2], "#"))
 	} else {
@@ -123,6 +127,10 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 	var reason string
 
 	reportedUsername = strings.ToLower(parts[1])
+
+	if reportedUsername == user.GetName() {
+		return nil
+	}
 
 	if len(parts) >= 3 {
 		reason = strings.Join(parts[2:], " ")
