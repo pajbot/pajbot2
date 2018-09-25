@@ -90,8 +90,12 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub, _twitch
 		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
 	}
 	b := &Boss{
-		Host:   config.Web.Host,
-		WSHost: "ws://" + config.Web.Domain + "/ws",
+		Host: config.Web.Host,
+	}
+	if config.Web.Secure {
+		b.WSHost = "wss://" + config.Web.Domain + "/ws"
+	} else {
+		b.WSHost = "ws://" + config.Web.Domain + "/ws"
 	}
 	twitchBots = webCfg.Bots
 	redisClient = webCfg.Redis

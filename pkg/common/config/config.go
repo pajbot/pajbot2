@@ -14,6 +14,7 @@ type RedisConfig struct {
 type WebConfig struct {
 	Host   string
 	Domain string
+	Secure bool
 }
 
 type SQLConfig struct {
