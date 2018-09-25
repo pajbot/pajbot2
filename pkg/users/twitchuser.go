@@ -126,6 +126,24 @@ func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
 	return u.GetName() == channel.GetChannel()
 }
 
+func GetUserPermissions(userID, channelID string) (pkg.Permission, error) {
+	switch channelID {
+	case "global":
+		return GetUserGlobalPermissions(userID)
+	default:
+		return GetUserChannelPermissions(userID, channelID)
+	}
+}
+
+func SetUserPermissions(userID, channelID string, newPermissions pkg.Permission) error {
+	switch channelID {
+	case "global":
+		return SetUserGlobalPermissions(userID, newPermissions)
+	default:
+		return SetUserChannelPermissions(userID, channelID, newPermissions)
+	}
+}
+
 func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
 	var permissions pkg.Permission
 

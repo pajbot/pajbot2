@@ -488,7 +488,7 @@ func (a *Application) LoadBots() error {
 		// customCommands.RegisterCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
 		// customCommands.RegisterCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
 		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
-		customCommands.RegisterCommand([]string{"!user"}, &commands.User{})
+		customCommands.RegisterCommand([]string{"!user"}, commands.NewUser())
 		customCommands.RegisterCommand([]string{"!pb2rank"}, &commands.Rank{})
 		customCommands.RegisterCommand([]string{"!pb2ping"}, &commands.Ping{})
 		customCommands.RegisterCommand([]string{"!pb2simplify"}, &commands.Simplify{})
