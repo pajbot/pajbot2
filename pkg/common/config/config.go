@@ -20,19 +20,17 @@ type SQLConfig struct {
 	DSN string
 }
 
-type authTwitchConfig struct {
-	Bot struct {
-		// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
-		ClientID     string
-		ClientSecret string
-		RedirectURI  string
-	}
+type TwitchAuthConfig struct {
+	// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
+	ClientID     string
+	ClientSecret string
+	RedirectURI  string
+}
 
-	User struct {
-		ClientID     string
-		ClientSecret string
-		RedirectURI  string
-	}
+type AuthTwitchConfig struct {
+	Bot      TwitchAuthConfig
+	User     TwitchAuthConfig
+	Streamer TwitchAuthConfig
 }
 
 type authTwitterConfig struct {
@@ -43,7 +41,7 @@ type authTwitterConfig struct {
 }
 
 type authConfig struct {
-	Twitch authTwitchConfig
+	Twitch AuthTwitchConfig
 
 	Twitter authTwitterConfig
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
+	"github.com/pajlada/pajbot2/pkg/users"
 )
 
 type ReportUser struct {
@@ -52,7 +53,7 @@ func New(db *sql.DB, pubSub *pubsub.PubSub) (*Holder, error) {
 		return nil, err
 	}
 
-	pubSub.Subscribe(h, "HandleReport")
+	pubSub.Subscribe(h, "HandleReport", nil)
 	pubSub.HandleSubscribe(h, "ReportReceived")
 
 	return h, nil
@@ -91,7 +92,13 @@ type handleReportMessage struct {
 }
 
 func (h *Holder) Register(report Report) error {
-	const queryF = "INSERT INTO `Report` (`channel_id`, `channel_name`, `channel_type`, `reporter_id`, `reporter_name`, `target_id`, `target_name`, `reason`, `logs`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	const queryF = `
+	INSERT INTO Report
+		(channel_id, channel_name, channel_type,
+		reporter_id, reporter_name, target_id, target_name, reason, logs)
+	VALUES
+		(?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
 
 	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"))
 	if err != nil {
@@ -107,7 +114,7 @@ func (h *Holder) Register(report Report) error {
 
 	report.ID = uint32(id)
 
-	h.pubSub.Publish("ReportReceived", report)
+	h.pubSub.Publish("ReportReceived", report, pkg.PubSubAdminAuth())
 
 	{
 		h.reportsMutex.Lock()
@@ -157,7 +164,7 @@ func (h *Holder) handleReport(reportID uint32, action string) error {
 			Action: action,
 		}
 
-		h.pubSub.Publish("ReportHandled", &msg)
+		h.pubSub.Publish("ReportHandled", &msg, pkg.PubSubAdminAuth())
 
 		switch action {
 		case "ban":
@@ -165,15 +172,14 @@ func (h *Holder) handleReport(reportID uint32, action string) error {
 				Channel: report.Channel.Name,
 				Target:  report.Target.Name,
 				Reason:  report.Reason,
-			})
+			}, pkg.PubSubAdminAuth())
 
 		case "undo":
 			h.pubSub.Publish("Untimeout", &pkg.PubSubUntimeout{
 				Channel: report.Channel.Name,
 				Target:  report.Target.Name,
-			})
+			}, pkg.PubSubAdminAuth())
 		}
-		h.pubSub.Publish("ReportHandled", &msg)
 
 		// Delete from our internal storage
 		delete(h.reports, report.ID)
@@ -185,7 +191,7 @@ func (h *Holder) handleReport(reportID uint32, action string) error {
 	return nil
 }
 
-func (h *Holder) MessageReceived(topic string, data []byte) error {
+func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {
 	var msg handleReportMessage
 	err := json.Unmarshal(data, &msg)
 	if err != nil {
@@ -198,17 +204,47 @@ func (h *Holder) MessageReceived(topic string, data []byte) error {
 	return h.handleReport(msg.ReportID, msg.Action)
 }
 
-func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string) error {
+func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string, authorization *pkg.PubSubAuthorization) (error, bool) {
 	switch topic {
 	case "ReportReceived":
+		if authorization == nil {
+			return nil, false
+		}
+
+		// Verify authorization
+		const queryF = `
+SELECT twitch_username FROM User
+	WHERE twitch_userid=? AND twitch_nonce=? LIMIT 1;
+`
+
+		fmt.Printf("user id: %#v, nonce: %#v\n", authorization.TwitchUserID, authorization.Nonce)
+		rows, err := h.db.Query(queryF, authorization.TwitchUserID, authorization.Nonce)
+		if err != nil {
+			return err, true
+		}
+		defer rows.Close()
+
+		if !rows.Next() {
+			return nil, false
+		}
+
+		hasPermission, err := users.HasGlobalPermission(authorization.TwitchUserID, pkg.PermissionModeration)
+		if err != nil {
+			return err, false
+		}
+
+		if !hasPermission {
+			return nil, false
+		}
+
 		for _, report := range h.reports {
 			bytes, err := json.Marshal(report)
 			if err != nil {
-				return err
+				return err, true
 			}
-			connection.MessageReceived(topic, bytes)
+			connection.MessageReceived(topic, bytes, authorization)
 		}
 	}
 
-	return nil
+	return nil, true
 }

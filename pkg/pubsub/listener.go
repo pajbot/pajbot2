@@ -3,6 +3,8 @@ package pubsub
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/pajlada/pajbot2/pkg"
 )
 
 type Listener struct {
@@ -10,7 +12,7 @@ type Listener struct {
 	subscriptionType SubscriptionType
 }
 
-func (l *Listener) Publish(topic string, data interface{}) error {
+func (l *Listener) Publish(topic string, data interface{}, auth *pkg.PubSubAuthorization) error {
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		fmt.Printf("Unable to unmarshal %#v\n", data)
@@ -18,7 +20,7 @@ func (l *Listener) Publish(topic string, data interface{}) error {
 		return nil
 	}
 
-	err = l.connection.MessageReceived(topic, bytes)
+	err = l.connection.MessageReceived(topic, bytes, auth)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package users
 
 import (
+	"database/sql"
 	"errors"
 	"log"
 
@@ -8,6 +9,17 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
+
+type TwitchUser struct {
+	twitch.User
+
+	ID string
+
+	permissionsLoaded bool
+	permissions       pkg.Permission
+
+	channelPermissions map[string]*permissionSet
+}
 
 var _ pkg.User = &TwitchUser{}
 
@@ -40,37 +52,14 @@ func (p *permissionSet) load(channelID, userID string) error {
 	return nil
 }
 
-type TwitchUser struct {
-	twitch.User
-
-	ID string
-
-	permissionsLoaded bool
-	permissions       pkg.Permission
-
-	channelPermissions map[string]*permissionSet
-}
-
 func (u *TwitchUser) loadPermissions() error {
-	const queryF = "SELECT permissions FROM `twitch_user_permissions` WHERE `twitch_user_id`=?;"
-
-	u.permissionsLoaded = true
-
-	rows, err := _server.sql.Query(queryF, u.GetID())
+	p, err := GetUserGlobalPermissions(u.GetID())
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 
-	if rows.Next() {
-		var permissionsBytes []uint8
-		err := rows.Scan(&permissionsBytes)
-		if err != nil {
-			return err
-		}
-
-		u.permissions = pkg.Permission(utils.BytesToUint64(permissionsBytes))
-	}
+	u.permissionsLoaded = true
+	u.permissions = p
 
 	return nil
 }
@@ -129,6 +118,30 @@ func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
 	return u.GetName() == channel.GetChannel()
 }
 
+func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
+	var permissions pkg.Permission
+
+	if userID == "" {
+		return permissions, errors.New("missing user id or channel id")
+	}
+
+	const queryF = "SELECT permissions FROM `twitch_user_permissions` WHERE `twitch_user_id`=?;"
+
+	var permissionsBytes []uint8
+	err := _server.sql.QueryRow(queryF, userID).Scan(&permissionsBytes)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return permissions, nil
+		}
+
+		return permissions, err
+	}
+
+	permissions = pkg.Permission(utils.BytesToUint64(permissionsBytes))
+
+	return permissions, nil
+}
+
 func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error) {
 	var permissions pkg.Permission
 
@@ -155,7 +168,6 @@ func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error)
 	}
 
 	return permissions, nil
-
 }
 
 func SetUserChannelPermissions(userID, channelID string, permission pkg.Permission) error {
@@ -178,4 +190,50 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 	}
 
 	return nil
+}
+
+func SetUserGlobalPermissions(userID string, permission pkg.Permission) error {
+	const queryF = `
+INSERT INTO twitch_user_permissions
+	(twitch_user_id, permissions)
+	VALUES (?, ?)
+	ON DUPLICATE KEY UPDATE permissions=?;
+	`
+
+	if userID == "" {
+		return errors.New("missing user id or channel id")
+	}
+
+	permissionBytes := utils.Uint64ToBytes(uint64(permission))
+
+	_, err := _server.sql.Exec(queryF, userID, permissionBytes, permissionBytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func HasGlobalPermission(userID string, permission pkg.Permission) (hasPermission bool, err error) {
+	globalPermissions, err := GetUserGlobalPermissions(userID)
+	if err != nil {
+		return
+	}
+
+	hasPermission = (globalPermissions & permission) != 0
+	return
+}
+
+func HasChannelPermission(userID, channelID string, permission pkg.Permission) (hasPermission bool, err error) {
+	globalPermissions, err := GetUserGlobalPermissions(userID)
+	if err != nil {
+		return
+	}
+	channelPermissions, err := GetUserChannelPermissions(userID, channelID)
+	if err != nil {
+		return
+	}
+
+	hasPermission = ((globalPermissions | channelPermissions) & permission) != 0
+	return
 }

@@ -52,9 +52,14 @@ type pubsubMessage struct {
 	Data  json.RawMessage
 }
 
-func (c *WSConn) MessageReceived(topic string, bytes []byte) error {
+func (c *WSConn) MessageReceived(topic string, bytes []byte, auth *pkg.PubSubAuthorization) error {
 	if !c.connected() {
 		return errors.New("Connection no longer connected")
+	}
+
+	if auth == nil || !auth.Admin() {
+		fmt.Printf("Skipping forwarding this message: %s - %s\n", topic, string(bytes))
+		return nil
 	}
 
 	msg := pubsubMessage{

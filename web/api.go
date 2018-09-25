@@ -9,16 +9,8 @@ import (
 
 	"time"
 
-	"github.com/dankeroni/gotwitch"
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg/apirequest"
-	"github.com/pajlada/pajbot2/pkg/common"
-	"golang.org/x/oauth2"
-)
-
-var (
-	twitchBotOauthConfig  = &oauth2.Config{}
-	twitchUserOauthConfig = &oauth2.Config{}
+	"github.com/pajlada/pajbot2/pkg/common/config"
 )
 
 // api endpoints
@@ -133,118 +125,6 @@ func apiRootHandler(w http.ResponseWriter, r *http.Request) {
 	write(w, p.data)
 }
 
-// TODO(pajlada): This should be random per request
-var oauthStateString = "penis"
-
-func apiTwitchBotLogin(w http.ResponseWriter, r *http.Request) {
-	if twitchBotOauthConfig.ClientID == "" {
-		writeError(w, "Missing client ID for Twitch bot")
-		return
-	}
-
-	url := twitchBotOauthConfig.AuthCodeURL(oauthStateString)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func apiTwitchBotCallback(w http.ResponseWriter, r *http.Request) {
-	state := r.FormValue("state")
-	if state != oauthStateString {
-		fmt.Printf("Invalid oauth state")
-		// bad oauth state
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	code := r.FormValue("code")
-	token, err := twitchBotOauthConfig.Exchange(oauth2.NoContext, code)
-	if err != nil {
-		fmt.Printf("Code exchange failed with %s", err)
-	}
-	write(w, "Access token: "+token.AccessToken)
-
-	p := customPayload{}
-
-	onSuccess := func(data gotwitch.Self) {
-		log.Println("Success!!!!!!!!!!")
-		p.Add("data", data)
-
-		if data.Identified && data.Token.Valid {
-			p.Add("username", data.Token.UserName)
-			p.Add("token", token.AccessToken)
-			p.Add("refreshtoken", token.RefreshToken)
-			err = common.CreateBot(sqlClient, data.Token.UserName, token.AccessToken, token.RefreshToken)
-			if err != nil {
-				// XXX: handle this
-				log.Println(err)
-			}
-		}
-	}
-
-	apirequest.TwitchBotV3.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
-
-	// We should, instead of returning the data raw, do something about it.
-	// Right now this is useful for new apps that need access.
-	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
-	write(w, p.data)
-	log.Println("hehe")
-
-	//common.CreateBotAccount(sqlClient, )
-}
-
-func apiTwitchUserLogin(w http.ResponseWriter, r *http.Request) {
-	url := twitchUserOauthConfig.AuthCodeURL(oauthStateString)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
-func apiTwitchUserCallback(w http.ResponseWriter, r *http.Request) {
-	state := r.FormValue("state")
-	if state != oauthStateString {
-		fmt.Printf("Invalid oauth state")
-		// bad oauth state
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	p := customPayload{}
-
-	code := r.FormValue("code")
-	if code == "" {
-		// no valid code given
-		p.Add("error", "Invalid code")
-		write(w, p.data)
-		return
-	}
-	token, err := twitchUserOauthConfig.Exchange(oauth2.NoContext, code)
-	if err != nil {
-		fmt.Printf("Code exchange failed with %s", err)
-	}
-
-	onSuccess := func(data gotwitch.Self) {
-		log.Println("Success!")
-		p.Add("data", data)
-
-		if data.Identified && data.Token.Valid {
-			p.Add("username", data.Token.UserName)
-			p.Add("token", token.AccessToken)
-			p.Add("refreshtoken", token.RefreshToken)
-
-			fmt.Printf("Username: %s - Access token: %s\n", data.Token.UserName, token.AccessToken)
-			err = common.CreateDBUser(sqlClient, data.Token.UserName, token.AccessToken, token.RefreshToken, "user")
-			if err != nil {
-				// XXX: handle this
-				log.Println(err)
-			}
-		}
-	}
-
-	apirequest.TwitchV3.GetSelf(token.AccessToken, onSuccess, onHTTPError, onInternalError)
-
-	// We should, instead of returning the data raw, do something about it.
-	// Right now this is useful for new apps that need access.
-	// oo, do we keep multiple applications? One for bot accounts, one for clients? yes I think that sounds good
-	fmt.Fprintf(w, "ok done")
-}
-
 const ActionUnknown = 0
 const ActionTimeout = 1
 const ActionBan = 2
@@ -318,13 +198,15 @@ func onInternalError(err error) {
 	fmt.Printf("internal error: %s", err)
 }
 
-// InitAPI adds routes to the given subrouter
-func InitAPI(m *mux.Router) {
+func initAPI(m *mux.Router, config *config.Config) {
 	m.HandleFunc("/", apiRootHandler)
-	m.HandleFunc("/auth/twitch/bot", apiTwitchBotLogin)
-	m.HandleFunc("/auth/twitch/user", apiTwitchUserLogin)
-	m.HandleFunc("/auth/twitch/bot/callback", apiTwitchBotCallback)
-	m.HandleFunc("/auth/twitch/user/callback", apiTwitchUserCallback)
+
+	fmt.Println("Init API")
+	err := twitchAuthInit(m, &config.Auth.Twitch)
+	if err != nil {
+		panic(err)
+	}
+
 	// m.HandleFunc(`/channel/{channel:\w+}/{rest:.*}`, APIHandler)
 	m.HandleFunc(`/channel/{channelID}/moderation/latest`, apiChannelModerationLatest)
 	m.HandleFunc(`/hook/{channel:\w+}`, apiHook)

@@ -31,13 +31,15 @@ type Boss struct {
 }
 
 var (
+	router      *mux.Router
 	twitchBots  map[string]pkg.Sender
 	redisClient *redis.Pool
 	sqlClient   *sql.DB
 	hooks       map[string]struct {
 		Secret string
 	}
-	pubSub *pubsub.PubSub
+	pubSub          *pubsub.PubSub
+	twitchUserStore pkg.UserStore
 )
 
 var (
@@ -47,23 +49,24 @@ var (
 )
 
 // Init returns a webBoss which hosts the website
-func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub) *Boss {
+func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub, _twitchUserStore pkg.UserStore) *Boss {
 	pubSub = _pubSub
-	twitchBotOauthConfig.RedirectURL = config.Auth.Twitch.Bot.RedirectURI
-	twitchBotOauthConfig.ClientID = config.Auth.Twitch.Bot.ClientID
-	twitchBotOauthConfig.ClientSecret = config.Auth.Twitch.Bot.ClientSecret
-	twitchBotOauthConfig.Scopes = []string{
+	twitchUserStore = _twitchUserStore
+	twitchBotOauth.RedirectURL = config.Auth.Twitch.Bot.RedirectURI
+	twitchBotOauth.ClientID = config.Auth.Twitch.Bot.ClientID
+	twitchBotOauth.ClientSecret = config.Auth.Twitch.Bot.ClientSecret
+	twitchBotOauth.Scopes = []string{
 		"user_read",
 		"chat_login",
 	}
-	twitchBotOauthConfig.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://api.twitch.tv/kraken/oauth2/authorize",
-		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
+	twitchBotOauth.Endpoint = oauth2.Endpoint{
+		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
+		TokenURL: "https://id.twitch.tv/oauth2/token",
 	}
-	twitchUserOauthConfig.RedirectURL = config.Auth.Twitch.User.RedirectURI
-	twitchUserOauthConfig.ClientID = config.Auth.Twitch.User.ClientID
-	twitchUserOauthConfig.ClientSecret = config.Auth.Twitch.User.ClientSecret
-	twitchUserOauthConfig.Scopes = []string{
+	twitchStreamerOauth.RedirectURL = config.Auth.Twitch.Streamer.RedirectURI
+	twitchStreamerOauth.ClientID = config.Auth.Twitch.Streamer.ClientID
+	twitchStreamerOauth.ClientSecret = config.Auth.Twitch.Streamer.ClientSecret
+	twitchStreamerOauth.Scopes = []string{
 		"user_read",
 		"channel_commercial",
 		"channel_subscriptions",
@@ -71,8 +74,19 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub) *Boss {
 		"channel_feed_read",
 		"channel_feed_edit",
 	}
-	twitchUserOauthConfig.Endpoint = oauth2.Endpoint{
-		AuthURL:  "https://api.twitch.tv/kraken/oauth2/authorize",
+	twitchStreamerOauth.Endpoint = oauth2.Endpoint{
+		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
+		TokenURL: "https://id.twitch.tv/oauth2/token",
+	}
+
+	twitchUserOauth.RedirectURL = config.Auth.Twitch.User.RedirectURI
+	twitchUserOauth.ClientID = config.Auth.Twitch.User.ClientID
+	twitchUserOauth.ClientSecret = config.Auth.Twitch.User.ClientSecret
+	twitchUserOauth.Scopes = []string{
+		"openid",
+	}
+	twitchUserOauth.Endpoint = oauth2.Endpoint{
+		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
 		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
 	}
 	b := &Boss{
@@ -83,6 +97,21 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub) *Boss {
 	redisClient = webCfg.Redis
 	sqlClient = webCfg.SQL
 	hooks = config.Hooks
+
+	router = mux.NewRouter()
+	router.HandleFunc("/", b.rootHandler)
+	router.HandleFunc("/ws/{type}", b.wsHandler)
+	router.HandleFunc("/dashboard", b.dashboardHandler)
+	// i would like to use a subdomain for this but it might be annoying for you pajaHop
+	router.HandleFunc("/api", apiRootHandler)
+	api := router.PathPrefix("/api").Subrouter()
+
+	initAPI(api, config)
+
+	// Serve files statically from ./web/static in /static
+	router.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../web/static/"))))
+
+	fmt.Printf("Starting web on host %s\n", b.Host)
 	return b
 }
 
@@ -90,21 +119,8 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub) *Boss {
 func (b *Boss) Run() {
 	go Hub.run()
 
-	r := mux.NewRouter()
-	r.HandleFunc("/", b.rootHandler)
-	r.HandleFunc("/ws/{type}", b.wsHandler)
-	r.HandleFunc("/dashboard", b.dashboardHandler)
-	// i would like to use a subdomain for this but it might be annoying for you pajaHop
-	r.HandleFunc("/api", apiRootHandler)
-	api := r.PathPrefix("/api").Subrouter()
-
-	// Serve files statically from ./web/static in /static
-	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../web/static/"))))
-
-	fmt.Printf("Starting web on host %s\n", b.Host)
-	InitAPI(api)
 	corsObj := handlers.AllowedOrigins([]string{"*"})
-	err := http.ListenAndServe(b.Host, handlers.CORS(corsObj)(r))
+	err := http.ListenAndServe(b.Host, handlers.CORS(corsObj)(router))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -15,6 +15,7 @@
   </head>
   <body>
     <div class="container-fluid">
+      <button class="btn btn-link" data-bind="click: $root.logIn">Log in with twitch</button>
       <div id="reports" data-bind="foreach: { data: reports, as: 'report' }">
         <div class="report card mb-3">
           <div class="card-header">

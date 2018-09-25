@@ -345,8 +345,9 @@ func (a *Application) StartWebServer() error {
 		SQL:   a.SQL,
 	}
 
-	webBoss := web.Init(a.config, webCfg, a.PubSub)
 	a.TwitchUserStore = NewUserStore()
+
+	webBoss := web.Init(a.config, webCfg, a.PubSub, a.TwitchUserStore)
 	go webBoss.Run()
 
 	return nil
@@ -399,7 +400,7 @@ func (a *Application) notifyPubSub(next pb2twitch.Handler) pb2twitch.Handler {
 		a.PubSub.Publish("MessageReceived", &messageReceivedData{
 			Sender:  user.GetName(),
 			Message: message.Text,
-		})
+		}, pkg.PubSubAdminAuth())
 		next.HandleMessage(bot, channel, user, message, action)
 	})
 }

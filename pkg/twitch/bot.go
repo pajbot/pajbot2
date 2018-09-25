@@ -70,8 +70,8 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 		pubSub: pubSub,
 	}
 
-	pubSub.Subscribe(b, "Ban")
-	pubSub.Subscribe(b, "Untimeout")
+	pubSub.Subscribe(b, "Ban", nil)
+	pubSub.Subscribe(b, "Untimeout", nil)
 
 	return b
 }
@@ -678,7 +678,7 @@ func (b *Bot) MakeChannel(channel string) pkg.Channel {
 	}
 }
 
-func (b *Bot) MessageReceived(topic string, data []byte) error {
+func (b *Bot) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {
 	switch topic {
 	case "Ban":
 		var msg pkg.PubSubBan

@@ -10,6 +10,8 @@ const (
 	PermissionModeration Permission = 1 << 3
 )
 
+// GetPermissionBit converts a string (i.e. "admin") to the binary value it represents.
+// 0b100 in this example
 func GetPermissionBit(s string) Permission {
 	if s == "report" {
 		return PermissionReport
@@ -25,4 +27,15 @@ func GetPermissionBit(s string) Permission {
 	}
 
 	return PermissionNone
+}
+
+// GetPermissionBits converts a list of strings (i.e. ["admin", "raffle"]) to the binary value they represent.
+// 0b110 in this example
+func GetPermissionBits(permissionNames []string) (permissions Permission) {
+	for _, permissionName := range permissionNames {
+		permission := GetPermissionBit(permissionName)
+		permissions |= permission
+	}
+
+	return
 }

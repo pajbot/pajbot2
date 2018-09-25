@@ -4,17 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
+
+	"github.com/pajlada/pajbot2/pkg"
 )
 
 type topic struct {
 }
 
 type Connection interface {
-	MessageReceived(topic string, bytes []byte) error
+	MessageReceived(topic string, bytes []byte, Authorization *pkg.PubSubAuthorization) error
 }
 
 type SubscriptionHandler interface {
-	ConnectionSubscribed(connection Connection, topic string) error
+	ConnectionSubscribed(connection Connection, topic string, Authorization *pkg.PubSubAuthorization) (error, bool)
 }
 
 type SubscriptionType int
@@ -34,10 +36,11 @@ const (
 )
 
 type Message struct {
-	operation  operationType
-	topic      string
-	data       interface{}
-	connection Connection
+	operation     operationType
+	topic         string
+	data          interface{}
+	authorization *pkg.PubSubAuthorization
+	connection    Connection
 }
 
 type PubSub struct {
@@ -69,9 +72,9 @@ func (ps *PubSub) Run() {
 		case msg := <-ps.c:
 			switch msg.operation {
 			case operationPublish:
-				ps.publish(msg.topic, msg.data)
+				ps.publish(msg.topic, msg.data, msg.authorization)
 			case operationSubscribe:
-				ps.Subscribe(msg.connection, msg.topic)
+				ps.Subscribe(msg.connection, msg.topic, msg.authorization)
 
 			default:
 				fmt.Printf("Unhandled operation: %v\n", msg.operation)
@@ -80,12 +83,12 @@ func (ps *PubSub) Run() {
 	}
 }
 
-func (ps *PubSub) publish(topic string, data interface{}) {
+func (ps *PubSub) publish(topic string, data interface{}, auth *pkg.PubSubAuthorization) {
 	ps.topicsMutex.Lock()
 
 	for _, l := range ps.topics[topic] {
 		go func(listener *Listener) {
-			err := listener.Publish(topic, data)
+			err := listener.Publish(topic, data, auth)
 			if err != nil {
 				ps.UnsubscribeAll(listener)
 				fmt.Println(err)
@@ -96,18 +99,20 @@ func (ps *PubSub) publish(topic string, data interface{}) {
 	ps.topicsMutex.Unlock()
 }
 
-func (ps *PubSub) Publish(topic string, data interface{}) {
+func (ps *PubSub) Publish(topic string, data interface{}, auth *pkg.PubSubAuthorization) {
 	ps.c <- Message{
-		operation: operationPublish,
-		topic:     topic,
-		data:      data,
+		operation:     operationPublish,
+		topic:         topic,
+		data:          data,
+		authorization: auth,
 	}
 }
 
 type pubsubMessage struct {
-	Type  string
-	Topic string
-	Data  interface{} `json:",omitempty"`
+	Type          string
+	Topic         string
+	Data          interface{} `json:",omitempty"`
+	Authorization *pkg.PubSubAuthorization
 }
 
 func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
@@ -120,15 +125,21 @@ func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
 	switch msg.Type {
 	case "Publish":
 		fmt.Println("Send publish message on topic", msg.Topic)
-		ps.c <- Message{operation: operationPublish, topic: msg.Topic, connection: connection, data: msg.Data}
+		ps.c <- Message{operation: operationPublish, topic: msg.Topic, connection: connection, data: msg.Data, authorization: msg.Authorization}
 	case "Subscribe":
-		ps.c <- Message{operation: operationSubscribe, topic: msg.Topic, connection: connection}
+		ps.c <- Message{operation: operationSubscribe, topic: msg.Topic, connection: connection, authorization: msg.Authorization}
 	}
 
 	return nil
 }
 
-func (ps *PubSub) Subscribe(connection Connection, topic string) {
+func (ps *PubSub) Subscribe(connection Connection, topic string, authorization *pkg.PubSubAuthorization) {
+	successfulAuthorization := ps.notifySubscriptionHandlers(connection, topic, authorization)
+	if !successfulAuthorization {
+		fmt.Println("Failed authorization")
+		return
+	}
+
 	{
 		ps.topicsMutex.Lock()
 		defer ps.topicsMutex.Unlock()
@@ -136,18 +147,24 @@ func (ps *PubSub) Subscribe(connection Connection, topic string) {
 
 		ps.topics[topic] = append(ps.topics[topic], l)
 	}
-
-	ps.notifySubscriptionHandlers(connection, topic)
 }
 
-func (ps *PubSub) notifySubscriptionHandlers(connection Connection, topic string) {
+func (ps *PubSub) notifySubscriptionHandlers(connection Connection, topic string, authorization *pkg.PubSubAuthorization) bool {
 	ps.onSubscribeMutex.Lock()
 	defer ps.onSubscribeMutex.Unlock()
 
 	for _, handler := range ps.onSubscribe[topic] {
-		handler.ConnectionSubscribed(connection, topic)
+		err, successfulAuthorization := handler.ConnectionSubscribed(connection, topic, authorization)
+		if err != nil {
+			fmt.Println("Error in subscription handler:", err)
+		}
 
+		if !successfulAuthorization {
+			return false
+		}
 	}
+
+	return true
 }
 
 func (ps *PubSub) HandleSubscribe(connection SubscriptionHandler, topic string) {
