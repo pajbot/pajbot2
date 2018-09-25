@@ -115,6 +115,8 @@ class pb2WebSocket {
       'Data': data,
     };
 
+    this.authorize(payload);
+
     this.send(payload);
   }
 
