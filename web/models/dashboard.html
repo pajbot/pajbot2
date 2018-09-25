@@ -15,9 +15,15 @@
   </head>
   <body>
     <div class="container-fluid">
-      <button class="btn btn-link" data-bind="click: $root.logIn">Log in with twitch</button>
-      <div id="reports" data-bind="foreach: { data: reports, as: 'report' }">
-        <div class="report card mb-3">
+      <div class="row">
+        <div class="col">
+        <button class="btn btn-twitch" data-bind="click: $root.logIn, visible: $root.loggedIn() == false"><i class="icon twitch"></i>Connect with Twitch</button>
+        <button class="btn btn-twitch" data-bind="click: $root.logOut, visible: $root.loggedIn">Log out</button>
+        </div>
+      </div>
+      <h4>Reports</h4>
+      <div class="row" id="reports" data-bind="foreach: { data: reports, as: 'report' }">
+        <div class="col report card mb-3">
           <div class="card-header">
             <span class="channel" data-bind="text: Channel.Name, css: { 'twitch': Channel.Type == 'twitch', 'discord': Channel.Type == 'discord', }"></span>
             <span class="reporter" data-bind="text: Reporter.Name, title: 'ID: ' + Reporter.ID"></span>
@@ -33,14 +39,6 @@
               <button class="card-link btn btn-light" title="Hide this from your session" data-bind="click: $root.hideReport">Hide</button>
           </div>
         </div>
-      </div>
-      <div>Send message: <input type="text" id="messageText"><button id="sendMessage">Send</button></div>
-      <div class="chatbox">
-        <ul class="chat" data-bind="foreach: { data: messages, as: 'message'}">
-          <li class="message">
-            <span data-bind="text: message.Sender"></span>: <span data-bind="text: message.Message"></span>
-          </li>
-        </ul>
       </div>
     </div>
   </body>

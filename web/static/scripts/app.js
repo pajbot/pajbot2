@@ -1,10 +1,11 @@
 class pb2ViewModel {
   constructor() {
-    this.messages = ko.observableArray([]);
     this.reports = ko.observableArray([]);
+    this.nonce = ko.observable(null);
+    this.user_id = ko.observable(null);
 
-    ws.subscribe('MessageReceived', (json) => {
-      this.messages.push(json);
+    this.loggedIn = ko.computed(() => {
+      return this.nonce() != null && this.user_id() != null;
     });
 
     ws.subscribe('ReportReceived', (json) => {
@@ -17,14 +18,46 @@ class pb2ViewModel {
         return report.ID == json.ReportID;
       });
     });
+
+    this.loadAuth();
+  }
+
+  loadAuth() {
+    let nonce = window.localStorage.getItem('nonce');
+    let user_id = window.localStorage.getItem('user_id');
+    if (window.location.hash) {
+      let hash = window.location.hash.substring(1);
+      let hashParts = hash.split(';');
+      let hashMap = {};
+      for (let i = 0; i < hashParts.length; ++i) {
+        let p = hashParts[i].split('=');
+        if (p.length == 2) {
+          hashMap[p[0]] = p[1];
+        }
+      }
+
+      if ('nonce' in hashMap && 'user_id' in hashMap) {
+        nonce = hashMap['nonce'];
+        user_id = hashMap['user_id'];
+        window.localStorage.setItem('nonce', nonce);
+        window.localStorage.setItem('user_id', user_id);
+      }
+
+      history.replaceState(
+          '', document.title,
+          window.location.pathname + window.location.search);
+    }
+
+    this.nonce(nonce);
+    this.user_id(user_id);
   }
 
   handleReport(action, report) {
     ws.publish('HandleReport', {
-        'Action': action,
-        'ChannelID': report.Channel.ID,
-        'ReportID': report.ID,
-      });
+      'Action': action,
+      'ChannelID': report.Channel.ID,
+      'ReportID': report.ID,
+    });
   }
 
   // Locally hides the report for this session only
@@ -37,8 +70,14 @@ class pb2ViewModel {
   }
 
   logIn() {
-    console.log('log in');
-    window.location.href = "/api/auth/twitch/user?redirect=/dashboard";
+    window.location.href = '/api/auth/twitch/user?redirect=/dashboard';
+  }
+
+  logOut() {
+    this.nonce(null);
+    this.user_id(null);
+    window.localStorage.removeItem('nonce');
+    window.localStorage.removeItem('user_id');
   }
 
   onConnected() {
@@ -47,12 +86,10 @@ class pb2ViewModel {
 }
 
 class pb2WebSocket {
-  constructor(nonce, user_id) {
+  constructor() {
     this.isOpen = false;
     this.socket = null;
     this.cbs = {};
-    this.nonce = nonce;
-    this.user_id = user_id;
   }
 
   subscribe(topic, cb) {
@@ -92,10 +129,10 @@ class pb2WebSocket {
   }
 
   authorize(payload) {
-    if (this.nonce && this.user_id) {
+    if (vm.nonce() && vm.user_id()) {
       payload['Authorization'] = {
-        'Nonce': this.nonce,
-        'TwitchUserID': this.user_id,
+        'Nonce': vm.nonce(),
+        'TwitchUserID': vm.user_id(),
       };
     }
   }
@@ -111,7 +148,7 @@ class pb2WebSocket {
     try {
       this.socket = new WebSocket(ws_host);
     } catch (e) {
-      console.log("????????" + e);
+      console.log('????????' + e);
       return;
     }
     console.log(this.socket);
@@ -162,35 +199,7 @@ class pb2WebSocket {
 }
 
 $(document).ready(function() {
-  let nonce = window.localStorage.getItem('nonce');
-  let user_id = window.localStorage.getItem('user_id');
-  if (window.location.hash) {
-    console.log('xd');
-    let hash = window.location.hash.substring(1);
-    let hashParts = hash.split(';');
-    let hashMap = {};
-    for (let i = 0; i < hashParts.length; ++i) {
-      let p = hashParts[i].split('=');
-      if (p.length == 2) {
-        hashMap[p[0]] = p[1];
-      }
-    }
-
-    if ('nonce' in hashMap && 'user_id' in hashMap) {
-      nonce = hashMap['nonce'];
-      user_id = hashMap['user_id'];
-      window.localStorage.setItem('nonce', nonce);
-      window.localStorage.setItem('user_id', user_id);
-    }
-
-    history.replaceState('', document.title, window.location.pathname + window.location.search);
-  }
-
-  console.log('nonce:', nonce);
-
-  // Read nonce
-  console.log('Document ready');
-  ws = new pb2WebSocket(nonce, user_id);
+  ws = new pb2WebSocket();
   vm = new pb2ViewModel();
 
   ws.connect();

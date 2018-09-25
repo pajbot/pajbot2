@@ -38,3 +38,21 @@ body {
 .report pre.logs {
     font-family: sans-serif;
 }
+
+i.icon.twitch {
+    display: inline-block;
+    background: url('/static/Glitch_White_RGB.svg');
+    background-repeat: no-repeat;
+    width: 1.2em;
+    height: 1.2em;
+    margin-right: 0.5em;
+}
+
+.btn-twitch {
+    background-color: #6441A4;
+    color: #fff;
+}
+
+.btn-twitch:hover {
+    background-color: rgb(80, 52, 131);
+}
