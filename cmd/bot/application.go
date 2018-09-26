@@ -96,6 +96,8 @@ func (a *Application) GetUserMessages(channelID, userID string) ([]string, error
 func NewApplication() *Application {
 	a := Application{}
 
+	a.TwitchUserStore = NewUserStore()
+
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
 	a.UserContext = make(map[string]*channelContext)
@@ -342,8 +344,6 @@ func (a *Application) StartWebServer() error {
 		Redis: a.Redis,
 		SQL:   a.SQL,
 	}
-
-	a.TwitchUserStore = NewUserStore()
 
 	webBoss := web.Init(a.config, webCfg, a.PubSub, a.TwitchUserStore)
 	go webBoss.Run()
