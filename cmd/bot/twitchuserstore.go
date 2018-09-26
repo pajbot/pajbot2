@@ -41,18 +41,17 @@ func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 	ids = make(map[string]string)
 
 	remainingNames := []string{}
-	{
-		s.idsMutex.Lock()
-		defer s.idsMutex.Unlock()
+	s.idsMutex.Lock()
 
-		for _, name := range names {
-			if id, ok := s.ids[name]; ok {
-				ids[name] = id
-			} else {
-				remainingNames = append(remainingNames, name)
-			}
+	for _, name := range names {
+		if id, ok := s.ids[name]; ok {
+			ids[name] = id
+		} else {
+			remainingNames = append(remainingNames, name)
 		}
 	}
+
+	s.idsMutex.Unlock()
 
 	var batch []string
 
@@ -85,15 +84,11 @@ func (s *UserStore) GetID(name string) (id string) {
 	var ok bool
 	name = strings.ToLower(name)
 
-	{
-		s.idsMutex.Lock()
-		defer s.idsMutex.Unlock()
-
-		id, ok = s.ids[name]
-
-		if ok {
-			return
-		}
+	s.idsMutex.Lock()
+	id, ok = s.ids[name]
+	s.idsMutex.Unlock()
+	if ok {
+		return
 	}
 
 	onSuccess := func(data []gotwitch.User) {
@@ -119,14 +114,11 @@ func (s *UserStore) GetID(name string) (id string) {
 func (s *UserStore) GetName(id string) (name string) {
 	var ok bool
 
-	{
-		s.namesMutex.Lock()
-		defer s.namesMutex.Unlock()
-
-		name, ok = s.names[id]
-		if ok {
-			return
-		}
+	s.namesMutex.Lock()
+	name, ok = s.names[id]
+	defer s.namesMutex.Unlock()
+	if ok {
+		return
 	}
 
 	onSuccess := func(data []gotwitch.User) {
