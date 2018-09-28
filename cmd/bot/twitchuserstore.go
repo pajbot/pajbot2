@@ -116,7 +116,7 @@ func (s *UserStore) GetName(id string) (name string) {
 
 	s.namesMutex.Lock()
 	name, ok = s.names[id]
-	defer s.namesMutex.Unlock()
+	s.namesMutex.Unlock()
 	if ok {
 		return
 	}
