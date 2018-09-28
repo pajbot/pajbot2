@@ -71,6 +71,7 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 	}
 
 	pubSub.Subscribe(b, "Ban", nil)
+	pubSub.Subscribe(b, "Timeout", nil)
 	pubSub.Subscribe(b, "Untimeout", nil)
 
 	return b
@@ -686,7 +687,16 @@ func (b *Bot) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthori
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Ban through pubsub: %+v\n", msg)
 		b.Ban(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target), msg.Reason)
+	case "Timeout":
+		var msg pkg.PubSubTimeout
+		err := json.Unmarshal(data, &msg)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Timeout through pubsub: %+v\n", msg)
+		b.Timeout(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target), int(msg.Duration), msg.Reason)
 	case "Untimeout":
 		fmt.Printf("untimeout %s\n", string(data))
 		var msg pkg.PubSubUntimeout
@@ -694,6 +704,7 @@ func (b *Bot) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthori
 		if err != nil {
 			return err
 		}
+		fmt.Printf("Untimeout through pubsub: %+v\n", msg)
 		b.Untimeout(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target))
 	}
 	return nil

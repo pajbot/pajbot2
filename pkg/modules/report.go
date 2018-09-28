@@ -2,6 +2,7 @@ package modules
 
 import (
 	"strings"
+	"time"
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/report"
@@ -95,6 +96,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 			Name: targetUsername,
 		},
 		Reason: reason,
+		Time:   time.Now(),
 	}
 
 	lastReportTime, _ := m.reportHolder.Register(r)

@@ -52,12 +52,20 @@ class pb2ViewModel {
     this.user_id(user_id);
   }
 
-  handleReport(action, report) {
-    ws.publish('HandleReport', {
+  handleReport(report, action, duration) {
+      console.log(action);
+      console.log(report);
+    let payload = {
       'Action': action,
       'ChannelID': report.Channel.ID,
       'ReportID': report.ID,
-    });
+    };
+
+    if (duration) {
+      payload['Duration'] = duration;
+    }
+
+    ws.publish('HandleReport', payload);
   }
 
   // Locally hides the report for this session only

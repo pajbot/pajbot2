@@ -22,6 +22,13 @@ type PubSubBan struct {
 	Reason  string
 }
 
+type PubSubTimeout struct {
+	Channel  string
+	Target   string
+	Reason   string
+	Duration uint32
+}
+
 type PubSubUntimeout struct {
 	Channel string
 	Target  string

@@ -94,6 +94,7 @@ type handleReportMessage struct {
 	Action    string
 	ChannelID string
 	ReportID  uint32
+	Duration  *uint32
 }
 
 func (h *Holder) Register(report Report) (*time.Time, error) {
@@ -111,11 +112,12 @@ func (h *Holder) Register(report Report) (*time.Time, error) {
 	// Don't accept reports for users that have already been reported
 	for _, oldReport := range h.reports {
 		if oldReport.Channel.ID == report.Channel.ID && oldReport.Target.ID == report.Target.ID {
+			fmt.Println("Report already registered for this target in this channel")
 			return &report.Time, nil
 		}
 	}
 
-	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), time.Now())
+	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), report.Time)
 	if err != nil {
 		fmt.Printf("Error inserting report %v into SQL: %s\n", report, err)
 		return nil, err
@@ -142,7 +144,7 @@ type reportHandled struct {
 	Action   string
 }
 
-func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAuthorization) error {
+func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthorization) error {
 	h.reportsMutex.Lock()
 	defer h.reportsMutex.Unlock()
 
@@ -151,8 +153,9 @@ func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAu
 		return nil
 	}
 
-	report, ok := h.reports[reportID]
+	report, ok := h.reports[action.ReportID]
 	if !ok {
+		fmt.Printf("No report found with ID %d\n", action.ReportID)
 		// No report found with this ID
 		return nil
 	}
@@ -160,6 +163,7 @@ func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAu
 	// Remove report from SQL and our local map
 	err := h.dismissReport(report.ID)
 	if err != nil {
+		fmt.Println("Error dismissing report", err)
 		return err
 	}
 
@@ -171,12 +175,12 @@ func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAu
 			ID:   auth.TwitchUserID,
 			Name: h.userStore.GetName(auth.TwitchUserID),
 		},
-		Action: action,
+		Action: action.Action,
 	}
 
 	h.pubSub.Publish("ReportHandled", &msg, pkg.PubSubAdminAuth())
 
-	switch action {
+	switch action.Action {
 	case "ban":
 		h.pubSub.Publish("Ban", &pkg.PubSubBan{
 			Channel: report.Channel.Name,
@@ -184,11 +188,26 @@ func (h *Holder) handleReport(reportID uint32, action string, auth *pkg.PubSubAu
 			Reason:  report.Reason,
 		}, pkg.PubSubAdminAuth())
 
+	case "timeout":
+		var duration uint32
+		duration = 600
+		if action.Duration != nil {
+			duration = *action.Duration
+		}
+		h.pubSub.Publish("Timeout", &pkg.PubSubTimeout{
+			Channel:  report.Channel.Name,
+			Target:   report.Target.Name,
+			Duration: duration,
+			Reason:   report.Reason,
+		}, pkg.PubSubAdminAuth())
+
 	case "undo":
 		h.pubSub.Publish("Untimeout", &pkg.PubSubUntimeout{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
 		}, pkg.PubSubAdminAuth())
+	default:
+		fmt.Println("Unhandled action", action.Action)
 	}
 
 	return nil
@@ -238,7 +257,7 @@ func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuth
 
 		fmt.Printf("Handle report: %#v\n", msg)
 
-		return h.handleReport(msg.ReportID, msg.Action, auth)
+		return h.handleReport(msg, auth)
 
 	case "BanEvent":
 		var msg pkg.PubSubBanEvent

@@ -33,10 +33,14 @@
           <div class="card-body">
             <span data-bind="if: typeof Reason === 'string' && Reason.length > 0">Reason: <span class="reason" data-bind="text: Reason"></span></span>
             <a target="_blank" class="btn btn-link" data-bind="attr: { href: $root.makeLogLink(Channel.Name, Target.Name) }">logs</a>
+            <div data-bind="text: Time"></div>
             <div data-bind="if: typeof Logs === 'string'"><pre class="logs" data-bind="text: Logs.join('\n')"></pre></div>
-              <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: $root.handleReport.bind($data, 'ban')">Ban</button>
-              <button class="card-link btn btn-danger" title="Dismiss this report for everyone" data-bind="click: $root.handleReport.bind($data, 'dismiss')">Dismiss</button>
-              <button class="card-link btn btn-danger" title="Undo and dismiss this report for everyone" data-bind="click: $root.handleReport.bind($data, 'undo')">Undo</button>
+                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'ban') }">Ban</button>
+                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 86400) }">Timeout 1d</button>
+                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 604800) }">Timeout 7d</button>
+                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 1209600) }">Timeout 14d</button>
+                <button class="card-link btn btn-danger" title="Dismiss this report for everyone" data-bind="click: function() { $root.handleReport($data, 'dismiss') }">Dismiss</button>
+                <button class="card-link btn btn-danger" title="Undo and dismiss this report for everyone" data-bind="click: function() { $root.handleReport($data, 'undo') }">Undo</button>
               <button class="card-link btn btn-light" title="Hide this from your session" data-bind="click: $root.hideReport">Hide</button>
           </div>
         </div>
