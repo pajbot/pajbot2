@@ -8,4 +8,8 @@ type UserStore interface {
 	GetID(string) string
 
 	GetName(string) string
+
+	// Input: list of twitch IDs
+	// Returns: map of twitch IDs pointing at twitch usernames
+	GetNames([]string) map[string]string
 }

@@ -141,6 +141,49 @@ func (s *UserStore) GetName(id string) (name string) {
 	return
 }
 
+func (s *UserStore) GetNames(ids []string) (names map[string]string) {
+	names = make(map[string]string)
+
+	remaining := []string{}
+	s.namesMutex.Lock()
+
+	for _, id := range ids {
+		if name, ok := s.names[id]; ok {
+			names[id] = name
+		} else {
+			remaining = append(remaining, id)
+		}
+	}
+
+	s.namesMutex.Unlock()
+
+	var batch []string
+
+	for len(remaining) > 0 {
+		if len(batch) == 0 {
+			batch = remaining[0:min(99, len(remaining))]
+			remaining = remaining[len(batch):]
+		}
+
+		onSuccess := func(data []gotwitch.User) {
+			s.idsMutex.Lock()
+			defer s.idsMutex.Unlock()
+			s.namesMutex.Lock()
+			defer s.namesMutex.Unlock()
+
+			for _, user := range data {
+				names[user.ID] = user.Login
+				s.save(user.ID, user.Login)
+			}
+			batch = nil
+		}
+
+		apirequest.Twitch.GetUsers(batch, onSuccess, onHTTPError, onInternalError)
+	}
+
+	return
+}
+
 func (s *UserStore) save(id, name string) {
 	s.names[id] = name
 	s.ids[name] = id

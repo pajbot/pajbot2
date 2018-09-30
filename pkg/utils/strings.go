@@ -122,6 +122,19 @@ func IsValidUsername(username string) bool {
 	return true
 }
 
+func IsValidUserID(username string) bool {
+	for _, r := range username {
+		// Numbers
+		if r >= 0x30 && r <= 0x39 {
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
 func FilterUsername(username string) string {
 	username = strings.TrimPrefix(username, "@")
 
@@ -136,6 +149,16 @@ func FilterUsernames(potentialUsernames []string) (usernames []string) {
 	for _, s := range potentialUsernames {
 		if IsValidUsername(s) {
 			usernames = append(usernames, strings.ToLower(s))
+		}
+	}
+
+	return
+}
+
+func FilterUserIDs(potentialUserIDs []string) (userIDs []string) {
+	for _, s := range potentialUserIDs {
+		if IsValidUserID(s) {
+			userIDs = append(userIDs, s)
 		}
 	}
 
