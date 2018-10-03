@@ -159,7 +159,7 @@ func runCmd() {
 
 	err = application.StartPubSubClient()
 	if err != nil {
-		log.Fatal("An error occured while starting pubsub client", err)
+		fmt.Println("Error starting PubSub Client:", err)
 	}
 
 	log.Fatal(application.Run())
