@@ -4,5 +4,19 @@
     },
     "SQL": {
         "DSN": "root:penis123@tcp(localhost:3306)/pajbot2_test"
+    },
+    "Auth": {
+        "Twitch": {
+            "Bot": {
+                "ClientID": "kdjfghkjdfghdfjkg",
+                "ClientSecret": "kdjfhgkjdfghjkdfg",
+                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/bot/callback"
+            },
+            "User": {
+                "ClientID": "g8h343k4jgh34g",
+                "ClientSecret": "jfhs3jks3hfjks3hf",
+                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/user/callback"
+            }
+        }
     }
 }
