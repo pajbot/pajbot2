@@ -5,3 +5,10 @@ pajbot2
 
 # Ignore config files
 config.json
+
+# Ignore web Files
+web/node_modules
+
+# Various
+.DS_Store
+.vscode/
