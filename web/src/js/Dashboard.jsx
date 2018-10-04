@@ -64,11 +64,11 @@ export default class App extends Component {
 		);
 	}
 
-	isLoggedIn() {
+	isLoggedIn = () => {
 		return this.state.nonce !== null && this.state.userId !== null;
 	}
 
-	loadAuth() {
+	loadAuth = () => {
 		let nonce = window.localStorage.getItem('nonce');
 		let user_id = window.localStorage.getItem('user_id');
 		if (window.location.hash) {
@@ -97,22 +97,23 @@ export default class App extends Component {
 		return { nonce: nonce, userId: user_id };
 	}
 
-	logIn() {
+	logIn = () => {
 		window.location.href = '/api/auth/twitch/user?redirect=/dashboard';
 	}
 
-	logOut() {
+	logOut = () => {
 		this.setState({
 			...this.state,
 			nonce: null,
-			userId: null
+			userId: null,
+			reports: [],
 		});
 
 		window.localStorage.removeItem('nonce');
 		window.localStorage.removeItem('user_id');
 	}
 
-	handleReport(channelId, reportId, action, duration = null) {
+	handleReport = (channelId, reportId, action, duration = null) => {
 		let payload = {
 			'Action': action,
 			'ChannelID': channelId,
@@ -130,8 +131,7 @@ export default class App extends Component {
 		this.ws.publish('HandleReport', payload);
 	}
 
-	removeVisibleReport(id) 
-	{
+	removeVisibleReport = (id) => {
 		const newReports = [];
 		
 		this.state.reports.map(report => {
@@ -146,7 +146,7 @@ export default class App extends Component {
 		});
 	}
 
-	addToVisibleReports(report) {
+	addToVisibleReports = (report) => {
 
 		const newReports = this.state.reports;
 		newReports.push(report);
