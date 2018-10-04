@@ -63,7 +63,7 @@ type Application struct {
 	Redis        *redis.Pool
 	SQL          *sql.DB
 	Twitter      *twitter.Client
-	TwitchPubSub *twitch_pubsub.Client
+	TwitchPubSub *twitchpubsub.Client
 
 	ReportHolder *report.Holder
 
@@ -557,7 +557,7 @@ func (a *Application) StartBots() error {
 
 func (a *Application) StartPubSubClient() error {
 	cfg := &a.config.PubSub
-	a.TwitchPubSub = twitch_pubsub.NewClient()
+	a.TwitchPubSub = twitchpubsub.NewClient()
 
 	err := a.TwitchPubSub.Connect()
 	if err != nil {
@@ -572,15 +572,15 @@ func (a *Application) StartPubSubClient() error {
 }
 
 func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
-	moderationTopic := fmt.Sprintf("chat_moderator_actions.%s.%s", userID, channelID)
+	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
 	a.TwitchPubSub.Listen(moderationTopic, userToken, func(bytes []byte) error {
-		msg := twitch_pubsub.Message{}
+		msg := twitchpubsub.Message{}
 		err := json.Unmarshal(bytes, &msg)
 		if err != nil {
 			return err
 		}
 
-		timeoutData := twitch_pubsub.TimeoutData{}
+		timeoutData := twitchpubsub.TimeoutData{}
 		err = json.Unmarshal([]byte(msg.Data.Message), &timeoutData)
 		if err != nil {
 			return err
