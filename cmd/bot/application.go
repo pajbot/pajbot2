@@ -523,6 +523,10 @@ func (a *Application) StartBots() error {
 
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
+			if bot.Name == "gempir" {
+				bot.Join("pajlada")
+			}
+
 			if bot.Name == "snusbot" {
 				// bot.Join("forsen")
 			}

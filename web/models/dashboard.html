@@ -2,49 +2,15 @@
   <head>
     <title>Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/build/bundle.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-
-    <script type="text/javascript">
-      var ws_host = '[[.WSHost]]/dashboard';
-    </script>
-
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
-    <script type="text/javascript" src="/static/scripts/knockout-3.4.2.js"></script>
-    <script type="text/javascript" src="/static/scripts/app.js"></script>
   </head>
   <body>
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col">
-          <button class="btn btn-twitch" data-bind="click: $root.logIn, visible: $root.loggedIn() == false"><i class="icon twitch"></i>Connect with Twitch</button>
-          <button class="btn btn-twitch" data-bind="click: $root.logOut, visible: $root.loggedIn">Log out</button>
-        </div>
-      </div>
-      <h4>Reports</h4>
-      <div id="reports" data-bind="foreach: { data: reports, as: 'report' }">
-        <div class="report card mb-3">
-          <div class="card-header">
-            <span class="channel" data-bind="text: Channel.Name, css: { 'twitch': Channel.Type == 'twitch', 'discord': Channel.Type == 'discord', }"></span>
-            <span class="reporter" data-bind="text: Reporter.Name, title: 'ID: ' + Reporter.ID"></span>
-            reported
-            <span class="target" data-bind="text: Target.Name, title: 'ID: ' + Target.ID"></span>
-          </div>
-          <div class="card-body">
-            <span data-bind="if: typeof Reason === 'string' && Reason.length > 0">Reason: <span class="reason" data-bind="text: Reason"></span></span>
-            <a target="_blank" class="btn btn-link" data-bind="attr: { href: $root.makeLogLink(Channel.Name, Target.Name) }">logs</a>
-            <div data-bind="text: Time"></div>
-            <div data-bind="if: typeof Logs === 'string'"><pre class="logs" data-bind="text: Logs.join('\n')"></pre></div>
-                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'ban') }">Ban</button>
-                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 86400) }">Timeout 1d</button>
-                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 604800) }">Timeout 7d</button>
-                <button class="card-link btn btn-danger" title="Bans the user" data-bind="click: function() { $root.handleReport($data, 'timeout', 1209600) }">Timeout 14d</button>
-                <button class="card-link btn btn-danger" title="Dismiss this report for everyone" data-bind="click: function() { $root.handleReport($data, 'dismiss') }">Dismiss</button>
-                <button class="card-link btn btn-danger" title="Undo and dismiss this report for everyone" data-bind="click: function() { $root.handleReport($data, 'undo') }">Undo</button>
-              <button class="card-link btn btn-light" title="Hide this from your session" data-bind="click: $root.hideReport">Hide</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root" data-wshost="[[.WSHost]]/dashboard"></div>
   </body>
+  <script src="/static/build/bundle.js"></script>
 </html>
