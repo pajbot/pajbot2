@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import WebSocketHandler from "./WebSocketHandler"
 
-export default class App extends Component {
+export default class Dashboard extends Component {
 
 	constructor(props) {
 		super(props);
@@ -12,7 +12,7 @@ export default class App extends Component {
 			nonce: auth.nonce,
 			userId: auth.userId,
 			reports: [],
-		}
+		};
 
 		this.ws = new WebSocketHandler(props.wshost, auth.nonce, auth.userId);
 
