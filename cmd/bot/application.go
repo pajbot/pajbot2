@@ -450,6 +450,10 @@ func (a *Application) LoadBots() error {
 			return err
 		}
 
+		if strings.HasPrefix(twitchAccessToken, "oauth:") {
+			panic(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
+		}
+
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
 		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore)
