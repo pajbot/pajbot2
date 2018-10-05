@@ -524,7 +524,6 @@ func (a *Application) StartBots() error {
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
 			if bot.Name == "gempir" {
-				fmt.Println("bot is gempir :)")
 				bot.Join("pajlada")
 			}
 
