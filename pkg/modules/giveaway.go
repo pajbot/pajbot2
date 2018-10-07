@@ -33,7 +33,7 @@ func (m Giveaway) Register() error {
 	return nil
 }
 
-const forsen25ID = "1272012"
+const forsen25ID = "1361602"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
