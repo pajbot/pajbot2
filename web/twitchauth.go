@@ -2,7 +2,9 @@ package web
 
 import (
 	"context"
+	"errors"
 	"net/http"
+	"sync"
 
 	oidc "github.com/coreos/go-oidc"
 	"github.com/dankeroni/gotwitch"
@@ -28,29 +30,68 @@ type nonceData struct {
 
 var nonces = make(map[string]nonceData)
 
-// TODO(pajlada): This should be random per request
-const oauthStateString = "penis"
+var statesMutex sync.Mutex
+var states = make(map[string]bool)
 
-func testpenis(m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAuthConfig, name string, onAuthorized func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce nonceData)) error {
-	ctx := context.Background()
+func stateExists(state string) bool {
+	statesMutex.Lock()
+	defer statesMutex.Unlock()
 
-	provider, err := oidc.NewProvider(ctx, "https://id.twitch.tv/oauth2")
+	_, ok := states[state]
+	return ok
+}
+
+func stateExistsClear(state string) bool {
+	statesMutex.Lock()
+	defer statesMutex.Unlock()
+
+	_, ok := states[state]
+	if ok {
+		delete(states, state)
+	}
+	return ok
+}
+
+func makeState() (string, error) {
+	state, err := utils.GenerateRandomString(32)
 	if err != nil {
-		panic(err)
-		return err
+		return "", err
 	}
 
-	oidcConfig := &oidc.Config{
-		ClientID:        appConfig.ClientID,
-		SkipExpiryCheck: true,
+	if stateExists(state) {
+		return "", errors.New("state already exists")
 	}
 
-	// Use the nonce source to create a custom ID Token verifier.
-	nonceEnabledVerifier := provider.Verifier(oidcConfig)
+	statesMutex.Lock()
+	defer statesMutex.Unlock()
+
+	states[state] = true
+
+	return state, nil
+}
+
+type authorizedCallback func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData)
+
+func testpenis(ctx context.Context, provider *oidc.Provider, m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAuthConfig, name string, onAuthorized authorizedCallback) error {
+	var nonceEnabledVerifier *oidc.IDTokenVerifier
+	useOIDC := false
+
+	if provider != nil {
+		oidcConfig := &oidc.Config{
+			ClientID:        appConfig.ClientID,
+			SkipExpiryCheck: true,
+		}
+
+		// Use the nonce source to create a custom ID Token verifier.
+		nonceEnabledVerifier = provider.Verifier(oidcConfig)
+		useOIDC = true
+	}
+
 	m.HandleFunc("/auth/twitch/"+name, func(w http.ResponseWriter, r *http.Request) {
 		nonce, err := utils.GenerateRandomString(32)
 		if err != nil {
-			panic(err)
+			http.Error(w, err.Error(), 500)
+			return
 		}
 		nonces[nonce] = nonceData{
 			str:      nonce,
@@ -58,15 +99,19 @@ func testpenis(m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAut
 			redirect: r.FormValue("redirect"),
 		}
 
-		url := config.AuthCodeURL(oauthStateString, oidc.Nonce(nonce))
+		requestStateString, err := makeState()
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		url := config.AuthCodeURL(requestStateString, oidc.Nonce(nonce))
 		http.Redirect(w, r, url, http.StatusFound)
 	})
 
 	m.HandleFunc("/auth/twitch/"+name+"/callback",
 		func(w http.ResponseWriter, r *http.Request) {
-			// Verify state
-			state := r.FormValue("state")
-			if state != oauthStateString {
+			if !stateExistsClear(r.FormValue("state")) {
 				http.Error(w, "Invalid OAuth state", http.StatusInternalServerError)
 				return
 			}
@@ -78,24 +123,30 @@ func testpenis(m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAut
 				return
 			}
 
-			// Extract id_token
-			rawIDToken, ok := oauth2Token.Extra("id_token").(string)
-			if !ok {
-				http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
-				return
-			}
+			var nonceData *nonceData
 
-			// Verify the ID Token signature and nonce.
-			idToken, err := nonceEnabledVerifier.Verify(ctx, rawIDToken)
-			if err != nil {
-				http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
-				return
-			}
+			if useOIDC {
+				// Extract id_token
+				rawIDToken, ok := oauth2Token.Extra("id_token").(string)
+				if !ok {
+					http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
+					return
+				}
 
-			nonceData, ok := nonces[idToken.Nonce]
-			if !ok || nonceData.state != "pending" {
-				http.Error(w, "Invalid ID Token nonce", http.StatusInternalServerError)
-				return
+				// Verify the ID Token signature and nonce.
+				idToken, err := nonceEnabledVerifier.Verify(ctx, rawIDToken)
+				if err != nil {
+					http.Error(w, "Failed to verify ID Token: "+err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				nd, ok := nonces[idToken.Nonce]
+				if !ok || nd.state != "pending" {
+					http.Error(w, "Invalid ID Token nonce", http.StatusInternalServerError)
+					return
+				}
+
+				nonceData = &nd
 			}
 
 			onSuccess := func(data gotwitch.Self) {
@@ -116,7 +167,14 @@ func testpenis(m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAut
 }
 
 func twitchAuthInit(m *mux.Router, appConfig *config.AuthTwitchConfig) (err error) {
-	err = testpenis(m, twitchBotOauth, &appConfig.Bot, "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce nonceData) {
+	ctx := context.Background()
+
+	provider, err := oidc.NewProvider(ctx, "https://id.twitch.tv/oauth2")
+	if err != nil {
+		panic(err)
+	}
+
+	err = testpenis(ctx, nil, m, twitchBotOauth, &appConfig.Bot, "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
 		err := common.CreateBot(sqlClient, self.Token.UserName, oauth2Token.AccessToken, oauth2Token.RefreshToken)
 		if err != nil {
 			// TODO: Handle gracefully
@@ -126,7 +184,7 @@ func twitchAuthInit(m *mux.Router, appConfig *config.AuthTwitchConfig) (err erro
 	if err != nil {
 		return
 	}
-	err = testpenis(m, twitchUserOauth, &appConfig.User, "user", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce nonceData) {
+	err = testpenis(ctx, provider, m, twitchUserOauth, &appConfig.User, "user", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
 		name := self.Token.UserName
 		id := twitchUserStore.GetID(name)
 
@@ -161,7 +219,7 @@ VALUES (?, ?, ?)
 	if err != nil {
 		return
 	}
-	err = testpenis(m, twitchStreamerOauth, &appConfig.Streamer, "streamer", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce nonceData) {
+	err = testpenis(ctx, nil, m, twitchStreamerOauth, &appConfig.Streamer, "streamer", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
 		// fmt.Printf("STREAMER Username: %s - Access token: %s\n", self.Token.UserName, oauth2Token.AccessToken)
 	})
 	if err != nil {

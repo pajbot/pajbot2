@@ -61,7 +61,7 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub, _twitch
 	}
 	twitchBotOauth.Endpoint = oauth2.Endpoint{
 		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
-		TokenURL: "https://id.twitch.tv/oauth2/token",
+		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
 	}
 	twitchStreamerOauth.RedirectURL = config.Auth.Twitch.Streamer.RedirectURI
 	twitchStreamerOauth.ClientID = config.Auth.Twitch.Streamer.ClientID
@@ -76,7 +76,7 @@ func Init(config *config.Config, webCfg *Config, _pubSub *pubsub.PubSub, _twitch
 	}
 	twitchStreamerOauth.Endpoint = oauth2.Endpoint{
 		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
-		TokenURL: "https://id.twitch.tv/oauth2/token",
+		TokenURL: "https://api.twitch.tv/kraken/oauth2/token",
 	}
 
 	twitchUserOauth.RedirectURL = config.Auth.Twitch.User.RedirectURI
