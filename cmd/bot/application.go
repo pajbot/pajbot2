@@ -532,18 +532,18 @@ func (a *Application) StartBots() error {
 			}
 
 			if bot.Name == "snusbot" {
-				// bot.Join("forsen")
+				bot.Join("forsen")
 			}
 
 			if bot.Name == "botnextdoor" {
-				// bot.Join("nymn")
+				bot.Join("nymn")
 			}
 
 			if bot.Name == "pajbot" {
-				// bot.Join("krakenbul")
-				// bot.Join("nani")
+				bot.Join("krakenbul")
+				bot.Join("nani")
 				bot.Join("pajlada")
-				// bot.Join("narwhal_dave")
+				bot.Join("narwhal_dave")
 				// err := bot.ConnectToPointServer()
 				// if err != nil {
 				// 	log.Fatal(err)
