@@ -99,6 +99,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		Reason: reason,
 		Time:   time.Now(),
 	}
+	r.Logs = bot.GetUserContext().GetContext(r.Channel.ID, r.Target.ID)
 
 	oldReport, inserted, _ := m.reportHolder.Register(r)
 

@@ -53,19 +53,21 @@ type Bot struct {
 
 	ticker *time.Ticker
 
-	userStore pkg.UserStore
+	userStore   pkg.UserStore
+	userContext pkg.UserContext
 
 	pubSub *pubsub.PubSub
 }
 
 var _ pubsub.Connection = &Bot{}
 
-func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore) *Bot {
+func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
-		Client:    client,
-		userStore: userStore,
+		Client:      client,
+		userStore:   userStore,
+		userContext: userContext,
 
 		pubSub: pubSub,
 	}
@@ -79,6 +81,10 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 
 func (b *Bot) GetUserStore() pkg.UserStore {
 	return b.userStore
+}
+
+func (b *Bot) GetUserContext() pkg.UserContext {
+	return b.userContext
 }
 
 type emoteReader struct {

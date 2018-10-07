@@ -72,8 +72,9 @@ type Application struct {
 
 	Quit chan string
 
-	PubSub          *pubsub.PubSub
-	TwitchUserStore pkg.UserStore
+	PubSub            *pubsub.PubSub
+	TwitchUserStore   pkg.UserStore
+	TwitchUserContext pkg.UserContext
 }
 
 func lol(xd string) *string {
@@ -97,6 +98,7 @@ func NewApplication() *Application {
 	a := Application{}
 
 	a.TwitchUserStore = NewUserStore()
+	a.TwitchUserContext = NewUserContext()
 
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
@@ -403,6 +405,17 @@ func (a *Application) notifyPubSub(next pb2twitch.Handler) pb2twitch.Handler {
 	})
 }
 
+func (a *Application) storeContext(next pb2twitch.Handler) pb2twitch.Handler {
+	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
+		if channel != nil && user != nil {
+			formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.GetName(), message.GetText())
+			a.TwitchUserContext.AddContext(channel.GetID(), user.GetID(), formattedMessage)
+		}
+
+		next.HandleMessage(bot, channel, user, message, action)
+	})
+}
+
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
 	db, err := sql.Open("mysql", a.config.SQL.DSN)
@@ -456,7 +469,7 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore)
+		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext)
 		bot.Name = name
 		bot.QuitChannel = a.Quit
 
@@ -505,7 +518,7 @@ func (a *Application) LoadBots() error {
 		// Moderation
 		bot.AddModule(modules.NewNuke())
 
-		bot.SetHandler(a.notifyPubSub(checkModules(pb2twitch.HandleCommands(finalHandler))))
+		bot.SetHandler(a.storeContext(a.notifyPubSub(checkModules(pb2twitch.HandleCommands(finalHandler)))))
 
 		a.TwitchBots[name] = bot
 	}
