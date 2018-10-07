@@ -3,6 +3,7 @@ package report
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -97,7 +98,7 @@ type handleReportMessage struct {
 	Duration  *uint32
 }
 
-func (h *Holder) Register(report Report) (*time.Time, error) {
+func (h *Holder) Register(report Report) (*Report, bool, error) {
 	const queryF = `
 	INSERT INTO Report
 		(channel_id, channel_name, channel_type,
@@ -113,20 +114,20 @@ func (h *Holder) Register(report Report) (*time.Time, error) {
 	for _, oldReport := range h.reports {
 		if oldReport.Channel.ID == report.Channel.ID && oldReport.Target.ID == report.Target.ID {
 			fmt.Println("Report already registered for this target in this channel")
-			return &report.Time, nil
+			return &oldReport, false, nil
 		}
 	}
 
 	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), report.Time)
 	if err != nil {
 		fmt.Printf("Error inserting report %v into SQL: %s\n", report, err)
-		return nil, err
+		return nil, false, err
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
 		fmt.Printf("Error getting last insert id: %s\n", err)
-		return nil, err
+		return nil, false, err
 	}
 
 	report.ID = uint32(id)
@@ -135,7 +136,27 @@ func (h *Holder) Register(report Report) (*time.Time, error) {
 
 	h.reports[report.ID] = report
 
-	return nil, nil
+	return &report, true, nil
+}
+
+func (h *Holder) Update(report Report) error {
+	if report.ID == 0 {
+		return errors.New("Missing report ID in Update")
+	}
+
+	const queryF = `UPDATE Report SET time=?, logs=? WHERE id=?`
+	_, err := h.db.Exec(queryF, report.Time, strings.Join(report.Logs, "\n"), report.ID)
+	if err != nil {
+		return err
+	}
+
+	h.reportsMutex.Lock()
+	defer h.reportsMutex.Unlock()
+	h.reports[report.ID] = report
+
+	// TODO: Send some "ReportUpdated" message
+
+	return nil
 }
 
 type reportHandled struct {
@@ -288,6 +309,7 @@ SELECT twitch_username FROM User
 
 		rows, err := h.db.Query(queryF, auth.TwitchUserID, auth.Nonce)
 		if err != nil {
+			fmt.Println(err)
 			return err, true
 		}
 		defer rows.Close()
@@ -298,6 +320,7 @@ SELECT twitch_username FROM User
 
 		hasPermission, err := users.HasGlobalPermission(auth.TwitchUserID, pkg.PermissionModeration)
 		if err != nil {
+			fmt.Println(err)
 			return err, false
 		}
 
@@ -305,9 +328,12 @@ SELECT twitch_username FROM User
 			return nil, false
 		}
 
+		fmt.Println("Send reports to new connection")
+
 		for _, report := range h.reports {
 			bytes, err := json.Marshal(report)
 			if err != nil {
+				fmt.Println(err)
 				return err, true
 			}
 			connection.MessageReceived(topic, bytes, pkg.PubSubAdminAuth())

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -99,11 +100,23 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		Time:   time.Now(),
 	}
 
-	lastReportTime, _ := m.reportHolder.Register(r)
+	oldReport, inserted, _ := m.reportHolder.Register(r)
 
-	if lastReportTime != nil {
-		bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
+	if !inserted {
+		// Report for this user in this channel already exists
+
+		if time.Now().Sub(oldReport.Time) < time.Minute*10 {
+			// User was reported less than 10 minutes ago, don't let this user be timed out again
+			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", time.Now().Sub(oldReport.Time))
+			return
+		}
+
+		fmt.Println("Update report")
+		r.ID = oldReport.ID
+		m.reportHolder.Update(r)
 	}
+
+	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
 }
 
 func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {

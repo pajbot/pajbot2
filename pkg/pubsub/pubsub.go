@@ -136,7 +136,7 @@ func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
 func (ps *PubSub) Subscribe(connection Connection, topic string, auth *pkg.PubSubAuthorization) {
 	successfulAuthorization := ps.notifySubscriptionHandlers(connection, topic, auth)
 	if !successfulAuthorization {
-		fmt.Printf("[%s] Failed authorization%+v\n", topic, auth)
+		fmt.Printf("[%s] Failed authorization: %+v\n", topic, auth)
 		return
 	}
 
