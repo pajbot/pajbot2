@@ -11,8 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"encoding/json"
-
 	"errors"
 	"strconv"
 
@@ -595,14 +593,7 @@ func (a *Application) StartPubSubClient() error {
 func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
 	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
 	a.TwitchPubSub.Listen(moderationTopic, userToken, func(bytes []byte) error {
-		msg := twitchpubsub.Message{}
-		err := json.Unmarshal(bytes, &msg)
-		if err != nil {
-			return err
-		}
-
-		timeoutData := twitchpubsub.TimeoutData{}
-		err = json.Unmarshal([]byte(msg.Data.Message), &timeoutData)
+		event, err := twitchpubsub.GetModerationAction(bytes)
 		if err != nil {
 			return err
 		}
@@ -613,22 +604,22 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 		const ActionUnban = 3
 		duration := 0
 
-		content := fmt.Sprintf("Moderation action: %+v", timeoutData.Data)
+		content := fmt.Sprintf("Moderation action: %+v", event)
 		fmt.Println(content)
 		var actionContext *string
 		action := 0
 		reason := ""
 		const queryF = "INSERT INTO `ModerationAction` (ChannelID, UserID, Action, Duration, TargetID, Reason, Context) VALUES (?, ?, ?, ?, ?, ?, ?);"
-		switch timeoutData.Data.ModerationAction {
+		switch event.ModerationAction {
 		case "timeout":
 			action = ActionTimeout
-			content = fmt.Sprintf("%s timed out %s for %s seconds", timeoutData.Data.CreatedBy, timeoutData.Data.Arguments[0], timeoutData.Data.Arguments[1])
-			duration, _ = strconv.Atoi(timeoutData.Data.Arguments[1])
-			if len(timeoutData.Data.Arguments[2]) > 0 {
-				reason = timeoutData.Data.Arguments[2]
+			content = fmt.Sprintf("%s timed out %s for %s seconds", event.CreatedBy, event.Arguments[0], event.Arguments[1])
+			duration, _ = strconv.Atoi(event.Arguments[1])
+			if len(event.Arguments[2]) > 0 {
+				reason = event.Arguments[2]
 				content += " for reason: \"" + reason + "\""
 			}
-			msgs, err := a.GetUserMessages(channelID, timeoutData.Data.TargetUserID)
+			msgs, err := a.GetUserMessages(channelID, event.TargetUserID)
 			if err == nil {
 				actionContext = lol(strings.Join(msgs, "\n"))
 			}
@@ -638,12 +629,12 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 					ID: channelID,
 				},
 				Target: pkg.PubSubUser{
-					ID:   timeoutData.Data.TargetUserID,
-					Name: timeoutData.Data.Arguments[0],
+					ID:   event.TargetUserID,
+					Name: event.Arguments[0],
 				},
 				Source: pkg.PubSubUser{
-					ID:   timeoutData.Data.CreatedByUserID,
-					Name: timeoutData.Data.CreatedBy,
+					ID:   event.CreatedByUserID,
+					Name: event.CreatedBy,
 				},
 				Duration: duration,
 				Reason:   reason,
@@ -653,12 +644,12 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 
 		case "ban":
 			action = ActionBan
-			content = fmt.Sprintf("%s banned %s", timeoutData.Data.CreatedBy, timeoutData.Data.Arguments[0])
-			if len(timeoutData.Data.Arguments[1]) > 0 {
-				reason = timeoutData.Data.Arguments[1]
+			content = fmt.Sprintf("%s banned %s", event.CreatedBy, event.Arguments[0])
+			if len(event.Arguments[1]) > 0 {
+				reason = event.Arguments[1]
 				content += " for reason: \"" + reason + "\""
 			}
-			msgs, err := a.GetUserMessages(channelID, timeoutData.Data.TargetUserID)
+			msgs, err := a.GetUserMessages(channelID, event.TargetUserID)
 			if err == nil {
 				actionContext = lol(strings.Join(msgs, "\n"))
 			}
@@ -668,12 +659,12 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 					ID: channelID,
 				},
 				Target: pkg.PubSubUser{
-					ID:   timeoutData.Data.TargetUserID,
-					Name: timeoutData.Data.Arguments[0],
+					ID:   event.TargetUserID,
+					Name: event.Arguments[0],
 				},
 				Source: pkg.PubSubUser{
-					ID:   timeoutData.Data.CreatedByUserID,
-					Name: timeoutData.Data.CreatedBy,
+					ID:   event.CreatedByUserID,
+					Name: event.CreatedBy,
 				},
 				Reason: reason,
 			}
@@ -682,11 +673,11 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 
 		case "unban", "untimeout":
 			action = ActionUnban
-			content = fmt.Sprintf("%s unbanned %s", timeoutData.Data.CreatedBy, timeoutData.Data.Arguments[0])
+			content = fmt.Sprintf("%s unbanned %s", event.CreatedBy, event.Arguments[0])
 		}
 
 		if action != 0 {
-			_, err := a.SQL.Exec(queryF, channelID, timeoutData.Data.CreatedByUserID, action, duration, timeoutData.Data.TargetUserID, reason, actionContext)
+			_, err := a.SQL.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
 			if err != nil {
 				return err
 			}
