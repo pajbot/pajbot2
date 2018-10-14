@@ -2,13 +2,16 @@ package twitch
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dankeroni/gotwitch"
@@ -39,13 +42,19 @@ type botFlags struct {
 type Bot struct {
 	*twitch.Client
 
-	Name    string
+	ID      int
+	name    string
 	handler Handler
 
 	QuitChannel chan string
 
 	Flags botFlags
 
+	// Filled in with user IDs when bot is loaded, from SQL
+	channelsMutex *sync.Mutex
+	Channels      []*BotChannel
+
+	// XXX: This is wrong. Modules need to be stored per channel, instead of per bot
 	Modules []pkg.Module
 
 	// TODO: Store one point server per channel the bot is in. share between bots
@@ -57,19 +66,26 @@ type Bot struct {
 	userContext pkg.UserContext
 
 	pubSub *pubsub.PubSub
+
+	sql *sql.DB
 }
 
 var _ pubsub.Connection = &Bot{}
 
-func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext) *Bot {
+func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext, db *sql.DB) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
-		Client:      client,
+		Client: client,
+
+		channelsMutex: &sync.Mutex{},
+
 		userStore:   userStore,
 		userContext: userContext,
 
 		pubSub: pubSub,
+
+		sql: db,
 	}
 
 	pubSub.Subscribe(b, "Ban", nil)
@@ -77,6 +93,48 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 	pubSub.Subscribe(b, "Untimeout", nil)
 
 	return b
+}
+
+func (b *Bot) LoadChannels(sql *sql.DB) error {
+	const queryF = `SELECT id, twitch_channel_id FROM BotChannel WHERE bot_id=?`
+
+	rows, err := sql.Query(queryF, b.ID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var channelIDs []string
+	var channels []*BotChannel
+
+	for rows.Next() {
+		var botChannel BotChannel
+
+		if err = rows.Scan(&botChannel.DatabaseID, &botChannel.Channel.ID); err != nil {
+			return err
+		}
+
+		channelIDs = append(channelIDs, botChannel.Channel.ID)
+		channels = append(channels, &botChannel)
+	}
+
+	m := b.userStore.GetNames(channelIDs)
+
+	for id, name := range m {
+		for _, c := range channels {
+			if c.Channel.ID == id {
+				c.Channel.Name = name
+			}
+		}
+	}
+
+	for _, c := range channels {
+		if c.Channel.Valid() {
+			b.Channels = append(b.Channels, c)
+		}
+	}
+
+	return nil
 }
 
 func (b *Bot) GetUserStore() pkg.UserStore {
@@ -177,6 +235,14 @@ func (b *Bot) Reply(channel pkg.Channel, user pkg.User, message string) {
 	} else {
 		b.Say(channel, message)
 	}
+}
+
+func (b *Bot) Name() string {
+	return b.name
+}
+
+func (b *Bot) SetName(name string) {
+	b.name = name
 }
 
 func (b *Bot) Say(channel pkg.Channel, message string) {
@@ -683,6 +749,75 @@ func (b *Bot) MakeChannel(channel string) pkg.Channel {
 		Channel: channel,
 		ID:      b.userStore.GetID(channel),
 	}
+}
+
+func (b *Bot) JoinChannel(channelID string) error {
+	const queryF = `INSERT INTO BotChannel (bot_id, twitch_channel_id) VALUES (?, ?)`
+	res, err := b.sql.Exec(queryF, b.ID, channelID)
+	if err != nil {
+		if common.IsDuplicateKey(err) {
+			return errors.New("we have already joined this channel!")
+		}
+
+		return err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	botChannel := &BotChannel{
+		DatabaseID: id,
+
+		Channel: User{
+			ID: channelID,
+		},
+	}
+	err = botChannel.Channel.fillIn(b.userStore)
+	if err != nil {
+		return err
+	}
+
+	b.Join(botChannel.Channel.Name)
+
+	b.Channels = append(b.Channels, botChannel)
+
+	return nil
+}
+
+func (b *Bot) LeaveChannel(channelID string) error {
+	const queryF = `DELETE FROM BotChannel WHERE id=? LIMIT 1;`
+
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for i, botChannel := range b.Channels {
+		if botChannel.Channel.ID == channelID {
+			b.Depart(botChannel.Channel.Name)
+
+			res, err := b.sql.Exec(queryF, botChannel.DatabaseID)
+			if err != nil {
+				return err
+			}
+
+			// Delete it from our internal list
+			b.Channels = append(b.Channels[:i], b.Channels[i+1:]...)
+
+			rowsAffected, err := res.RowsAffected()
+			if err != nil {
+				return err
+			}
+			if rowsAffected != 1 {
+				// We didn't remove the channel from SQL, s
+				return errors.New("unable to remove channel from SQL, but it did exist in our internal storage. sync issue")
+			}
+
+			return nil
+		}
+	}
+
+	return errors.New("we have not joined this channel")
 }
 
 func (b *Bot) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {

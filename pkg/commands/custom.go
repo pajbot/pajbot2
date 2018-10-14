@@ -252,6 +252,76 @@ func (c TimeMeOut) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, 
 	bot.Timeout(channel, source, int(timeoutDuration.Seconds()), reason)
 }
 
+type Join struct {
+}
+
+func (c *Join) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
+		bot.Mention(channel, user, "you do not have permission to use this command. Admin permission is required")
+		return
+	}
+
+	if len(parts) < 2 {
+		return
+	}
+
+	channelName := parts[1]
+
+	if strings.EqualFold(channelName, bot.Name()) {
+		bot.Mention(channel, user, "I cannot join my own channel")
+		return
+	}
+
+	channelID := bot.GetUserStore().GetID(channelName)
+	if channelID == "" {
+		bot.Mention(channel, user, "no channel with that name exists")
+		return
+	}
+
+	err := bot.JoinChannel(channelID)
+	if err != nil {
+		bot.Mention(channel, user, err.Error())
+		return
+	}
+
+	bot.Mention(channel, user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
+}
+
+type Leave struct {
+}
+
+func (c *Leave) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
+		bot.Mention(channel, user, "you do not have permission to use this command. Admin permission is required")
+		return
+	}
+
+	if len(parts) < 2 {
+		return
+	}
+
+	channelName := parts[1]
+
+	if strings.EqualFold(channelName, bot.Name()) {
+		bot.Mention(channel, user, "I cannot leave my own channel")
+		return
+	}
+
+	channelID := bot.GetUserStore().GetID(channelName)
+	if channelID == "" {
+		bot.Mention(channel, user, "no channel with that name exists")
+		return
+	}
+
+	err := bot.LeaveChannel(channelID)
+	if err != nil {
+		bot.Mention(channel, user, err.Error())
+		return
+	}
+
+	bot.Mention(channel, user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
+}
+
 type Test struct {
 }
 

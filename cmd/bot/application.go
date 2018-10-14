@@ -219,6 +219,16 @@ func (a *Application) InitializeModules() (err error) {
 		return
 	}
 
+	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub)
+	if err != nil {
+		return
+	}
+
+	err = users.InitServer(a.SQL)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -387,7 +397,7 @@ func (a *Application) storeContext(next pb2twitch.Handler) pb2twitch.Handler {
 
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
-	const queryF = `SELECT name, twitch_access_token FROM Bot`
+	const queryF = `SELECT id, name, twitch_access_token FROM Bot`
 	rows, err := a.SQL.Query(queryF)
 	if err != nil {
 		return err
@@ -400,24 +410,11 @@ func (a *Application) LoadBots() error {
 		}
 	}()
 
-	/*
-	 Sorry :( To prevent racism we only allow basic Latin Letters with some exceptions. If you think your message should not have been timed out, please send a link to YOUR chatlogs for the MONTH with a TIMESTAMP of the offending message to "omgscoods@gmail.com" and we'll review it.
-	*/
-
-	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub)
-	if err != nil {
-		return err
-	}
-
-	err = users.InitServer(a.SQL)
-	if err != nil {
-		return err
-	}
-
 	for rows.Next() {
+		var id int
 		var name string
 		var twitchAccessToken string
-		if err := rows.Scan(&name, &twitchAccessToken); err != nil {
+		if err := rows.Scan(&id, &name, &twitchAccessToken); err != nil {
 			return err
 		}
 
@@ -427,9 +424,15 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext)
-		bot.Name = name
+		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
+		bot.ID = id
+		bot.SetName(name)
 		bot.QuitChannel = a.Quit
+
+		err = bot.LoadChannels(a.SQL)
+		if err != nil {
+			return err
+		}
 
 		// Parsing
 		bot.AddModule(modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
@@ -469,6 +472,8 @@ func (a *Application) LoadBots() error {
 		customCommands.RegisterCommand([]string{"!pb2simplify"}, &commands.Simplify{})
 		// customCommands.RegisterCommand([]string{"!timemeout"}, &commands.TimeMeOut{})
 		customCommands.RegisterCommand([]string{"!pb2test"}, &commands.Test{})
+		customCommands.RegisterCommand([]string{"!pb2join"}, &commands.Join{})
+		customCommands.RegisterCommand([]string{"!pb2leave"}, &commands.Leave{})
 
 		bot.AddModule(customCommands)
 
@@ -489,41 +494,27 @@ func (a *Application) LoadBots() error {
 func (a *Application) StartBots() error {
 	for _, bot := range a.TwitchBots {
 		go func(bot *pb2twitch.Bot) {
-			if bot.Name != "snusbot" {
-				// continue
-			}
-
 			bot.OnNewWhisper(bot.HandleWhisper)
 
 			bot.OnNewMessage(bot.HandleMessage)
 
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
-			if bot.Name == "gempir" {
-				bot.Join("pajlada")
+			// Bots always join their own channel
+			bot.Join(bot.Name())
+
+			// TODO: Join some "central control center" like skynetcentral?
+
+			for _, c := range bot.Channels {
+				fmt.Println("Joining", c.Channel.Name)
+				bot.Join(c.Channel.Name)
 			}
 
-			if bot.Name == "snusbot" {
-				bot.Join("forsen")
-			}
-
-			if bot.Name == "botnextdoor" {
-				bot.Join("nymn")
-			}
-
-			if bot.Name == "pajbot" {
-				bot.Join("krakenbul")
-				bot.Join("nani")
-				bot.Join("pajlada")
-				bot.Join("narwhal_dave")
-				// err := bot.ConnectToPointServer()
-				// if err != nil {
-				// 	log.Fatal(err)
-				// }
-				// bot.StartChatterPoller()
-			}
-
-			bot.Join(bot.Name)
+			// err := bot.ConnectToPointServer()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// bot.StartChatterPoller()
 
 			err := bot.Connect()
 			if err != nil {

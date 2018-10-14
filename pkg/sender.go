@@ -1,6 +1,8 @@
 package pkg
 
 type Sender interface {
+	Name() string
+
 	Say(Channel, string)
 	Mention(Channel, User, string)
 	Whisper(User, string)
@@ -23,4 +25,10 @@ type Sender interface {
 
 	MakeUser(string) User
 	MakeChannel(string) Channel
+
+	// Permanently join channel with the given channel ID
+	JoinChannel(channelID string) error
+
+	// Permanently leave channel with the given channel ID
+	LeaveChannel(channelID string) error
 }
