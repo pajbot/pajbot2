@@ -1,2 +1,5 @@
-bot
-migrations
+/bot
+/migrations
+/*.dll
+/charmap.bin.gz
+/web

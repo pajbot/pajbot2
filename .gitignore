@@ -2,6 +2,7 @@
 pajbot2
 *.exe
 *.exe~
+/bot
 
 # Ignore config files
 config.json
