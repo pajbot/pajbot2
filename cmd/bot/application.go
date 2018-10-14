@@ -484,6 +484,7 @@ func (a *Application) LoadBots() error {
 		bot.AddModule(modules.NewEmoteFilter(bot))
 		bot.AddModule(modules.NewBannedNames())
 		bot.AddModule(modules.NewLinkFilter())
+		bot.AddModule(modules.NewMessageHeightLimit())
 
 		bot.AddModule(modules.NewMessageLengthLimit())
 

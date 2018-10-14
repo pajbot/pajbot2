@@ -80,6 +80,10 @@ func (m EmoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User
 		return nil
 	}
 
+	if source.GetChannel() == "forsen" {
+		return nil
+	}
+
 	// BTTV Emotes
 	reader := message.GetBTTVReader()
 	timeoutDuration := 0

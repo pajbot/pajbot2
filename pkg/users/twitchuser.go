@@ -126,6 +126,10 @@ func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
 	return u.GetName() == channel.GetChannel()
 }
 
+func (u TwitchUser) GetBadges() map[string]int {
+	return u.Badges
+}
+
 func GetUserPermissions(userID, channelID string) (pkg.Permission, error) {
 	switch channelID {
 	case "global":

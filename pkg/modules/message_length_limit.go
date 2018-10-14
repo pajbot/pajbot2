@@ -31,6 +31,8 @@ func (m MessageLengthLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user 
 		return nil
 	}
 
+	return nil
+
 	if user.GetName() == "gazatu2" {
 		return nil
 	}

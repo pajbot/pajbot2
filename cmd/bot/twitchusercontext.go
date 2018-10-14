@@ -56,8 +56,6 @@ func (c *UserContext) AddContext(channelID, userID, message string) {
 		c.context[channelID] = make(map[string][]string)
 	}
 
-	fmt.Println("Add context", channelID, userID, message)
-
 	c.context[channelID][userID] = append(c.context[channelID][userID], message)
 	newLen := len(c.context[channelID][userID]) - 5
 	if newLen > 5 {

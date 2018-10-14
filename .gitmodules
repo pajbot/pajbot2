@@ -1,0 +1,3 @@
+[submodule "3rdParty/MessageHeightTwitch"]
+	path = 3rdParty/MessageHeightTwitch
+	url = https://github.com/TETYYS/MessageHeightTwitch.git
