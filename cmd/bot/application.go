@@ -425,7 +425,7 @@ func (a *Application) LoadBots() error {
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
 		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
-		bot.ID = id
+		bot.DatabaseID = id
 		bot.SetName(name)
 		bot.QuitChannel = a.Quit
 

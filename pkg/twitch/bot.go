@@ -42,7 +42,8 @@ type botFlags struct {
 type Bot struct {
 	*twitch.Client
 
-	ID      int
+	DatabaseID int
+
 	name    string
 	handler Handler
 
@@ -98,7 +99,7 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 func (b *Bot) LoadChannels(sql *sql.DB) error {
 	const queryF = `SELECT id, twitch_channel_id FROM BotChannel WHERE bot_id=?`
 
-	rows, err := sql.Query(queryF, b.ID)
+	rows, err := sql.Query(queryF, b.DatabaseID)
 	if err != nil {
 		return err
 	}
@@ -293,7 +294,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	b.handler.HandleMessage(b, nil, twitchUser, message, action)
 
 	if pkg.VerboseMessages {
-		fmt.Printf("%s - @%s(%s): %s", b.Name, twitchUser.DisplayName, twitchUser.Username, message.Text)
+		fmt.Printf("%s - @%s(%s): %s", b.Name(), twitchUser.DisplayName, twitchUser.Username, message.Text)
 	}
 }
 
@@ -326,7 +327,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 	b.handler.HandleMessage(b, channel, twitchUser, message, action)
 
 	if pkg.VerboseMessages {
-		fmt.Printf("%s - #%s: %s(%s): %s", b.Name, channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
+		fmt.Printf("%s - #%s: %s(%s): %s", b.Name(), channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
 	}
 }
 
@@ -358,7 +359,7 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 		}
 	}
 
-	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name, channel, user, rawMessage)
+	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name(), channel, user, rawMessage)
 }
 
 // Quit quits the entire application
@@ -753,7 +754,7 @@ func (b *Bot) MakeChannel(channel string) pkg.Channel {
 
 func (b *Bot) JoinChannel(channelID string) error {
 	const queryF = `INSERT INTO BotChannel (bot_id, twitch_channel_id) VALUES (?, ?)`
-	res, err := b.sql.Exec(queryF, b.ID, channelID)
+	res, err := b.sql.Exec(queryF, b.DatabaseID, channelID)
 	if err != nil {
 		if common.IsDuplicateKey(err) {
 			return errors.New("we have already joined this channel!")
