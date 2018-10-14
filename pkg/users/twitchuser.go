@@ -155,7 +155,7 @@ func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
 		return permissions, errors.New("missing user id or channel id")
 	}
 
-	const queryF = "SELECT permissions FROM `twitch_user_permissions` WHERE `twitch_user_id`=?;"
+	const queryF = "SELECT permissions FROM `TwitchUserGlobalPermission` WHERE `twitch_user_id`=?;"
 
 	var permissionsBytes []uint8
 	err := _server.sql.QueryRow(queryF, userID).Scan(&permissionsBytes)
@@ -179,7 +179,7 @@ func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error)
 		return permissions, errors.New("missing user id or channel id")
 	}
 
-	const queryF = "SELECT permissions FROM `twitch_user_channel_permissions` WHERE `twitch_user_id`=? AND `channel_id`=?;"
+	const queryF = "SELECT permissions FROM `TwitchUserChannelPermission` WHERE `twitch_user_id`=? AND `channel_id`=?;"
 
 	rows, err := _server.sql.Query(queryF, userID, channelID)
 	if err != nil {
@@ -205,7 +205,7 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 		return errors.New("missing user id or channel id")
 	}
 
-	const queryF = "INSERT INTO twitch_user_channel_permissions (twitch_user_id, channel_id, permissions) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE permissions=?;"
+	const queryF = "INSERT INTO TwitchUserChannelPermission (twitch_user_id, channel_id, permissions) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE permissions=?;"
 
 	permissionBytes := utils.Uint64ToBytes(uint64(permission))
 
@@ -224,7 +224,7 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 
 func SetUserGlobalPermissions(userID string, permission pkg.Permission) error {
 	const queryF = `
-INSERT INTO twitch_user_permissions
+INSERT INTO TwitchUserGlobalPermission
 	(twitch_user_id, permissions)
 	VALUES (?, ?)
 	ON DUPLICATE KEY UPDATE permissions=?;

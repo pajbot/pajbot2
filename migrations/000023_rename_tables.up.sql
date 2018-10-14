@@ -1,0 +1,1 @@
+RENAME TABLE pb_bot TO Bot, twitch_user_channel_permissions TO TwitchUserChannelPermission, twitch_user_permissions TO TwitchUserGlobalPermission;

@@ -387,19 +387,8 @@ func (a *Application) storeContext(next pb2twitch.Handler) pb2twitch.Handler {
 
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
-	db, err := sql.Open("mysql", a.config.SQL.DSN)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		dErr := db.Close()
-		if dErr != nil {
-			fmt.Println("Error in deferred close:", dErr)
-		}
-	}()
-
-	rows, err := db.Query("SELECT `name`, `twitch_access_token` FROM `pb_bot`")
+	const queryF = `SELECT name, twitch_access_token FROM Bot`
+	rows, err := a.SQL.Query(queryF)
 	if err != nil {
 		return err
 	}
@@ -433,7 +422,7 @@ func (a *Application) LoadBots() error {
 		}
 
 		if strings.HasPrefix(twitchAccessToken, "oauth:") {
-			panic(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
+			return errors.New(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
 		}
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
