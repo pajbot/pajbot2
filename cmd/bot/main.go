@@ -98,24 +98,29 @@ func runCmd() {
 		log.Fatal("An error occured while loading the config file: ", err)
 	}
 
+	err = application.InitializeAPIs()
+	if err != nil {
+		log.Fatal("An error occured while initializing APIs: ", err)
+	}
+
+	err = application.InitializeSQL()
+	if err != nil {
+		log.Fatal("Error starting SQL client:", err)
+	}
+
 	err = application.RunDatabaseMigrations()
 	if err != nil {
 		log.Fatal("An error occured while running database migrations: ", err)
 	}
 
-	err = application.StartRedisClient()
+	err = application.InitializeRedis()
 	if err != nil {
 		log.Fatal("Error starting redis client:", err)
 	}
 
-	err = application.StartSQLClient()
+	err = application.InitializeModules()
 	if err != nil {
 		log.Fatal("Error starting SQL client:", err)
-	}
-
-	err = application.InitializeAPIs()
-	if err != nil {
-		log.Fatal("An error occured while initializing APIs: ", err)
 	}
 
 	err = application.LoadExternalEmotes()
@@ -123,34 +128,15 @@ func runCmd() {
 		log.Fatal("An error occured while loading external emotes: ", err)
 	}
 
-	err = application.StartTwitterStream()
-	if err != nil {
-		log.Println("Error starting twitter stream: ", err)
-	}
-
 	err = application.StartWebServer()
 	if err != nil {
 		log.Fatal("An error occured while starting the web server: ", err)
 	}
 
-	/*
-		err = application.LoadOldPajbot()
-		if err != nil {
-			log.Fatal("An error occured while loading old pajbot: ", err)
-		}
-	*/
-
 	err = application.LoadBots()
 	if err != nil {
 		log.Fatal("An error occured while loading bots: ", err)
 	}
-
-	/*
-		err = application.StartContextBot()
-		if err != nil {
-			log.Fatal("An error occured while starting context bot: ", err)
-		}
-	*/
 
 	err = application.StartBots()
 	if err != nil {

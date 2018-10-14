@@ -122,19 +122,7 @@ func (a *Application) LoadConfig(path string) error {
 
 // RunDatabaseMigrations runs database migrations on the database specified in the config file
 func (a *Application) RunDatabaseMigrations() error {
-	db, err := sql.Open("mysql", a.config.SQL.DSN)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		dErr := db.Close()
-		if dErr != nil {
-			fmt.Println("Error in deferred close:", dErr)
-		}
-	}()
-
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	driver, err := mysql.WithInstance(a.SQL, &mysql.Config{})
 	if err != nil {
 		return err
 	}
@@ -173,32 +161,6 @@ func (a *Application) InitializeAPIs() error {
 	apirequest.TwitchV3 = gotwitch.NewV3(a.config.Auth.Twitch.User.ClientID)
 	apirequest.TwitchBotV3 = gotwitch.NewV3(a.config.Auth.Twitch.Bot.ClientID)
 
-	// onSuccess := func(data []gotwitch.User) {
-	// 	fmt.Printf("%#v\n", data)
-	// }
-
-	// apirequest.Twitch.GetUsersByLogin([]string{"bajlada"}, onSuccess, onHTTPError, onInternalError)
-
-	/*
-		apirequest.Twitch.SubscribeFollows("19571641", "http://57552418.ngrok.io/api/callbacks/follow", func() {
-			fmt.Println("success")
-		}, func() {
-			fmt.Println("error")
-		})
-	*/
-
-	apirequest.Twitch.SubscribeStreams("159849156", "http://57552418.ngrok.io/api/callbacks/streams", func() {
-		fmt.Println("streams success")
-	}, func() {
-		fmt.Println("streams error")
-	})
-
-	apirequest.Twitch.SubscribeStreams("11148817", "http://57552418.ngrok.io/api/callbacks/streams", func() {
-		fmt.Println("streams success")
-	}, func() {
-		fmt.Println("streams error")
-	})
-
 	return nil
 }
 
@@ -211,7 +173,17 @@ func (a *Application) LoadExternalEmotes() error {
 	return nil
 }
 
-func (a *Application) StartRedisClient() error {
+func (a *Application) InitializeSQL() error {
+	var err error
+	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *Application) InitializeRedis() error {
 	a.Redis = &redis.Pool{
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", a.config.Redis.Host)
@@ -235,20 +207,19 @@ func (a *Application) StartRedisClient() error {
 	return conn.Send("PING")
 }
 
-func (a *Application) StartSQLClient() error {
-	var err error
-	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
-	if err != nil {
-		return err
-	}
-
+func (a *Application) InitializeModules() (err error) {
 	// TODO: move this to init
 	a.ReportHolder, err = report.New(a.SQL, a.PubSub, a.TwitchUserStore)
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
+	err = a.StartTwitterStream()
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (a *Application) StartTwitterStream() error {
