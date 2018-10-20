@@ -2,30 +2,43 @@ package modules
 
 import "github.com/pajlada/pajbot2/pkg"
 
-var _ pkg.Module = &Test{}
-
-type Test struct {
+type test struct {
 	server *server
 }
 
-func NewTest() *Test {
-	return &Test{
+func newTest() pkg.Module {
+	return &test{
 		server: &_server,
 	}
 }
 
-func (m *Test) Register() error {
+var testSpec = moduleSpec{
+	id:    "test",
+	name:  "Test",
+	maker: newTest,
+
+	Priority: 0,
+
+	enabledByDefault: false,
+}
+
+func (m *test) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
 }
 
-func (m *Test) Name() string {
-	return "Test"
-}
-
-func (m Test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m *test) Disable() error {
 	return nil
 }
 
-func (m Test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *test) Spec() pkg.ModuleSpec {
+	return &testSpec
+}
+
+func (m test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	// bot.Mention(channel, user, "test module xd")
 	return nil
 }

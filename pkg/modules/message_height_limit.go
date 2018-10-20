@@ -20,9 +20,22 @@ import (
 	"unsafe"
 
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 var _ pkg.Module = &MessageHeightLimit{}
+
+func init() {
+	Register(messageHeightLimitSpec)
+}
+
+var messageHeightLimitSpec = &moduleSpec{
+	id:    "message_height_limit",
+	name:  "Message height limit",
+	maker: NewMessageHeightLimit,
+
+	enabledByDefault: true,
+}
 
 type MessageHeightLimit struct {
 	server *server
@@ -30,7 +43,7 @@ type MessageHeightLimit struct {
 	heightLimit float32
 }
 
-func NewMessageHeightLimit() *MessageHeightLimit {
+func NewMessageHeightLimit() pkg.Module {
 	return &MessageHeightLimit{
 		server: &_server,
 
@@ -51,11 +64,7 @@ func initCLR() error {
 	fmt.Println("Executable dir", executableDir)
 	fmt.Println("os args 0:", os.Args[0])
 
-	clrLibraryFolder, clrLibraryFolderSet := os.LookupEnv("LIBCOREFOLDER")
-	if !clrLibraryFolderSet {
-		// clrLibraryFolder = "/opt/dotnet/shared/Microsoft.NETCore.App/2.1.5"
-		clrLibraryFolder = "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5"
-	}
+	clrPath := utils.GetEnv("LIBCOREFOLDER", "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5")
 
 	// Path to our own executable
 	clr1 := C.CString(executableDir + "/bot")
@@ -63,7 +72,7 @@ func initCLR() error {
 	fmt.Println(executableDir)
 
 	// Folder where libcoreclr.so is located
-	clr2 := C.CString(clrLibraryFolder)
+	clr2 := C.CString(clrPath)
 
 	// Path to library we want to use
 	clr3 := C.CString(executableDir + "/MessageHeightTwitch.dll")
@@ -100,6 +109,8 @@ func initChannel(channelName string) error {
 	}
 
 	C.free(unsafe.Pointer(channel))
+
+	return nil
 }
 
 func initMessageHeightLimitLibrary() error {
@@ -117,17 +128,10 @@ func initMessageHeightLimitLibrary() error {
 
 	messageHeightLimitLibraryInitialized = true
 
-	if err = initChannel("forsen"); err != nil {
-		return err
-	}
-	if err = initChannel("pajlada"); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (m *MessageHeightLimit) Register() (err error) {
+func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []byte) (err error) {
 	if !clrInitialized {
 		err = initCLR()
 		if err != nil {
@@ -137,11 +141,19 @@ func (m *MessageHeightLimit) Register() (err error) {
 		err = initMessageHeightLimitLibrary()
 	}
 
+	if err := initChannel(botChannel.ChannelName()); err != nil {
+		return err
+	}
+
 	return
 }
 
-func (m *MessageHeightLimit) Name() string {
-	return "MessageHeightLimit"
+func (m *MessageHeightLimit) Disable() error {
+	return nil
+}
+
+func (m *MessageHeightLimit) Spec() pkg.ModuleSpec {
+	return messageHeightLimitSpec
 }
 
 func (m *MessageHeightLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
@@ -236,10 +248,6 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 				}
 			}
 		}
-	}
-
-	if channel.GetChannel() != "forsen" {
-		return nil
 	}
 
 	const maxTimeoutLength = 1800

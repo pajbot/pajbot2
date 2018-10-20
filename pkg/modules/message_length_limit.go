@@ -8,18 +8,28 @@ type MessageLengthLimit struct {
 	server *server
 }
 
-func NewMessageLengthLimit() *MessageLengthLimit {
+func newMessageLengthLimit() pkg.Module {
 	return &MessageLengthLimit{
 		server: &_server,
 	}
 }
 
-func (m *MessageLengthLimit) Register() error {
+var messageLengthLimitSpec = moduleSpec{
+	id:    "message_length_limit",
+	name:  "Message length limit",
+	maker: newMessageLengthLimit,
+}
+
+func (m *MessageLengthLimit) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
 }
 
-func (m *MessageLengthLimit) Name() string {
-	return "MessageLengthLimit"
+func (m *MessageLengthLimit) Disable() error {
+	return nil
+}
+
+func (m *MessageLengthLimit) Spec() pkg.ModuleSpec {
+	return &messageLengthLimitSpec
 }
 
 func (m MessageLengthLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {

@@ -2,8 +2,6 @@ package modules
 
 import "github.com/pajlada/pajbot2/pkg"
 
-var _ pkg.Module = &ActionPerformer{}
-
 type ActionPerformer struct {
 	server *server
 }

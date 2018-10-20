@@ -7,7 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-type Giveaway struct {
+type giveaway struct {
 	server *server
 
 	state string
@@ -17,31 +17,40 @@ type Giveaway struct {
 	Sender pkg.Sender
 }
 
-func NewGiveaway(sender pkg.Sender) *Giveaway {
-	return &Giveaway{
+func newGiveaway() pkg.Module {
+	return &giveaway{
 		server: &_server,
 		state:  "inactive",
-		Sender: sender,
 	}
 }
 
-func (m Giveaway) Name() string {
-	return "Giveaway"
+var giveawaySpec = moduleSpec{
+	id:    "giveaway",
+	name:  "Giveaway",
+	maker: newGiveaway,
 }
 
-func (m Giveaway) Register() error {
+func (m *giveaway) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
+}
+
+func (m *giveaway) Disable() error {
+	return nil
+}
+
+func (m *giveaway) Spec() pkg.ModuleSpec {
+	return &giveawaySpec
 }
 
 const forsen25ID = "1361602"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
-func (m Giveaway) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m giveaway) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *Giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	// if channel.GetChannel() != "forsen" {
 	// 	return nil
 	// }

@@ -11,8 +11,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-var _ pkg.Module = &Nuke{}
-
 const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
@@ -22,7 +20,7 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-type Nuke struct {
+type nukeModule struct {
 	server        *server
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
@@ -30,8 +28,8 @@ type Nuke struct {
 	ticker *time.Ticker
 }
 
-func NewNuke() *Nuke {
-	m := &Nuke{
+func newNuke() pkg.Module {
+	m := &nukeModule{
 		server:   &_server,
 		messages: make(map[string][]nukeMessage),
 	}
@@ -50,19 +48,31 @@ func NewNuke() *Nuke {
 	return m
 }
 
-func (m *Nuke) Register() error {
+var nukeSpec = moduleSpec{
+	id:    "nuke",
+	name:  "Nuke",
+	maker: newNuke,
+
+	enabledByDefault: true,
+}
+
+func (m *nukeModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
 }
 
-func (m *Nuke) Name() string {
-	return "Nuke"
-}
-
-func (m *Nuke) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m *nukeModule) Disable() error {
 	return nil
 }
 
-func (m *Nuke) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *nukeModule) Spec() pkg.ModuleSpec {
+	return &nukeSpec
+}
+
+func (m *nukeModule) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m *nukeModule) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	defer func() {
 		m.addMessage(channel, user, message)
 	}()
@@ -106,7 +116,7 @@ func (m *Nuke) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, mes
 	return nil
 }
 
-func (m *Nuke) garbageCollect() {
+func (m *nukeModule) garbageCollect() {
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
 
@@ -123,7 +133,7 @@ func (m *Nuke) garbageCollect() {
 	}
 }
 
-func (m *Nuke) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase string, scrollbackLength, timeoutDuration time.Duration) {
+func (m *nukeModule) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase string, scrollbackLength, timeoutDuration time.Duration) {
 	if timeoutDuration > 24*time.Hour {
 		timeoutDuration = 24 * time.Hour
 	}
@@ -181,7 +191,7 @@ func (m *Nuke) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, phrase
 	bot.Say(channel, fmt.Sprintf("%s nuked %d users for the phrase %s in the last %s for %s", source.GetName(), len(targets), phrase, scrollbackLength, timeoutDuration))
 }
 
-func (m *Nuke) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
+func (m *nukeModule) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
 

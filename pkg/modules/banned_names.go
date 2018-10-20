@@ -6,20 +6,27 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-type BannedNames struct {
+type bannedNames struct {
 	server *server
 
 	badUsernames []*regexp.Regexp
 }
 
-func NewBannedNames() *BannedNames {
-	return &BannedNames{
+func newBannedNames() pkg.Module {
+	return &bannedNames{
 		server: &_server,
 	}
 }
 
-func (m *BannedNames) Register() error {
+var bannedNamesSpec = moduleSpec{
+	id:    "banned_names",
+	name:  "Banned names",
+	maker: newBannedNames,
 
+	enabledByDefault: true,
+}
+
+func (m *bannedNames) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`tos_is_trash\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`trash_is_the_tos\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`terms_of_service_uncool\d+`))
@@ -32,15 +39,19 @@ func (m *BannedNames) Register() error {
 	return nil
 }
 
-func (m BannedNames) Name() string {
-	return "BannedNames"
-}
-
-func (m BannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *bannedNames) Disable() error {
 	return nil
 }
 
-func (m BannedNames) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *bannedNames) Spec() pkg.ModuleSpec {
+	return &bannedNamesSpec
+}
+
+func (m bannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m bannedNames) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if source.GetChannel() != "forsen" {
 		return nil
 	}

@@ -91,7 +91,7 @@ Commands:
 }
 
 func runCmd() {
-	application := NewApplication()
+	application := newApplication()
 
 	err := application.LoadConfig(*configPath)
 	if err != nil {

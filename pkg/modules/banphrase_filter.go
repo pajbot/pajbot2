@@ -9,19 +9,27 @@ import (
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
-type Pajbot1BanphraseFilter struct {
+type pajbot1BanphraseFilter struct {
 	server *server
 
 	banphrases []pkg.Banphrase
 }
 
-func NewPajbot1BanphraseFilter() *Pajbot1BanphraseFilter {
-	return &Pajbot1BanphraseFilter{
+func newPajbot1BanphraseFilter() pkg.Module {
+	return &pajbot1BanphraseFilter{
 		server: &_server,
 	}
 }
 
-func (m *Pajbot1BanphraseFilter) addCustomBanphrase(phrase string) {
+var pajbot1BanphraseSpec = moduleSpec{
+	id:    "pajbot1_banphrase",
+	name:  "pajbot1 banphrase",
+	maker: newPajbot1BanphraseFilter,
+
+	enabledByDefault: true,
+}
+
+func (m *pajbot1BanphraseFilter) addCustomBanphrase(phrase string) {
 	m.banphrases = append(m.banphrases, &filters.Pajbot1Banphrase{
 		ID:            -1,
 		Name:          "Custom",
@@ -38,7 +46,7 @@ func (m *Pajbot1BanphraseFilter) addCustomBanphrase(phrase string) {
 	})
 }
 
-func (m *Pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
+func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 	const queryF = `SELECT * FROM tb_banphrase`
 
 	session := m.server.oldSession
@@ -64,7 +72,7 @@ func (m *Pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 	return nil
 }
 
-func (m *Pajbot1BanphraseFilter) Register() error {
+func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	// hard-coded banphrases
 
 	m.addCustomBanphrase("n!66ger")
@@ -256,8 +264,12 @@ func (m *Pajbot1BanphraseFilter) Register() error {
 	return nil
 }
 
-func (m Pajbot1BanphraseFilter) Name() string {
-	return "Pajbot1BanphraseFilter"
+func (m *pajbot1BanphraseFilter) Disable() error {
+	return nil
+}
+
+func (m *pajbot1BanphraseFilter) Spec() pkg.ModuleSpec {
+	return &pajbot1BanphraseSpec
 }
 
 type TimeoutData struct {
@@ -268,11 +280,11 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m Pajbot1BanphraseFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *pajbot1BanphraseFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text string, action pkg.Action) error {
+func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text string, action pkg.Action) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(text, true)
 	if err != nil {
 		return err
@@ -327,7 +339,7 @@ func (m Pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text s
 	return nil
 }
 
-func (m Pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if user.IsModerator() || user.IsBroadcaster(source) {
 		return nil
 	}

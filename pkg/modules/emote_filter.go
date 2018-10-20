@@ -15,24 +15,28 @@ type limitConsequence struct {
 	extraDuration int
 }
 
-type EmoteFilter struct {
+type emoteFilter struct {
 	server *server
 
 	emoteLimits    map[string]limitConsequence
 	combinedLimits int
-	Sender         pkg.Sender
 }
 
-func NewEmoteFilter(sender pkg.Sender) *EmoteFilter {
-	return &EmoteFilter{
+func newEmoteFilter() pkg.Module {
+	return &emoteFilter{
 		server: &_server,
 
 		emoteLimits: make(map[string]limitConsequence),
-		Sender:      sender,
 	}
 }
 
-func (m *EmoteFilter) Register() error {
+var emoteLimitSpec = moduleSpec{
+	id:    "emote_limit",
+	name:  "Emote limit",
+	maker: newEmoteFilter,
+}
+
+func (m *emoteFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.emoteLimits["NaM"] = limitConsequence{
 		limit:         2,
 		baseDuration:  300,
@@ -67,15 +71,19 @@ func (m *EmoteFilter) Register() error {
 	return nil
 }
 
-func (m EmoteFilter) Name() string {
-	return "EmoteFilter"
-}
-
-func (m EmoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *emoteFilter) Disable() error {
 	return nil
 }
 
-func (m EmoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *emoteFilter) Spec() pkg.ModuleSpec {
+	return &emoteLimitSpec
+}
+
+func (m emoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m emoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if source.GetChannel() == "nymn" || source.GetChannel() == "narwhal_dave" {
 		return nil
 	}

@@ -10,25 +10,33 @@ import (
 )
 
 type Report struct {
-	server       *server
 	reportHolder *report.Holder
 }
 
 var _ pkg.Module = &Report{}
 
-func NewReportModule(reportHolder *report.Holder) *Report {
+func newReport() pkg.Module {
 	return &Report{
-		server:       &_server,
-		reportHolder: reportHolder,
+		reportHolder: _server.reportHolder,
 	}
 }
 
-func (m Report) Name() string {
-	return "Report"
+var reportSpec = moduleSpec{
+	id:    "report",
+	name:  "Report",
+	maker: newReport,
 }
 
-func (m *Report) Register() error {
+func (m *Report) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
+}
+
+func (m *Report) Disable() error {
+	return nil
+}
+
+func (m *Report) Spec() pkg.ModuleSpec {
+	return &reportSpec
 }
 
 func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

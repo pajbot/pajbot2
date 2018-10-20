@@ -31,7 +31,6 @@ import (
 	"github.com/pajlada/pajbot2/emotes"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
-	"github.com/pajlada/pajbot2/pkg/commands"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
@@ -40,17 +39,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/web"
 )
-
-type channelContext struct {
-	// TODO: replace []string with some 5 message long fifo queue
-	Channels map[string][]string
-}
-
-func NewChannelContext() *channelContext {
-	return &channelContext{
-		Channels: make(map[string][]string),
-	}
-}
 
 // Application is the heart of pajbot
 // It keeps the functions to initialize, start, and stop pajbot
@@ -65,9 +53,6 @@ type Application struct {
 
 	ReportHolder *report.Holder
 
-	// key = user ID
-	UserContext map[string]*channelContext
-
 	Quit chan string
 
 	PubSub            *pubsub.PubSub
@@ -75,24 +60,8 @@ type Application struct {
 	TwitchUserContext pkg.UserContext
 }
 
-func lol(xd string) *string {
-	return &xd
-}
-
-func (a *Application) GetUserMessages(channelID, userID string) ([]string, error) {
-	if uc, ok := a.UserContext[userID]; ok {
-		if cc, ok := uc.Channels[channelID]; ok {
-			return cc, nil
-		}
-
-		return nil, errors.New("No messages found in this channel for this user")
-	}
-
-	return nil, errors.New("No messages found for this user")
-}
-
 // NewApplication creates an instance of Application. Generally this should only be done once
-func NewApplication() *Application {
+func newApplication() *Application {
 	a := Application{}
 
 	a.TwitchUserStore = NewUserStore()
@@ -100,7 +69,6 @@ func NewApplication() *Application {
 
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
-	a.UserContext = make(map[string]*channelContext)
 	a.PubSub = pubsub.New()
 
 	go a.PubSub.Run()
@@ -219,7 +187,7 @@ func (a *Application) InitializeModules() (err error) {
 		return
 	}
 
-	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub)
+	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub, a.ReportHolder)
 	if err != nil {
 		return
 	}
@@ -339,30 +307,9 @@ type UnicodeRange struct {
 
 func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
 	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
-		modulesStart := time.Now()
-		defer func() {
-			modulesEnd := time.Now()
-
-			if pkg.VerboseBenchmark {
-				fmt.Printf("[% 26s] %s", "Total", modulesEnd.Sub(modulesStart))
-			}
-		}()
-
-		for _, module := range bot.Modules {
-			moduleStart := time.Now()
-			var err error
-			if channel == nil {
-				err = module.OnWhisper(bot, user, message)
-			} else {
-				err = module.OnMessage(bot, channel, user, message, action)
-			}
-			moduleEnd := time.Now()
-			if pkg.VerboseBenchmark {
-				fmt.Printf("[% 26s] %s", module.Name(), moduleEnd.Sub(moduleStart))
-			}
-			if err != nil {
-				fmt.Printf("%s: %s\n", module.Name(), err)
-			}
+		err := bot.Test123(channel, user, message, action)
+		if err != nil {
+			fmt.Println("error in module forwarder:", err)
 		}
 
 		next.HandleMessage(bot, channel, user, message, action)
@@ -434,54 +381,6 @@ func (a *Application) LoadBots() error {
 			return err
 		}
 
-		// Parsing
-		bot.AddModule(modules.NewBTTVEmoteParser(&emotes.GlobalEmotes.Bttv))
-
-		// Report module/Admin commands
-		bot.AddModule(modules.NewReportModule(a.ReportHolder))
-
-		// Filtering
-		bot.AddModule(modules.NewBadCharacterFilter())
-		bot.AddModule(modules.NewLatinFilter())
-		bot.AddModule(modules.NewPajbot1BanphraseFilter())
-		bot.AddModule(modules.NewEmoteFilter(bot))
-		bot.AddModule(modules.NewBannedNames())
-		bot.AddModule(modules.NewLinkFilter())
-		// bot.AddModule(modules.NewMessageHeightLimit())
-
-		bot.AddModule(modules.NewMessageLengthLimit())
-
-		// Actions
-		bot.AddModule(modules.NewActionPerformer())
-
-		// Commands
-		bot.AddModule(modules.NewPajbot1Commands(bot))
-
-		customCommands := modules.NewCustomCommands()
-		customCommands.RegisterCommand([]string{"!userid"}, &commands.GetUserID{})
-		customCommands.RegisterCommand([]string{"!username"}, &commands.GetUserName{})
-		customCommands.RegisterCommand([]string{"!pb2points"}, &commands.GetPoints{})
-		customCommands.RegisterCommand([]string{"!pb2roulette"}, &commands.Roulette{})
-		customCommands.RegisterCommand([]string{"!pb2givepoints"}, &commands.GivePoints{})
-		// customCommands.RegisterCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
-		// customCommands.RegisterCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
-		customCommands.RegisterCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
-		customCommands.RegisterCommand([]string{"!user"}, commands.NewUser())
-		customCommands.RegisterCommand([]string{"!pb2rank"}, &commands.Rank{})
-		customCommands.RegisterCommand([]string{"!pb2ping"}, &commands.Ping{})
-		customCommands.RegisterCommand([]string{"!pb2simplify"}, &commands.Simplify{})
-		// customCommands.RegisterCommand([]string{"!timemeout"}, &commands.TimeMeOut{})
-		customCommands.RegisterCommand([]string{"!pb2test"}, &commands.Test{})
-		customCommands.RegisterCommand([]string{"!pb2join"}, &commands.Join{})
-		customCommands.RegisterCommand([]string{"!pb2leave"}, &commands.Leave{})
-
-		bot.AddModule(customCommands)
-
-		bot.AddModule(modules.NewGiveaway(bot))
-
-		// Moderation
-		bot.AddModule(modules.NewNuke())
-
 		bot.SetHandler(a.storeContext(a.notifyPubSub(checkModules(pb2twitch.HandleCommands(finalHandler)))))
 
 		a.TwitchBots[name] = bot
@@ -505,10 +404,8 @@ func (a *Application) StartBots() error {
 
 			// TODO: Join some "central control center" like skynetcentral?
 
-			for _, c := range bot.Channels {
-				fmt.Println("Joining", c.Channel.Name)
-				bot.Join(c.Channel.Name)
-			}
+			// Join all "external" channels
+			bot.JoinChannels()
 
 			// err := bot.ConnectToPointServer()
 			// if err != nil {
@@ -571,10 +468,6 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 				reason = event.Arguments[2]
 				content += " for reason: \"" + reason + "\""
 			}
-			msgs, err := a.GetUserMessages(channelID, event.TargetUserID)
-			if err == nil {
-				actionContext = lol(strings.Join(msgs, "\n"))
-			}
 
 			e := pkg.PubSubTimeoutEvent{
 				Channel: pkg.PubSubUser{
@@ -600,10 +493,6 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 			if len(event.Arguments[1]) > 0 {
 				reason = event.Arguments[1]
 				content += " for reason: \"" + reason + "\""
-			}
-			msgs, err := a.GetUserMessages(channelID, event.TargetUserID)
-			if err == nil {
-				actionContext = lol(strings.Join(msgs, "\n"))
 			}
 
 			e := pkg.PubSubBanEvent{

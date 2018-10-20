@@ -23,26 +23,32 @@ type UnicodeRange struct {
 	End   rune
 }
 
-type LatinFilter struct {
+type latinFilter struct {
 	server *server
 
 	transparentList  *datastructures.TransparentList
 	unicodeWhitelist []UnicodeRange
 }
 
-func NewLatinFilter() *LatinFilter {
-	return &LatinFilter{
+func newLatinFilter() pkg.Module {
+	return &latinFilter{
 		server: &_server,
 
 		transparentList: datastructures.NewTransparentList(),
 	}
 }
 
-func (m *LatinFilter) addToWhitelist(start, end rune) {
+var latinFilterSpec = moduleSpec{
+	id:    "latin_filter",
+	name:  "Latin filter",
+	maker: newLatinFilter,
+}
+
+func (m *latinFilter) addToWhitelist(start, end rune) {
 	m.unicodeWhitelist = append(m.unicodeWhitelist, UnicodeRange{start, end})
 }
 
-func (m *LatinFilter) Register() error {
+func (m *latinFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.transparentList.Add("(/ﾟДﾟ)/")
 	m.transparentList.Add("(╯°□°）╯︵ ┻━┻")
 	m.transparentList.Add("(╯°Д°）╯︵/(.□ . )")
@@ -91,15 +97,19 @@ func (m *LatinFilter) Register() error {
 	return nil
 }
 
-func (m LatinFilter) Name() string {
-	return "LatinFilter"
-}
-
-func (m LatinFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *latinFilter) Disable() error {
 	return nil
 }
 
-func (m LatinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *latinFilter) Spec() pkg.ModuleSpec {
+	return &latinFilterSpec
+}
+
+func (m *latinFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m *latinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !user.IsModerator() || true {
 		text := message.GetText()
 

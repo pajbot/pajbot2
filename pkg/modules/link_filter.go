@@ -8,12 +8,26 @@ import (
 type LinkFilter struct {
 }
 
-func NewLinkFilter() *LinkFilter {
+func newLinkFilter() pkg.Module {
 	return &LinkFilter{}
 }
 
-func (m *LinkFilter) Register() error {
+var linkFilterSpec = moduleSpec{
+	id:    "link_filter",
+	name:  "Link filter",
+	maker: newLinkFilter,
+}
+
+func (m *LinkFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	return nil
+}
+
+func (m *LinkFilter) Disable() error {
+	return nil
+}
+
+func (m *LinkFilter) Spec() pkg.ModuleSpec {
+	return &linkFilterSpec
 }
 
 func (m LinkFilter) Name() string {

@@ -53,10 +53,7 @@ type Bot struct {
 
 	// Filled in with user IDs when bot is loaded, from SQL
 	channelsMutex *sync.Mutex
-	Channels      []*BotChannel
-
-	// XXX: This is wrong. Modules need to be stored per channel, instead of per bot
-	Modules []pkg.Module
+	channels      []*BotChannel
 
 	// TODO: Store one point server per channel the bot is in. share between bots
 	pointServer *PointServer
@@ -96,6 +93,35 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 	return b
 }
 
+func (b *Bot) addBotChannel(botChannel *BotChannel) error {
+	b.channelsMutex.Lock()
+	b.channels = append(b.channels, botChannel)
+	b.channelsMutex.Unlock()
+
+	// Initialize bot channel
+	return botChannel.Initialize(b)
+}
+
+func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for i, botChannel := range b.channels {
+		if botChannel.Channel.ID == channelID {
+			return i, botChannel
+		}
+	}
+
+	return -1, nil
+}
+
+func (b *Bot) removeBotChannelAtIndex(index int) {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	b.channels = append(b.channels[:index], b.channels[index+1:]...)
+}
+
 func (b *Bot) LoadChannels(sql *sql.DB) error {
 	const queryF = `SELECT id, twitch_channel_id FROM BotChannel WHERE bot_id=?`
 
@@ -131,11 +157,23 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 
 	for _, c := range channels {
 		if c.Channel.Valid() {
-			b.Channels = append(b.Channels, c)
+			if err = b.addBotChannel(c); err != nil {
+				return nil
+			}
 		}
 	}
 
 	return nil
+}
+
+func (b *Bot) JoinChannels() {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for _, c := range b.channels {
+		fmt.Println("Joining", c.Channel.Name)
+		b.Join(c.Channel.Name)
+	}
 }
 
 func (b *Bot) GetUserStore() pkg.UserStore {
@@ -639,19 +677,6 @@ func (b *Bot) PointRank(channel pkg.Channel, userID string) uint64 {
 	return rank
 }
 
-func (b *Bot) AddModule(module pkg.Module) {
-	if module == nil {
-		return
-	}
-
-	if err := module.Register(); err != nil {
-		fmt.Printf("Error registering module(%s): %s\n", module.Name(), err.Error())
-		return
-	}
-
-	b.Modules = append(b.Modules, module)
-}
-
 // TODO: Code under here should be generalized, or moved into their own module
 func HandleCommands(next Handler) Handler {
 	return HandlerFunc(func(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
@@ -782,41 +807,58 @@ func (b *Bot) JoinChannel(channelID string) error {
 
 	b.Join(botChannel.Channel.Name)
 
-	b.Channels = append(b.Channels, botChannel)
+	if err = b.addBotChannel(botChannel); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func (b *Bot) Test123(channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
+	if channel == nil {
+		fmt.Println("channel is nil, skipping")
+		return nil
+	}
+
+	_, botChannel := b.getBotChannel(channel.GetID())
+	if botChannel == nil {
+		return errors.New("No bot channel with id " + channel.GetID())
+	}
+
+	return botChannel.forwardToModules(b, channel, user, message, action)
 }
 
 func (b *Bot) LeaveChannel(channelID string) error {
 	const queryF = `DELETE FROM BotChannel WHERE id=? LIMIT 1;`
 
+	i, botChannel := b.getBotChannel(channelID)
+	if botChannel == nil {
+		return errors.New("we have not joined this channel")
+	}
+
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()
 
-	for i, botChannel := range b.Channels {
-		if botChannel.Channel.ID == channelID {
-			b.Depart(botChannel.Channel.Name)
+	b.Depart(botChannel.Channel.Name)
 
-			res, err := b.sql.Exec(queryF, botChannel.DatabaseID)
-			if err != nil {
-				return err
-			}
-
-			// Delete it from our internal list
-			b.Channels = append(b.Channels[:i], b.Channels[i+1:]...)
-
-			rowsAffected, err := res.RowsAffected()
-			if err != nil {
-				return err
-			}
-			if rowsAffected != 1 {
-				// We didn't remove the channel from SQL, s
-				return errors.New("unable to remove channel from SQL, but it did exist in our internal storage. sync issue")
-			}
-
-			return nil
-		}
+	res, err := b.sql.Exec(queryF, botChannel.DatabaseID)
+	if err != nil {
+		return err
 	}
+
+	// Delete it from our internal list
+	b.removeBotChannelAtIndex(i)
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		// We didn't remove the channel from SQL, s
+		return errors.New("unable to remove channel from SQL, but it did exist in our internal storage. sync issue")
+	}
+
+	return nil
 
 	return errors.New("we have not joined this channel")
 }

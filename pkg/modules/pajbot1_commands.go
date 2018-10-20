@@ -12,15 +12,18 @@ type Pajbot1Commands struct {
 	server *server
 
 	commands []*commands.Pajbot1Command
-
-	Sender pkg.Sender
 }
 
-func NewPajbot1Commands(sender pkg.Sender) *Pajbot1Commands {
+func newPajbot1Commands() pkg.Module {
 	return &Pajbot1Commands{
 		server: &_server,
-		Sender: sender,
 	}
+}
+
+var pajbot1CommandsSpec = moduleSpec{
+	id:    "pajbot1_commands",
+	name:  "pajbot1 commands",
+	maker: newPajbot1Commands,
 }
 
 func (m *Pajbot1Commands) loadPajbot1Commands() error {
@@ -56,8 +59,7 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 	return nil
 }
 
-func (m *Pajbot1Commands) Register() error {
-
+func (m *Pajbot1Commands) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	err := m.loadPajbot1Commands()
 	if err != nil {
 		return err
@@ -66,8 +68,12 @@ func (m *Pajbot1Commands) Register() error {
 	return nil
 }
 
-func (m Pajbot1Commands) Name() string {
-	return "Pajbot1Commands"
+func (m Pajbot1Commands) Disable() error {
+	return nil
+}
+
+func (m *Pajbot1Commands) Spec() pkg.ModuleSpec {
+	return &pajbot1CommandsSpec
 }
 
 func (m Pajbot1Commands) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
@@ -86,7 +92,7 @@ func (m Pajbot1Commands) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.
 
 	for _, command := range m.commands {
 		if command.IsTriggered(parts) {
-			err := command.Trigger(source, user, parts, m.Sender)
+			err := command.Trigger(source, user, parts, bot)
 			if err != nil {
 				return err
 			}

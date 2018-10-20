@@ -4,33 +4,39 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-type BadCharacterFilter struct {
-	server *server
-
+type badCharacterFilter struct {
 	badCharacters []rune
 }
 
-func NewBadCharacterFilter() *BadCharacterFilter {
-	return &BadCharacterFilter{
-		server: &_server,
-	}
+func newBadCharacterFilter() pkg.Module {
+	return &badCharacterFilter{}
 }
 
-func (m *BadCharacterFilter) Register() error {
+var badCharacterSpec = moduleSpec{
+	id:    "bad_character_filter",
+	name:  "Bad character filter",
+	maker: newBadCharacterFilter,
+}
+
+func (m *badCharacterFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.badCharacters = append(m.badCharacters, '\x01')
 
 	return nil
 }
 
-func (m BadCharacterFilter) Name() string {
-	return "BadCharacterFilter"
-}
-
-func (m BadCharacterFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *badCharacterFilter) Disable() error {
 	return nil
 }
 
-func (m BadCharacterFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *badCharacterFilter) Spec() pkg.ModuleSpec {
+	return &badCharacterSpec
+}
+
+func (m *badCharacterFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+	return nil
+}
+
+func (m *badCharacterFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {
