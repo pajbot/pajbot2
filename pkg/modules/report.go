@@ -10,6 +10,8 @@ import (
 )
 
 type Report struct {
+	botChannel pkg.BotChannel
+
 	reportHolder *report.Holder
 }
 
@@ -28,6 +30,8 @@ var reportSpec = moduleSpec{
 }
 
 func (m *Report) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	return nil
 }
 
@@ -37,6 +41,10 @@ func (m *Report) Disable() error {
 
 func (m *Report) Spec() pkg.ModuleSpec {
 	return &reportSpec
+}
+
+func (m *Report) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

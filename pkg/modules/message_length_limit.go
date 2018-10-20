@@ -5,6 +5,8 @@ import "github.com/pajlada/pajbot2/pkg"
 var _ pkg.Module = &MessageLengthLimit{}
 
 type MessageLengthLimit struct {
+	botChannel pkg.BotChannel
+
 	server *server
 }
 
@@ -21,6 +23,8 @@ var messageLengthLimitSpec = moduleSpec{
 }
 
 func (m *MessageLengthLimit) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	return nil
 }
 
@@ -30,6 +34,10 @@ func (m *MessageLengthLimit) Disable() error {
 
 func (m *MessageLengthLimit) Spec() pkg.ModuleSpec {
 	return &messageLengthLimitSpec
+}
+
+func (m *MessageLengthLimit) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m MessageLengthLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {

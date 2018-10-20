@@ -8,6 +8,8 @@ import (
 )
 
 type giveaway struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	state string
@@ -31,6 +33,8 @@ var giveawaySpec = moduleSpec{
 }
 
 func (m *giveaway) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	return nil
 }
 
@@ -40,6 +44,10 @@ func (m *giveaway) Disable() error {
 
 func (m *giveaway) Spec() pkg.ModuleSpec {
 	return &giveawaySpec
+}
+
+func (m *giveaway) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 const forsen25ID = "1361602"

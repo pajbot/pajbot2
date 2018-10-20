@@ -3,6 +3,8 @@ package modules
 import "github.com/pajlada/pajbot2/pkg"
 
 type test struct {
+	botChannel pkg.BotChannel
+
 	server *server
 }
 
@@ -23,6 +25,7 @@ var testSpec = moduleSpec{
 }
 
 func (m *test) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
 	return nil
 }
 
@@ -32,6 +35,10 @@ func (m *test) Disable() error {
 
 func (m *test) Spec() pkg.ModuleSpec {
 	return &testSpec
+}
+
+func (m *test) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {

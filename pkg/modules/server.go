@@ -36,6 +36,12 @@ func InitServer(redis *redis.Pool, _sql *sql.DB, pajbot1Config config.Pajbot1Con
 	return nil
 }
 
+type moduleParameterSpec struct {
+	description   string
+	parameterType string
+	defaultValue  interface{}
+}
+
 type moduleSpec struct {
 	maker pkg.ModuleMaker
 
@@ -49,6 +55,8 @@ type moduleSpec struct {
 	enabledByDefault bool
 
 	Priority int
+
+	parameters map[string]*moduleParameterSpec
 }
 
 func (s *moduleSpec) ID() string {

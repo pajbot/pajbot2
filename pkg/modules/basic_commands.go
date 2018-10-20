@@ -8,6 +8,8 @@ import (
 )
 
 type basicCommandsModule struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	commands map[string]pkg.CustomCommand
@@ -35,6 +37,8 @@ func (m *basicCommandsModule) registerCommand(aliases []string, command pkg.Cust
 }
 
 func (m *basicCommandsModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	m.registerCommand([]string{"!userid"}, &commands.GetUserID{})
 	m.registerCommand([]string{"!username"}, &commands.GetUserName{})
 	m.registerCommand([]string{"!pb2points"}, &commands.GetPoints{})
@@ -61,6 +65,10 @@ func (m *basicCommandsModule) Disable() error {
 
 func (m *basicCommandsModule) Spec() pkg.ModuleSpec {
 	return basicCommandsModuleSpec
+}
+
+func (m *basicCommandsModule) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *basicCommandsModule) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

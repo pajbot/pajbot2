@@ -14,18 +14,20 @@ import (
 const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
-type nukeMessage struct {
-	user      pkg.User
-	message   pkg.Message
-	timestamp time.Time
-}
-
 type nukeModule struct {
+	botChannel pkg.BotChannel
+
 	server        *server
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
 
 	ticker *time.Ticker
+}
+
+type nukeMessage struct {
+	user      pkg.User
+	message   pkg.Message
+	timestamp time.Time
 }
 
 func newNuke() pkg.Module {
@@ -57,6 +59,8 @@ var nukeSpec = moduleSpec{
 }
 
 func (m *nukeModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	return nil
 }
 
@@ -66,6 +70,10 @@ func (m *nukeModule) Disable() error {
 
 func (m *nukeModule) Spec() pkg.ModuleSpec {
 	return &nukeSpec
+}
+
+func (m *nukeModule) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *nukeModule) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {

@@ -137,7 +137,7 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 	for rows.Next() {
 		var botChannel BotChannel
 
-		if err = rows.Scan(&botChannel.DatabaseID, &botChannel.Channel.ID); err != nil {
+		if err = rows.Scan(&botChannel.ID, &botChannel.Channel.ID); err != nil {
 			return err
 		}
 
@@ -794,7 +794,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 	}
 
 	botChannel := &BotChannel{
-		DatabaseID: id,
+		ID: id,
 
 		Channel: User{
 			ID: channelID,

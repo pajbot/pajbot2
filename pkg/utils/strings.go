@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -210,4 +211,9 @@ func GetTriggersN(message string, n int) []string {
 // NewStringPtr returns the pointer to the given string
 func NewStringPtr(s string) *string {
 	return &s
+}
+
+// FloatToString converts a float value to a string with sane defaults
+func Float32ToString(v float32) string {
+	return strconv.FormatFloat(float64(v), 'f', -1, 32)
 }
