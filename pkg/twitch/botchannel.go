@@ -12,7 +12,7 @@ import (
 var _ pkg.BotChannel = &BotChannel{}
 
 type BotChannel struct {
-	DatabaseID int64
+	ID int64
 
 	Channel User
 	BotUser User
@@ -23,6 +23,10 @@ type BotChannel struct {
 	modules []pkg.Module
 
 	sql *sql.DB
+}
+
+func (c *BotChannel) DatabaseID() int64 {
+	return c.ID
 }
 
 func (c *BotChannel) ChannelID() string {
@@ -59,7 +63,7 @@ type moduleConfig struct {
 func (c *BotChannel) loadAllModuleConfigs() ([]*moduleConfig, error) {
 	const queryF = `SELECT id, module_id, enabled, settings FROM BotChannelModule WHERE bot_channel_id=?`
 
-	rows, err := c.sql.Query(queryF, c.DatabaseID)
+	rows, err := c.sql.Query(queryF, c.DatabaseID())
 	if err != nil {
 		return nil, err
 	}

@@ -16,6 +16,8 @@ type limitConsequence struct {
 }
 
 type emoteFilter struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	emoteLimits    map[string]limitConsequence
@@ -37,6 +39,8 @@ var emoteLimitSpec = moduleSpec{
 }
 
 func (m *emoteFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	m.emoteLimits["NaM"] = limitConsequence{
 		limit:         2,
 		baseDuration:  300,
@@ -77,6 +81,10 @@ func (m *emoteFilter) Disable() error {
 
 func (m *emoteFilter) Spec() pkg.ModuleSpec {
 	return &emoteLimitSpec
+}
+
+func (m *emoteFilter) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m emoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

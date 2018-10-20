@@ -10,6 +10,8 @@ import (
 )
 
 type pajbot1BanphraseFilter struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	banphrases []pkg.Banphrase
@@ -73,8 +75,9 @@ func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 }
 
 func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	// hard-coded banphrases
+	m.botChannel = botChannel
 
+	// hard-coded banphrases
 	m.addCustomBanphrase("n!66ger")
 
 	m.addCustomBanphrase("negro")
@@ -270,6 +273,10 @@ func (m *pajbot1BanphraseFilter) Disable() error {
 
 func (m *pajbot1BanphraseFilter) Spec() pkg.ModuleSpec {
 	return &pajbot1BanphraseSpec
+}
+
+func (m *pajbot1BanphraseFilter) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 type TimeoutData struct {

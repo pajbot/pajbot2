@@ -19,6 +19,9 @@ type Module interface {
 	// Returns the spec for the module
 	Spec() ModuleSpec
 
+	// Returns the bot channel that the module has saved
+	BotChannel() BotChannel
+
 	OnWhisper(bot Sender, source User, message Message) error
 	OnMessage(bot Sender, source Channel, user User, message Message, action Action) error
 }

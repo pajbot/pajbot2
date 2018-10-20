@@ -5,6 +5,8 @@ import (
 )
 
 type badCharacterFilter struct {
+	botChannel pkg.BotChannel
+
 	badCharacters []rune
 }
 
@@ -19,6 +21,8 @@ var badCharacterSpec = moduleSpec{
 }
 
 func (m *badCharacterFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	m.badCharacters = append(m.badCharacters, '\x01')
 
 	return nil
@@ -30,6 +34,10 @@ func (m *badCharacterFilter) Disable() error {
 
 func (m *badCharacterFilter) Spec() pkg.ModuleSpec {
 	return &badCharacterSpec
+}
+
+func (m *badCharacterFilter) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *badCharacterFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

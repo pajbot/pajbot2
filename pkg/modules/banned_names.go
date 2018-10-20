@@ -7,6 +7,8 @@ import (
 )
 
 type bannedNames struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	badUsernames []*regexp.Regexp
@@ -27,6 +29,8 @@ var bannedNamesSpec = moduleSpec{
 }
 
 func (m *bannedNames) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`tos_is_trash\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`trash_is_the_tos\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`terms_of_service_uncool\d+`))
@@ -45,6 +49,10 @@ func (m *bannedNames) Disable() error {
 
 func (m *bannedNames) Spec() pkg.ModuleSpec {
 	return &bannedNamesSpec
+}
+
+func (m *bannedNames) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m bannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

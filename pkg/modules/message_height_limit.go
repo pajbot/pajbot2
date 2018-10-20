@@ -15,7 +15,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"unsafe"
 
@@ -25,33 +24,51 @@ import (
 
 var _ pkg.Module = &MessageHeightLimit{}
 
+func floatPtr(v float32) *float32 {
+	return &v
+}
+
+var messageHeightLimitSpec *moduleSpec
+
 func init() {
+	messageHeightLimitSpec = &moduleSpec{
+		id:    "message_height_limit",
+		name:  "Message height limit",
+		maker: NewMessageHeightLimit,
+
+		enabledByDefault: true,
+
+		parameters: map[string]*moduleParameterSpec{
+			"HeightLimit": &moduleParameterSpec{
+				description:  "Max height of a message before it's timed out",
+				defaultValue: floatPtr(95),
+			},
+		},
+	}
+
 	Register(messageHeightLimitSpec)
 }
 
-var messageHeightLimitSpec = &moduleSpec{
-	id:    "message_height_limit",
-	name:  "Message height limit",
-	maker: NewMessageHeightLimit,
-
-	enabledByDefault: true,
-}
-
 type MessageHeightLimit struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
-	heightLimit float32
+	HeightLimit floatParameter `json:",omitempty"`
 }
 
 func NewMessageHeightLimit() pkg.Module {
 	return &MessageHeightLimit{
 		server: &_server,
 
-		heightLimit: 95,
+		HeightLimit: floatParameter{
+			defaultValue: messageHeightLimitSpec.parameters["HeightLimit"].defaultValue.(*float32),
+		},
 	}
 }
 
 var clrInitialized = false
+
 var messageHeightLimitLibraryInitialized = false
 var charMapPath string
 
@@ -132,6 +149,8 @@ func initMessageHeightLimitLibrary() error {
 }
 
 func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []byte) (err error) {
+	m.botChannel = botChannel
+
 	if !clrInitialized {
 		err = initCLR()
 		if err != nil {
@@ -145,6 +164,10 @@ func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []by
 		return err
 	}
 
+	if err := loadModule(settings, m); err != nil {
+		fmt.Println("Error loading module:", err)
+	}
+
 	return
 }
 
@@ -154,6 +177,10 @@ func (m *MessageHeightLimit) Disable() error {
 
 func (m *MessageHeightLimit) Spec() pkg.ModuleSpec {
 	return messageHeightLimitSpec
+}
+
+func (m *MessageHeightLimit) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *MessageHeightLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
@@ -228,24 +255,26 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 	if user.IsModerator() || user.IsBroadcaster(channel) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
-			if len(parts) >= 2 {
-				if parts[0] == "!heightlimit" {
-					i, err := strconv.Atoi(parts[1])
-					if err != nil {
+			if parts[0] == "!heightlimit" {
+				if len(parts) >= 2 {
+					if err := m.HeightLimit.Parse(parts[1]); err != nil {
 						bot.Mention(channel, user, err.Error())
 						return nil
 					}
 
-					bot.Mention(channel, user, "Height limit set to "+strconv.Itoa(i))
-					m.heightLimit = float32(i)
-					return nil
+					bot.Mention(channel, user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
+					saveModule(m)
+				} else {
+					bot.Mention(channel, user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
 				}
 
-				if parts[0] == "!heighttest" {
-					height := m.getHeight(channel, user, message)
-					bot.Mention(channel, user, fmt.Sprintf("your message height is %.2f", height))
-					return nil
-				}
+				return nil
+			}
+
+			if parts[0] == "!heighttest" {
+				height := m.getHeight(channel, user, message)
+				bot.Mention(channel, user, fmt.Sprintf("your message height is %.2f", height))
+				return nil
 			}
 		}
 	}
@@ -255,8 +284,8 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 	height := m.getHeight(channel, user, message)
 	// bot.Mention(channel, user, fmt.Sprintf("Message height: %f\n", height))
 
-	if height > m.heightLimit {
-		timeoutDuration := int(math.Min(math.Pow(float64(height-m.heightLimit), 1.2), maxTimeoutLength))
+	if height > m.HeightLimit.Get() {
+		timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
 		action.Set(pkg.Timeout{timeoutDuration, fmt.Sprintf("Your message is too tall: %.1f", height)})
 	}
 

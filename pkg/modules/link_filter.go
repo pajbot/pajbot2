@@ -6,6 +6,7 @@ import (
 )
 
 type LinkFilter struct {
+	botChannel pkg.BotChannel
 }
 
 func newLinkFilter() pkg.Module {
@@ -19,6 +20,8 @@ var linkFilterSpec = moduleSpec{
 }
 
 func (m *LinkFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	return nil
 }
 
@@ -28,6 +31,10 @@ func (m *LinkFilter) Disable() error {
 
 func (m *LinkFilter) Spec() pkg.ModuleSpec {
 	return &linkFilterSpec
+}
+
+func (m *LinkFilter) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m LinkFilter) Name() string {

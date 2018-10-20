@@ -9,6 +9,8 @@ import (
 )
 
 type Pajbot1Commands struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	commands []*commands.Pajbot1Command
@@ -60,6 +62,8 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 }
 
 func (m *Pajbot1Commands) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	err := m.loadPajbot1Commands()
 	if err != nil {
 		return err
@@ -74,6 +78,10 @@ func (m Pajbot1Commands) Disable() error {
 
 func (m *Pajbot1Commands) Spec() pkg.ModuleSpec {
 	return &pajbot1CommandsSpec
+}
+
+func (m *Pajbot1Commands) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m Pajbot1Commands) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {

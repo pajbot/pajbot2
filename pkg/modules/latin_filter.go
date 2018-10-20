@@ -24,6 +24,8 @@ type UnicodeRange struct {
 }
 
 type latinFilter struct {
+	botChannel pkg.BotChannel
+
 	server *server
 
 	transparentList  *datastructures.TransparentList
@@ -49,6 +51,8 @@ func (m *latinFilter) addToWhitelist(start, end rune) {
 }
 
 func (m *latinFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
+	m.botChannel = botChannel
+
 	m.transparentList.Add("(/ﾟДﾟ)/")
 	m.transparentList.Add("(╯°□°）╯︵ ┻━┻")
 	m.transparentList.Add("(╯°Д°）╯︵/(.□ . )")
@@ -103,6 +107,10 @@ func (m *latinFilter) Disable() error {
 
 func (m *latinFilter) Spec() pkg.ModuleSpec {
 	return &latinFilterSpec
+}
+
+func (m *latinFilter) BotChannel() pkg.BotChannel {
+	return m.botChannel
 }
 
 func (m *latinFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
