@@ -4,7 +4,7 @@ set -e
 
 # Compile C++ "coreruncommon" lib
 cd 3rdParty/MessageHeightTwitch/c-interop
-g++ -c coreruncommon.cpp
+g++ -c coreruncommon.cpp --std=c++14
 ar rvs libcoreruncommon.a coreruncommon.o
 
 # Compile C# library

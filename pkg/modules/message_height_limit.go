@@ -12,8 +12,11 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/pajlada/pajbot2/pkg"
@@ -23,11 +26,15 @@ var _ pkg.Module = &MessageHeightLimit{}
 
 type MessageHeightLimit struct {
 	server *server
+
+	heightLimit float32
 }
 
 func NewMessageHeightLimit() *MessageHeightLimit {
 	return &MessageHeightLimit{
 		server: &_server,
+
+		heightLimit: 95,
 	}
 }
 
@@ -41,13 +48,19 @@ func initCLR() error {
 		return err
 	}
 
+	fmt.Println("Executable dir", executableDir)
+	fmt.Println("os args 0:", os.Args[0])
+
 	clrLibraryFolder, clrLibraryFolderSet := os.LookupEnv("LIBCOREFOLDER")
 	if !clrLibraryFolderSet {
-		clrLibraryFolder = "/opt/dotnet/shared/Microsoft.NETCore.App/2.1.5/"
+		// clrLibraryFolder = "/opt/dotnet/shared/Microsoft.NETCore.App/2.1.5"
+		clrLibraryFolder = "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5"
 	}
 
 	// Path to our own executable
 	clr1 := C.CString(executableDir + "/bot")
+
+	fmt.Println(executableDir)
 
 	// Folder where libcoreclr.so is located
 	clr2 := C.CString(clrLibraryFolder)
@@ -77,22 +90,39 @@ func initCLR() error {
 	return nil
 }
 
+func initChannel(channelName string) error {
+	channel := C.CString(channelName)
+
+	res := C.InitChannel(channel)
+
+	if res != 1 {
+		return errors.New("Failed to init Channel " + channelName)
+	}
+
+	C.free(unsafe.Pointer(channel))
+}
+
 func initMessageHeightLimitLibrary() error {
 	charMap := C.CString(charMapPath)
-	channel := C.CString("forsen")
 
 	fmt.Println(charMapPath)
 
-	res := C.InitMessageHeightTwitch(charMap, channel)
+	res := C.InitCharMap(charMap)
 
 	C.free(unsafe.Pointer(charMap))
-	C.free(unsafe.Pointer(channel))
 
-	if res != 0 {
-		return errors.New("Failed to init MessageHeightTwitch")
+	if res != 1 {
+		return errors.New(fmt.Sprintf("Failed to init CharMap: %d", int(res)))
 	}
 
 	messageHeightLimitLibraryInitialized = true
+
+	if err = initChannel("forsen"); err != nil {
+		return err
+	}
+	if err = initChannel("pajlada"); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -118,7 +148,8 @@ func (m *MessageHeightLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pk
 	return nil
 }
 
-func (m *MessageHeightLimit) getHeight(user pkg.User, message pkg.Message) float32 {
+func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, message pkg.Message) float32 {
+	channelString := C.CString(channel.GetChannel())
 	input := C.CString(message.GetText())
 	loginName := C.CString(user.GetName())
 	displayName := C.CString(user.GetDisplayName())
@@ -148,6 +179,7 @@ func (m *MessageHeightLimit) getHeight(user pkg.User, message pkg.Message) float
 	badgeCount := C.int(len(user.GetBadges()))
 
 	height := C.CalculateMessageHeightDirect(
+		channelString,
 		input,                      // Message text
 		loginName,                  // Login name
 		displayName,                // Display name
@@ -156,6 +188,7 @@ func (m *MessageHeightLimit) getHeight(user pkg.User, message pkg.Message) float
 		C.int(len(te)),             // Emote array size
 	)
 
+	C.free(unsafe.Pointer(channelString))
 	C.free(unsafe.Pointer(input))
 	C.free(unsafe.Pointer(loginName))
 	C.free(unsafe.Pointer(displayName))
@@ -172,14 +205,52 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		return nil
 	}
 
+	if user.GetName() == "gazatu2" {
+		return nil
+	}
+
+	if user.GetName() == "supibot" {
+		return nil
+	}
+
+	if user.IsModerator() || user.IsBroadcaster(channel) {
+		if strings.HasPrefix(message.GetText(), "!") {
+			parts := strings.Split(message.GetText(), " ")
+			if len(parts) >= 2 {
+				if parts[0] == "!heightlimit" {
+					i, err := strconv.Atoi(parts[1])
+					if err != nil {
+						bot.Mention(channel, user, err.Error())
+						return nil
+					}
+
+					bot.Mention(channel, user, "Height limit set to "+strconv.Itoa(i))
+					m.heightLimit = float32(i)
+					return nil
+				}
+
+				if parts[0] == "!heighttest" {
+					height := m.getHeight(channel, user, message)
+					bot.Mention(channel, user, fmt.Sprintf("your message height is %.2f", height))
+					return nil
+				}
+			}
+		}
+	}
+
 	if channel.GetChannel() != "forsen" {
 		return nil
 	}
 
-	const heightLimit = 160
+	const maxTimeoutLength = 1800
 
-	height := m.getHeight(user, message)
-	bot.Mention(channel, user, fmt.Sprintf("Message height: %f\n", height))
+	height := m.getHeight(channel, user, message)
+	// bot.Mention(channel, user, fmt.Sprintf("Message height: %f\n", height))
+
+	if height > m.heightLimit {
+		timeoutDuration := int(math.Min(math.Pow(float64(height-m.heightLimit), 1.2), maxTimeoutLength))
+		action.Set(pkg.Timeout{timeoutDuration, fmt.Sprintf("Your message is too tall: %.1f", height)})
+	}
 
 	return nil
 }
