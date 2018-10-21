@@ -25,17 +25,17 @@ type Raffle struct {
 	participantsUsername map[string]string
 }
 
-func (c *Raffle) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+func (c *Raffle) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	cmd := strings.ToLower(parts[0])
 
 	if cmd == "!roffle" {
-		if !source.HasChannelPermission(channel, pkg.PermissionRaffle) {
-			bot.Mention(channel, source, "you do not have the permission to start a raffle")
+		if !user.HasChannelPermission(channel, pkg.PermissionRaffle) {
+			bot.Mention(channel, user, "you do not have the permission to start a raffle")
 			return
 		}
 
 		if c.running {
-			bot.Mention(channel, source, "a raffle is already running xd")
+			bot.Mention(channel, user, "a raffle is already running xd")
 			return
 		}
 
@@ -46,7 +46,7 @@ func (c *Raffle) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, so
 			var err error
 			pointsToRaffle, err = strconv.ParseInt(parts[1], 10, 32)
 			if err != nil {
-				bot.Mention(channel, source, "usage: !raffle 500")
+				bot.Mention(channel, user, "usage: !raffle 500")
 				return
 			}
 		}
@@ -93,16 +93,16 @@ func (c *Raffle) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, so
 			return
 		}
 
-		if _, ok := c.participantsUsername[source.GetID()]; !ok {
+		if _, ok := c.participantsUsername[user.GetID()]; !ok {
 			// User can join the raffle
-			c.participantsUsername[source.GetID()] = source.GetName()
-			c.participants = append(c.participants, source.GetID())
+			c.participantsUsername[user.GetID()] = user.GetName()
+			c.participants = append(c.participants, user.GetID())
 
-			bot.Mention(channel, source, "you have joined the raffle PepeS")
+			bot.Mention(channel, user, "you have joined the raffle PepeS")
 		}
 
 		return
 	}
 
-	bot.Mention(channel, source, "how did you get here?")
+	bot.Mention(channel, user, "how did you get here?")
 }

@@ -59,7 +59,7 @@ func NewUser() *User {
 
 	u.subCommands.add("print", &subCommand{
 		permission: pkg.PermissionNone,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			channelPermissions, err := users.GetUserChannelPermissions(target.id, channel.GetID())
 			if err != nil {
 				return "error getting channel permission: " + err.Error()
@@ -76,7 +76,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("set_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME set_global_permissions permission1 permission2"
 			}
@@ -87,7 +87,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("set_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME set_channel_permissions permission1 permission2"
 			}
@@ -98,7 +98,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("add_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME add_global_permissions permission1 permission2"
 			}
@@ -109,7 +109,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("add_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME add_channel_permissions permission1 permission2"
 			}
@@ -120,7 +120,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("remove_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME remove_global_permissions permission1 permission2"
 			}
@@ -131,7 +131,7 @@ func NewUser() *User {
 
 	u.subCommands.addSC("remove_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
 				return "usage: !user USERNAME remove_channel_permissions permission1 permission2"
 			}
@@ -143,20 +143,20 @@ func NewUser() *User {
 	return u
 }
 
-func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
+func (c *User) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if len(parts) < 2 {
 		return
 	}
 
 	targetName := utils.FilterUsername(parts[1])
 	if targetName == "" {
-		bot.Mention(channel, source, "invalid username")
+		bot.Mention(channel, user, "invalid username")
 		return
 	}
 
 	targetUserID := bot.GetUserStore().GetID(targetName)
 	if targetUserID == "" {
-		bot.Mention(channel, source, "no user with this ID")
+		bot.Mention(channel, user, "no user with this ID")
 		return
 	}
 
@@ -171,9 +171,9 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(bot, target, channel, source, parts)
+		response := subCommand.run(bot, botChannel, target, channel, user, parts)
 		if response != "" {
-			bot.Mention(channel, source, response)
+			bot.Mention(channel, user, response)
 		}
 	}
 }

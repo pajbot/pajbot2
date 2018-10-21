@@ -1,15 +1,8 @@
 package utils
 
-// GetTrueP returns a bool true pointer
-func GetTrueP() *bool {
-	b := true
-	return &b
-}
-
-// GetFalseP returns a bool false pointer
-func GetFalseP() *bool {
-	b := false
-	return &b
+// BoolPtr returns a bool pointer of the given bool value
+func BoolPtr(v bool) *bool {
+	return &v
 }
 
 // CheckFlag returns true if the given flag is enabled in the value

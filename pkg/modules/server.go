@@ -2,6 +2,7 @@ package modules
 
 import (
 	"database/sql"
+	"strings"
 	"sync"
 
 	"github.com/garyburd/redigo/redis"
@@ -80,6 +81,9 @@ var _ pkg.ModuleSpec = &moduleSpec{}
 var _modulesMutex sync.Mutex
 var _modules []*moduleSpec
 
+var _validModulesMutex sync.Mutex
+var _validModules map[string]*moduleSpec
+
 func Register(spec *moduleSpec) {
 	if spec == nil {
 		panic("Trying to register a nil module spec")
@@ -98,8 +102,15 @@ func Register(spec *moduleSpec) {
 	}
 
 	_modulesMutex.Lock()
-	defer _modulesMutex.Unlock()
 	_modules = append(_modules, spec)
+	_modulesMutex.Unlock()
+
+	_validModulesMutex.Lock()
+	if _validModules == nil {
+		_validModules = make(map[string]*moduleSpec)
+	}
+	_validModules[strings.ToLower(spec.ID())] = spec
+	_validModulesMutex.Unlock()
 }
 
 func Modules() []*moduleSpec {
@@ -107,6 +118,14 @@ func Modules() []*moduleSpec {
 	defer _modulesMutex.Unlock()
 
 	return _modules
+}
+
+func GetModule(moduleID string) (pkg.ModuleSpec, bool) {
+	_validModulesMutex.Lock()
+	defer _validModulesMutex.Unlock()
+
+	spec, ok := _validModules[strings.ToLower(moduleID)]
+	return spec, ok
 }
 
 func init() {

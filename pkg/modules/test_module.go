@@ -46,6 +46,6 @@ func (m test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) erro
 }
 
 func (m test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	// bot.Mention(channel, user, "test module xd")
+	bot.Mention(channel, user, "test module xd")
 	return nil
 }
