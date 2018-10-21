@@ -320,41 +320,9 @@ type UnicodeRange struct {
 	End   rune
 }
 
-func checkModules(next pb2twitch.Handler) pb2twitch.Handler {
-	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
-		err := bot.Test123(channel, user, message, action)
-		if err != nil {
-			fmt.Println("error in module forwarder:", err)
-		}
-
-		next.HandleMessage(bot, channel, user, message, action)
-	})
-}
-
 type messageReceivedData struct {
 	Sender  string
 	Message string
-}
-
-func (a *Application) notifyPubSub(next pb2twitch.Handler) pb2twitch.Handler {
-	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
-		a.PubSub.Publish("MessageReceived", &messageReceivedData{
-			Sender:  user.GetName(),
-			Message: message.Text,
-		}, pkg.PubSubAdminAuth())
-		next.HandleMessage(bot, channel, user, message, action)
-	})
-}
-
-func (a *Application) storeContext(next pb2twitch.Handler) pb2twitch.Handler {
-	return pb2twitch.HandlerFunc(func(bot *pb2twitch.Bot, channel pkg.Channel, user pkg.User, message *pb2twitch.TwitchMessage, action pkg.Action) {
-		if channel != nil && user != nil {
-			formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.GetName(), message.GetText())
-			a.TwitchUserContext.AddContext(channel.GetID(), user.GetID(), formattedMessage)
-		}
-
-		next.HandleMessage(bot, channel, user, message, action)
-	})
 }
 
 // LoadBots loads bots from the database
@@ -384,8 +352,6 @@ func (a *Application) LoadBots() error {
 			return errors.New(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
 		}
 
-		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
-
 		bot := pb2twitch.NewBot(name, twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
 		bot.DatabaseID = id
 		bot.QuitChannel = a.Quit
@@ -394,8 +360,6 @@ func (a *Application) LoadBots() error {
 		if err != nil {
 			return err
 		}
-
-		bot.SetHandler(a.storeContext(a.notifyPubSub(checkModules(pb2twitch.HandleCommands(finalHandler)))))
 
 		a.TwitchBots[name] = bot
 	}
@@ -409,11 +373,25 @@ func (a *Application) StartBots() error {
 		go func(bot *pb2twitch.Bot) {
 			bot.OnNewWhisper(bot.HandleWhisper)
 
-			bot.OnNewMessage(bot.HandleMessage)
+			bot.OnNewMessage(func(channelName string, user twitch.User, message twitch.Message) {
+				channelID := message.Tags["room-id"]
+				if channelID == "" {
+					fmt.Printf("Missing room-id tag in message: %+v\n", message)
+					return
+				}
+
+				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.Username, message.Text)
+
+				// Store message in our twitch message context class
+				a.TwitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
+
+				// Forward to bot to let its modules work
+				bot.HandleMessage(channelName, user, message)
+			})
 
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
-			// Bots always join their own channel
+			// Ensure that the bot has joined its own chat
 			bot.JoinChannel(bot.TwitchAccount().ID())
 
 			// TODO: Join some "central control center" like skynetcentral?

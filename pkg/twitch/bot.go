@@ -46,8 +46,6 @@ type Bot struct {
 
 	twitchAccount *User
 
-	handler Handler
-
 	QuitChannel chan string
 
 	Flags botFlags
@@ -178,7 +176,6 @@ func (b *Bot) JoinChannels() {
 	defer b.channelsMutex.Unlock()
 
 	for _, c := range b.channels {
-		fmt.Println("Joining", c.Channel.Name())
 		b.Join(c.Channel.Name())
 	}
 }
@@ -317,22 +314,43 @@ func (b *Bot) Untimeout(channel pkg.Channel, user pkg.User) {
 	}
 }
 
-// SetHandler sets the handler to message at the bottom of the list
-func (b *Bot) SetHandler(handler Handler) {
-	b.handler = handler
-}
-
 func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
-	message := NewTwitchMessage(rawMessage)
+	twitchUser := users.NewTwitchUser(user, rawMessage.Tags["user-id"])
 
-	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
+	// Find out what bot channel this whisper is related to
 
-	action := &pkg.TwitchAction{
-		Sender: b,
-		User:   twitchUser,
+	parts := strings.Split(rawMessage.Text, " ")
+	if len(parts) == 0 {
+		return
 	}
 
-	b.handler.HandleMessage(b, nil, twitchUser, message, action)
+	channelName := strings.ToLower(utils.FilterChannelName(parts[0]))
+	if channelName == "" {
+		// No valid channel name was given as context
+		// TODO: Pass through to some sort of "global modules"?
+		return
+	}
+
+	channelID := b.userStore.GetID(channelName)
+	if channelID == "" {
+		// Context wasn't a valid channel name
+		return
+	}
+
+	_, botChannel := b.getBotChannel(channelID)
+	if botChannel == nil {
+		fmt.Println("Whisper received with context channel being", channelName, "without having a BotChannel there")
+		return
+	}
+
+	rawMessage.Text = strings.Join(parts[1:], " ")
+
+	message := NewTwitchMessage(rawMessage)
+
+	err := botChannel.handleWhisper(b, twitchUser, message)
+	if err != nil {
+		fmt.Println("Error occured while forwarding whisper to bot channel:", err)
+	}
 }
 
 func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
@@ -361,7 +379,16 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 		message.twitchEmotes = append(message.twitchEmotes, parsedEmote)
 	}
 
-	b.handler.HandleMessage(b, channel, twitchUser, message, action)
+	_, botChannel := b.getBotChannel(channel.GetID())
+	if botChannel == nil {
+		fmt.Println("Message received in channel with id", channel.GetID(), "without having a BotChannel there")
+		return
+	}
+
+	err := botChannel.handleMessage(b, channel, twitchUser, message, action)
+	if err != nil {
+		fmt.Println("Error occured while forwarding message to bot channel:", err)
+	}
 }
 
 func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
@@ -672,88 +699,6 @@ func (b *Bot) PointRank(channel pkg.Channel, userID string) uint64 {
 	return rank
 }
 
-// TODO: Code under here should be generalized, or moved into their own module
-func HandleCommands(next Handler) Handler {
-	return HandlerFunc(func(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
-		if user.IsModerator() || user.IsBroadcaster(channel) || user.GetName() == "pajlada" || user.GetName() == "karl_kons" || user.GetName() == "fourtf" {
-			if strings.HasPrefix(message.Text, "!xd") {
-				bot.Reply(channel, user, "XDDDDDDDDDD")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!myuserid") {
-				bot.Say(channel, fmt.Sprintf("@%s, your user ID is %s", user.GetName(), user.GetID()))
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!whisperme") {
-				fmt.Printf("Send whisper!")
-				bot.Say(channel, "@"+user.GetName()+", I just sent you a whisper with the text \"hehe\" :D")
-				bot.Whisper(user, "hehe")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!modme") {
-				bot.Say(channel, ".mod "+user.GetName())
-				bot.Say(channel, "Modded")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!unmodme") {
-				bot.Say(channel, ".unmod "+user.GetName())
-				bot.Say(channel, "Unmodded")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!pb2quit") {
-				bot.Reply(channel, user, "Quitting...")
-				time.AfterFunc(time.Millisecond*500, func() {
-					bot.Quit("Quit because pajlada said so")
-				})
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!emoteonly") {
-				bot.Say(channel, ".emoteonly")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!emoteonlyoff") || message.Text == "TriHard TriHard TriHard forsenE pajaCool TriHard" {
-				bot.Say(channel, ".emoteonlyoff")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!subon") {
-				if bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is already enabled")
-					return
-				}
-
-				bot.Flags.PermaSubMode = true
-
-				bot.Say(channel, ".subscribers")
-				bot.Say(channel, "Permanent subscribers mode has been enabled")
-				return
-			}
-
-			if strings.HasPrefix(message.Text, "!suboff") {
-				if !bot.Flags.PermaSubMode {
-					bot.Say(channel, "Permanent subscribers mode is not enabled")
-					return
-				}
-
-				bot.Flags.PermaSubMode = false
-
-				bot.Say(channel, ".subscribersoff")
-				bot.Say(channel, "Permanent subscribers mode has been disabled")
-				return
-			}
-		}
-
-		next.HandleMessage(bot, channel, user, message, action)
-	})
-}
-
 func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
 	// fmt.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
@@ -765,10 +710,10 @@ func (b *Bot) MakeUser(username string) pkg.User {
 	}, b.userStore.GetID(username))
 }
 
-func (b *Bot) MakeChannel(channel string) pkg.Channel {
+func (b *Bot) MakeChannel(channelName string) pkg.Channel {
 	return channels.TwitchChannel{
-		Channel: channel,
-		ID:      b.userStore.GetID(channel),
+		Channel: channelName,
+		ID:      b.userStore.GetID(channelName),
 	}
 }
 
@@ -807,20 +752,6 @@ func (b *Bot) JoinChannel(channelID string) error {
 	}
 
 	return nil
-}
-
-func (b *Bot) Test123(channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
-	if channel == nil {
-		fmt.Println("channel is nil, skipping")
-		return nil
-	}
-
-	_, botChannel := b.getBotChannel(channel.GetID())
-	if botChannel == nil {
-		return errors.New("No bot channel with id " + channel.GetID())
-	}
-
-	return botChannel.forwardToModules(b, channel, user, message, action)
 }
 
 func (b *Bot) LeaveChannel(channelID string) error {

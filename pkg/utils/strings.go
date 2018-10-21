@@ -136,6 +136,16 @@ func IsValidUserID(username string) bool {
 	return true
 }
 
+func FilterChannelName(username string) string {
+	username = strings.TrimPrefix(username, "#")
+
+	if IsValidUsername(username) {
+		return username
+	}
+
+	return ""
+}
+
 func FilterUsername(username string) string {
 	username = strings.TrimPrefix(username, "@")
 

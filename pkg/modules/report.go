@@ -48,10 +48,10 @@ func (m *Report) BotChannel() pkg.BotChannel {
 }
 
 func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
-	const usageString = `Usage: !report username channel (reason) i.e. !report Karl_Kons forsen spamming stuff`
+	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
 
 	parts := strings.Split(message.GetText(), " ")
-	if len(parts) < 2 {
+	if len(parts) < 1 {
 		return nil
 	}
 
@@ -65,29 +65,22 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	}
 
 	var reportedUsername string
-	var reportedChannel string
 	var reason string
 
 	reportedUsername = strings.ToLower(parts[1])
 	if reportedUsername == source.GetName() {
+		// cannot report yourself
 		return nil
 	}
 
-	if len(parts) >= 3 {
-		reportedChannel = strings.ToLower(strings.TrimPrefix(parts[2], "#"))
-	} else {
-		bot.Whisper(source, usageString)
-		return nil
-	}
-
-	channel := bot.MakeChannel(reportedChannel)
+	channel := bot.MakeChannel(m.botChannel.ChannelName())
 	if !source.HasPermission(channel, pkg.PermissionReport) {
 		bot.Whisper(source, "you don't have permissions to use the !report command")
 		return nil
 	}
 
-	if len(parts) >= 4 {
-		reason = strings.Join(parts[3:], " ")
+	if len(parts) >= 3 {
+		reason = strings.Join(parts[2:], " ")
 	}
 
 	m.report(bot, source, channel, reportedUsername, reason, duration)

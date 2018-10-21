@@ -256,21 +256,34 @@ func (c *BotChannel) loadModules() {
 	}
 }
 
-func (c *BotChannel) forwardToModules(bot pkg.Sender, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
+func (c *BotChannel) onModules(cb func(module pkg.Module) error) (err error) {
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
 	for _, module := range c.modules {
-		var err error
-		if channel == nil {
-			err = module.OnWhisper(bot, user, message)
-		} else {
-			err = module.OnMessage(bot, channel, user, message, action)
-		}
-		if err != nil {
-			return err
+		if err = cb(module); err != nil {
+			return
 		}
 	}
+
+	return
+}
+
+func (c *BotChannel) handleMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
+	if channel == nil {
+		return errors.New("channel may not be nil")
+	}
+
+	return c.onModules(func(module pkg.Module) error {
+		return module.OnMessage(bot, channel, user, message, action)
+	})
+}
+
+func (c *BotChannel) handleWhisper(bot pkg.Sender, user pkg.User, message *TwitchMessage) error {
+	fmt.Println("handle whisper", message.GetText())
+	return c.onModules(func(module pkg.Module) error {
+		return module.OnWhisper(bot, user, message)
+	})
 
 	return nil
 }
