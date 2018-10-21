@@ -87,19 +87,11 @@ func (m *emoteFilter) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m emoteFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *emoteFilter) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m emoteFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.GetChannel() == "nymn" || source.GetChannel() == "narwhal_dave" {
-		return nil
-	}
-
-	if source.GetChannel() == "forsen" {
-		return nil
-	}
-
+func (m *emoteFilter) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	// BTTV Emotes
 	reader := message.GetBTTVReader()
 	timeoutDuration := 0
