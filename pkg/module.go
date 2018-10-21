@@ -34,4 +34,6 @@ type ModuleSpec interface {
 	EnabledByDefault() bool
 
 	Maker() ModuleMaker
+
+	Priority() int
 }

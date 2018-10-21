@@ -120,7 +120,7 @@ func runCmd() {
 
 	err = application.InitializeModules()
 	if err != nil {
-		log.Fatal("Error starting SQL client:", err)
+		log.Fatal("Error initializing modules:", err)
 	}
 
 	err = application.LoadExternalEmotes()

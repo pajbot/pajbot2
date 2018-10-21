@@ -1,7 +1,7 @@
 package pkg
 
 type Sender interface {
-	Name() string
+	TwitchAccount() TwitchAccount
 
 	Say(Channel, string)
 	Mention(Channel, User, string)

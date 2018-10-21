@@ -44,7 +44,8 @@ type Bot struct {
 
 	DatabaseID int
 
-	name    string
+	twitchAccount *User
+
 	handler Handler
 
 	QuitChannel chan string
@@ -70,11 +71,15 @@ type Bot struct {
 
 var _ pubsub.Connection = &Bot{}
 
-func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext, db *sql.DB) *Bot {
+func NewBot(name string, client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext, db *sql.DB) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
 		Client: client,
+
+		twitchAccount: &User{
+			name: name,
+		},
 
 		channelsMutex: &sync.Mutex{},
 
@@ -89,6 +94,8 @@ func NewBot(client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStor
 	pubSub.Subscribe(b, "Ban", nil)
 	pubSub.Subscribe(b, "Timeout", nil)
 	pubSub.Subscribe(b, "Untimeout", nil)
+
+	b.twitchAccount.fillIn(b.userStore)
 
 	return b
 }
@@ -107,7 +114,7 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	defer b.channelsMutex.Unlock()
 
 	for i, botChannel := range b.channels {
-		if botChannel.Channel.ID == channelID {
+		if botChannel.Channel.ID() == channelID {
 			return i, botChannel
 		}
 	}
@@ -137,11 +144,11 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 	for rows.Next() {
 		var botChannel BotChannel
 
-		if err = rows.Scan(&botChannel.ID, &botChannel.Channel.ID); err != nil {
+		if err = rows.Scan(&botChannel.ID, &botChannel.Channel.id); err != nil {
 			return err
 		}
 
-		channelIDs = append(channelIDs, botChannel.Channel.ID)
+		channelIDs = append(channelIDs, botChannel.Channel.ID())
 		channels = append(channels, &botChannel)
 	}
 
@@ -149,8 +156,8 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 
 	for id, name := range m {
 		for _, c := range channels {
-			if c.Channel.ID == id {
-				c.Channel.Name = name
+			if c.Channel.ID() == id {
+				c.Channel.SetName(name)
 			}
 		}
 	}
@@ -172,7 +179,7 @@ func (b *Bot) JoinChannels() {
 
 	for _, c := range b.channels {
 		fmt.Println("Joining", c.Channel.Name)
-		b.Join(c.Channel.Name)
+		b.Join(c.Channel.Name())
 	}
 }
 
@@ -276,12 +283,8 @@ func (b *Bot) Reply(channel pkg.Channel, user pkg.User, message string) {
 	}
 }
 
-func (b *Bot) Name() string {
-	return b.name
-}
-
-func (b *Bot) SetName(name string) {
-	b.name = name
+func (b *Bot) TwitchAccount() pkg.TwitchAccount {
+	return b.twitchAccount
 }
 
 func (b *Bot) Say(channel pkg.Channel, message string) {
@@ -330,10 +333,6 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 	}
 
 	b.handler.HandleMessage(b, nil, twitchUser, message, action)
-
-	if pkg.VerboseMessages {
-		fmt.Printf("%s - @%s(%s): %s", b.Name(), twitchUser.DisplayName, twitchUser.Username, message.Text)
-	}
 }
 
 func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
@@ -363,10 +362,6 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 	}
 
 	b.handler.HandleMessage(b, channel, twitchUser, message, action)
-
-	if pkg.VerboseMessages {
-		fmt.Printf("%s - #%s: %s(%s): %s", b.Name(), channel, twitchUser.DisplayName, twitchUser.Username, message.Text)
-	}
 }
 
 func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
@@ -797,7 +792,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 		ID: id,
 
 		Channel: User{
-			ID: channelID,
+			id: channelID,
 		},
 	}
 	err = botChannel.Channel.fillIn(b.userStore)
@@ -805,7 +800,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 		return err
 	}
 
-	b.Join(botChannel.Channel.Name)
+	b.Join(botChannel.Channel.Name())
 
 	if err = b.addBotChannel(botChannel); err != nil {
 		return err
@@ -839,7 +834,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()
 
-	b.Depart(botChannel.Channel.Name)
+	b.Depart(botChannel.Channel.Name())
 
 	res, err := b.sql.Exec(queryF, botChannel.DatabaseID)
 	if err != nil {

@@ -184,7 +184,7 @@ func (a *Application) InitializeModules() (err error) {
 
 	err = a.StartTwitterStream()
 	if err != nil {
-		return
+		fmt.Println("Error starting twitter stream:", err)
 	}
 
 	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub, a.ReportHolder)
@@ -371,9 +371,8 @@ func (a *Application) LoadBots() error {
 
 		finalHandler := pb2twitch.HandlerFunc(pb2twitch.FinalMiddleware)
 
-		bot := pb2twitch.NewBot(twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
+		bot := pb2twitch.NewBot(name, twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
 		bot.DatabaseID = id
-		bot.SetName(name)
 		bot.QuitChannel = a.Quit
 
 		err = bot.LoadChannels(a.SQL)
@@ -400,7 +399,7 @@ func (a *Application) StartBots() error {
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
 			// Bots always join their own channel
-			bot.Join(bot.Name())
+			bot.JoinChannel(bot.TwitchAccount().ID())
 
 			// TODO: Join some "central control center" like skynetcentral?
 

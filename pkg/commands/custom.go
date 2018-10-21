@@ -267,7 +267,7 @@ func (c *Join) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, bot.Name()) {
+	if strings.EqualFold(channelName, bot.TwitchAccount().Name()) {
 		bot.Mention(channel, user, "I cannot join my own channel")
 		return
 	}
@@ -302,7 +302,7 @@ func (c *Leave) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []strin
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, bot.Name()) {
+	if strings.EqualFold(channelName, bot.TwitchAccount().Name()) {
 		bot.Mention(channel, user, "I cannot leave my own channel")
 		return
 	}

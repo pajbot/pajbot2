@@ -55,7 +55,7 @@ type moduleSpec struct {
 
 	enabledByDefault bool
 
-	Priority int
+	priority int
 
 	parameters map[string]*moduleParameterSpec
 }
@@ -74,6 +74,10 @@ func (s *moduleSpec) EnabledByDefault() bool {
 
 func (s *moduleSpec) Maker() pkg.ModuleMaker {
 	return s.maker
+}
+
+func (s *moduleSpec) Priority() int {
+	return s.priority
 }
 
 var _ pkg.ModuleSpec = &moduleSpec{}
@@ -146,4 +150,5 @@ func init() {
 	Register(&reportSpec)
 	Register(&testSpec)
 	Register(basicCommandsModuleSpec)
+	Register(actionPerformerModuleSpec)
 }

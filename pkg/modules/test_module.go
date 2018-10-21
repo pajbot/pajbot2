@@ -19,8 +19,6 @@ var testSpec = moduleSpec{
 	name:  "Test",
 	maker: newTest,
 
-	Priority: 0,
-
 	enabledByDefault: false,
 }
 

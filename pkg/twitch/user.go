@@ -7,32 +7,44 @@ import (
 )
 
 type User struct {
-	ID   string
-	Name string
+	id   string
+	name string
+}
+
+func (u *User) ID() string {
+	return u.id
+}
+
+func (u *User) Name() string {
+	return u.name
+}
+
+func (u *User) SetName(v string) {
+	u.name = v
 }
 
 func (u *User) fillIn(userStore pkg.UserStore) error {
-	if u.ID == "" && u.Name != "" {
+	if u.id == "" && u.name != "" {
 		// Has name but not ID
-		u.ID = userStore.GetID(u.Name)
-		if u.ID == "" {
+		u.id = userStore.GetID(u.name)
+		if u.id == "" {
 			return errors.New("Unable to get ID")
 		}
 
 		return nil
 	}
 
-	if u.Name == "" && u.ID != "" {
+	if u.name == "" && u.id != "" {
 		// Has ID but not name
-		u.Name = userStore.GetName(u.ID)
-		if u.Name == "" {
+		u.name = userStore.GetName(u.id)
+		if u.name == "" {
 			return errors.New("Unable to get Name")
 		}
 
 		return nil
 	}
 
-	if u.Name != "" && u.ID != "" {
+	if u.name != "" && u.id != "" {
 		// User already has name and ID, no need to fetch anything
 		return nil
 	}
@@ -41,5 +53,5 @@ func (u *User) fillIn(userStore pkg.UserStore) error {
 }
 
 func (u *User) Valid() bool {
-	return u.Name != "" && u.ID != ""
+	return u.name != "" && u.id != ""
 }

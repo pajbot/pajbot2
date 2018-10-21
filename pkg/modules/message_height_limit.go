@@ -36,7 +36,7 @@ func init() {
 		name:  "Message height limit",
 		maker: NewMessageHeightLimit,
 
-		enabledByDefault: true,
+		enabledByDefault: false,
 
 		parameters: map[string]*moduleParameterSpec{
 			"HeightLimit": &moduleParameterSpec{

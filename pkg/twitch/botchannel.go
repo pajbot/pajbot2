@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
@@ -34,11 +35,18 @@ func (c *BotChannel) DatabaseID() int64 {
 }
 
 func (c *BotChannel) ChannelID() string {
-	return c.Channel.ID
+	return c.Channel.ID()
 }
 
 func (c *BotChannel) ChannelName() string {
-	return c.Channel.Name
+	return c.Channel.Name()
+}
+
+// We assume that modulesMutex is locked already
+func (c *BotChannel) sortModules() {
+	sort.Slice(c.modules, func(i, j int) bool {
+		return c.modules[i].Spec().Priority() < c.modules[j].Spec().Priority()
+	})
 }
 
 func (c *BotChannel) getSettingsForModule(moduleID string) ([]byte, error) {
@@ -76,6 +84,9 @@ func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
 	}
 
 	c.modules = append(c.modules, module)
+
+	c.sortModules()
+
 	return nil
 }
 
