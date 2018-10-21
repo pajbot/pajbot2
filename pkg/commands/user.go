@@ -46,36 +46,18 @@ func updatePermissions(action, channelID string, target userTarget, parts []stri
 	return fmt.Sprintf("%s %s permissions changed from %b to %b (%s)", target.name, channelName, oldPermissions, newPermissions, action)
 }
 
-type subCommandFunc func(pkg.Sender, userTarget, pkg.Channel, pkg.User, []string) string
-
-type subCommand struct {
-	permission pkg.Permission
-	cb         subCommandFunc
-}
-
-func (c *subCommand) run(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
-	if c.permission != pkg.PermissionNone {
-		if !user.HasPermission(channel, c.permission) {
-			return "you do not have permission to use this command"
-		}
-
-	}
-
-	return c.cb(bot, target, channel, user, parts)
-}
-
 type User struct {
-	subCommands       map[string]*subCommand
+	subCommands       *subCommands
 	defaultSubCommand string
 }
 
 func NewUser() *User {
 	u := &User{
-		subCommands:       make(map[string]*subCommand),
+		subCommands:       newSubCommands(),
 		defaultSubCommand: "print",
 	}
 
-	u.subCommands["print"] = &subCommand{
+	u.subCommands.add("print", &subCommand{
 		permission: pkg.PermissionNone,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			channelPermissions, err := users.GetUserChannelPermissions(target.id, channel.GetID())
@@ -90,9 +72,9 @@ func NewUser() *User {
 
 			return fmt.Sprintf("%s permissions: %b (global: %b, channel: %b)", target.name, permissions, globalPermissions, channelPermissions)
 		},
-	}
+	})
 
-	u.addSC("set_global_permission", &subCommand{
+	u.subCommands.addSC("set_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -103,7 +85,7 @@ func NewUser() *User {
 		},
 	})
 
-	u.addSC("set_channel_permission", &subCommand{
+	u.subCommands.addSC("set_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -114,7 +96,7 @@ func NewUser() *User {
 		},
 	})
 
-	u.addSC("add_global_permission", &subCommand{
+	u.subCommands.addSC("add_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -125,7 +107,7 @@ func NewUser() *User {
 		},
 	})
 
-	u.addSC("add_channel_permission", &subCommand{
+	u.subCommands.addSC("add_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -136,7 +118,7 @@ func NewUser() *User {
 		},
 	})
 
-	u.addSC("remove_global_permission", &subCommand{
+	u.subCommands.addSC("remove_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -147,7 +129,7 @@ func NewUser() *User {
 		},
 	})
 
-	u.addSC("remove_channel_permission", &subCommand{
+	u.subCommands.addSC("remove_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
 		cb: func(bot pkg.Sender, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 4 {
@@ -159,11 +141,6 @@ func NewUser() *User {
 	})
 
 	return u
-}
-
-func (c *User) addSC(name string, sc *subCommand) {
-	c.subCommands[name] = sc
-	c.subCommands[name+"s"] = sc
 }
 
 func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) {
@@ -193,7 +170,7 @@ func (c *User) Trigger(bot pkg.Sender, parts []string, channel pkg.Channel, sour
 		subCommandName = strings.ToLower(parts[2])
 	}
 
-	if subCommand, ok := c.subCommands[subCommandName]; ok {
+	if subCommand, ok := c.subCommands.find(subCommandName); ok {
 		response := subCommand.run(bot, target, channel, source, parts)
 		if response != "" {
 			bot.Mention(channel, source, response)
