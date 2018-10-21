@@ -206,7 +206,7 @@ func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthor
 		h.pubSub.Publish("Ban", &pkg.PubSubBan{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
-			Reason:  report.Reason,
+			// Reason:  report.Reason,
 		}, pkg.PubSubAdminAuth())
 
 	case "timeout":
@@ -219,7 +219,7 @@ func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthor
 			Channel:  report.Channel.Name,
 			Target:   report.Target.Name,
 			Duration: duration,
-			Reason:   report.Reason,
+			// Reason:   report.Reason,
 		}, pkg.PubSubAdminAuth())
 
 	case "undo":
