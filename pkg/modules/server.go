@@ -134,6 +134,8 @@ func GetModule(moduleID string) (pkg.ModuleSpec, bool) {
 
 func init() {
 	// TODO: Remove action performer
+	Register(bttvEmoteParserSpec)
+
 	Register(&badCharacterSpec)
 	Register(&bannedNamesSpec)
 	Register(&pajbot1BanphraseSpec)
@@ -144,7 +146,6 @@ func init() {
 	Register(&latinFilterSpec)
 	Register(&linkFilterSpec)
 	Register(&messageLengthLimitSpec)
-	// Register(&messageHeightLimitSpec)
 	Register(&nukeSpec)
 	Register(&pajbot1CommandsSpec)
 	Register(&reportSpec)
