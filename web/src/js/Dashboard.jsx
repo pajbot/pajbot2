@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import WebSocketHandler from "./WebSocketHandler"
+import WebSocketHandler from "./WebSocketHandler";
 
 export default class Dashboard extends Component {
 
