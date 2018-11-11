@@ -21,8 +21,8 @@ func Subrouter(path string) *mux.Router {
 	return r.PathPrefix(path).Subrouter()
 }
 
-func RGet(R *mux.Router, path string, handler http.HandlerFunc) {
-	R.HandleFunc(path, handler).Methods("GET")
+func RGet(R *mux.Router, path string, handler http.HandlerFunc) *mux.Route {
+	return R.HandleFunc(path, handler).Methods("GET")
 }
 
 func Get(path string, handler http.HandlerFunc) {

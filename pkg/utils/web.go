@@ -8,9 +8,10 @@ import (
 
 type WebAPIError struct {
 	ErrorString string `json:"error"`
+	ErrorCode   string `json:"code"`
 }
 
-func NewWebAPIError(errorString string) WebAPIError {
+func NewWebAPIError(code int, errorString string) WebAPIError {
 	return WebAPIError{
 		ErrorString: errorString,
 	}
@@ -19,9 +20,17 @@ func NewWebAPIError(errorString string) WebAPIError {
 func WebWrite(w http.ResponseWriter, data interface{}) {
 	bs, err := json.Marshal(data)
 	if err != nil {
-		fmt.Printf("Error in web write: %s", err)
-		bs, _ = json.Marshal(NewWebAPIError("internal server error"))
+		fmt.Printf("Error in web write: %s\n", err)
+		WebWriteError(w, 500, "internal server error")
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bs)
+}
+
+func WebWriteError(w http.ResponseWriter, code int, errorString string) {
+	msg := NewWebAPIError(code, errorString)
+
+	// TODO: write error code
+	WebWrite(w, msg)
 }

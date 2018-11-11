@@ -31,13 +31,15 @@ func getActionString(action int) string {
 }
 
 type moderationAction struct {
-	UserID    string
-	Action    string
-	Duration  int
-	TargetID  string
-	Reason    string
-	Timestamp time.Time
-	Context   *string
+	UserName   string
+	UserID     string
+	Action     string
+	Duration   int
+	TargetID   string
+	TargetName string
+	Reason     string
+	Timestamp  time.Time
+	Context    *string
 }
 
 type moderationResponse struct {
@@ -48,8 +50,6 @@ type moderationResponse struct {
 
 func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 	c := state.Context(w, r)
-
-	fmt.Printf("c: %#v\n", c)
 
 	vars := mux.Vars(r)
 	response := moderationResponse{}

@@ -14,7 +14,7 @@ func Load() {
 }
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	err := views.Render("home", w)
+	err := views.Render("home", w, r)
 	if err != nil {
 		log.Println("Error rendering dashboard view:", err)
 	}

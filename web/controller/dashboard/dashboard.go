@@ -13,7 +13,7 @@ func Load() {
 }
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-	err := views.Render("dashboard", w)
+	err := views.Render("dashboard", w, r)
 	if err != nil {
 		log.Println("Error rendering dashboard view:", err)
 	}
