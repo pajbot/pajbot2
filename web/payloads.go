@@ -12,10 +12,6 @@ type user struct {
 	LastActive          string `json:"last_active"`
 }
 
-type apiError struct {
-	Err string `json:"error"`
-}
-
 type customPayload struct {
 	data map[string]interface{}
 }

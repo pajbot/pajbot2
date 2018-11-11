@@ -124,10 +124,20 @@ func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
 
 	switch msg.Type {
 	case "Publish":
-		fmt.Println("Send publish message on topic", msg.Topic)
-		ps.c <- Message{operation: operationPublish, topic: msg.Topic, connection: connection, data: msg.Data, authorization: msg.Authorization}
+		ps.c <- Message{
+			operation:     operationPublish,
+			topic:         msg.Topic,
+			connection:    connection,
+			data:          msg.Data,
+			authorization: msg.Authorization,
+		}
 	case "Subscribe":
-		ps.c <- Message{operation: operationSubscribe, topic: msg.Topic, connection: connection, authorization: msg.Authorization}
+		ps.c <- Message{
+			operation:     operationSubscribe,
+			topic:         msg.Topic,
+			connection:    connection,
+			authorization: msg.Authorization,
+		}
 	}
 
 	return nil
@@ -136,7 +146,8 @@ func (ps *PubSub) HandleJSON(connection Connection, bytes []byte) error {
 func (ps *PubSub) Subscribe(connection Connection, topic string, auth *pkg.PubSubAuthorization) {
 	successfulAuthorization := ps.notifySubscriptionHandlers(connection, topic, auth)
 	if !successfulAuthorization {
-		fmt.Printf("[%s] Failed authorization: %+v\n", topic, auth)
+		fmt.Printf("[%s] Failed authorization:\n", topic)
+		// fmt.Printf("[%s] Failed authorization: %+v\n", topic, auth)
 		return
 	}
 

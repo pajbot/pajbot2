@@ -1,4 +1,4 @@
-package web
+package ws
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
+	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajlada/pajbot2/web/state"
 	"github.com/tevino/abool"
 )
 
@@ -31,18 +33,21 @@ type WSConn struct {
 
 	messageType MessageType
 
+	c state.State
+
 	// user is nil if the user has not authenticated
 	user pkg.User
 }
 
 var _ pubsub.Connection = &WSConn{}
 
-func NewWSConn(ws *websocket.Conn, messageType MessageType) *WSConn {
+func NewWSConn(ws *websocket.Conn, messageType MessageType, c state.State) *WSConn {
 	return &WSConn{
 		send:        make(chan []byte, 256),
 		connected_:  abool.New(),
 		ws:          ws,
 		messageType: messageType,
+		c:           c,
 	}
 }
 
@@ -127,9 +132,11 @@ func (c *WSConn) readPump() {
 			fmt.Printf("Error reading message: %v\n", err)
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		message = bytes.TrimSpace(bytes.Replace(message, utils.LineFeed, utils.Space, -1))
 
-		err = pubSub.HandleJSON(c, message)
+		fmt.Println("Got msg:", string(message))
+
+		err = c.c.PubSub.HandleJSON(c, message)
 		if err != nil {
 			fmt.Println("Error calling HandleJSON for pubsub:", err)
 		}
@@ -165,7 +172,7 @@ func (c *WSConn) writePump() {
 			// Add queued message to the current websocket message
 			n := len(c.send)
 			for i := 0; i < n; i++ {
-				w.Write(crlf)
+				w.Write(utils.CRLF)
 				w.Write(<-c.send)
 			}
 
@@ -179,29 +186,4 @@ func (c *WSConn) writePump() {
 			}
 		}
 	}
-}
-
-// MessageType is used to help redirect a message to the proper connections
-type MessageType uint8
-
-// All available MessageTypes
-const (
-	MessageTypeAll MessageType = iota
-	MessageTypeNone
-	MessageTypeCLR
-	MessageTypeDashboard
-)
-
-// WSMessage xD
-type WSMessage struct {
-	Channel string
-
-	MessageType MessageType
-
-	// LevelRequired <=0 means the message does not require authentication, otherwise
-	// authentication is required and the users level must be equal to or above
-	// the LevelRequired value
-	LevelRequired int
-
-	Payload *Payload
 }

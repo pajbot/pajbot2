@@ -1,5 +1,7 @@
 package web
 
+// TODO: Move these to webhook/github.go or something
+
 import (
 	"encoding/json"
 	"fmt"
@@ -7,59 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/pkg"
 )
-
-func apiHook(w http.ResponseWriter, r *http.Request) {
-	p := customPayload{}
-	v := mux.Vars(r)
-	hookType := r.Header.Get("x-github-event")
-	hookSignature := r.Header.Get("x-hub-signature")
-	channel := v["channel"]
-
-	// Get hook from config according to channel
-	channelHook, ok := hooks[channel]
-	if !ok {
-		// No hook for this channel found
-		p.Add("error", "No hook found for given channel")
-		write(w, p.data)
-		return
-	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		p.Add("error", "Internal error")
-		write(w, p.data)
-		return
-	}
-
-	verified := verifySignature(channelHook.Secret, hookSignature, body)
-
-	if !verified {
-		p.Add("error", "Invalid secret")
-		write(w, p.data)
-		return
-	}
-
-	b, _ := twitchBots[channel]
-
-	if b == nil {
-		// no bot found for channel
-		p.Add("error", "No bot found for channel "+channel)
-		write(w, p.data)
-		return
-	}
-
-	switch hookType {
-	case "push":
-		//handlePush(b, body, &p)
-	case "status":
-		//handleStatus(b, body, &p)
-	}
-
-	write(w, p.data)
-}
 
 type followResponse struct {
 	Data []struct {

@@ -1,20 +1,17 @@
 import React, { Component } from "react";
 import WebSocketHandler from "./WebSocketHandler";
+import {getAuth} from "./auth"
 
 export default class Dashboard extends Component {
 
 	constructor(props) {
 		super(props);
 
-		const auth = this.loadAuth();
-
 		this.state = {
-			nonce: auth.nonce,
-			userId: auth.userId,
 			reports: [],
 		};
 
-		this.ws = new WebSocketHandler(props.wshost, auth.nonce, auth.userId);
+		this.ws = new WebSocketHandler(props.wshost, getAuth());
 
 		this.ws.subscribe('ReportReceived', (json) => {
 			console.log("Report Inc:", json);
@@ -32,8 +29,6 @@ export default class Dashboard extends Component {
 	render() {
 		return (
 			<div className="dashboard">
-				<button className="btn btn-twitch" hidden={this.isLoggedIn()} onClick={this.logIn}><i className="fab fa-twitch" /> Connect with Twitch</button>
-				<button className="btn btn-twitch" hidden={!this.isLoggedIn()} onClick={this.logOut}>Log out</button>
 				<div className="reports">
 					{this.state.reports.map((report, index) =>
 						<div className="report card mb-3" key={index}>
@@ -62,55 +57,6 @@ export default class Dashboard extends Component {
 				</div>
 			</div>
 		);
-	}
-
-	isLoggedIn = () => {
-		return this.state.nonce !== null && this.state.userId !== null;
-	}
-
-	loadAuth = () => {
-		let nonce = window.localStorage.getItem('nonce');
-		let user_id = window.localStorage.getItem('user_id');
-		if (window.location.hash) {
-			let hash = window.location.hash.substring(1);
-			let hashParts = hash.split(';');
-			let hashMap = {};
-			for (let i = 0; i < hashParts.length; ++i) {
-				let p = hashParts[i].split('=');
-				if (p.length == 2) {
-					hashMap[p[0]] = p[1];
-				}
-			}
-
-			if ('nonce' in hashMap && 'user_id' in hashMap) {
-				nonce = hashMap['nonce'];
-				user_id = hashMap['user_id'];
-				window.localStorage.setItem('nonce', nonce);
-				window.localStorage.setItem('user_id', user_id);
-			}
-
-			history.replaceState(
-				'', document.title,
-				window.location.pathname + window.location.search);
-		}
-
-		return { nonce: nonce, userId: user_id };
-	}
-
-	logIn = () => {
-		window.location.href = '/api/auth/twitch/user?redirect=/dashboard';
-	}
-
-	logOut = () => {
-		this.setState({
-			...this.state,
-			nonce: null,
-			userId: null,
-			reports: [],
-		});
-
-		window.localStorage.removeItem('nonce');
-		window.localStorage.removeItem('user_id');
 	}
 
 	handleReport = (channelId, reportId, action, duration = null) => {

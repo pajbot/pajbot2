@@ -1,9 +1,9 @@
 export default class WebSocketHandler {
-    constructor(wsHost, nonce, userId) {
+    constructor(wsHost, auth) {
         this.isOpen = false;
         this.wsHost = wsHost;
-        this.nonce = nonce;
-        this.userId = userId;
+        this.nonce = auth.nonce;
+        this.userId = auth.userID;
         this.socket = null;
         this.cbs = {};
     }

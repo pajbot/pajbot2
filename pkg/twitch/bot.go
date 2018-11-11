@@ -178,7 +178,7 @@ func (b *Bot) JoinChannels() {
 	defer b.channelsMutex.Unlock()
 
 	for _, c := range b.channels {
-		fmt.Println("Joining", c.Channel.Name)
+		fmt.Println("Joining", c.Channel.Name())
 		b.Join(c.Channel.Name())
 	}
 }

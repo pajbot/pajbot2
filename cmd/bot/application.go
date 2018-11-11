@@ -38,6 +38,9 @@ import (
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/web"
+	"github.com/pajlada/pajbot2/web/controller"
+	"github.com/pajlada/pajbot2/web/state"
+	"github.com/pajlada/pajbot2/web/views"
 )
 
 // Application is the heart of pajbot
@@ -65,11 +68,13 @@ func newApplication() *Application {
 	a := Application{}
 
 	a.TwitchUserStore = NewUserStore()
+	state.StoreTwitchUserStore(a.TwitchUserStore)
 	a.TwitchUserContext = NewUserContext()
 
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
 	a.PubSub = pubsub.New()
+	state.StorePubSub(a.PubSub)
 
 	go a.PubSub.Run()
 
@@ -147,6 +152,8 @@ func (a *Application) InitializeSQL() error {
 	if err != nil {
 		return err
 	}
+
+	state.StoreSQL(a.SQL)
 
 	return nil
 }
@@ -289,13 +296,21 @@ func (a *Application) StartTwitterStream() error {
 
 // StartWebServer starts the web server associated to the bot
 func (a *Application) StartWebServer() error {
-	webCfg := &web.Config{
-		Redis: a.Redis,
-		SQL:   a.SQL,
+	var WSHost string
+
+	if a.config.Web.Secure {
+		WSHost = "wss://" + a.config.Web.Domain + "/ws"
+	} else {
+		WSHost = "ws://" + a.config.Web.Domain + "/ws"
 	}
 
-	webBoss := web.Init(a.config, webCfg, a.PubSub, a.TwitchUserStore)
-	go webBoss.Run()
+	go web.Run(&a.config.Web)
+
+	controller.LoadRoutes(a.config)
+
+	views.Configure(views.Config{
+		WSHost: WSHost,
+	})
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package web
+package ws
 
 import "fmt"
 
@@ -22,13 +22,16 @@ func (h *ConnectionHub) run() {
 	for {
 		select {
 		case conn := <-h.register:
+			fmt.Println("new connection")
 			h.connections[conn] = true
 		case conn := <-h.unregister:
 			if _, ok := h.connections[conn]; ok {
+				fmt.Println("disconnect")
 				delete(h.connections, conn)
 				conn.disconnect()
 			}
 		case wsMessage := <-h.broadcast:
+			fmt.Println("broadcast")
 			message := wsMessage.Payload.ToJSON()
 			for conn := range h.connections {
 				// Figure out if this connection should even be sent this message
