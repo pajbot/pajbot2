@@ -43,3 +43,11 @@ func Round(val float64, places int) (newVal float64) {
 	newVal = round / pow
 	return
 }
+
+func MinInt(a, b int) int {
+	if a < b {
+		return a
+	}
+
+	return b
+}
