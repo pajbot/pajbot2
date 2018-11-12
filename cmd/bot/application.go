@@ -391,6 +391,10 @@ func (a *Application) StartBots() error {
 
 			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
 
+			bot.OnNewUnsetMessage(func(rawMessage string) {
+				fmt.Println("Unparsed message:", rawMessage)
+			})
+
 			// Ensure that the bot has joined its own chat
 			bot.JoinChannel(bot.TwitchAccount().ID())
 
