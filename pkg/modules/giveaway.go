@@ -15,8 +15,6 @@ type giveaway struct {
 	state string
 
 	entrants []string
-
-	Sender pkg.Sender
 }
 
 func newGiveaway() pkg.Module {
@@ -50,7 +48,7 @@ func (m *giveaway) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-const forsen25ID = "1361602"
+const forsen25ID = "1479442"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
@@ -73,11 +71,11 @@ func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User,
 			if m.state == "inactive" {
 				m.state = "started"
 				m.entrants = []string{}
-				m.Sender.Say(channel, "Started giveaway")
+				bot.Say(channel, "Started giveaway")
 
 				return nil
 			} else {
-				m.Sender.Say(channel, "Giveaway already started")
+				bot.Say(channel, "Giveaway already started")
 				return nil
 			}
 		}
@@ -85,7 +83,7 @@ func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User,
 		if strings.HasPrefix(text, "!25stop") {
 			if m.state == "started" {
 				m.state = "inactive"
-				m.Sender.Say(channel, "Stopped accepting people into the giveaway")
+				bot.Say(channel, "Stopped accepting people into the giveaway")
 
 				return nil
 			}
@@ -93,13 +91,13 @@ func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User,
 
 		if strings.HasPrefix(text, "!25draw") {
 			if len(m.entrants) == 0 {
-				m.Sender.Say(channel, "No one has joined the giveaway")
+				bot.Say(channel, "No one has joined the giveaway")
 				return nil
 			}
 
 			winnerIndex := rand.Intn(len(m.entrants))
 			winnerUsername := m.entrants[winnerIndex]
-			m.Sender.Say(channel, winnerUsername+" just won the sub emote giveaway PogChamp")
+			bot.Say(channel, winnerUsername+" just won the sub emote giveaway PogChamp")
 
 			m.entrants = append(m.entrants[:winnerIndex], m.entrants[winnerIndex+1:]...)
 
@@ -114,7 +112,7 @@ func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User,
 		for reader.Next() {
 			emote := reader.Get()
 			if emote.GetID() == giveawayEmote {
-				// m.Sender.Say(channel, fmt.Sprintf("%#v", emote))
+				// bot.Say(channel, fmt.Sprintf("%#v", emote))
 				// User wants to enter the giveaway
 				enterGiveaway = true
 				break
@@ -131,7 +129,7 @@ func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User,
 			}
 			m.entrants = append(m.entrants, user.GetName())
 
-			m.Sender.Say(channel, "@"+user.GetName()+", you have been entered into the sub emote giveaway")
+			bot.Say(channel, "@"+user.GetName()+", you have been entered into the sub emote giveaway")
 			return nil
 		}
 	}
