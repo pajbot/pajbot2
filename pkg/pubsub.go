@@ -1,19 +1,16 @@
 package pkg
 
-type PubSubAuthorization struct {
-	Nonce        string
-	TwitchUserID string
-	admin        bool
+// PubSubConnection is an interface where a JSON message can be written to
+type PubSubConnection interface {
+	MessageReceived(source PubSubSource, topic string, bytes []byte) error
 }
 
-func PubSubAdminAuth() *PubSubAuthorization {
-	return &PubSubAuthorization{
-		admin: true,
-	}
-}
-
-func (p PubSubAuthorization) Admin() bool {
-	return p.admin
+// PubSubSource is an interface that is responsible for a message being written into pubsub
+// This will be responsible for checking authorization
+type PubSubSource interface {
+	IsApplication() bool
+	Connection() PubSubConnection
+	AuthenticatedUser() User
 }
 
 type PubSubBan struct {

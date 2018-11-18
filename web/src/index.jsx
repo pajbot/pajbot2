@@ -4,10 +4,7 @@ import Dashboard from './js/Dashboard';
 import Menu from './js/Menu';
 import ThemeLoader from './js/ThemeLoader';
 import ThemeProvider from './js/ThemeProvider';
-import {loadAuth} from './js/auth'
 import './scss/app.scss';
-
-loadAuth();
 
 const menuEl = document.getElementById('menu');
 const dashboard = document.getElementById('dashboard');

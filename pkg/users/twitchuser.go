@@ -31,6 +31,20 @@ func NewTwitchUser(user twitch.User, id string) *TwitchUser {
 	}
 }
 
+func NewSimpleTwitchUser(userID, userName string) *TwitchUser {
+	u := &TwitchUser{
+		User: twitch.User{
+			UserID:      userID,
+			Username:    userName,
+			DisplayName: userName,
+		},
+
+		ID: userID,
+	}
+
+	return u
+}
+
 type permissionSet struct {
 	loaded      bool
 	permissions pkg.Permission

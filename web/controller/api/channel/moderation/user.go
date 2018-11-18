@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/web/state"
 )
@@ -25,6 +26,22 @@ func apiUser(w http.ResponseWriter, r *http.Request) {
 	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? AND `TargetID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
 
 	c := state.Context(w, r)
+
+	if c.Session == nil {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		return
+	}
+
+	user := users.NewSimpleTwitchUser(c.Session.TwitchUserID, c.Session.TwitchUserName)
+	if user == nil {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		return
+	}
+
+	if !user.HasGlobalPermission(pkg.PermissionModeration) {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
+		return
+	}
 
 	vars := mux.Vars(r)
 	response := userResponse{}

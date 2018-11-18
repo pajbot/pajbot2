@@ -67,7 +67,8 @@ type Bot struct {
 	sql *sql.DB
 }
 
-var _ pubsub.Connection = &Bot{}
+var _ pkg.PubSubConnection = &Bot{}
+var _ pkg.PubSubSource = &Bot{}
 
 func NewBot(name string, client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext, db *sql.DB) *Bot {
 	// TODO(pajlada): share user store between twitch bots
@@ -89,13 +90,25 @@ func NewBot(name string, client *twitch.Client, pubSub *pubsub.PubSub, userStore
 		sql: db,
 	}
 
-	pubSub.Subscribe(b, "Ban", nil)
-	pubSub.Subscribe(b, "Timeout", nil)
-	pubSub.Subscribe(b, "Untimeout", nil)
+	pubSub.Subscribe(b, "Ban")
+	pubSub.Subscribe(b, "Timeout")
+	pubSub.Subscribe(b, "Untimeout")
 
 	b.twitchAccount.fillIn(b.userStore)
 
 	return b
+}
+
+func (b *Bot) IsApplication() bool {
+	return true
+}
+
+func (b *Bot) Connection() pkg.PubSubConnection {
+	return b
+}
+
+func (b *Bot) AuthenticatedUser() pkg.User {
+	return nil
 }
 
 func (b *Bot) addBotChannel(botChannel *BotChannel) error {
@@ -789,7 +802,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 	return errors.New("we have not joined this channel")
 }
 
-func (b *Bot) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {
+func (b *Bot) MessageReceived(source pkg.PubSubSource, topic string, data []byte) error {
 	switch topic {
 	case "Ban":
 		var msg pkg.PubSubBan

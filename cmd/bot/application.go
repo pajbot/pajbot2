@@ -63,6 +63,8 @@ type Application struct {
 	TwitchUserContext pkg.UserContext
 }
 
+var _ pkg.PubSubSource = &Application{}
+
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
 	a := Application{}
@@ -79,6 +81,18 @@ func newApplication() *Application {
 	go a.PubSub.Run()
 
 	return &a
+}
+
+func (a *Application) IsApplication() bool {
+	return true
+}
+
+func (a *Application) Connection() pkg.PubSubConnection {
+	return nil
+}
+
+func (a *Application) AuthenticatedUser() pkg.User {
+	return nil
 }
 
 // LoadConfig loads a config file from the given path. The format for the config file is available in the config package
@@ -481,7 +495,7 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 				Reason:   reason,
 			}
 
-			a.PubSub.Publish("TimeoutEvent", e, pkg.PubSubAdminAuth())
+			a.PubSub.Publish(a, "TimeoutEvent", e)
 
 		case "ban":
 			action = ActionBan
@@ -506,7 +520,7 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 				Reason: reason,
 			}
 
-			a.PubSub.Publish("BanEvent", e, pkg.PubSubAdminAuth())
+			a.PubSub.Publish(a, "BanEvent", e)
 
 		case "unban", "untimeout":
 			action = ActionUnban

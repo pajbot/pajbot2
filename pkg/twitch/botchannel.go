@@ -75,8 +75,6 @@ WHERE
 
 // We assume that modulesMutex is locked already
 func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
-	fmt.Println("Enabling module", spec.Name())
-
 	module := spec.Maker()()
 	err := module.Initialize(c, settings)
 	if err != nil {

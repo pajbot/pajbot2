@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/pubsub"
+	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/web/state"
 	"github.com/tevino/abool"
@@ -39,16 +39,23 @@ type WSConn struct {
 	user pkg.User
 }
 
-var _ pubsub.Connection = &WSConn{}
+var _ pkg.PubSubConnection = &WSConn{}
+var _ pkg.PubSubSource = &WSConn{}
 
 func NewWSConn(ws *websocket.Conn, messageType MessageType, c state.State) *WSConn {
-	return &WSConn{
+	conn := &WSConn{
 		send:        make(chan []byte, 256),
 		connected_:  abool.New(),
 		ws:          ws,
 		messageType: messageType,
 		c:           c,
 	}
+
+	if !conn.authenticate() {
+		fmt.Println("ws conn could not authenticate")
+	}
+
+	return conn
 }
 
 type pubsubMessage struct {
@@ -57,13 +64,25 @@ type pubsubMessage struct {
 	Data  json.RawMessage
 }
 
-func (c *WSConn) MessageReceived(topic string, bytes []byte, auth *pkg.PubSubAuthorization) error {
+func (c *WSConn) Connection() pkg.PubSubConnection {
+	return c
+}
+
+func (c *WSConn) AuthenticatedUser() pkg.User {
+	return c.user
+}
+
+func (c *WSConn) IsApplication() bool {
+	return false
+}
+
+func (c *WSConn) MessageReceived(source pkg.PubSubSource, topic string, bytes []byte) error {
 	if !c.connected() {
 		return errors.New("Connection no longer connected")
 	}
 
-	if auth == nil || !auth.Admin() {
-		fmt.Printf("Skipping forwarding this message: %s - %s\n", topic, string(bytes))
+	if !source.IsApplication() {
+		fmt.Println("Cannot forward messages to websocket listener from anything other than the application")
 		return nil
 	}
 
@@ -97,10 +116,14 @@ func (c *WSConn) connected() bool {
 	return c.connected_.IsSet()
 }
 
-// TODO: Fix proper authentication
-// TODO: load user from db/redis/cache
-func (c *WSConn) authenticate(username string) {
-	fmt.Printf("Attempting to authenticate as %s\n", username)
+func (c *WSConn) authenticate() bool {
+	if c.c.Session == nil {
+		return false
+	}
+
+	c.user = users.NewSimpleTwitchUser(c.c.Session.TwitchUserID, c.c.Session.TwitchUserName)
+
+	return true
 }
 
 func (c *WSConn) disconnect() {

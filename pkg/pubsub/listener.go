@@ -8,11 +8,11 @@ import (
 )
 
 type Listener struct {
-	connection       Connection
+	connection       pkg.PubSubConnection
 	subscriptionType SubscriptionType
 }
 
-func (l *Listener) Publish(topic string, data interface{}, auth *pkg.PubSubAuthorization) error {
+func (l *Listener) Publish(source pkg.PubSubSource, topic string, data interface{}) error {
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		fmt.Printf("Unable to unmarshal %#v\n", data)
@@ -20,7 +20,7 @@ func (l *Listener) Publish(topic string, data interface{}, auth *pkg.PubSubAutho
 		return nil
 	}
 
-	err = l.connection.MessageReceived(topic, bytes, auth)
+	err = l.connection.MessageReceived(source, topic, bytes)
 	if err != nil {
 		return err
 	}

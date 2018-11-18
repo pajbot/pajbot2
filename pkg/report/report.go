@@ -11,7 +11,6 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/pubsub"
-	"github.com/pajlada/pajbot2/pkg/users"
 )
 
 type ReportUser struct {
@@ -39,7 +38,8 @@ type Holder struct {
 	reports      map[uint32]Report
 }
 
-var _ pubsub.Connection = &Holder{}
+var _ pkg.PubSubConnection = &Holder{}
+var _ pkg.PubSubSource = &Holder{}
 var _ pubsub.SubscriptionHandler = &Holder{}
 
 func New(db *sql.DB, pubSub *pubsub.PubSub, userStore pkg.UserStore) (*Holder, error) {
@@ -57,12 +57,24 @@ func New(db *sql.DB, pubSub *pubsub.PubSub, userStore pkg.UserStore) (*Holder, e
 		return nil, err
 	}
 
-	pubSub.Subscribe(h, "HandleReport", nil)
-	pubSub.Subscribe(h, "TimeoutEvent", nil)
-	pubSub.Subscribe(h, "BanEvent", nil)
+	pubSub.Subscribe(h, "HandleReport")
+	pubSub.Subscribe(h, "TimeoutEvent")
+	pubSub.Subscribe(h, "BanEvent")
 	pubSub.HandleSubscribe(h, "ReportReceived")
 
 	return h, nil
+}
+
+func (h *Holder) AuthenticatedUser() pkg.User {
+	return nil
+}
+
+func (h *Holder) IsApplication() bool {
+	return true
+}
+
+func (h *Holder) Connection() pkg.PubSubConnection {
+	return h
 }
 
 func (h *Holder) Load() error {
@@ -132,7 +144,7 @@ func (h *Holder) Register(report Report) (*Report, bool, error) {
 
 	report.ID = uint32(id)
 
-	h.pubSub.Publish("ReportReceived", report, pkg.PubSubAdminAuth())
+	h.pubSub.Publish(h, "ReportReceived", report)
 
 	h.reports[report.ID] = report
 
@@ -165,11 +177,12 @@ type reportHandled struct {
 	Action   string
 }
 
-func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthorization) error {
+func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessage) error {
 	h.reportsMutex.Lock()
 	defer h.reportsMutex.Unlock()
 
-	if auth == nil {
+	user := source.AuthenticatedUser()
+	if user == nil {
 		fmt.Println("Missing auth in HandleReport")
 		return nil
 	}
@@ -190,24 +203,24 @@ func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthor
 
 	// TODO: Insert into new table: HandledReport
 
-	msg := reportHandled{
+	msg := &reportHandled{
 		ReportID: report.ID,
 		Handler: ReportUser{
-			ID:   auth.TwitchUserID,
-			Name: h.userStore.GetName(auth.TwitchUserID),
+			ID:   user.GetID(),
+			Name: h.userStore.GetName(user.GetID()),
 		},
 		Action: action.Action,
 	}
 
-	h.pubSub.Publish("ReportHandled", &msg, pkg.PubSubAdminAuth())
+	h.pubSub.Publish(h, "ReportHandled", msg)
 
 	switch action.Action {
 	case "ban":
-		h.pubSub.Publish("Ban", &pkg.PubSubBan{
+		h.pubSub.Publish(h, "Ban", &pkg.PubSubBan{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
 			// Reason:  report.Reason,
-		}, pkg.PubSubAdminAuth())
+		})
 
 	case "timeout":
 		var duration uint32
@@ -215,18 +228,18 @@ func (h *Holder) handleReport(action handleReportMessage, auth *pkg.PubSubAuthor
 		if action.Duration != nil {
 			duration = *action.Duration
 		}
-		h.pubSub.Publish("Timeout", &pkg.PubSubTimeout{
+		h.pubSub.Publish(h, "Timeout", &pkg.PubSubTimeout{
 			Channel:  report.Channel.Name,
 			Target:   report.Target.Name,
 			Duration: duration,
 			// Reason:   report.Reason,
-		}, pkg.PubSubAdminAuth())
+		})
 
 	case "undo":
-		h.pubSub.Publish("Untimeout", &pkg.PubSubUntimeout{
+		h.pubSub.Publish(h, "Untimeout", &pkg.PubSubUntimeout{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
-		}, pkg.PubSubAdminAuth())
+		})
 	default:
 		fmt.Println("Unhandled action", action.Action)
 	}
@@ -266,7 +279,7 @@ func (h *Holder) handleBanEvent(banEvent pkg.PubSubBanEvent) error {
 	return nil
 }
 
-func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuthorization) error {
+func (h *Holder) MessageReceived(source pkg.PubSubSource, topic string, data []byte) error {
 	switch topic {
 	case "HandleReport":
 		var msg handleReportMessage
@@ -278,7 +291,7 @@ func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuth
 
 		fmt.Printf("Handle report: %#v\n", msg)
 
-		return h.handleReport(msg, auth)
+		return h.handleReport(source, msg)
 
 	case "BanEvent":
 		var msg pkg.PubSubBanEvent
@@ -294,35 +307,18 @@ func (h *Holder) MessageReceived(topic string, data []byte, auth *pkg.PubSubAuth
 	return nil
 }
 
-func (h *Holder) ConnectionSubscribed(connection pubsub.Connection, topic string, auth *pkg.PubSubAuthorization) (error, bool) {
+func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string) (error, bool) {
 	switch topic {
 	case "ReportReceived":
-		if auth == nil {
+		user := source.AuthenticatedUser()
+		if user == nil {
+			fmt.Println("no user")
 			return nil, false
 		}
 
-		// Verify authorization
-		const queryF = `
-SELECT twitch_username FROM User
-	WHERE twitch_userid=? AND twitch_nonce=? LIMIT 1;
-`
+		fmt.Println("User name:", user.GetName())
 
-		rows, err := h.db.Query(queryF, auth.TwitchUserID, auth.Nonce)
-		if err != nil {
-			fmt.Println(err)
-			return err, true
-		}
-		defer rows.Close()
-
-		if !rows.Next() {
-			return nil, false
-		}
-
-		hasPermission, err := users.HasGlobalPermission(auth.TwitchUserID, pkg.PermissionModeration)
-		if err != nil {
-			fmt.Println(err)
-			return err, false
-		}
+		hasPermission := user.HasGlobalPermission(pkg.PermissionModeration)
 
 		if !hasPermission {
 			return nil, false
@@ -336,7 +332,7 @@ SELECT twitch_username FROM User
 				fmt.Println(err)
 				return err, true
 			}
-			connection.MessageReceived(topic, bytes, pkg.PubSubAdminAuth())
+			source.Connection().MessageReceived(h, topic, bytes)
 		}
 	}
 

@@ -246,35 +246,43 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 	}
 	err = testpenis(ctx, provider, m, twitchUserOauth, &appConfig.User, "user", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
 		c := state.Context(w, r)
-		name := self.Token.UserName
-		id := c.TwitchUserStore.GetID(name)
+		twitchUserName := self.Token.UserName
+
+		twitchUserID := c.TwitchUserStore.GetID(twitchUserName)
+
+		if twitchUserID == "" {
+			// TODO: Fix proper error handling
+			return
+		}
 
 		const queryF = `
 INSERT INTO User
-	(twitch_username, twitch_userid, twitch_nonce)
-VALUES (?, ?, ?)
-	ON DUPLICATE KEY UPDATE twitch_username=?, twitch_nonce=?
+	(twitch_username, twitch_userid)
+VALUES (?, ?)
+	ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), twitch_username=?
 	`
 
-		res, err := c.SQL.Exec(queryF, name, id, nonce.str, name, nonce.str)
+		res, err := c.SQL.Exec(queryF, twitchUserName, twitchUserID, twitchUserName)
 		if err != nil {
 			panic(err)
 		}
 
-		affectedRowsCount, err := res.RowsAffected()
+		lastInsertID, err := res.LastInsertId()
 		if err != nil {
 			panic(err)
 		}
 
-		if affectedRowsCount == 1 {
-			// User inserted
-		} else {
-			// User updated
+		fmt.Println("Last insert ID:", lastInsertID)
+
+		sessionID, err := c.CreateSession(lastInsertID)
+		if err != nil {
+			panic(err)
 		}
+		state.SetSessionCookies(w, sessionID, twitchUserName)
 
 		// TODO: Secure the redirect
 		if nonce.redirect != "" {
-			http.Redirect(w, r, nonce.redirect+"#nonce="+nonce.str+";user_id="+id, http.StatusFound)
+			http.Redirect(w, r, nonce.redirect, http.StatusFound)
 		}
 	})
 	if err != nil {

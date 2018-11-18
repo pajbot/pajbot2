@@ -8,12 +8,13 @@ import (
 
 type WebAPIError struct {
 	ErrorString string `json:"error"`
-	ErrorCode   string `json:"code"`
+	ErrorCode   int    `json:"code"`
 }
 
 func NewWebAPIError(code int, errorString string) WebAPIError {
 	return WebAPIError{
 		ErrorString: errorString,
+		ErrorCode:   code,
 	}
 }
 
@@ -31,6 +32,7 @@ func WebWrite(w http.ResponseWriter, data interface{}) {
 func WebWriteError(w http.ResponseWriter, code int, errorString string) {
 	msg := NewWebAPIError(code, errorString)
 
-	// TODO: write error code
+	w.WriteHeader(code)
+
 	WebWrite(w, msg)
 }
