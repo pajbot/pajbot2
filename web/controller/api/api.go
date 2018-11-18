@@ -7,6 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/web/controller/api/auth"
 	"github.com/pajlada/pajbot2/web/controller/api/channel"
+	"github.com/pajlada/pajbot2/web/controller/api/report"
 	"github.com/pajlada/pajbot2/web/router"
 )
 
@@ -24,4 +25,6 @@ func Load(cfg *config.Config) {
 	auth.Load(m, cfg)
 
 	channel.Load(m)
+
+	report.Load(m)
 }

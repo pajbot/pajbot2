@@ -37,6 +37,20 @@ type Report struct {
 	Time     time.Time
 }
 
+type HistoricReport struct {
+	ID             uint32
+	Channel        ReportUser
+	Reporter       ReportUser
+	Target         ReportUser
+	Reason         string
+	Logs           []string
+	Time           time.Time
+	Handler        ReportUser
+	Action         uint8
+	ActionDuration uint32
+	TimeHandled    time.Time
+}
+
 type Holder struct {
 	db        *sql.DB
 	pubSub    *pubsub.PubSub

@@ -8,6 +8,7 @@ const (
 	PermissionRaffle     Permission = 1 << 1
 	PermissionAdmin      Permission = 1 << 2
 	PermissionModeration Permission = 1 << 3
+	PermissionReportAPI  Permission = 1 << 4
 )
 
 // GetPermissionBit converts a string (i.e. "admin") to the binary value it represents.
@@ -24,6 +25,9 @@ func GetPermissionBit(s string) Permission {
 	}
 	if s == "moderation" {
 		return PermissionModeration
+	}
+	if s == "reportapi" {
+		return PermissionReportAPI
 	}
 
 	return PermissionNone
