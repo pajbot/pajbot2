@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import WebSocketHandler from "./WebSocketHandler";
 
+const ReportActionUnknown = 0;
+const ReportActionBan     = 1;
+const ReportActionTimeout = 2;
+const ReportActionDismiss = 3;
+const ReportActionUndo    = 4;
+
 function jsonifyResponse(response) {
   if (!response.ok) {
     throw response;
@@ -64,12 +70,12 @@ export default class Dashboard extends Component {
                   {report.Logs && report.Logs.map((value, key) =>
                     <div key={key}>{value}</div>
                   )}
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, "ban")}>Ban</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, "timeout", 86400)}>Timeout 1d</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, "timeout", 604800)}>Timeout 7d</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, "timeout", 1209600)}>Timeout 14d</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, "dismiss")}>Dismiss</button>
-                  <button className="card-link btn btn-danger" title="Undos timeout/ban" onClick={() => this.handleReport(report.Channel.ID, report.ID, "undo")}>Undo</button>
+                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionBan)}>Ban</button>
+                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 86400)}>Timeout 1d</button>
+                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 604800)}>Timeout 7d</button>
+                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 1209600)}>Timeout 14d</button>
+                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionDismis)}>Dismiss</button>
+                  <button className="card-link btn btn-danger" title="Undos timeout/ban" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionUndo)}>Undo</button>
                   <button className="card-link btn btn-light" title="Hide this from your session" onClick={() => this.removeVisibleReport(report.ID)}>Hide</button>
                 </div>
               </div>

@@ -19,6 +19,14 @@ type ReportUser struct {
 	Type string `json:",omitempty"`
 }
 
+func (u ReportUser) GetChannel() string {
+	return u.Name
+}
+
+func (u ReportUser) GetID() string {
+	return u.ID
+}
+
 type Report struct {
 	ID       uint32
 	Channel  ReportUser
@@ -104,10 +112,11 @@ func (h *Holder) Load() error {
 }
 
 type handleReportMessage struct {
-	Action    string
+	Action    uint8
 	ChannelID string
 	ReportID  uint32
 	Duration  *uint32
+	Handler   ReportUser
 }
 
 func (h *Holder) Register(report Report) (*Report, bool, error) {
@@ -174,7 +183,50 @@ func (h *Holder) Update(report Report) error {
 type reportHandled struct {
 	ReportID uint32
 	Handler  ReportUser
-	Action   string
+	Action   uint8
+}
+
+func (h *Holder) insertHistoricReport(report Report, action handleReportMessage) {
+	const queryF = `
+INSERT INTO
+	ReportHistory
+(
+id,
+channel_id, channel_name, channel_type,
+reporter_id, reporter_name,
+target_id, target_name,
+reason, logs,
+time,
+handler_id, handler_name,
+action, action_duration,
+time_handled
+)
+
+VALUES (
+?,
+?,?,?,
+?,?,
+?,?,
+?,?,
+?,
+?,?,
+?,?,
+?
+)`
+
+	_, err := h.db.Exec(queryF,
+		report.ID,
+		report.Channel.ID, report.Channel.Name, report.Channel.Type,
+		report.Reporter.ID, report.Reporter.Name,
+		report.Target.ID, report.Target.Name,
+		report.Reason, strings.Join(report.Logs, "\n"),
+		report.Time,
+		action.Handler.ID, action.Handler.Name,
+		action.Action, action.Duration,
+		time.Now())
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessage) error {
@@ -194,6 +246,11 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 		return nil
 	}
 
+	if !user.HasPermission(report.Channel, pkg.PermissionModeration) {
+		fmt.Println("user does not have moderation permission")
+		return nil
+	}
+
 	// Remove report from SQL and our local map
 	err := h.dismissReport(report.ID)
 	if err != nil {
@@ -201,7 +258,11 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 		return err
 	}
 
+	action.Handler.Name = user.GetName()
+	action.Handler.ID = user.GetID()
+
 	// TODO: Insert into new table: HandledReport
+	h.insertHistoricReport(report, action)
 
 	msg := &reportHandled{
 		ReportID: report.ID,
@@ -215,14 +276,14 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 	h.pubSub.Publish(h, "ReportHandled", msg)
 
 	switch action.Action {
-	case "ban":
+	case pkg.ReportActionBan:
 		h.pubSub.Publish(h, "Ban", &pkg.PubSubBan{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
 			// Reason:  report.Reason,
 		})
 
-	case "timeout":
+	case pkg.ReportActionTimeout:
 		var duration uint32
 		duration = 600
 		if action.Duration != nil {
@@ -235,7 +296,10 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			// Reason:   report.Reason,
 		})
 
-	case "undo":
+	case pkg.ReportActionDismiss:
+		// We don't need to do anything here, as we've already dismissed the report prior to the ban/timeout/untimeout events being sent out
+
+	case pkg.ReportActionUndo:
 		h.pubSub.Publish(h, "Untimeout", &pkg.PubSubUntimeout{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
