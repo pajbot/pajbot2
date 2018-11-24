@@ -9,7 +9,7 @@ CREATE TABLE `ReportHistory` (
     `target_name` VARCHAR(64) NOT NULL COMMENT 'twitch user name of person being reported',
     `reason` TEXT,
     `logs` TEXT,
-    `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'time report was added',
+    `time` timestamp NOT NULL DEFAULT 0 COMMENT 'time report was added',
 
     `handler_id` VARCHAR(64) NOT NULL COMMENT 'twitch user ID of person who handled the report',
     `handler_name` VARCHAR(64) NOT NULL COMMENT 'twitch user name of person who handled the report',
@@ -17,7 +17,7 @@ CREATE TABLE `ReportHistory` (
     `action` TINYINT UNSIGNED NOT NULL COMMENT 'number constant for what action was taken for the report. 1 = ban, 2 = timeout, 3 = dismiss',
     `action_duration` INT(11) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'number of seconds for the action. only relevant for timeouts',
 
-    `time_handled` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `time_handled` timestamp NOT NULL DEFAULT 0,
 
     PRIMARY KEY (`id`)
 )
