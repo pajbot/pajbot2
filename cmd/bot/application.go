@@ -133,7 +133,7 @@ func (a *Application) RunDatabaseMigrations() error {
 }
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	fmt.Println("HTTPERROR: ", errorMessage)
+	fmt.Println("APPLICATION HTTPERROR: ", errorMessage, statusMessage, statusCode)
 }
 
 func onInternalError(err error) {

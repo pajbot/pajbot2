@@ -21,7 +21,7 @@ import (
 )
 
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	log.Println("HTTPERROR: ", errorMessage)
+	log.Println("HTTPERROR: ", errorMessage, statusMessage, statusCode)
 }
 
 func onInternalError(err error) {

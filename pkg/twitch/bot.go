@@ -440,7 +440,7 @@ func (b *Bot) Quit(message string) {
 	b.QuitChannel <- message
 }
 func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	log.Println("HTTPERROR: ", errorMessage)
+	fmt.Println("TWITCH BOT HTTPERROR: ", errorMessage, statusMessage, statusCode)
 }
 
 func onInternalError(err error) {
