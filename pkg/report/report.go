@@ -228,6 +228,10 @@ VALUES (
 ?
 )`
 
+	var actionDuration uint32
+	if action.Duration != nil {
+		actionDuration = *action.Duration
+	}
 	_, err := h.db.Exec(queryF,
 		report.ID,
 		report.Channel.ID, report.Channel.Name, report.Channel.Type,
@@ -236,7 +240,7 @@ VALUES (
 		report.Reason, strings.Join(report.Logs, "\n"),
 		report.Time,
 		action.Handler.ID, action.Handler.Name,
-		action.Action, action.Duration,
+		action.Action, actionDuration,
 		time.Now())
 	if err != nil {
 		panic(err)
