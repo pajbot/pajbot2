@@ -55,6 +55,8 @@ type MessageHeightLimit struct {
 	server *server
 
 	HeightLimit floatParameter `json:",omitempty"`
+
+	userViolationCount map[string]int
 }
 
 func NewMessageHeightLimit() pkg.Module {
@@ -64,6 +66,7 @@ func NewMessageHeightLimit() pkg.Module {
 		HeightLimit: floatParameter{
 			defaultValue: messageHeightLimitSpec.parameters["HeightLimit"].defaultValue.(*float32),
 		},
+		userViolationCount: make(map[string]int),
 	}
 }
 
@@ -252,6 +255,10 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		return nil
 	}
 
+	if user.GetName() == "titlechange_bot" {
+		return nil
+	}
+
 	if user.IsModerator() || user.IsBroadcaster(channel) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
@@ -285,8 +292,44 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 	// bot.Mention(channel, user, fmt.Sprintf("Message height: %f\n", height))
 
 	if height > m.HeightLimit.Get() {
+		// Message height is too tall
+		messageLength := len([]rune(message.GetText()))
+		var fitsIn7Bit int
+		var doesntFitIn7Bit int
+		for _, r := range message.GetText() {
+			if r > 0x7a || r < 0x20 {
+				doesntFitIn7Bit++
+			} else {
+				fitsIn7Bit++
+			}
+		}
+
+		fmt.Printf("Message length: %d. Fits: %d. Don't fit: %d\n", messageLength, doesntFitIn7Bit, fitsIn7Bit)
+		var ratio float32
+		ratio = float32(doesntFitIn7Bit) / float32(messageLength)
+		var reason string
+		userViolations := 0
 		timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
-		action.Set(pkg.Timeout{timeoutDuration, fmt.Sprintf("Your message is too tall: %.1f", height)})
+		if ratio > 0.5 {
+			timeoutDuration = timeoutDuration + 90
+		}
+
+		if ratio > 0.5 && height > 140.0 {
+			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
+			userViolations = m.userViolationCount[user.GetID()]
+			timeoutDuration = timeoutDuration * userViolations
+			timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
+			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f A", height, ratio)
+			bot.Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
+		} else {
+			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f", height, ratio)
+		}
+
+		reason = fmt.Sprintf("Your message is too tall: %.0f (%d)", height, userViolations)
+		action.Set(pkg.Timeout{
+			Duration: timeoutDuration,
+			Reason:   reason,
+		})
 	}
 
 	return nil
