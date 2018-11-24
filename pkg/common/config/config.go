@@ -5,12 +5,6 @@ import (
 	"io/ioutil"
 )
 
-type RedisConfig struct {
-	Host     string
-	Password string
-	Database int
-}
-
 type WebConfig struct {
 	Host   string
 	Domain string
@@ -66,8 +60,6 @@ The Config contains all the data required to connect
 to the twitch IRC servers
 */
 type Config struct {
-	Redis RedisConfig
-
 	Web WebConfig
 
 	SQL SQLConfig
@@ -89,9 +81,6 @@ type Config struct {
 }
 
 var defaultConfig = Config{
-	Redis: RedisConfig{
-		Host: "localhost:6379",
-	},
 	Web: WebConfig{
 		Host:   "localhost:2355",
 		Domain: "localhost:2355",
