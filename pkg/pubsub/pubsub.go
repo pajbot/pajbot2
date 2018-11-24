@@ -8,10 +8,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-type SubscriptionHandler interface {
-	ConnectionSubscribed(source pkg.PubSubSource, topic string) (error, bool)
-}
-
 type SubscriptionType int
 
 const (
@@ -43,14 +39,14 @@ type PubSub struct {
 	topics      map[string][]*Listener
 
 	onSubscribeMutex sync.Mutex
-	onSubscribe      map[string][]SubscriptionHandler
+	onSubscribe      map[string][]pkg.PubSubSubscriptionHandler
 }
 
 func New() *PubSub {
 	return &PubSub{
 		c:           make(chan (Message)),
 		topics:      make(map[string][]*Listener),
-		onSubscribe: make(map[string][]SubscriptionHandler),
+		onSubscribe: make(map[string][]pkg.PubSubSubscriptionHandler),
 	}
 }
 
@@ -168,7 +164,7 @@ func (ps *PubSub) notifySubscriptionHandlers(source pkg.PubSubSource, topic stri
 	return true
 }
 
-func (ps *PubSub) HandleSubscribe(connection SubscriptionHandler, topic string) {
+func (ps *PubSub) HandleSubscribe(connection pkg.PubSubSubscriptionHandler, topic string) {
 	ps.onSubscribeMutex.Lock()
 	defer ps.onSubscribeMutex.Unlock()
 

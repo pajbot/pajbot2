@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/pubsub"
 )
 
 type ReportUser struct {
@@ -53,7 +52,7 @@ type HistoricReport struct {
 
 type Holder struct {
 	db        *sql.DB
-	pubSub    *pubsub.PubSub
+	pubSub    pkg.PubSub
 	userStore pkg.UserStore
 
 	reportsMutex *sync.Mutex
@@ -62,13 +61,13 @@ type Holder struct {
 
 var _ pkg.PubSubConnection = &Holder{}
 var _ pkg.PubSubSource = &Holder{}
-var _ pubsub.SubscriptionHandler = &Holder{}
+var _ pkg.PubSubSubscriptionHandler = &Holder{}
 
-func New(db *sql.DB, pubSub *pubsub.PubSub, userStore pkg.UserStore) (*Holder, error) {
+func New(app pkg.Application) (*Holder, error) {
 	h := &Holder{
-		db:        db,
-		pubSub:    pubSub,
-		userStore: userStore,
+		db:        app.SQL(),
+		pubSub:    app.PubSub(),
+		userStore: app.UserStore(),
 
 		reportsMutex: &sync.Mutex{},
 		reports:      make(map[uint32]Report),
@@ -79,10 +78,10 @@ func New(db *sql.DB, pubSub *pubsub.PubSub, userStore pkg.UserStore) (*Holder, e
 		return nil, err
 	}
 
-	pubSub.Subscribe(h, "HandleReport")
-	pubSub.Subscribe(h, "TimeoutEvent")
-	pubSub.Subscribe(h, "BanEvent")
-	pubSub.HandleSubscribe(h, "ReportReceived")
+	h.pubSub.Subscribe(h, "HandleReport")
+	h.pubSub.Subscribe(h, "TimeoutEvent")
+	h.pubSub.Subscribe(h, "BanEvent")
+	h.pubSub.HandleSubscribe(h, "ReportReceived")
 
 	return h, nil
 }

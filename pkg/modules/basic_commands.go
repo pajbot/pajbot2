@@ -56,6 +56,7 @@ func (m *basicCommandsModule) Initialize(botChannel pkg.BotChannel, settings []b
 	m.registerCommand([]string{"!pb2join"}, &commands.Join{})
 	m.registerCommand([]string{"!pb2leave"}, &commands.Leave{})
 	m.registerCommand([]string{"!pb2module"}, commands.NewModule())
+	m.registerCommand([]string{"!pb2islive"}, commands.IsLive{})
 
 	return nil
 }

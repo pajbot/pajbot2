@@ -1,8 +1,20 @@
 package pkg
 
+type PubSub interface {
+	Subscribe(source PubSubSource, topic string)
+	Publish(source PubSubSource, topic string, data interface{})
+
+	HandleSubscribe(connection PubSubSubscriptionHandler, topic string)
+	HandleJSON(source PubSubSource, bytes []byte) error
+}
+
 // PubSubConnection is an interface where a JSON message can be written to
 type PubSubConnection interface {
 	MessageReceived(source PubSubSource, topic string, bytes []byte) error
+}
+
+type PubSubSubscriptionHandler interface {
+	ConnectionSubscribed(source PubSubSource, topic string) (error, bool)
 }
 
 // PubSubSource is an interface that is responsible for a message being written into pubsub

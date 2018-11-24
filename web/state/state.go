@@ -7,14 +7,13 @@ import (
 	"sync"
 
 	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/pubsub"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 var (
 	sqlClient       *sql.DB
 	twitchUserStore pkg.UserStore
-	pubSub          *pubsub.PubSub
+	pubSub          pkg.PubSub
 
 	mutex = &sync.RWMutex{}
 
@@ -33,7 +32,7 @@ func StoreTwitchUserStore(twitchUserStore_ pkg.UserStore) {
 	mutex.Unlock()
 }
 
-func StorePubSub(pubSub_ *pubsub.PubSub) {
+func StorePubSub(pubSub_ pkg.PubSub) {
 	mutex.Lock()
 	pubSub = pubSub_
 	mutex.Unlock()
@@ -50,7 +49,7 @@ type Session struct {
 type State struct {
 	SQL             *sql.DB
 	TwitchUserStore pkg.UserStore
-	PubSub          *pubsub.PubSub
+	PubSub          pkg.PubSub
 	Session         *Session
 	SessionID       *string
 }

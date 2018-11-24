@@ -16,7 +16,6 @@ import (
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
-	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
@@ -49,8 +48,7 @@ type Application struct {
 	config *config.Config
 
 	TwitchBots   map[string]*pb2twitch.Bot
-	Redis        *redis.Pool
-	SQL          *sql.DB
+	sqlClient    *sql.DB
 	Twitter      *twitter.Client
 	TwitchPubSub *twitchpubsub.Client
 
@@ -58,29 +56,53 @@ type Application struct {
 
 	Quit chan string
 
-	PubSub            *pubsub.PubSub
-	TwitchUserStore   pkg.UserStore
-	TwitchUserContext pkg.UserContext
+	pubSub *pubsub.PubSub
+
+	twitchUserStore   pkg.UserStore
+	twitchUserContext pkg.UserContext
+	twitchStreamStore pkg.StreamStore
 }
 
 var _ pkg.PubSubSource = &Application{}
+var _ pkg.Application = &Application{}
 
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
 	a := Application{}
 
-	a.TwitchUserStore = NewUserStore()
-	state.StoreTwitchUserStore(a.TwitchUserStore)
-	a.TwitchUserContext = NewUserContext()
+	a.twitchUserStore = NewUserStore()
+	state.StoreTwitchUserStore(a.twitchUserStore)
+	a.twitchUserContext = NewUserContext()
+	a.twitchStreamStore = NewStreamStore()
 
 	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
-	a.PubSub = pubsub.New()
-	state.StorePubSub(a.PubSub)
+	a.pubSub = pubsub.New()
+	state.StorePubSub(a.pubSub)
 
-	go a.PubSub.Run()
+	go a.pubSub.Run()
 
 	return &a
+}
+
+func (a *Application) UserStore() pkg.UserStore {
+	return a.twitchUserStore
+}
+
+func (a *Application) UserContext() pkg.UserContext {
+	return a.twitchUserContext
+}
+
+func (a *Application) StreamStore() pkg.StreamStore {
+	return a.twitchStreamStore
+}
+
+func (a *Application) SQL() *sql.DB {
+	return a.sqlClient
+}
+
+func (a *Application) PubSub() pkg.PubSub {
+	return a.pubSub
 }
 
 func (a *Application) IsApplication() bool {
@@ -109,7 +131,7 @@ func (a *Application) LoadConfig(path string) error {
 
 // RunDatabaseMigrations runs database migrations on the database specified in the config file
 func (a *Application) RunDatabaseMigrations() error {
-	driver, err := mysql.WithInstance(a.SQL, &mysql.Config{})
+	driver, err := mysql.WithInstance(a.sqlClient, &mysql.Config{})
 	if err != nil {
 		return err
 	}
@@ -162,43 +184,19 @@ func (a *Application) LoadExternalEmotes() error {
 
 func (a *Application) InitializeSQL() error {
 	var err error
-	a.SQL, err = sql.Open("mysql", a.config.SQL.DSN)
+	a.sqlClient, err = sql.Open("mysql", a.config.SQL.DSN)
 	if err != nil {
 		return err
 	}
 
-	state.StoreSQL(a.SQL)
+	state.StoreSQL(a.sqlClient)
 
 	return nil
 }
 
-func (a *Application) InitializeRedis() error {
-	a.Redis = &redis.Pool{
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", a.config.Redis.Host)
-			if err != nil {
-				log.Fatal("An error occured while connecting to redis: ", err)
-				return nil, err
-			}
-			if a.config.Redis.Database >= 0 {
-				_, err = c.Do("SELECT", a.config.Redis.Database)
-				if err != nil {
-					log.Fatal("Error while selecting redis db:", err)
-					return nil, err
-				}
-			}
-			return c, err
-		},
-	}
-
-	// Ensure that the redis connection works
-	conn := a.Redis.Get()
-	return conn.Send("PING")
-}
-
 func (a *Application) InitializeModules() (err error) {
 	// TODO: move this to init
-	a.ReportHolder, err = report.New(a.SQL, a.PubSub, a.TwitchUserStore)
+	a.ReportHolder, err = report.New(a)
 	if err != nil {
 		return
 	}
@@ -208,12 +206,12 @@ func (a *Application) InitializeModules() (err error) {
 		fmt.Println("Error starting twitter stream:", err)
 	}
 
-	err = modules.InitServer(a.Redis, a.SQL, a.config.Pajbot1, a.PubSub, a.ReportHolder)
+	err = modules.InitServer(a, &a.config.Pajbot1, a.ReportHolder)
 	if err != nil {
 		return
 	}
 
-	err = users.InitServer(a.SQL)
+	err = users.InitServer(a.sqlClient)
 	if err != nil {
 		return
 	}
@@ -342,7 +340,7 @@ type messageReceivedData struct {
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
 	const queryF = `SELECT id, name, twitch_access_token FROM Bot`
-	rows, err := a.SQL.Query(queryF)
+	rows, err := a.sqlClient.Query(queryF)
 	if err != nil {
 		return err
 	}
@@ -366,11 +364,11 @@ func (a *Application) LoadBots() error {
 			return errors.New(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
 		}
 
-		bot := pb2twitch.NewBot(name, twitch.NewClient(name, "oauth:"+twitchAccessToken), a.PubSub, a.TwitchUserStore, a.TwitchUserContext, a.SQL)
+		bot := pb2twitch.NewBot(name, twitch.NewClient(name, "oauth:"+twitchAccessToken), a)
 		bot.DatabaseID = id
 		bot.QuitChannel = a.Quit
 
-		err = bot.LoadChannels(a.SQL)
+		err = bot.LoadChannels(a.sqlClient)
 		if err != nil {
 			return err
 		}
@@ -397,7 +395,7 @@ func (a *Application) StartBots() error {
 				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.Username, message.Text)
 
 				// Store message in our twitch message context class
-				a.TwitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
+				a.twitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
 
 				// Forward to bot to let its modules work
 				bot.HandleMessage(channelName, user, message)
@@ -495,7 +493,7 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 				Reason:   reason,
 			}
 
-			a.PubSub.Publish(a, "TimeoutEvent", e)
+			a.pubSub.Publish(a, "TimeoutEvent", e)
 
 		case "ban":
 			action = ActionBan
@@ -520,7 +518,7 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 				Reason: reason,
 			}
 
-			a.PubSub.Publish(a, "BanEvent", e)
+			a.pubSub.Publish(a, "BanEvent", e)
 
 		case "unban", "untimeout":
 			action = ActionUnban
@@ -528,7 +526,7 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 		}
 
 		if action != 0 {
-			_, err := a.SQL.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
+			_, err := a.sqlClient.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
 			if err != nil {
 				return err
 			}

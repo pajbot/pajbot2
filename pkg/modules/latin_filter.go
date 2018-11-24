@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -177,16 +176,6 @@ func (m *latinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.Use
 
 			}
 			i++
-		}
-
-		if lol.Message != "" {
-			go func() {
-				c := m.server.redis.Get()
-				bytes, _ := json.Marshal(&lol)
-				c.Do("LPUSH", "karl_kons", bytes)
-				c.Close()
-				// fmt.Printf("First bad character: 0x%0x message '%s' from '%s' in '#%s' is disallowed due to our whitelist\n", lol.BadCharacters[0], text, user.GetName(), source.GetChannel())
-			}()
 		}
 	}
 

@@ -5,30 +5,26 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/pkg/pubsub"
 	"github.com/pajlada/pajbot2/pkg/report"
 )
 
 type server struct {
-	redis        *redis.Pool
 	sql          *sql.DB
 	oldSession   *sql.DB
-	pubSub       *pubsub.PubSub
+	pubSub       pkg.PubSub
 	reportHolder *report.Holder
 }
 
 var _server server
 
-func InitServer(redis *redis.Pool, _sql *sql.DB, pajbot1Config config.Pajbot1Config, pubSub *pubsub.PubSub, reportHolder *report.Holder) error {
+func InitServer(app pkg.Application, pajbot1Config *config.Pajbot1Config, reportHolder *report.Holder) error {
 	var err error
 
-	_server.redis = redis
-	_server.sql = _sql
+	_server.sql = app.SQL()
 	_server.oldSession, err = sql.Open("mysql", pajbot1Config.SQL.DSN)
-	_server.pubSub = pubSub
+	_server.pubSub = app.PubSub()
 	_server.reportHolder = reportHolder
 	if err != nil {
 		return err

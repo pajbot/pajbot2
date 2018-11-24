@@ -19,7 +19,6 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/common"
-	"github.com/pajlada/pajbot2/pkg/pubsub"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -62,7 +61,7 @@ type Bot struct {
 	userStore   pkg.UserStore
 	userContext pkg.UserContext
 
-	pubSub *pubsub.PubSub
+	pubSub pkg.PubSub
 
 	sql *sql.DB
 }
@@ -70,7 +69,7 @@ type Bot struct {
 var _ pkg.PubSubConnection = &Bot{}
 var _ pkg.PubSubSource = &Bot{}
 
-func NewBot(name string, client *twitch.Client, pubSub *pubsub.PubSub, userStore pkg.UserStore, userContext pkg.UserContext, db *sql.DB) *Bot {
+func NewBot(name string, client *twitch.Client, app pkg.Application) *Bot {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
@@ -82,17 +81,17 @@ func NewBot(name string, client *twitch.Client, pubSub *pubsub.PubSub, userStore
 
 		channelsMutex: &sync.Mutex{},
 
-		userStore:   userStore,
-		userContext: userContext,
+		userStore:   app.UserStore(),
+		userContext: app.UserContext(),
 
-		pubSub: pubSub,
+		pubSub: app.PubSub(),
 
-		sql: db,
+		sql: app.SQL(),
 	}
 
-	pubSub.Subscribe(b, "Ban")
-	pubSub.Subscribe(b, "Timeout")
-	pubSub.Subscribe(b, "Untimeout")
+	b.pubSub.Subscribe(b, "Ban")
+	b.pubSub.Subscribe(b, "Timeout")
+	b.pubSub.Subscribe(b, "Untimeout")
 
 	b.twitchAccount.fillIn(b.userStore)
 

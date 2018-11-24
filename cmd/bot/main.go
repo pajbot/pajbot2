@@ -113,11 +113,6 @@ func runCmd() {
 		log.Fatal("An error occured while running database migrations: ", err)
 	}
 
-	err = application.InitializeRedis()
-	if err != nil {
-		log.Fatal("Error starting redis client:", err)
-	}
-
 	err = application.InitializeModules()
 	if err != nil {
 		log.Fatal("Error initializing modules:", err)

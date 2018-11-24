@@ -344,3 +344,10 @@ func (c Test) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string,
 		bot.Mention(channel, user, fmt.Sprintf("variation %s", variation))
 	}
 }
+
+type IsLive struct {
+}
+
+func (c IsLive) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	bot.Mention(channel, user, bot.TwitchAccount().Name())
+}
