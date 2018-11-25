@@ -25,6 +25,10 @@ func RGet(R *mux.Router, path string, handler http.HandlerFunc) *mux.Route {
 	return R.HandleFunc(path, handler).Methods("GET")
 }
 
+func RPost(R *mux.Router, path string, handler http.HandlerFunc) *mux.Route {
+	return R.HandleFunc(path, handler).Methods("POST")
+}
+
 func Get(path string, handler http.HandlerFunc) {
 	RGet(r, path, handler)
 }

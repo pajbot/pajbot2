@@ -24,7 +24,6 @@ import (
 	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
 
-	"github.com/dankeroni/gotwitch"
 	"github.com/gempir/go-twitch-irc"
 	"github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
@@ -60,7 +59,7 @@ type Application struct {
 
 	twitchUserStore   pkg.UserStore
 	twitchUserContext pkg.UserContext
-	twitchStreamStore pkg.StreamStore
+	twitchStreamStore *StreamStore
 }
 
 var _ pkg.PubSubSource = &Application{}
@@ -163,21 +162,18 @@ func onInternalError(err error) {
 }
 
 // InitializeAPIs initializes various APIs that are needed for pajbot
-func (a *Application) InitializeAPIs() error {
-	// Twitch APIs
-	apirequest.Twitch = gotwitch.New(a.config.Auth.Twitch.User.ClientID)
-	apirequest.TwitchBot = gotwitch.New(a.config.Auth.Twitch.Bot.ClientID)
-	apirequest.TwitchV3 = gotwitch.NewV3(a.config.Auth.Twitch.User.ClientID)
-	apirequest.TwitchBotV3 = gotwitch.NewV3(a.config.Auth.Twitch.Bot.ClientID)
+func (a *Application) InitializeAPIs() (err error) {
+	err = apirequest.InitTwitch(a.config)
+	if err != nil {
+		return
+	}
 
-	return nil
+	return
 }
 
 // LoadExternalEmotes xd
 func (a *Application) LoadExternalEmotes() error {
-	fmt.Println("Loading globalemotes...")
 	go emotes.LoadGlobalEmotes()
-	fmt.Println("Done!")
 
 	return nil
 }
@@ -427,6 +423,8 @@ func (a *Application) StartBots() error {
 			}
 		}(bot)
 	}
+
+	go a.twitchStreamStore.Run()
 
 	return nil
 }

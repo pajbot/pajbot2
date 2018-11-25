@@ -29,6 +29,14 @@ func Sum(s []int) int {
 	return x
 }
 
+func FloorInt(f float64) int {
+	return int(math.Floor(f))
+}
+
+func CeilInt(f float64) int {
+	return int(math.Ceil(f))
+}
+
 // Round returns the rounded value of a float64 up to N places
 func Round(val float64, places int) (newVal float64) {
 	var round float64

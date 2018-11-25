@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/dankeroni/gotwitch"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 var _ pkg.UserStore = &UserStore{}
@@ -40,28 +42,33 @@ func min(a, b int) int {
 func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 	ids = make(map[string]string)
 
-	remainingNames := []string{}
+	remaining := []string{}
 	s.idsMutex.Lock()
 
 	for _, name := range names {
 		if id, ok := s.ids[name]; ok {
 			ids[name] = id
 		} else {
-			remainingNames = append(remainingNames, name)
+			remaining = append(remaining, name)
 		}
 	}
 
 	s.idsMutex.Unlock()
 
-	var batch []string
+	var wg sync.WaitGroup
 
-	for len(remainingNames) > 0 {
-		if len(batch) == 0 {
-			batch = remainingNames[0:min(99, len(remainingNames))]
-			remainingNames = remainingNames[len(batch):]
-		}
+	batches, _ := utils.ChunkStringSlice(remaining, 100)
+	for _, batch := range batches {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			data, err := apirequest.TwitchWrapper.GetUsersByLogin(batch)
 
-		onSuccess := func(data []gotwitch.User) {
+			if err != nil {
+				fmt.Println("API ERROR. maybe retry?")
+				return
+			}
+
 			s.idsMutex.Lock()
 			defer s.idsMutex.Unlock()
 			s.namesMutex.Lock()
@@ -71,11 +78,10 @@ func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 				ids[user.Login] = user.ID
 				s.save(user.ID, user.Login)
 			}
-			batch = nil
-		}
-
-		apirequest.Twitch.GetUsersByLogin(batch, onSuccess, onHTTPError, onInternalError)
+		}()
 	}
+
+	wg.Wait()
 
 	return
 }
@@ -157,15 +163,19 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 
 	s.namesMutex.Unlock()
 
-	var batch []string
+	var wg sync.WaitGroup
 
-	for len(remaining) > 0 {
-		if len(batch) == 0 {
-			batch = remaining[0:min(99, len(remaining))]
-			remaining = remaining[len(batch):]
-		}
+	batches, _ := utils.ChunkStringSlice(remaining, 100)
+	for _, batch := range batches {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			data, err := apirequest.TwitchWrapper.GetUsersByID(batch)
+			if err != nil {
+				fmt.Println("API ERROR. maybe retry?")
+				return
+			}
 
-		onSuccess := func(data []gotwitch.User) {
 			s.idsMutex.Lock()
 			defer s.idsMutex.Unlock()
 			s.namesMutex.Lock()
@@ -175,11 +185,10 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 				names[user.ID] = user.Login
 				s.save(user.ID, user.Login)
 			}
-			batch = nil
-		}
-
-		apirequest.Twitch.GetUsers(batch, onSuccess, onHTTPError, onInternalError)
+		}()
 	}
+
+	wg.Wait()
 
 	return
 }

@@ -1,6 +1,8 @@
 package webhook
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -59,8 +61,72 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 	*/
 }
 
+func apiFollowers(w http.ResponseWriter, r *http.Request) {
+	v := mux.Vars(r)
+	channel := v["channelID"]
+	fmt.Println("Channel ID:", channel)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("ERROR", err)
+		//p.Add("error", "Internal error")
+		//utils.WebWrite(w, p.data)
+		return
+	}
+
+	fmt.Println("Body:", string(body))
+}
+
+func apiStreams(w http.ResponseWriter, r *http.Request) {
+	v := mux.Vars(r)
+	channel := v["channelID"]
+	fmt.Println("Channel ID:", channel)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("ERROR", err)
+		//p.Add("error", "Internal error")
+		//utils.WebWrite(w, p.data)
+		return
+	}
+
+	fmt.Println("streams Body:", string(body))
+}
+
+func apiUserChanged(w http.ResponseWriter, r *http.Request) {
+	v := mux.Vars(r)
+	channel := v["channelID"]
+	fmt.Println("Channel ID:", channel)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("ERROR", err)
+		//p.Add("error", "Internal error")
+		//utils.WebWrite(w, p.data)
+		return
+	}
+
+	fmt.Println("user changed Body:", body)
+}
+
 func Load(parent *mux.Router) {
-	m := parent.Path("/webhook").Subrouter()
+	m := parent.PathPrefix("/webhook").Subrouter()
 
 	router.RGet(m, `/{channel:\w+}`, apiHook)
+	router.RGet(m, `/{channelID:\w+}/{topic:\w+}`, verifyHandler)
+	router.RPost(m, `/{channelID:\w+}/followers`, apiFollowers)
+	router.RPost(m, `/{channelID:\w+}/streams`, apiStreams)
+	router.RPost(m, `/{channelID:\w+}/user_changed`, apiUserChanged)
+}
+
+func verifyHandler(w http.ResponseWriter, r *http.Request) {
+	challenge := r.URL.Query().Get("hub.challenge")
+	if challenge == "" {
+		w.WriteHeader(400)
+		return
+
+	}
+
+	w.WriteHeader(200)
+	w.Write([]byte(challenge))
 }

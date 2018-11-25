@@ -60,6 +60,7 @@ type Bot struct {
 
 	userStore   pkg.UserStore
 	userContext pkg.UserContext
+	streamStore pkg.StreamStore
 
 	pubSub pkg.PubSub
 
@@ -83,6 +84,7 @@ func NewBot(name string, client *twitch.Client, app pkg.Application) *Bot {
 
 		userStore:   app.UserStore(),
 		userContext: app.UserContext(),
+		streamStore: app.StreamStore(),
 
 		pubSub: app.PubSub(),
 
@@ -404,6 +406,14 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 }
 
 func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+	if len(rawMessage.Tags) > 2 {
+		if channelID, ok := rawMessage.Tags["room-id"]; ok {
+			// Joined channel
+			b.streamStore.JoinStream(&SimpleAccount{channelID, channelName})
+		} else {
+			fmt.Println("room-id not set in roomstate message:", rawMessage.Raw)
+		}
+	}
 	subMode := ModeUnset
 
 	channel := &channels.TwitchChannel{
@@ -420,9 +430,9 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 
 	if subMode != ModeUnset {
 		if subMode == ModeEnabled {
-			fmt.Println("Submode enabled")
+			// fmt.Println("Submode enabled")
 		} else {
-			fmt.Println("Submode disabled")
+			// fmt.Println("Submode disabled")
 
 			if b.Flags.PermaSubMode {
 				b.Say(channel, "Perma sub mode is enabled. A mod can type !suboff to disable perma sub mode")

@@ -16,6 +16,8 @@ import (
 var _ pkg.BotChannel = &BotChannel{}
 
 type BotChannel struct {
+	streamStore pkg.StreamStore
+
 	ID int64
 
 	Channel User
@@ -40,6 +42,10 @@ func (c *BotChannel) ChannelID() string {
 
 func (c *BotChannel) ChannelName() string {
 	return c.Channel.Name()
+}
+
+func (c *BotChannel) Stream() pkg.Stream {
+	return c.streamStore.GetStream(&c.Channel)
 }
 
 // We assume that modulesMutex is locked already
@@ -165,6 +171,7 @@ func (c *BotChannel) Initialize(b *Bot) error {
 	}
 
 	c.sql = b.sql
+	c.streamStore = b.streamStore
 
 	c.initialized = true
 
@@ -215,10 +222,6 @@ func (c *BotChannel) loadModules() {
 	moduleConfigs, err := c.loadAllModuleConfigs()
 	if err != nil {
 		panic(err)
-	}
-
-	for _, cfg := range moduleConfigs {
-		fmt.Printf("cfg: %+v\n", cfg)
 	}
 
 	availableModules := modules.Modules()

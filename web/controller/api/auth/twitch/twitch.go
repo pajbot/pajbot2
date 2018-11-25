@@ -83,7 +83,7 @@ func makeState() (string, error) {
 	return state, nil
 }
 
-type authorizedCallback func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData)
+type authorizedCallback func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, nonce *nonceData)
 
 func testpenis(ctx context.Context, provider *oidc.Provider, m *mux.Router, config *oauth2.Config, appConfig *config.TwitchAuthConfig, name string, onAuthorized authorizedCallback) error {
 	var nonceEnabledVerifier *oidc.IDTokenVerifier
@@ -162,18 +162,13 @@ func testpenis(ctx context.Context, provider *oidc.Provider, m *mux.Router, conf
 				nonceData = &nd
 			}
 
-			onSuccess := func(data gotwitch.Self) {
-				if !data.Identified || !data.Token.Valid {
-					http.Error(w, "Token invalid (Twitch end)", http.StatusInternalServerError)
-					return
-				}
-
-				onAuthorized(w, r, data, oauth2Token, nonceData)
+			validateResponse, err := apirequest.Twitch.ValidateOAuthTokenSimple(oauth2Token.AccessToken)
+			if err != nil {
+				http.Error(w, "Error validating token: "+err.Error(), http.StatusInternalServerError)
+				return
 			}
 
-			apirequest.TwitchV3.GetSelf(oauth2Token.AccessToken, onSuccess, onHTTPError, onInternalError)
-
-			// w.Write([]byte("penis"))
+			onAuthorized(w, r, *validateResponse, oauth2Token, nonceData)
 		})
 
 	return nil
@@ -233,9 +228,9 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 		return err
 	}
 
-	err = testpenis(ctx, nil, m, twitchBotOauth, &appConfig.Bot, "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
+	err = testpenis(ctx, nil, m, twitchBotOauth, &appConfig.Bot, "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, nonce *nonceData) {
 		c := state.Context(w, r)
-		err := common.CreateBot(c.SQL, self.Token.UserName, oauth2Token.AccessToken, oauth2Token.RefreshToken)
+		err := common.CreateBot(c.SQL, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken)
 		if err != nil {
 			// TODO: Handle gracefully
 			panic(err)
@@ -244,9 +239,9 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 	if err != nil {
 		return err
 	}
-	err = testpenis(ctx, provider, m, twitchUserOauth, &appConfig.User, "user", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
+	err = testpenis(ctx, provider, m, twitchUserOauth, &appConfig.User, "user", func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, nonce *nonceData) {
 		c := state.Context(w, r)
-		twitchUserName := self.Token.UserName
+		twitchUserName := self.Login
 
 		twitchUserID := c.TwitchUserStore.GetID(twitchUserName)
 
@@ -288,7 +283,7 @@ VALUES (?, ?)
 	if err != nil {
 		return err
 	}
-	err = testpenis(ctx, nil, m, twitchStreamerOauth, &appConfig.Streamer, "streamer", func(w http.ResponseWriter, r *http.Request, self gotwitch.Self, oauth2Token *oauth2.Token, nonce *nonceData) {
+	err = testpenis(ctx, nil, m, twitchStreamerOauth, &appConfig.Streamer, "streamer", func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, nonce *nonceData) {
 		// fmt.Printf("STREAMER Username: %s - Access token: %s\n", self.Token.UserName, oauth2Token.AccessToken)
 	})
 	if err != nil {

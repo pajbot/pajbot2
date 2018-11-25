@@ -209,7 +209,7 @@ type Ping struct {
 }
 
 func (c Ping) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	bot.Mention(channel, user, fmt.Sprintf("pb2 has been running for %s", time.Since(startTime)))
+	bot.Mention(channel, user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
 }
 
 type Simplify struct {
@@ -349,5 +349,31 @@ type IsLive struct {
 }
 
 func (c IsLive) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.IsModerator() && !user.IsBroadcaster(channel) {
+		return
+	}
+
 	bot.Mention(channel, user, bot.TwitchAccount().Name())
+
+	if botChannel.Stream().Status().Live() {
+		startedAt := botChannel.Stream().Status().StartedAt()
+		bot.Mention(channel, user, fmt.Sprintf("LIVE FOR %s KKona", utils.TimeSince(startedAt)))
+	} else {
+		bot.Mention(channel, user, "offline FeelsBadMan")
+	}
+
+	/*
+		callbackURL := "https://52f3a7a0.ngrok.io/api/webhook/159849156/streams"
+
+		response, err := apirequest.Twitch.WebhookSubscribeSimple(callbackURL,
+			gotwitch.WebhookTopicStreams,
+			"159849156", 3600, "")
+		if err != nil {
+			fmt.Println("ERROR SUBSCRIBING:", err)
+		}
+
+		// TODO: Verify that the response is code 202
+
+		fmt.Println("Response from subscribing:", response)
+	*/
 }
