@@ -32,7 +32,7 @@ func InitTwitch(cfg *config.Config) (err error) {
 		return
 	}
 
-	initWrapper()
+	err = initWrapper(&cfg.Auth.Twitch.Webhook)
 
 	return
 }

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dankeroni/gotwitch"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/twitch"
@@ -56,6 +57,19 @@ func (s *StreamStore) PollStreams() {
 	batches, _ := utils.ChunkStringSlice(remaining, 100)
 	for _, batch := range batches {
 		wg.Add(1)
+
+		// Subscribe to the streams webhook topic for the channels as well
+		go func(batch []string) {
+			for _, userID := range batch {
+				go func(userID string) {
+					err := apirequest.TwitchWrapper.WebhookSubscribe(gotwitch.WebhookTopicStreams, userID)
+					if err != nil {
+						fmt.Println("Error subscribing to webhook for user", userID, err)
+					}
+				}(userID)
+			}
+		}(batch)
+
 		go func() {
 			defer wg.Done()
 			data, err := apirequest.TwitchWrapper.GetStreams(batch, nil)

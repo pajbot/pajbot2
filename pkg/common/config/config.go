@@ -22,6 +22,12 @@ type TwitchAuthConfig struct {
 	RedirectURI  string
 }
 
+type TwitchWebhookConfig struct {
+	HostPrefix       string
+	Secret           string
+	LeaseTimeSeconds int
+}
+
 type AuthTwitchConfig struct {
 	// Bot contains the client id, secret, and redirect URI for authenticating new bot accounts
 	Bot TwitchAuthConfig
@@ -32,6 +38,8 @@ type AuthTwitchConfig struct {
 	// Streamer contains the client id, secret, and reidrect URI for authenticating streamers
 	// This will be an extra option after logging in where streamers can choose to give out more permissions (like getting their subscribers)
 	Streamer TwitchAuthConfig
+
+	Webhook TwitchWebhookConfig
 }
 
 type authTwitterConfig struct {
@@ -84,6 +92,13 @@ var defaultConfig = Config{
 	Web: WebConfig{
 		Host:   "localhost:2355",
 		Domain: "localhost:2355",
+	},
+	Auth: authConfig{
+		Twitch: AuthTwitchConfig{
+			Webhook: TwitchWebhookConfig{
+				LeaseTimeSeconds: 24 * 3600,
+			},
+		},
 	},
 }
 
