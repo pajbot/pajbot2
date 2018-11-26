@@ -41,10 +41,6 @@ type authConfig struct {
 	Twitter authTwitterConfig
 }
 
-type grpcServiceConfig struct {
-	Host string
-}
-
 type pubsubConfig struct {
 	ChannelID string
 	UserID    string
@@ -73,8 +69,6 @@ type Config struct {
 	TLSKey  string
 	TLSCert string
 
-	GRPCService grpcServiceConfig
-
 	PubSub pubsubConfig
 
 	Pajbot1 Pajbot1Config
@@ -84,9 +78,6 @@ var defaultConfig = Config{
 	Web: WebConfig{
 		Host:   "localhost:2355",
 		Domain: "localhost:2355",
-	},
-	GRPCService: grpcServiceConfig{
-		Host: ":50052",
 	},
 }
 
