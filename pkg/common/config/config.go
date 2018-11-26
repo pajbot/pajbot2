@@ -23,8 +23,14 @@ type TwitchAuthConfig struct {
 }
 
 type AuthTwitchConfig struct {
-	Bot      TwitchAuthConfig
-	User     TwitchAuthConfig
+	// Bot contains the client id, secret, and redirect URI for authenticating new bot accounts
+	Bot TwitchAuthConfig
+
+	// User contains the client id, secret, and redirect URI for authenticating random users/moderators who want to log into the dashboard
+	User TwitchAuthConfig
+
+	// Streamer contains the client id, secret, and reidrect URI for authenticating streamers
+	// This will be an extra option after logging in where streamers can choose to give out more permissions (like getting their subscribers)
 	Streamer TwitchAuthConfig
 }
 
