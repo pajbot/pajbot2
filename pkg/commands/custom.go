@@ -315,7 +315,7 @@ func (c *Leave) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []strin
 
 	err := bot.LeaveChannel(channelID)
 	if err != nil {
-		bot.Mention(channel, user, err.Error())
+		bot.Mention(channel, user, "Error leaving channel: "+err.Error())
 		return
 	}
 

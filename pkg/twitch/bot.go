@@ -134,10 +134,8 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	return -1, nil
 }
 
+// channelsMutex needs to be locked before calling this function
 func (b *Bot) removeBotChannelAtIndex(index int) {
-	b.channelsMutex.Lock()
-	defer b.channelsMutex.Unlock()
-
 	b.channels = append(b.channels[:index], b.channels[index+1:]...)
 }
 
@@ -783,7 +781,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 
 	b.Depart(botChannel.Channel.Name())
 
-	res, err := b.sql.Exec(queryF, botChannel.DatabaseID)
+	res, err := b.sql.Exec(queryF, botChannel.DatabaseID())
 	if err != nil {
 		return err
 	}
