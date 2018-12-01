@@ -448,13 +448,6 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 func (b *Bot) Quit(message string) {
 	b.QuitChannel <- message
 }
-func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	fmt.Println("TWITCH BOT HTTPERROR: ", errorMessage, statusMessage, statusCode)
-}
-
-func onInternalError(err error) {
-	fmt.Printf("internal error: %s", err)
-}
 
 func (b *Bot) StartChatterPoller() {
 	b.ticker = time.NewTicker(5 * time.Minute)
@@ -464,26 +457,27 @@ func (b *Bot) StartChatterPoller() {
 		for {
 			select {
 			case <-b.ticker.C:
-				onSuccess := func(chatters gotwitch.Chatters) {
-					usernames := []string{}
-					usernames = append(usernames, chatters.Moderators...)
-					usernames = append(usernames, chatters.Staff...)
-					usernames = append(usernames, chatters.Admins...)
-					usernames = append(usernames, chatters.GlobalMods...)
-					usernames = append(usernames, chatters.Viewers...)
-					userIDs := b.GetUserStore().GetIDs(usernames)
-
-					userIDsSlice := make([]string, len(userIDs))
-					i := 0
-					for _, userID := range userIDs {
-						userIDsSlice[i] = userID
-						i++
-					}
-
-					b.BulkEdit("pajlada", userIDsSlice, 25)
+				chatters, _, err := gotwitch.GetChattersSimple("pajlada")
+				if err != nil {
+					continue
 				}
 
-				gotwitch.GetChatters("pajlada", onSuccess, onHTTPError, onInternalError)
+				var usernames []string
+				usernames = append(usernames, chatters.Moderators...)
+				usernames = append(usernames, chatters.Staff...)
+				usernames = append(usernames, chatters.Admins...)
+				usernames = append(usernames, chatters.GlobalMods...)
+				usernames = append(usernames, chatters.Viewers...)
+				userIDs := b.GetUserStore().GetIDs(usernames)
+
+				userIDsSlice := make([]string, len(userIDs))
+				i := 0
+				for _, userID := range userIDs {
+					userIDsSlice[i] = userID
+					i++
+				}
+
+				b.BulkEdit("pajlada", userIDsSlice, 25)
 			}
 		}
 	}()

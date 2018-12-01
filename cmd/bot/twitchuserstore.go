@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dankeroni/gotwitch"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/utils"
@@ -97,22 +96,22 @@ func (s *UserStore) GetID(name string) (id string) {
 		return
 	}
 
-	onSuccess := func(data []gotwitch.User) {
-		if len(data) == 0 {
-			// :(
-			return
-		}
-
-		s.idsMutex.Lock()
-		defer s.idsMutex.Unlock()
-		s.namesMutex.Lock()
-		defer s.namesMutex.Unlock()
-
-		id = data[0].ID
-		s.save(id, name)
+	response, err := apirequest.TwitchWrapper.GetUsersByLogin([]string{name})
+	if err != nil {
+		return
 	}
 
-	apirequest.Twitch.GetUsersByLogin([]string{name}, onSuccess, onHTTPError, onInternalError)
+	if len(response) == 0 {
+		return
+	}
+
+	s.idsMutex.Lock()
+	defer s.idsMutex.Unlock()
+	s.namesMutex.Lock()
+	defer s.namesMutex.Unlock()
+
+	id = response[0].ID
+	s.save(id, name)
 
 	return
 }
@@ -127,22 +126,23 @@ func (s *UserStore) GetName(id string) (name string) {
 		return
 	}
 
-	onSuccess := func(data []gotwitch.User) {
-		if len(data) == 0 {
-			// :(
-			return
-		}
-
-		s.idsMutex.Lock()
-		defer s.idsMutex.Unlock()
-		s.namesMutex.Lock()
-		defer s.namesMutex.Unlock()
-
-		name = data[0].Login
-		s.save(id, name)
+	response, err := apirequest.TwitchWrapper.GetUsersByID([]string{id})
+	if err != nil {
+		return
 	}
 
-	apirequest.Twitch.GetUsers([]string{id}, onSuccess, onHTTPError, onInternalError)
+	if len(response) == 0 {
+		// :(
+		return
+	}
+
+	s.idsMutex.Lock()
+	defer s.idsMutex.Unlock()
+	s.namesMutex.Lock()
+	defer s.namesMutex.Unlock()
+
+	name = response[0].Login
+	s.save(id, name)
 
 	return
 }

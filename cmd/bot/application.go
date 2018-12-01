@@ -153,14 +153,6 @@ func (a *Application) RunDatabaseMigrations() error {
 	return nil
 }
 
-func onHTTPError(statusCode int, statusMessage, errorMessage string) {
-	fmt.Println("APPLICATION HTTPERROR: ", errorMessage, statusMessage, statusCode)
-}
-
-func onInternalError(err error) {
-	fmt.Printf("internal error: %s", err)
-}
-
 // InitializeAPIs initializes various APIs that are needed for pajbot
 func (a *Application) InitializeAPIs() (err error) {
 	err = apirequest.InitTwitch(a.config)
