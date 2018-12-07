@@ -35,10 +35,10 @@ import (
 	"github.com/pajlada/pajbot2/pkg/report"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/web"
-	"github.com/pajlada/pajbot2/web/controller"
-	"github.com/pajlada/pajbot2/web/state"
-	"github.com/pajlada/pajbot2/web/views"
+	"github.com/pajlada/pajbot2/pkg/web"
+	"github.com/pajlada/pajbot2/pkg/web/controller"
+	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajlada/pajbot2/pkg/web/views"
 )
 
 // Application is the heart of pajbot
