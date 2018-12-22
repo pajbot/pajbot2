@@ -5,7 +5,7 @@ CREATE TABLE `pb_bot` (
 	`twitch_refresh_token` VARCHAR(64) NULL DEFAULT NULL COMMENT 'Bot level refresh-token',
 	PRIMARY KEY (`id`)
 )
-COMMENT='Store available bot accouns, requires an access token with chat_login scope'
+COMMENT='Store available bot accouns, requires an access token with all chat/PubSub scopes'
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
