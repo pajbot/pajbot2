@@ -194,7 +194,7 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 		"chat:edit",
 		"chat:read",
 		"whispers:read",
-		"whispers:edit"
+		"whispers:edit",
 	}
 	twitchBotOauth.Endpoint = oauth2.Endpoint{
 		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
