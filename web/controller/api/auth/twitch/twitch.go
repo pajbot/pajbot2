@@ -187,9 +187,14 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 	twitchBotOauth.RedirectURL = appConfig.Bot.RedirectURI
 	twitchBotOauth.ClientID = appConfig.Bot.ClientID
 	twitchBotOauth.ClientSecret = appConfig.Bot.ClientSecret
+	// https://dev.twitch.tv/docs/authentication/#scopes
 	twitchBotOauth.Scopes = []string{
 		"user_read",
-		"chat_login",
+		"channel:moderate",
+		"chat:edit",
+		"chat:read",
+		"whispers:read",
+		"whispers:edit"
 	}
 	twitchBotOauth.Endpoint = oauth2.Endpoint{
 		AuthURL:  "https://id.twitch.tv/oauth2/authorize",
