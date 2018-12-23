@@ -135,7 +135,7 @@ func (a *Application) RunDatabaseMigrations() error {
 		return err
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://migrations", "mysql", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://../../migrations", "mysql", driver)
 	if err != nil {
 		return err
 	}
