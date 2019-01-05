@@ -59,6 +59,26 @@ func getTheme(r *http.Request) (theme string) {
 	return
 }
 
+// RenderBasic renders only the given template, no base files
+func RenderBasic(templateName string, w http.ResponseWriter, r *http.Request) error {
+	tpl, err := template.ParseFiles(templatePath(templateName))
+	if err != nil {
+		return err
+	}
+
+	state := state{
+		Config: cfg,
+		Theme:  getTheme(r),
+	}
+
+	err = tpl.Execute(w, state)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra interface{}) error {
 	var err error
 	tpl := template.New(templateName)
@@ -86,4 +106,10 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 
 func Render(templateName string, w http.ResponseWriter, r *http.Request) error {
 	return RenderExtra(templateName, w, r, nil)
+}
+
+// Default pages
+func Render403(w http.ResponseWriter, r *http.Request) error {
+	w.WriteHeader(403)
+	return RenderBasic("403", w, r)
 }
