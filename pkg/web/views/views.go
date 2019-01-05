@@ -28,7 +28,7 @@ type state struct {
 
 	Theme string
 
-	Extra interface{}
+	Extra string
 }
 
 func Configure(c Config) {
@@ -79,7 +79,7 @@ func RenderBasic(templateName string, w http.ResponseWriter, r *http.Request) er
 	return nil
 }
 
-func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra interface{}) error {
+func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra []byte) error {
 	var err error
 	tpl := template.New(templateName)
 	_, err = tpl.ParseFiles(templatePath(templateName), templatePath("base"))
@@ -93,7 +93,7 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 		CurrentPage: templateName,
 		LoggedIn:    false,
 		Theme:       getTheme(r),
-		Extra:       extra,
+		Extra:       string(extra),
 	}
 
 	err = tpl.ExecuteTemplate(w, "base"+templateSuffix, state)
