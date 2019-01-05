@@ -180,7 +180,7 @@ func Load(parent *mux.Router, appConfig *config.AuthTwitchConfig) error {
 	twitchBotOauth.ClientSecret = appConfig.Bot.ClientSecret
 	// https://dev.twitch.tv/docs/authentication/#scopes
 	twitchBotOauth.Scopes = []string{
-		"user_read",
+		"user:edit", // Edit bot account description/profile picture
 		"channel:moderate",
 		"chat:edit",
 		"chat:read",

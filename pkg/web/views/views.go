@@ -85,7 +85,6 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 	}
 
 	return nil
-
 }
 
 func Render(templateName string, w http.ResponseWriter, r *http.Request) error {
