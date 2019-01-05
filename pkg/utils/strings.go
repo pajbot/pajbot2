@@ -110,7 +110,13 @@ func MakeVariations(text string, doNormalize bool) ([]string, []string, error) {
 	return originalVariations, lowercaseAll(originalVariations), nil
 }
 
+// IsValidUsername verifies that the given user name is not empty, and that it only contains valid characters (0-9 a-z A-Z _)
+// It does not to any length-checks, as there are no unbroken rules as to how short or long a user name can be
 func IsValidUsername(username string) bool {
+	if username == "" {
+		return false
+	}
+
 	for _, r := range username {
 		// Numbers || uppercase a-z || lowercase a-z || underscore
 		if (r >= 0x30 && r <= 0x39) || (r >= 0x41 && r <= 0x5A) || (r >= 0x61 && r <= 0x7A) || r == 0x5F {
@@ -123,8 +129,14 @@ func IsValidUsername(username string) bool {
 	return true
 }
 
-func IsValidUserID(username string) bool {
-	for _, r := range username {
+// IsValidUserID verifies that the given user id is not empty, and that it only contains valid characters
+// It does not to any length-checks, as there are no clear rules as to how short or long a user ID can be
+func IsValidUserID(userID string) bool {
+	if userID == "" {
+		return false
+	}
+
+	for _, r := range userID {
 		// Numbers
 		if r >= 0x30 && r <= 0x39 {
 			continue
