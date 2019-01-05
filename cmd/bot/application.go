@@ -35,6 +35,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/report"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
+	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/pkg/web"
 	"github.com/pajlada/pajbot2/pkg/web/controller"
 	"github.com/pajlada/pajbot2/pkg/web/state"
@@ -153,6 +154,23 @@ func (a *Application) RunDatabaseMigrations() error {
 	return nil
 }
 
+func (a *Application) ProvideAdminPermissionsToAdmin() (err error) {
+	cfg := a.config.Admin
+	if !utils.IsValidUserID(cfg.TwitchUserID) {
+		fmt.Println("Warning: No admin user ID specified in the config file. You probably want to do this at least on initial setup")
+		return
+	}
+
+	oldPermissions, err := users.GetUserPermissions(cfg.TwitchUserID, "global")
+	if err != nil {
+		return
+	}
+	newPermissions := oldPermissions | pkg.PermissionAdmin
+	err = users.SetUserPermissions(cfg.TwitchUserID, "global", newPermissions)
+
+	return
+}
+
 // InitializeAPIs initializes various APIs that are needed for pajbot
 func (a *Application) InitializeAPIs() (err error) {
 	err = apirequest.InitTwitch(a.config)
@@ -179,6 +197,8 @@ func (a *Application) InitializeSQL() error {
 
 	state.StoreSQL(a.sqlClient)
 
+	users.InitServer(a.sqlClient)
+
 	return nil
 }
 
@@ -195,11 +215,6 @@ func (a *Application) InitializeModules() (err error) {
 	}
 
 	err = modules.InitServer(a, &a.config.Pajbot1, a.ReportHolder)
-	if err != nil {
-		return
-	}
-
-	err = users.InitServer(a.sqlClient)
 	if err != nil {
 		return
 	}
