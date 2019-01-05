@@ -327,7 +327,7 @@ func (a *Application) StartWebServer() error {
 
 	go web.Run(&a.config.Web)
 
-	controller.LoadRoutes(a.config)
+	controller.LoadRoutes(a, a.config)
 
 	views.Configure(views.Config{
 		WSHost: WSHost,

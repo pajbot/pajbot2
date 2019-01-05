@@ -19,7 +19,7 @@ const App = (
     <Menu />
     {dashboard && <Dashboard  wshost={dashboard.getAttribute('data-wshost')} />}
     {banphrases && <Banphrases />}
-    {admin && <Admin />}
+    {admin && <Admin element={admin}/>}
   </ThemeProvider>
 );
 
