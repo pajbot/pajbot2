@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajlada/pajbot2/pkg/web/controller/admin"
 	"github.com/pajlada/pajbot2/pkg/web/controller/api"
 	"github.com/pajlada/pajbot2/pkg/web/controller/banphrases"
 	"github.com/pajlada/pajbot2/pkg/web/controller/dashboard"
@@ -27,4 +28,7 @@ func LoadRoutes(cfg *config.Config) {
 
 	// /banphrases
 	banphrases.Load()
+
+	// /admin
+	admin.Load()
 }
