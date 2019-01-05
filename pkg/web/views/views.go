@@ -46,15 +46,12 @@ func getTheme(r *http.Request) (theme string) {
 	theme = defaultTheme
 
 	themeCookie, err := r.Cookie("currentTheme")
-	if err != nil {
-		return
-	}
-	if themeCookie == nil {
+	if err != nil || themeCookie == nil {
+		// no cookie to be found
 		return
 	}
 
-	theme = themeCookie.Value
-
+	// verify that theme name in cookie is valid
 	if utils.StringContains(themeCookie.Value, validThemes) {
 		theme = themeCookie.Value
 	}
