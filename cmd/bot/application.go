@@ -315,16 +315,6 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
-type UnicodeRange struct {
-	Start rune
-	End   rune
-}
-
-type messageReceivedData struct {
-	Sender  string
-	Message string
-}
-
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
 	const queryF = `SELECT id, name, twitch_access_token FROM Bot`
