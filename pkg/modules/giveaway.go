@@ -48,7 +48,7 @@ func (m *giveaway) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-const forsen25ID = "1479442"
+const forsen25ID = "1673018"
 const pajlada25ID = "908917"
 const pajaWID = "80481"
 
