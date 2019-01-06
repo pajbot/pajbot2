@@ -28,6 +28,7 @@ import (
 	"github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
+	"github.com/pajlada/pajbot2/pkg/botstore"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/emotes"
 	"github.com/pajlada/pajbot2/pkg/modules"
@@ -35,6 +36,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/report"
 	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
 	"github.com/pajlada/pajbot2/pkg/users"
+	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/pkg/web"
 	"github.com/pajlada/pajbot2/pkg/web/controller"
 	"github.com/pajlada/pajbot2/pkg/web/state"
@@ -46,7 +48,7 @@ import (
 type Application struct {
 	config *config.Config
 
-	TwitchBots   map[string]*pb2twitch.Bot
+	twitchBots   pkg.BotStore
 	sqlClient    *sql.DB
 	Twitter      *twitter.Client
 	TwitchPubSub *twitchpubsub.Client
@@ -67,14 +69,15 @@ var _ pkg.Application = &Application{}
 
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
-	a := Application{}
+	a := Application{
+		twitchBots: botstore.New(),
+	}
 
 	a.twitchUserStore = NewUserStore()
 	state.StoreTwitchUserStore(a.twitchUserStore)
 	a.twitchUserContext = NewUserContext()
 	a.twitchStreamStore = NewStreamStore()
 
-	a.TwitchBots = make(map[string]*pb2twitch.Bot)
 	a.Quit = make(chan string)
 	a.pubSub = pubsub.New()
 	state.StorePubSub(a.pubSub)
@@ -102,6 +105,10 @@ func (a *Application) SQL() *sql.DB {
 
 func (a *Application) PubSub() pkg.PubSub {
 	return a.pubSub
+}
+
+func (a *Application) TwitchBots() pkg.BotStore {
+	return a.twitchBots
 }
 
 func (a *Application) IsApplication() bool {
@@ -153,6 +160,23 @@ func (a *Application) RunDatabaseMigrations() error {
 	return nil
 }
 
+func (a *Application) ProvideAdminPermissionsToAdmin() (err error) {
+	cfg := a.config.Admin
+	if !utils.IsValidUserID(cfg.TwitchUserID) {
+		fmt.Println("Warning: No admin user ID specified in the config file. You probably want to do this at least on initial setup")
+		return
+	}
+
+	oldPermissions, err := users.GetUserPermissions(cfg.TwitchUserID, "global")
+	if err != nil {
+		return
+	}
+	newPermissions := oldPermissions | pkg.PermissionAdmin
+	err = users.SetUserPermissions(cfg.TwitchUserID, "global", newPermissions)
+
+	return
+}
+
 // InitializeAPIs initializes various APIs that are needed for pajbot
 func (a *Application) InitializeAPIs() (err error) {
 	err = apirequest.InitTwitch(a.config)
@@ -179,6 +203,8 @@ func (a *Application) InitializeSQL() error {
 
 	state.StoreSQL(a.sqlClient)
 
+	users.InitServer(a.sqlClient)
+
 	return nil
 }
 
@@ -195,11 +221,6 @@ func (a *Application) InitializeModules() (err error) {
 	}
 
 	err = modules.InitServer(a, &a.config.Pajbot1, a.ReportHolder)
-	if err != nil {
-		return
-	}
-
-	err = users.InitServer(a.sqlClient)
 	if err != nil {
 		return
 	}
@@ -306,23 +327,13 @@ func (a *Application) StartWebServer() error {
 
 	go web.Run(&a.config.Web)
 
-	controller.LoadRoutes(a.config)
+	controller.LoadRoutes(a, a.config)
 
 	views.Configure(views.Config{
 		WSHost: WSHost,
 	})
 
 	return nil
-}
-
-type UnicodeRange struct {
-	Start rune
-	End   rune
-}
-
-type messageReceivedData struct {
-	Sender  string
-	Message string
 }
 
 // LoadBots loads bots from the database
@@ -361,7 +372,7 @@ func (a *Application) LoadBots() error {
 			return err
 		}
 
-		a.TwitchBots[name] = bot
+		a.twitchBots.Add(bot)
 	}
 
 	return nil
@@ -369,7 +380,19 @@ func (a *Application) LoadBots() error {
 
 // StartBots starts bots that were loaded from the LoadBots method
 func (a *Application) StartBots() error {
-	for _, bot := range a.TwitchBots {
+	for it := a.twitchBots.Iterate(); it.Next(); {
+		bot := it.Value()
+		if bot == nil {
+			fmt.Println("nil bot DansGame")
+			continue
+		}
+
+		pb2bot, ok := bot.(*pb2twitch.Bot)
+		if !ok {
+			fmt.Println("Unknown bot")
+			continue
+		}
+
 		go func(bot *pb2twitch.Bot) {
 			bot.OnNewWhisper(bot.HandleWhisper)
 
@@ -409,11 +432,19 @@ func (a *Application) StartBots() error {
 			// }
 			// bot.StartChatterPoller()
 
+			bot.IsConnected = true
 			err := bot.Connect()
 			if err != nil {
-				log.Fatal(err)
+				if err == twitch.ErrLoginAuthenticationFailed {
+					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
+				} else {
+					log.Fatal(err)
+				}
 			}
-		}(bot)
+			bot.IsConnected = false
+
+			// TODO: Check if we want to try to reconnect here (with a delay)
+		}(pb2bot)
 	}
 
 	go a.twitchStreamStore.Run()

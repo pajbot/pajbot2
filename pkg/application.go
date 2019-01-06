@@ -10,4 +10,5 @@ type Application interface {
 	StreamStore() StreamStore
 	SQL() *sql.DB
 	PubSub() PubSub
+	TwitchBots() BotStore
 }

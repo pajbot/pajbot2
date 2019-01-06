@@ -10,8 +10,6 @@ type server struct {
 
 var _server server
 
-func InitServer(_sql *sql.DB) error {
+func InitServer(_sql *sql.DB) {
 	_server.sql = _sql
-
-	return nil
 }

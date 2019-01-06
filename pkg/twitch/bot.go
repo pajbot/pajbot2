@@ -65,6 +65,8 @@ type Bot struct {
 	pubSub pkg.PubSub
 
 	sql *sql.DB
+
+	IsConnected bool
 }
 
 var _ pkg.PubSubConnection = &Bot{}
@@ -294,6 +296,10 @@ func (b *Bot) Reply(channel pkg.Channel, user pkg.User, message string) {
 
 func (b *Bot) TwitchAccount() pkg.TwitchAccount {
 	return b.twitchAccount
+}
+
+func (b *Bot) Connected() bool {
+	return b.IsConnected
 }
 
 func (b *Bot) Say(channel pkg.Channel, message string) {

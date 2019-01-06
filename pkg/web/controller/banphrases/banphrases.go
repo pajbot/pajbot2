@@ -1,6 +1,7 @@
 package banphrases
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -16,7 +17,9 @@ func handleBanphrases(w http.ResponseWriter, r *http.Request) {
 	banphrases := []string{
 		"a", "b", "c",
 	}
-	err := views.RenderExtra("banphrases", w, r, banphrases)
+	extra, _ := json.Marshal(banphrases)
+
+	err := views.RenderExtra("banphrases", w, r, extra)
 	if err != nil {
 		log.Println("Error rendering banphrases view:", err)
 	}

@@ -5,6 +5,10 @@ import (
 	"io/ioutil"
 )
 
+type AdminConfig struct {
+	TwitchUserID string
+}
+
 type WebConfig struct {
 	Host   string
 	Domain string
@@ -70,6 +74,8 @@ The Config contains all the data required to connect
 to the twitch IRC servers
 */
 type Config struct {
+	Admin AdminConfig
+
 	Web WebConfig
 
 	SQL SQLConfig

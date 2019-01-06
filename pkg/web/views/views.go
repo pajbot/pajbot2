@@ -28,7 +28,7 @@ type state struct {
 
 	Theme string
 
-	Extra interface{}
+	Extra string
 }
 
 func Configure(c Config) {
@@ -46,15 +46,12 @@ func getTheme(r *http.Request) (theme string) {
 	theme = defaultTheme
 
 	themeCookie, err := r.Cookie("currentTheme")
-	if err != nil {
-		return
-	}
-	if themeCookie == nil {
+	if err != nil || themeCookie == nil {
+		// no cookie to be found
 		return
 	}
 
-	theme = themeCookie.Value
-
+	// verify that theme name in cookie is valid
 	if utils.StringContains(themeCookie.Value, validThemes) {
 		theme = themeCookie.Value
 	}
@@ -62,7 +59,27 @@ func getTheme(r *http.Request) (theme string) {
 	return
 }
 
-func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra interface{}) error {
+// RenderBasic renders only the given template, no base files
+func RenderBasic(templateName string, w http.ResponseWriter, r *http.Request) error {
+	tpl, err := template.ParseFiles(templatePath(templateName))
+	if err != nil {
+		return err
+	}
+
+	state := state{
+		Config: cfg,
+		Theme:  getTheme(r),
+	}
+
+	err = tpl.Execute(w, state)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra []byte) error {
 	var err error
 	tpl := template.New(templateName)
 	_, err = tpl.ParseFiles(templatePath(templateName), templatePath("base"))
@@ -76,7 +93,7 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 		CurrentPage: templateName,
 		LoggedIn:    false,
 		Theme:       getTheme(r),
-		Extra:       extra,
+		Extra:       string(extra),
 	}
 
 	err = tpl.ExecuteTemplate(w, "base"+templateSuffix, state)
@@ -85,9 +102,14 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 	}
 
 	return nil
-
 }
 
 func Render(templateName string, w http.ResponseWriter, r *http.Request) error {
 	return RenderExtra(templateName, w, r, nil)
+}
+
+// Default pages
+func Render403(w http.ResponseWriter, r *http.Request) error {
+	w.WriteHeader(403)
+	return RenderBasic("403", w, r)
 }
