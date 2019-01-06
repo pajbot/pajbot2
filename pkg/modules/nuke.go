@@ -77,7 +77,54 @@ func (m *nukeModule) BotChannel() pkg.BotChannel {
 }
 
 func (m *nukeModule) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+	const usageString = `Usage: #channel !nuke phrase phrase phrase time`
+
+	parts := strings.Split(message.GetText(), " ")
+	if len(parts) < 4 {
+		return nil
+	}
+
+	fmt.Println("Parts:", parts)
+
+	if parts[0] != "!nuke" {
+		return nil
+	}
+
+	channel := bot.MakeChannel(m.botChannel.ChannelName())
+	if !user.HasPermission(channel, pkg.PermissionModeration) {
+		bot.Whisper(user, "you don't have permissions to use the !nuke command")
+		return nil
+	}
+
+	// TODO: Add another specific global/channel permission to check
+	if !user.IsModerator() && !user.IsBroadcaster(channel) && !user.HasChannelPermission(channel, pkg.PermissionModeration) && !user.HasGlobalPermission(pkg.PermissionModeration) {
+		return nil
+	}
+
+	phrase := strings.Join(parts[1:len(parts)-2], " ")
+	scrollbackLength, err := time.ParseDuration(parts[len(parts)-2])
+	if err != nil {
+		bot.Whisper(user, "usage: !nuke bad phrase 1m 10m")
+		return err
+	}
+	if scrollbackLength < 0 {
+		bot.Whisper(user, "usage: !nuke bad phrase 1m 10m")
+		return errors.New("scrollback length must be positive")
+	}
+	timeoutDuration, err := time.ParseDuration(parts[len(parts)-1])
+	if err != nil {
+		bot.Whisper(user, "usage: !nuke bad phrase 1m 10m")
+		return err
+	}
+	if timeoutDuration < 0 {
+		bot.Whisper(user, "usage: !nuke bad phrase 1m 10m")
+		return errors.New("timeout duration must be positive")
+	}
+
+	m.nuke(user, bot, channel, phrase, scrollbackLength, timeoutDuration)
+
 	return nil
+
 }
 
 func (m *nukeModule) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
@@ -196,7 +243,7 @@ func (m *nukeModule) nuke(source pkg.User, bot pkg.Sender, channel pkg.Channel, 
 		bot.Timeout(channel, user, timeoutDurationInSeconds, reason)
 	}
 
-	bot.Say(channel, fmt.Sprintf("%s nuked %d users for the phrase %s in the last %s for %s", source.GetName(), len(targets), phrase, scrollbackLength, timeoutDuration))
+	fmt.Printf("%s nuked %d users for the phrase %s in the last %s for %s\n", source.GetName(), len(targets), phrase, scrollbackLength, timeoutDuration)
 }
 
 func (m *nukeModule) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
