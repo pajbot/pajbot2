@@ -21,12 +21,14 @@ export default class Admin extends Component {
           <thead>
             <tr>
               <th scope="col">Name</th>
+              <th scope="col">Connected</th>
             </tr>
           </thead>
           <tbody>
           {this.state.bots.map((bot, index) =>
             <tr key={index}>
               <td>{bot.Name}</td>
+              <td>{bot.Connected ? "Yes" : "No"}</td>
             </tr>
           )}
           </tbody>

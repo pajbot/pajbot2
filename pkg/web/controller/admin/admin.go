@@ -34,7 +34,8 @@ func handleRoot(a pkg.Application) func(w http.ResponseWriter, r *http.Request) 
 		}
 
 		type BotInfo struct {
-			Name string
+			Name      string
+			Connected bool
 		}
 
 		type Extra struct {
@@ -46,7 +47,8 @@ func handleRoot(a pkg.Application) func(w http.ResponseWriter, r *http.Request) 
 		for it := a.TwitchBots().Iterate(); it.Next(); {
 			bot := it.Value()
 			botInfo := BotInfo{
-				Name: bot.TwitchAccount().Name(),
+				Name:      bot.TwitchAccount().Name(),
+				Connected: bot.Connected(),
 			}
 			extra.Bots = append(extra.Bots, botInfo)
 		}

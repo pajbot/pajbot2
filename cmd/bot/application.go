@@ -432,10 +432,18 @@ func (a *Application) StartBots() error {
 			// }
 			// bot.StartChatterPoller()
 
+			bot.IsConnected = true
 			err := bot.Connect()
 			if err != nil {
-				log.Fatal(err)
+				if err == twitch.ErrLoginAuthenticationFailed {
+					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
+				} else {
+					log.Fatal(err)
+				}
 			}
+			bot.IsConnected = false
+
+			// TODO: Check if we want to try to reconnect here (with a delay)
 		}(pb2bot)
 	}
 

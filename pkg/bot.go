@@ -3,6 +3,8 @@ package pkg
 type Sender interface {
 	TwitchAccount() TwitchAccount
 
+	Connected() bool
+
 	Say(Channel, string)
 	Mention(Channel, User, string)
 	Whisper(User, string)
