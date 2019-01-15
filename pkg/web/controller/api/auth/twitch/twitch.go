@@ -153,7 +153,7 @@ func testpenis(ctx context.Context, provider *oidc.Provider, m *mux.Router, conf
 				nonceData = &nd
 			}
 
-			validateResponse, err := apirequest.Twitch.ValidateOAuthTokenSimple(oauth2Token.AccessToken)
+			validateResponse, _, err := apirequest.Twitch.ValidateOAuthTokenSimple(oauth2Token.AccessToken)
 			if err != nil {
 				http.Error(w, "Error validating token: "+err.Error(), http.StatusInternalServerError)
 				return
