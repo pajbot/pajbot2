@@ -403,6 +403,11 @@ func (a *Application) StartBots() error {
 					return
 				}
 
+				if user.UserID == bot.TwitchAccount().ID() {
+					// Ignore messages from self
+					return
+				}
+
 				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.Username, message.Text)
 
 				// Store message in our twitch message context class
