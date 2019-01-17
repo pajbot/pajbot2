@@ -259,7 +259,7 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		return nil
 	}
 
-	if user.IsModerator() || user.IsBroadcaster(channel) {
+	if user.IsModerator() || user.IsBroadcaster(channel) || user.HasPermission(channel, pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
 			if parts[0] == "!heightlimit" {
@@ -286,6 +286,7 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		}
 	}
 
+	const minTimeoutLength = 10
 	const maxTimeoutLength = 1800
 
 	height := m.getHeight(channel, user, message)
@@ -313,6 +314,8 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		if ratio > 0.5 {
 			timeoutDuration = timeoutDuration + 90
 		}
+
+		timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
 
 		if ratio > 0.5 && height > 140.0 {
 			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
