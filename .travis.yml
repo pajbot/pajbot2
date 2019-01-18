@@ -30,20 +30,25 @@ install:
   # this is NOT a problem (go files sit in ./pkg and ./cmd/bot), so we suppress the error with `|| true`.
   - go get "github.com/$TRAVIS_REPO_SLUG" || true
   - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
+  - git checkout "$TRAVIS_BRANCH"
+  - git pull
+  - git submodule update --init --recursive
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG/cmd/bot"
+  - go get -u
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG/web"
+  - npm i
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
 
 script:
   # this runs in ./web
-  - cd web
-  - npm i
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG/web"
   - npm run build
   # this runs in the project root
-  - cd ..
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
   - ./utils/install.sh
-  # this runs in ./cmd/bot
-  - cd ./cmd/bot
-  - go get -u
-  # test for successful compile
+  # test for successful compile (this runs in ./cmd/bot)
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG/cmd/bot"
   - go build -tags csharp
   # this runs in the project root
-  - cd ../../
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
   - go test -v ./pkg/... ./cmd/...
