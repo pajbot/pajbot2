@@ -5,29 +5,25 @@ version: 2
 jobs:
   build-web:
     docker:
-      # specify the version
-      # this image is based on Debian stretch
-      - image: circleci/node:1.11.4
+      # Node.JS LTS
+      - image: circleci/node:10.15.0
+    working_directory: ./web
     steps:
       - checkout
       - restore_cache:
           name: Restore npm package cache
-          key: dependency-cache-{{ checksum "/go/src/github.com/pajlada/pajbot2/web/package.json" }}
+          key: dependency-cache-{{ checksum "./web/package.json" }}
       - run:
           name: Get web dependencies
-          command: |
-            cd ./web
-            npm i
+          command: npm i
       - save_cache:
           name: Save npm package cache
-          key: dependency-cache-{{ checksum "/go/src/github.com/pajlada/pajbot2/web/package.json" }}
+          key: dependency-cache-{{ checksum "./web/package.json" }}
           paths:
             - /go/src/github.com/pajlada/pajbot2/web/node_modules
       - run:
           name: Assemble web files
-          command: |
-            cd ./web
-            npm run build
+          command: npm run build
   build-bot-with-csharp:
     docker:
       # specify the version
