@@ -31,6 +31,8 @@ jobs:
       # this image is based on Debian stretch
       - image: circleci/golang:1.11.4
     steps:
+      # do an extra checkout first JUST to get the clone script
+      - checkout
       - run:
           name: Clone code into goroot
           command: ./.circleci/clone-into-goroot.sh
@@ -71,6 +73,8 @@ jobs:
       # this image is based on Debian stretch
       - image: circleci/golang:1.11.4
     steps:
+      # do an extra checkout first JUST to get the clone script
+      - checkout
       - run:
           name: Clone code into goroot
           command: ./.circleci/clone-into-goroot.sh
