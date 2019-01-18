@@ -45,7 +45,7 @@ script:
   - npm run build
   # this runs in the project root
   - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
-  - ./utils/install.sh
+  - bash -x ./utils/install.sh
   # test for successful compile (this runs in ./cmd/bot)
   - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG/cmd/bot"
   - go build -tags csharp
