@@ -7,6 +7,7 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/report"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 type Report struct {
@@ -27,6 +28,39 @@ var reportSpec = moduleSpec{
 	id:    "report",
 	name:  "Report",
 	maker: newReport,
+}
+
+func (m *Report) ProcessReport(bot pkg.Sender, source pkg.Channel, user pkg.User, parts []string) error {
+	duration := 600
+
+	if parts[0] == "!report" {
+	} else if parts[0] == "!longreport" {
+		duration = 28800
+	} else {
+		return nil
+	}
+
+	if !user.HasPermission(source, pkg.PermissionReport) {
+		bot.Whisper(user, "you don't have permissions to use the !report command")
+		return nil
+	}
+
+	var reportedUsername string
+	var reason string
+
+	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
+
+	if reportedUsername == user.GetName() {
+		return nil
+	}
+
+	if len(parts) >= 3 {
+		reason = strings.Join(parts[2:], " ")
+	}
+
+	m.report(bot, user, source, reportedUsername, reason, duration)
+
+	return nil
 }
 
 func (m *Report) Initialize(botChannel pkg.BotChannel, settings []byte) error {
@@ -54,42 +88,14 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	if len(parts) < 1 {
 		return nil
 	}
-
-	duration := 600
-
-	if parts[0] == "!report" {
-	} else if parts[0] == "!longreport" {
-		duration = 28800
-	} else {
-		return nil
-	}
-
-	var reportedUsername string
-	var reason string
-
-	reportedUsername = strings.ToLower(parts[1])
-	if reportedUsername == source.GetName() {
-		// cannot report yourself
-		return nil
-	}
-
 	channel := bot.MakeChannel(m.botChannel.ChannelName())
-	if !source.HasPermission(channel, pkg.PermissionReport) {
-		bot.Whisper(source, "you don't have permissions to use the !report command")
-		return nil
-	}
 
-	if len(parts) >= 3 {
-		reason = strings.Join(parts[2:], " ")
-	}
-
-	m.report(bot, source, channel, reportedUsername, reason, duration)
-
+	m.ProcessReport(bot, channel, source, parts)
 	return nil
 }
 
 func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) {
-	// s := fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetChannel(), reason, targetUsername)
+	fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetChannel(), reason, targetUsername)
 
 	r := report.Report{
 		Channel: report.ReportUser{
@@ -135,33 +141,6 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		return nil
 	}
 
-	duration := 600
-
-	if parts[0] == "!report" {
-	} else if parts[0] == "!longreport" {
-		duration = 28800
-	} else {
-		return nil
-	}
-
-	if !user.HasPermission(source, pkg.PermissionReport) {
-		return nil
-	}
-
-	var reportedUsername string
-	var reason string
-
-	reportedUsername = strings.ToLower(parts[1])
-
-	if reportedUsername == user.GetName() {
-		return nil
-	}
-
-	if len(parts) >= 3 {
-		reason = strings.Join(parts[2:], " ")
-	}
-
-	m.report(bot, user, source, reportedUsername, reason, duration)
-
+	m.ProcessReport(bot, source, user, parts)
 	return nil
 }
