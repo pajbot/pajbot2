@@ -11,4 +11,6 @@ type Application interface {
 	SQL() *sql.DB
 	PubSub() PubSub
 	TwitchBots() BotStore
+	QuitChannel() chan string
+	TwitchAuths() TwitchAuths
 }

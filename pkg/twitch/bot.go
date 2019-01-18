@@ -16,11 +16,13 @@ import (
 
 	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc"
+	"github.com/go-sql-driver/mysql"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/common"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
+	"golang.org/x/oauth2"
 )
 
 type ModeState int
@@ -37,9 +39,17 @@ type botFlags struct {
 	PermaSubMode bool
 }
 
+type BotCredentials struct {
+	AccessToken  string
+	RefreshToken string
+	Expiry       mysql.NullTime
+}
+
 // Bot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
 type Bot struct {
 	*twitch.Client
+
+	TokenSource oauth2.TokenSource
 
 	DatabaseID int
 
@@ -72,14 +82,20 @@ type Bot struct {
 var _ pkg.PubSubConnection = &Bot{}
 var _ pkg.PubSubSource = &Bot{}
 
-func NewBot(name string, client *twitch.Client, app pkg.Application) *Bot {
+func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, app pkg.Application) (*Bot, error) {
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, err
+	}
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
-		Client: client,
+		Client: twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
+
+		DatabaseID: databaseID,
 
 		twitchAccount: &User{
-			name: name,
+			name: twitchAccount.Name(),
 		},
 
 		channelsMutex: &sync.Mutex{},
@@ -91,6 +107,8 @@ func NewBot(name string, client *twitch.Client, app pkg.Application) *Bot {
 		pubSub: app.PubSub(),
 
 		sql: app.SQL(),
+
+		QuitChannel: app.QuitChannel(),
 	}
 
 	b.pubSub.Subscribe(b, "Ban")
@@ -99,7 +117,7 @@ func NewBot(name string, client *twitch.Client, app pkg.Application) *Bot {
 
 	b.twitchAccount.fillIn(b.userStore)
 
-	return b
+	return b, nil
 }
 
 func (b *Bot) IsApplication() bool {
