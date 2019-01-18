@@ -1,8 +1,45 @@
-language: go
-go:
-    - 1.9.x
-    - 1.10.x
-    - 1.11.x
+# https://docs.travis-ci.com/user/languages/minimal-and-generic/#generic
+language: generic
+# ubuntu 16.04
+dist: xenial
+
+# also see:
+# https://github.com/RAnders00/pajbot2-doc/blob/master/install-debian9.txt
+
+before_install:
+  # nvm
+  - nvm install --lts
+  - nvm use --lts
+  # dotnet
+  # https://dotnet.microsoft.com/download/linux-package-manager/ubuntu16-04/sdk-current
+  - wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+  - sudo dpkg -i packages-microsoft-prod.deb
+  - sudo apt-get install apt-transport-https
+  - sudo apt-get update
+  - sudo apt-get install dotnet-sdk-2.2
+  # go (latest stable version) via "gimme" https://github.com/travis-ci/gimme
+  - gimme stable
+
+install:
+  # this has the || true at the end because the command exits non-zero
+  # because it cannot find any go files in the project root after cloning.
+  # it will also print:
+  # "package github.com/pajlada/pajbot2: no Go files in /home/travis/gopath/src/github.com/pajlada/pajbot2"
+  # this is NOT a problem (go files sit in ./pkg and ./cmd/bot), so we suppress the error with `|| true`.
+  - go get "github.com/$TRAVIS_REPO_SLUG" || true
+  - cd "$GOPATH/src/github.com/$TRAVIS_REPO_SLUG"
 
 script:
-    - go test -v ./pkg/... ./cmd/...
+  # this runs in ./web
+  - cd web
+  - npm i
+  - npm run build
+  # this runs in the project root
+  - cd ..
+  - ./utils/install.sh
+  # this runs in ./cmd/bot
+  - cd ./cmd/bot
+  - go get -u
+  # this runs in the project root
+  - cd ../../
+  - go test -v ./pkg/... ./cmd/...
