@@ -11,7 +11,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
-	"github.com/pajlada/pajbot2/pkg/common"
 	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/pkg/web/router"
 	"github.com/pajlada/pajbot2/pkg/web/state"
@@ -115,8 +114,6 @@ func Load(parent *mux.Router, a pkg.Application) error {
 
 	router.RGet(m, "", root)
 
-	initializeOauthRoutes(ctx, m, auths.Bot(), "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
-	})
 	initializeOauthRoutes(ctx, m, auths.Bot(), "bot", onBotAuthenticated)
 	initializeOauthRoutes(ctx, m, auths.User(), "user", onUserAuthenticated)
 	initializeOauthRoutes(ctx, m, auths.Streamer(), "streamer", onStreamerAuthenticated)
@@ -129,14 +126,17 @@ func onBotAuthenticated(w http.ResponseWriter, r *http.Request, self gotwitch.Va
 INSERT INTO Bot
 	(twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry)
 	VALUES (?, ?, ?, ?, ?)
-	ON DUPLICATE KEY UPDATE twitch_user_name=?, twitch_access_token=?, twitch_refresh_token=?, twitch_access_token_expiry=?
+	ON DUPLICATE KEY UPDATE twitch_username=?, twitch_access_token=?, twitch_refresh_token=?, twitch_access_token_expiry=?
 	`
 	c := state.Context(w, r)
-	err := common.CreateBot(c.SQL, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken)
+	_, err := c.SQL.Exec(queryF, self.UserID, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry,
+		self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry)
 	if err != nil {
-		// TODO: Handle gracefully
-		panic(err)
+		w.Write([]byte("Unable to insert bot :rage:"))
+		return
 	}
+
+	w.Write([]byte("Bot added/updated! Restart the bot for the changes to take effect"))
 }
 
 func onUserAuthenticated(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {

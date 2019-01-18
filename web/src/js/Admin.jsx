@@ -17,6 +17,9 @@ export default class Admin extends Component {
     return (
       <section>
         <h4>Admin</h4>
+        <div>
+          <a href="/api/auth/twitch/bot">Authenticate as bot</a> - <span>Use if you need to reauthenticate a bot below, or add a new one. You should probably copy-paste the link into incognito mode so you can log in as your bot account</span>
+        </div>
         <table className="table table-sm">
           <thead>
             <tr>
