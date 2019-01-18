@@ -7,7 +7,6 @@ jobs:
     docker:
       # Node.JS LTS
       - image: circleci/node:10.15.0
-    working_directory: ./web
     steps:
       - checkout
       - restore_cache:
@@ -15,6 +14,7 @@ jobs:
           key: dependency-cache-{{ checksum "./web/package.json" }}
       - run:
           name: Get web dependencies
+          working_directory: ./web
           command: npm i
       - save_cache:
           name: Save npm package cache
@@ -23,6 +23,7 @@ jobs:
             - /go/src/github.com/pajlada/pajbot2/web/node_modules
       - run:
           name: Assemble web files
+          working_directory: ./web
           command: npm run build
   build-bot-with-csharp:
     docker:
@@ -32,7 +33,7 @@ jobs:
     steps:
       - run:
           name: Clone code into goroot
-          command: ./clone-into-goroot.sh
+          command: ./.circleci/clone-into-goroot.sh
       - run:
           name: Setup base working directory
           # this INTENTIONALLY cd's into the username folder "pajlada" because all imports
@@ -72,7 +73,7 @@ jobs:
     steps:
       - run:
           name: Clone code into goroot
-          command: ./clone-into-goroot.sh
+          command: ./.circleci/clone-into-goroot.sh
       - run:
           name: Setup base working directory
           # this INTENTIONALLY cd's into the username folder "pajlada" because all imports
