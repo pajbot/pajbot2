@@ -11,14 +11,14 @@ jobs:
       - checkout
       - restore_cache:
           name: Restore npm package cache
-          key: dependency-cache-{{ checksum "./web/package.json" }}
+          key: v1-dependency-cache-{{ checksum "./web/package.json" }}
       - run:
           name: Get web dependencies
           working_directory: ./web
           command: npm i
       - save_cache:
           name: Save npm package cache
-          key: dependency-cache-{{ checksum "./web/package.json" }}
+          key: v1-dependency-cache-{{ checksum "./web/package.json" }}
           paths:
             - /go/src/github.com/pajlada/pajbot2/web/node_modules
       - run:
