@@ -40,6 +40,8 @@ script:
   # this runs in ./cmd/bot
   - cd ./cmd/bot
   - go get -u
+  # test for successful compile
+  - go build -tags csharp
   # this runs in the project root
   - cd ../../
   - go test -v ./pkg/... ./cmd/...
