@@ -115,8 +115,6 @@ func Load(parent *mux.Router, a pkg.Application) error {
 
 	router.RGet(m, "", root)
 
-	initializeOauthRoutes(ctx, m, auths.Bot(), "bot", func(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
-	})
 	initializeOauthRoutes(ctx, m, auths.Bot(), "bot", onBotAuthenticated)
 	initializeOauthRoutes(ctx, m, auths.User(), "user", onUserAuthenticated)
 	initializeOauthRoutes(ctx, m, auths.Streamer(), "streamer", onStreamerAuthenticated)

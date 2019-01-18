@@ -360,7 +360,7 @@ func (a *Application) StartWebServer() error {
 
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
-	const queryF = `SELECT id, twitch_userid, name, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM Bot`
+	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM Bot`
 	rows, err := a.sqlClient.Query(queryF)
 	if err != nil {
 		return err
@@ -404,6 +404,7 @@ func (a *Application) LoadBots() error {
 				RefreshToken: c.RefreshToken,
 				Expiry:       c.Expiry.Time,
 			}
+
 			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
 			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
 
@@ -431,7 +432,6 @@ func (a *Application) LoadBots() error {
 				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
 				return
 			}
-
 		}(databaseID, &acc, c)
 	}
 
