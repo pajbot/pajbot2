@@ -7,6 +7,7 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/report"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 type Report struct {
@@ -67,7 +68,7 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	var reportedUsername string
 	var reason string
 
-	reportedUsername = strings.ToLower(parts[1])
+	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
 	if reportedUsername == source.GetName() {
 		// cannot report yourself
 		return nil
@@ -151,8 +152,7 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 	var reportedUsername string
 	var reason string
 
-	reportedUsername = strings.ToLower(parts[1])
-
+	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
 	if reportedUsername == user.GetName() {
 		return nil
 	}

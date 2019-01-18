@@ -17,7 +17,7 @@ import (
 func LoadRoutes(a pkg.Application, cfg *config.Config) {
 	dashboard.Load()
 	home.Load()
-	api.Load(cfg)
+	api.Load(a, cfg)
 	static.Load()
 	ws.Load()
 

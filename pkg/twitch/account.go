@@ -12,3 +12,16 @@ func (a *SimpleAccount) ID() string {
 func (a *SimpleAccount) Name() string {
 	return a.name
 }
+
+type TwitchAccount struct {
+	UserID   string
+	UserName string
+}
+
+func (a *TwitchAccount) ID() string {
+	return a.UserID
+}
+
+func (a *TwitchAccount) Name() string {
+	return a.UserName
+}
