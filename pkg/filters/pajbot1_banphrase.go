@@ -3,6 +3,7 @@ package filters
 import (
 	"database/sql"
 	"strings"
+	"regexp"
 )
 
 // BanphraseOperator is a banphrase operator
@@ -13,6 +14,7 @@ const (
 	OperatorStartsWith
 	OperatorEndsWith
 	OperatorExact
+	OperatorRegex
 )
 
 // Pajbot1Banphrase is a banphrase loaded from the old pajbot1 database
@@ -49,6 +51,15 @@ func handleEndsWith(phrase, text string) bool {
 	return strings.HasSuffix(text, phrase)
 }
 
+func handleRegex(phrase, text string) bool {
+	re, err := regexp.Compile(phrase)
+	if err != nil {
+		return false
+	}
+
+	return re.MatchString(text)
+}
+
 func (f *Pajbot1Banphrase) Triggers(text string) bool {
 	// log.Println("Do we", f.Phrase, "trigger", text, "? forsenThink")
 	switch f.Operator {
@@ -69,6 +80,10 @@ func (f *Pajbot1Banphrase) Triggers(text string) bool {
 
 	case OperatorEndsWith:
 		if handleEndsWith(f.Phrase, text) {
+			return true
+		}
+	case OperatorRegex:
+		if handleRegex(f.Phrase, text) {
 			return true
 		}
 	}
@@ -115,6 +130,8 @@ func (f *Pajbot1Banphrase) LoadScan(rows *sql.Rows) error {
 		f.Operator = OperatorEndsWith
 	} else if operatorString == "exact" {
 		f.Operator = OperatorExact
+	} else if operatorString == "regex" {
+		f.Operator = OperatorRegex
 	}
 
 	return nil
