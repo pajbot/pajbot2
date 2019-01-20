@@ -2,6 +2,8 @@
 
 A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Golang.
 
+if pajlada reads this chat von
+
 ## Authors
  * [nuuls](https://github.com/nuuls)
  * [pajlada](https://github.com/pajlada)
