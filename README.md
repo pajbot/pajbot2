@@ -1,6 +1,6 @@
 # pajbot 2 [![CircleCI](https://circleci.com/gh/pajlada/pajbot2.svg?style=svg)](https://circleci.com/gh/pajlada/pajbot2)
 
-A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Golang.
+A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Golang.asdasd
 
 ## Authors
  * [nuuls](https://github.com/nuuls)
