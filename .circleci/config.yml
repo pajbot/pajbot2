@@ -1,0 +1,103 @@
+# CircleCI configuration
+# see: https://circleci.com/docs/2.0/configuration-reference/
+
+version: 2
+jobs:
+  build-web:
+    docker:
+      # Node.JS LTS
+      - image: circleci/node:10.15.0
+    steps:
+      - checkout
+      - restore_cache:
+          name: Restore npm package cache
+          key: v1-dependency-cache-{{ checksum "./web/package.json" }}
+      - run:
+          name: Get web dependencies
+          working_directory: ./web
+          command: npm i
+      - save_cache:
+          name: Save npm package cache
+          key: v1-dependency-cache-{{ checksum "./web/package.json" }}
+          paths:
+            - /go/src/github.com/pajlada/pajbot2/web/node_modules
+      - run:
+          name: Assemble web files
+          working_directory: ./web
+          command: npm run build
+  build-bot-with-csharp:
+    docker:
+      # specify the version
+      # this image is based on Debian stretch
+      - image: circleci/golang:1.11.4
+    steps:
+      # do an extra checkout first JUST to get the clone script
+      - checkout
+      - run:
+          name: Clone code into goroot
+          command: ./.circleci/clone-into-goroot.sh
+      - run:
+          name: Setup base working directory
+          # this INTENTIONALLY cd's into the username folder "pajlada" because all imports
+          # are hardcoded to this github username in the go source (this is a go "feature")
+          command: echo 'cd "$GOPATH/src/github.com/pajlada/$CIRCLE_PROJECT_REPONAME"' >> "$BASH_ENV"
+      - run:
+          name: Install .NET Core
+          command: |
+            cd ~
+            sudo apt install apt-transport-https
+            wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg
+            sudo mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/
+            wget -q https://packages.microsoft.com/config/debian/9/prod.list
+            sudo mv prod.list /etc/apt/sources.list.d/microsoft-prod.list
+            sudo chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg
+            sudo chown root:root /etc/apt/sources.list.d/microsoft-prod.list
+            sudo apt update
+            sudo apt install dotnet-sdk-2.2
+            echo 'export DOTNET_CLI_TELEMETRY_OPTOUT="1"' >> ~/.bashrc
+      - run:
+          name: Get go dependencies
+          command: |
+            cd ./cmd/bot
+            go get
+      - run:
+          name: Assemble C# message height dependency
+          command: ./utils/install.sh
+      - run:
+          name: Build bot including csharp dependency
+          command: |
+            cd ./cmd/bot
+            go build -tags csharp
+  test-go:
+    docker:
+      # specify the version
+      # this image is based on Debian stretch
+      - image: circleci/golang:1.11.4
+    steps:
+      # do an extra checkout first JUST to get the clone script
+      - checkout
+      - run:
+          name: Clone code into goroot
+          command: ./.circleci/clone-into-goroot.sh
+      - run:
+          name: Setup base working directory
+          # this INTENTIONALLY cd's into the username folder "pajlada" because all imports
+          # are hardcoded to this github username in the go source (this is a go "feature")
+          command: echo 'cd "$GOPATH/src/github.com/pajlada/$CIRCLE_PROJECT_REPONAME"' >> "$BASH_ENV"
+      - run:
+          name: Get go dependencies
+          command: |
+            cd ./cmd/bot
+            go get
+      - run:
+          name: Run Go unit tests
+          command: go test -v ./pkg/... ./cmd/...
+
+# add one workflow that runs all jobs in parallel
+workflows:
+  version: 2
+  build-all:
+    jobs:
+      - build-web
+      - build-bot-with-csharp
+      - test-go
