@@ -17,3 +17,4 @@ A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Gola
 Try running `./bot fix`
 ### How do I add a bot?
 After making yourself an admin in the config file, open up the web interface. Log in, go to `/admin`, press the "Log in as bot", then after authenticating whatever user you want as a bot, restart the bot!
+asdasdasd
