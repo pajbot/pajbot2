@@ -4,6 +4,8 @@ A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Gola
 
 if pajlada reads this chat von
 
+https://imgur.com/a/ThxBV10
+
 ## Authors
  * [nuuls](https://github.com/nuuls)
  * [pajlada](https://github.com/pajlada)
