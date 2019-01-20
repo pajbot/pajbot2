@@ -548,12 +548,8 @@ func (a *Application) StartPubSubClient() error {
 
 func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
 	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
-	a.TwitchPubSub.Listen(moderationTopic, userToken, func(bytes []byte) error {
-		event, err := twitchpubsub.GetModerationAction(bytes)
-		if err != nil {
-			return err
-		}
-
+	a.TwitchPubSub.Listen(moderationTopic, userToken)
+	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
 		const ActionUnknown = 0
 		const ActionTimeout = 1
 		const ActionBan = 2
@@ -627,11 +623,10 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 		if action != 0 {
 			_, err := a.sqlClient.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
 			if err != nil {
-				return err
+				fmt.Println("Error in moderation action callback:", err)
+				return
 			}
 		}
-
-		return nil
 	})
 
 	return nil
