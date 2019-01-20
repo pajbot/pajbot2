@@ -28,7 +28,7 @@ EOF
 # $CIRCLE_REPOSITORY_URL is something like "git@github.com:pajlada/pajbot2.git"
 # this INTENTIONALLY clones into the username folder "pajlada" because all imports
 # are hardcoded to this github username in the go source (this is a go "feature")
-git clone --recursive "$CIRCLE_REPOSITORY_URL" "$GOPATH/src/github.com/pajlada/$CIRCLE_PROJECT_REPONAME"
+git clone "$CIRCLE_REPOSITORY_URL" "$GOPATH/src/github.com/pajlada/$CIRCLE_PROJECT_REPONAME"
 cd "$GOPATH/src/github.com/pajlada/$CIRCLE_PROJECT_REPONAME"
 
 # fetch tag, if exists
@@ -49,3 +49,6 @@ fi
 
 # checkout specific SHA1 hash
 git reset --hard "$CIRCLE_SHA1"
+
+# update submodules, now that we are on the right commit
+git submodule update --init --recursive
