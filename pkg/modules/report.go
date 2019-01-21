@@ -85,7 +85,7 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
 
 	parts := strings.Split(message.GetText(), " ")
-	if len(parts) < 1 {
+	if len(parts) < 2 {
 		return nil
 	}
 	channel := bot.MakeChannel(m.botChannel.ChannelName())
