@@ -15,14 +15,14 @@ jobs:
     # for this job, so skip the submodule update.
     - restore_cache:
         name: Restore npm package cache
-        key: v1-dependency-cache-{{ checksum "./web/package.json" }}
+        key: v2-dependency-cache-{{ checksum "./web/package.json" }}
     - run:
         name: Get web dependencies
         working_directory: ./web
         command: npm i
     - save_cache:
         name: Save npm package cache
-        key: v1-dependency-cache-{{ checksum "./web/package.json" }}
+        key: v2-dependency-cache-{{ checksum "./web/package.json" }}
         paths:
         - ./web/node_modules
     - run:
