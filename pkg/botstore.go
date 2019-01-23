@@ -2,7 +2,11 @@ package pkg
 
 type BotStore interface {
 	Add(Sender)
-	Get(string) Sender
+
+	GetBotFromName(string) Sender
+	GetBotFromID(string) Sender
+	GetBotFromChannel(string) Sender
+
 	Iterate() BotStoreIterator
 }
 

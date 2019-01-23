@@ -128,6 +128,10 @@ func (b *Bot) Connection() pkg.PubSubConnection {
 	return b
 }
 
+func (b *Bot) FetchDatabaseID() int {
+	return b.DatabaseID
+}
+
 func (b *Bot) AuthenticatedUser() pkg.User {
 	return nil
 }
@@ -152,6 +156,19 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	}
 
 	return -1, nil
+}
+
+func (b *Bot) InChannel(channelID string) bool {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for _, botChannel := range b.channels {
+		if botChannel.Channel.ID() == channelID {
+			return true
+		}
+	}
+
+	return false
 }
 
 // channelsMutex needs to be locked before calling this function
