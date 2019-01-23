@@ -1,6 +1,9 @@
 package botstore
 
-import "github.com/pajlada/pajbot2/pkg"
+import (
+	"github.com/pajlada/pajbot2/pkg"
+	"strings"
+)
 
 var _ pkg.BotStore = &BotStore{}
 
@@ -18,7 +21,7 @@ func (s *BotStore) Add(bot pkg.Sender) {
 
 func (s *BotStore) Get(name string) pkg.Sender {
 	for _, b := range s.store {
-		if b.TwitchAccount().Name() == name {
+		if b.TwitchAccount().Name() == strings.ToLower(name) {
 			return b
 		}
 	}
