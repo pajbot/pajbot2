@@ -73,7 +73,7 @@ func (a *TwitchAction) Set(action ActionType) {
 	if a.action == nil {
 		a.action = action
 	} else {
-		if a.action.Priority() > action.Priority() {
+		if action.Priority() > a.action.Priority() {
 			a.action = action
 		}
 	}
