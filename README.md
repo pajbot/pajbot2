@@ -1,6 +1,4 @@
-# pajbot 2
-
-[![Build Status](https://travis-ci.org/pajlada/pajbot2.svg?branch=master)](https://travis-ci.org/pajlada/pajbot2)
+# pajbot 2 [![CircleCI](https://circleci.com/gh/pajlada/pajbot2.svg?style=svg)](https://circleci.com/gh/pajlada/pajbot2)
 
 A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Golang.
 
@@ -13,3 +11,9 @@ A rewrite/restructuring of [pajbot 1](https://github.com/pajlada/pajbot) in Gola
 ## Web guide
 * `cd web && npm install`
 * `npm run watch` to let webpack running and compile in background
+
+## FAQ
+### After pulling the latest version, something went wrong. what should I do?
+Try running `./bot fix`
+### How do I add a bot?
+After making yourself an admin in the config file, open up the web interface. Log in, go to `/admin`, press the "Log in as bot", then after authenticating whatever user you want as a bot, restart the bot!

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/web/controller/api/auth"
 	"github.com/pajlada/pajbot2/pkg/web/controller/api/channel"
@@ -16,14 +17,14 @@ func apiRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "XD API ROOT")
 }
 
-func Load(cfg *config.Config) {
+func Load(a pkg.Application, cfg *config.Config) {
 	m := router.Subrouter("/api")
 
 	router.RGet(m, "", apiRoot)
 	// m.HandleFunc("", apiRoot)
 	// router.Get("/api", apiRoot)
 
-	auth.Load(m, cfg)
+	auth.Load(m, a, cfg)
 
 	channel.Load(m)
 

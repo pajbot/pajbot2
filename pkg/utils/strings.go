@@ -160,6 +160,8 @@ func FilterChannelName(username string) string {
 
 func FilterUsername(username string) string {
 	username = strings.TrimPrefix(username, "@")
+	username = strings.TrimSuffix(username, ",")
+	username = strings.TrimSuffix(username, ":")
 
 	if IsValidUsername(username) {
 		return username

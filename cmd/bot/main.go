@@ -67,6 +67,9 @@ func main() {
 	case "help":
 		helpCmd()
 
+	case "fix":
+		fixCmd()
+
 	default:
 		fallthrough
 	case "run":
@@ -79,6 +82,7 @@ func helpCmd() {
 		`usage: pajbot2 <command> [<args>]
 Commands:
    run            Run the bot (Default)
+   fix <number>   Fix issue #NUMBER automatically (or attempt to)
    check          Check the config file for missing fields
    install        Start the installation process (WIP)
    create <name>  Create a migration (WIP)
@@ -96,6 +100,11 @@ func runCmd() {
 	err := application.LoadConfig(*configPath)
 	if err != nil {
 		log.Fatal("An error occured while loading the config file: ", err)
+	}
+
+	err = application.InitializeOAuth2Configs()
+	if err != nil {
+		log.Fatal("An error occured while initializing oauth2 config: ", err)
 	}
 
 	err = application.InitializeAPIs()

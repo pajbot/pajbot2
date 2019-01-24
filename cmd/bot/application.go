@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
 	_ "github.com/go-sql-driver/mysql"
+	"golang.org/x/oauth2"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
 
@@ -28,6 +31,7 @@ import (
 	"github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
+	"github.com/pajlada/pajbot2/pkg/auth"
 	"github.com/pajlada/pajbot2/pkg/botstore"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/emotes"
@@ -62,6 +66,9 @@ type Application struct {
 	twitchUserStore   pkg.UserStore
 	twitchUserContext pkg.UserContext
 	twitchStreamStore *StreamStore
+
+	// Oauth configs
+	twitchAuths *auth.TwitchAuths
 }
 
 var _ pkg.PubSubSource = &Application{}
@@ -111,6 +118,14 @@ func (a *Application) TwitchBots() pkg.BotStore {
 	return a.twitchBots
 }
 
+func (a *Application) QuitChannel() chan string {
+	return a.Quit
+}
+
+func (a *Application) TwitchAuths() pkg.TwitchAuths {
+	return a.twitchAuths
+}
+
 func (a *Application) IsApplication() bool {
 	return true
 }
@@ -133,6 +148,13 @@ func (a *Application) LoadConfig(path string) error {
 	a.config = cfg
 
 	return nil
+}
+
+// https://dev.twitch.tv/docs/authentication/#scopes
+func (a *Application) InitializeOAuth2Configs() (err error) {
+	a.twitchAuths, err = auth.NewTwitchAuths(&a.config.Auth.Twitch)
+
+	return
 }
 
 // RunDatabaseMigrations runs database migrations on the database specified in the config file
@@ -338,7 +360,7 @@ func (a *Application) StartWebServer() error {
 
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
-	const queryF = `SELECT id, name, twitch_access_token FROM Bot`
+	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM Bot`
 	rows, err := a.sqlClient.Query(queryF)
 	if err != nil {
 		return err
@@ -351,21 +373,72 @@ func (a *Application) LoadBots() error {
 		}
 	}()
 
+	type bot struct {
+		databaseID  int
+		account     *pb2twitch.TwitchAccount
+		tokenSource oauth2.TokenSource
+	}
+
+	var botsMutex sync.Mutex
+	var bots []bot
+
+	var wg sync.WaitGroup
+
 	for rows.Next() {
-		var id int
-		var name string
-		var twitchAccessToken string
-		if err := rows.Scan(&id, &name, &twitchAccessToken); err != nil {
+		var databaseID int
+		var acc pb2twitch.TwitchAccount
+		var c pb2twitch.BotCredentials
+		if err := rows.Scan(&databaseID, &acc.UserID, &acc.UserName, &c.AccessToken, &c.RefreshToken, &c.Expiry); err != nil {
 			return err
 		}
 
-		if strings.HasPrefix(twitchAccessToken, "oauth:") {
-			return errors.New(fmt.Sprintf("Twitch access token for bot %s must not start with oauth: prefix", name))
-		}
+		wg.Add(1)
 
-		bot := pb2twitch.NewBot(name, twitch.NewClient(name, "oauth:"+twitchAccessToken), a)
-		bot.DatabaseID = id
-		bot.QuitChannel = a.Quit
+		c.AccessToken = strings.TrimPrefix(c.AccessToken, "oauth:")
+
+		go func(databaseID int, acc *pb2twitch.TwitchAccount, c pb2twitch.BotCredentials) {
+			defer wg.Done()
+			oldToken := &oauth2.Token{
+				AccessToken:  c.AccessToken,
+				TokenType:    "bearer",
+				RefreshToken: c.RefreshToken,
+				Expiry:       c.Expiry.Time,
+			}
+
+			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
+			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
+
+			botsMutex.Lock()
+			defer botsMutex.Unlock()
+			bots = append(bots, bot{
+				databaseID:  databaseID,
+				account:     acc,
+				tokenSource: refreshingTokenSource,
+			})
+
+			token, err := refreshingTokenSource.Token()
+			if err != nil {
+				fmt.Println("ERROR!!! Error getting token from token source for bot", acc.Name())
+				return
+			}
+
+			self, _, err := apirequest.TwitchBot.ValidateOAuthTokenSimple(token.AccessToken)
+			if err != nil {
+				fmt.Println("ERROR!!! Error validating oauth token for", acc.Name(), err)
+				return
+			}
+
+			if self.UserID != acc.ID() {
+				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
+				return
+			}
+		}(databaseID, &acc, c)
+	}
+
+	wg.Wait()
+
+	for _, bot := range bots {
+		bot, err := pb2twitch.NewBot(bot.databaseID, bot.account, bot.tokenSource, a)
 
 		err = bot.LoadChannels(a.sqlClient)
 		if err != nil {
@@ -400,6 +473,11 @@ func (a *Application) StartBots() error {
 				channelID := message.Tags["room-id"]
 				if channelID == "" {
 					fmt.Printf("Missing room-id tag in message: %+v\n", message)
+					return
+				}
+
+				if user.UserID == bot.TwitchAccount().ID() {
+					// Ignore messages from self
 					return
 				}
 
@@ -470,12 +548,8 @@ func (a *Application) StartPubSubClient() error {
 
 func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
 	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
-	a.TwitchPubSub.Listen(moderationTopic, userToken, func(bytes []byte) error {
-		event, err := twitchpubsub.GetModerationAction(bytes)
-		if err != nil {
-			return err
-		}
-
+	a.TwitchPubSub.Listen(moderationTopic, userToken)
+	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
 		const ActionUnknown = 0
 		const ActionTimeout = 1
 		const ActionBan = 2
@@ -549,11 +623,10 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 		if action != 0 {
 			_, err := a.sqlClient.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
 			if err != nil {
-				return err
+				fmt.Println("Error in moderation action callback:", err)
+				return
 			}
 		}
-
-		return nil
 	})
 
 	return nil

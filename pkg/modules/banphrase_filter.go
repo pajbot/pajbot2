@@ -67,10 +67,9 @@ func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 		}
 
 		if bp.Enabled {
-			// m.banphrases = append(m.banphrases, &bp)
+			m.banphrases = append(m.banphrases, &bp)
 		}
 	}
-
 	return nil
 }
 

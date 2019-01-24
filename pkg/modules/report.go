@@ -7,6 +7,7 @@ import (
 
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/report"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 type Report struct {
@@ -27,6 +28,39 @@ var reportSpec = moduleSpec{
 	id:    "report",
 	name:  "Report",
 	maker: newReport,
+}
+
+func (m *Report) ProcessReport(bot pkg.Sender, source pkg.Channel, user pkg.User, parts []string) error {
+	duration := 600
+
+	if parts[0] == "!report" {
+	} else if parts[0] == "!longreport" {
+		duration = 28800
+	} else {
+		return nil
+	}
+
+	if !user.HasPermission(source, pkg.PermissionReport) {
+		bot.Whisper(user, "you don't have permissions to use the !report command")
+		return nil
+	}
+
+	var reportedUsername string
+	var reason string
+
+	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
+
+	if reportedUsername == user.GetName() {
+		return nil
+	}
+
+	if len(parts) >= 3 {
+		reason = strings.Join(parts[2:], " ")
+	}
+
+	m.report(bot, user, source, reportedUsername, reason, duration)
+
+	return nil
 }
 
 func (m *Report) Initialize(botChannel pkg.BotChannel, settings []byte) error {
@@ -51,40 +85,12 @@ func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message)
 	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
 
 	parts := strings.Split(message.GetText(), " ")
-	if len(parts) < 1 {
+	if len(parts) < 2 {
 		return nil
 	}
-
-	duration := 600
-
-	if parts[0] == "!report" {
-	} else if parts[0] == "!longreport" {
-		duration = 28800
-	} else {
-		return nil
-	}
-
-	var reportedUsername string
-	var reason string
-
-	reportedUsername = strings.ToLower(parts[1])
-	if reportedUsername == source.GetName() {
-		// cannot report yourself
-		return nil
-	}
-
 	channel := bot.MakeChannel(m.botChannel.ChannelName())
-	if !source.HasPermission(channel, pkg.PermissionReport) {
-		bot.Whisper(source, "you don't have permissions to use the !report command")
-		return nil
-	}
 
-	if len(parts) >= 3 {
-		reason = strings.Join(parts[2:], " ")
-	}
-
-	m.report(bot, source, channel, reportedUsername, reason, duration)
-
+	m.ProcessReport(bot, channel, source, parts)
 	return nil
 }
 
@@ -110,6 +116,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 	}
 	r.Logs = bot.GetUserContext().GetContext(r.Channel.ID, r.Target.ID)
 
+	reporterUser := bot.MakeUser(reporter.GetName()) // Fixme: Should be already done in bot.go
 	oldReport, inserted, _ := m.reportHolder.Register(r)
 
 	if !inserted {
@@ -118,6 +125,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		if time.Now().Sub(oldReport.Time) < time.Minute*10 {
 			// User was reported less than 10 minutes ago, don't let this user be timed out again
 			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", time.Now().Sub(oldReport.Time))
+			bot.Whisper(reporterUser, "User successfully reported, but the last report was less than ten minutes ago so the timeout is skipped")
 			return
 		}
 
@@ -126,6 +134,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		m.reportHolder.Update(r)
 	}
 
+	bot.Whisper(reporterUser, fmt.Sprintf("Successfully reported user %s", targetUsername))
 	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
 }
 
@@ -135,33 +144,6 @@ func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, me
 		return nil
 	}
 
-	duration := 600
-
-	if parts[0] == "!report" {
-	} else if parts[0] == "!longreport" {
-		duration = 28800
-	} else {
-		return nil
-	}
-
-	if !user.HasPermission(source, pkg.PermissionReport) {
-		return nil
-	}
-
-	var reportedUsername string
-	var reason string
-
-	reportedUsername = strings.ToLower(parts[1])
-
-	if reportedUsername == user.GetName() {
-		return nil
-	}
-
-	if len(parts) >= 3 {
-		reason = strings.Join(parts[2:], " ")
-	}
-
-	m.report(bot, user, source, reportedUsername, reason, duration)
-
+	m.ProcessReport(bot, source, user, parts)
 	return nil
 }
