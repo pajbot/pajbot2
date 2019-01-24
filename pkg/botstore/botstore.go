@@ -1,6 +1,9 @@
 package botstore
 
-import "github.com/pajlada/pajbot2/pkg"
+import (
+	"github.com/pajlada/pajbot2/pkg"
+	"strings"
+)
 
 var _ pkg.BotStore = &BotStore{}
 
@@ -16,10 +19,31 @@ func (s *BotStore) Add(bot pkg.Sender) {
 	s.store = append(s.store, bot)
 }
 
-func (s *BotStore) Get(name string) pkg.Sender {
+func (s *BotStore) GetBotFromName(name string) pkg.Sender {
 	for _, b := range s.store {
-		if b.TwitchAccount().Name() == name {
+		if b.TwitchAccount().Name() == strings.ToLower(name) {
 			return b
+		}
+	}
+
+	return nil
+}
+
+func (s *BotStore) GetBotFromID(id string) pkg.Sender {
+	for _, b := range s.store {
+		if b.TwitchAccount().ID() == id {
+			return b
+		}
+	}
+
+	return nil
+}
+
+func (s *BotStore) GetBotFromChannel(channelID string) pkg.Sender {
+	for _, b := range s.store {
+		botExists := b.InChannel(channelID)
+		if botExists {
+			return b;
 		}
 	}
 

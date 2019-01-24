@@ -22,6 +22,7 @@ type Sender interface {
 
 	PointRank(Channel, string) uint64
 
+	InChannel(string) bool
 	GetUserStore() UserStore
 	GetUserContext() UserContext
 
