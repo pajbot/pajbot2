@@ -116,6 +116,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 	}
 	r.Logs = bot.GetUserContext().GetContext(r.Channel.ID, r.Target.ID)
 
+	reporterUser := bot.MakeUser(reporter.GetName()) // Fixme: Should be already done in bot.go
 	oldReport, inserted, _ := m.reportHolder.Register(r)
 
 	if !inserted {
@@ -124,6 +125,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		if time.Now().Sub(oldReport.Time) < time.Minute*10 {
 			// User was reported less than 10 minutes ago, don't let this user be timed out again
 			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", time.Now().Sub(oldReport.Time))
+			bot.Whisper(reporterUser, "User successfully reported, but the last report was less than ten minutes ago so the timeout is skipped")
 			return
 		}
 
@@ -132,6 +134,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		m.reportHolder.Update(r)
 	}
 
+	bot.Whisper(reporterUser, fmt.Sprintf("Successfully reported user %s", targetUsername))
 	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
 }
 
