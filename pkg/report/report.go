@@ -54,6 +54,7 @@ type Holder struct {
 	db        *sql.DB
 	pubSub    pkg.PubSub
 	userStore pkg.UserStore
+	botStore  pkg.BotStore
 
 	reportsMutex *sync.Mutex
 	reports      map[uint32]Report
@@ -68,6 +69,7 @@ func New(app pkg.Application) (*Holder, error) {
 		db:        app.SQL(),
 		pubSub:    app.PubSub(),
 		userStore: app.UserStore(),
+		botStore:  app.TwitchBots(),
 
 		reportsMutex: &sync.Mutex{},
 		reports:      make(map[uint32]Report),
@@ -278,6 +280,9 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 	action.Handler.Name = user.GetName()
 	action.Handler.ID = user.GetID()
 
+	bot := h.botStore.GetBotFromChannel(report.Channel.ID)
+	reporterInst := bot.MakeUser(report.Reporter.Name)
+
 	// TODO: Insert into new table: HandledReport
 	h.insertHistoricReport(report, action)
 
@@ -299,6 +304,7 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			Target:  report.Target.Name,
 			// Reason:  report.Reason,
 		})
+		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been permanently banned", report.Target.Name))
 
 	case pkg.ReportActionTimeout:
 		var duration uint32
@@ -312,15 +318,19 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			Duration: duration,
 			// Reason:   report.Reason,
 		})
+		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been timed out for %d seconds", report.Target.Name, duration))
 
 	case pkg.ReportActionDismiss:
-		// We don't need to do anything here, as we've already dismissed the report prior to the ban/timeout/untimeout events being sent out
+		bot.Whisper(reporterInst, fmt.Sprintf("Your report of %s has been dismissed with no further action taken :\\", report.Target.Name))
+		// We don't need to do anything else here, as we've already dismissed the report prior to the ban/timeout/untimeout events being sent out
 
 	case pkg.ReportActionUndo:
 		h.pubSub.Publish(h, "Untimeout", &pkg.PubSubUntimeout{
 			Channel: report.Channel.Name,
 			Target:  report.Target.Name,
 		})
+		bot.Whisper(reporterInst, fmt.Sprintf("Your report of %s has been undone with no further action taken :\\", report.Target.Name))
+
 	default:
 		fmt.Println("Unhandled action", action.Action)
 	}
