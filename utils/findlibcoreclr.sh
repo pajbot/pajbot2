@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Locate `libcoreclr.so` (requires locate)
-LIBCORECLR_PATH=$(locate /libcoreclr.so | grep -v cache | head -n 1 | sed -ne 's/\/libcoreclr\.so//p')
+LIBCORECLR_PATH=$(dotnet --list-runtimes | grep Microsoft.NETCore.App | tail -1 | awk '{gsub(/\[|\]/, "", $3); print $3 "/" $2}')
 if [ -z "$LIBCORECLR_PATH" ]; then
-    echo "Unable to find path to libcoreclr. Ensure you've run 'sudo updatedb' and that dotnet and mlocate is installed"
+    echo "Unable to find path to libcoreclr. Ensure dotnet is installed"
     exit 1
 fi
 
