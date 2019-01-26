@@ -142,6 +142,11 @@ func runCmd() {
 		log.Fatal("An error occured while starting the web server: ", err)
 	}
 
+	err = application.StartPubSubClient()
+	if err != nil {
+		fmt.Println("Error starting PubSub Client:", err)
+	}
+
 	err = application.LoadBots()
 	if err != nil {
 		log.Fatal("An error occured while loading bots: ", err)
@@ -150,11 +155,6 @@ func runCmd() {
 	err = application.StartBots()
 	if err != nil {
 		log.Fatal("An error occured while starting bots: ", err)
-	}
-
-	err = application.StartPubSubClient()
-	if err != nil {
-		fmt.Println("Error starting PubSub Client:", err)
 	}
 
 	log.Fatal(application.Run())

@@ -1,7 +1,10 @@
 package pkg
 
+import "golang.org/x/oauth2"
+
 type Sender interface {
 	TwitchAccount() TwitchAccount
+	GetTokenSource() oauth2.TokenSource
 
 	Connected() bool
 
@@ -22,6 +25,9 @@ type Sender interface {
 
 	PointRank(Channel, string) uint64
 
+	// ChannelIDs returns a slice of the channels this bot is connected to
+	ChannelIDs() []string
+
 	InChannel(string) bool
 	GetUserStore() UserStore
 	GetUserContext() UserContext
@@ -34,4 +40,7 @@ type Sender interface {
 
 	// Permanently leave channel with the given channel ID
 	LeaveChannel(channelID string) error
+
+	// Connect to the OnNewChannelJoined callback
+	OnNewChannelJoined(cb func(channelID string))
 }

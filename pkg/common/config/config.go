@@ -59,12 +59,6 @@ type authConfig struct {
 	Twitter authTwitterConfig
 }
 
-type pubsubConfig struct {
-	ChannelID string
-	UserID    string
-	UserToken string
-}
-
 type Pajbot1Config struct {
 	SQL SQLConfig
 }
@@ -88,8 +82,6 @@ type Config struct {
 
 	TLSKey  string
 	TLSCert string
-
-	PubSub pubsubConfig
 
 	Pajbot1 Pajbot1Config
 }

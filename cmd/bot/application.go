@@ -437,8 +437,22 @@ func (a *Application) LoadBots() error {
 
 	wg.Wait()
 
-	for _, bot := range bots {
-		bot, err := pb2twitch.NewBot(bot.databaseID, bot.account, bot.tokenSource, a)
+	for _, botConfig := range bots {
+		bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, a)
+		if err != nil {
+			return err
+		}
+
+		botUserID := botConfig.account.ID()
+		bot.OnNewChannelJoined(func(channelID string) {
+			token, err := bot.GetTokenSource().Token()
+			if err != nil {
+				fmt.Println("Error renewing token: ", err)
+				return
+			}
+			fmt.Println("Listen on", botUserID, " ", channelID)
+			a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channelID), token.AccessToken)
+		})
 
 		err = bot.LoadChannels(a.sqlClient)
 		if err != nil {
@@ -531,21 +545,8 @@ func (a *Application) StartBots() error {
 }
 
 func (a *Application) StartPubSubClient() error {
-	cfg := &a.config.PubSub
 	a.TwitchPubSub = twitchpubsub.NewClient(twitchpubsub.DefaultHost)
 
-	go a.TwitchPubSub.Start()
-
-	if cfg.ChannelID == "" || cfg.UserID == "" || cfg.UserToken == "" {
-		return errors.New("Missing PubSub configuration stuff")
-	}
-
-	return a.listenToModeratorActions(cfg.UserID, cfg.ChannelID, cfg.UserToken)
-}
-
-func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
-	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
-	a.TwitchPubSub.Listen(moderationTopic, userToken)
 	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
 		const ActionUnknown = 0
 		const ActionTimeout = 1
@@ -625,6 +626,15 @@ func (a *Application) listenToModeratorActions(userID, channelID, userToken stri
 			}
 		}
 	})
+
+	go a.TwitchPubSub.Start()
+
+	return nil
+}
+
+func (a *Application) listenToModeratorActions(userID, channelID, userToken string) error {
+	moderationTopic := twitchpubsub.ModerationActionTopic(userID, channelID)
+	a.TwitchPubSub.Listen(moderationTopic, userToken)
 
 	return nil
 }

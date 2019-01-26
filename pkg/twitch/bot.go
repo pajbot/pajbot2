@@ -77,6 +77,8 @@ type Bot struct {
 	sql *sql.DB
 
 	IsConnected bool
+
+	onNewChannelJoined func(channelID string)
 }
 
 var _ pkg.PubSubConnection = &Bot{}
@@ -90,7 +92,8 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
-		Client: twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
+		TokenSource: tokenSource,
+		Client:      twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
 
 		DatabaseID: databaseID,
 
@@ -118,6 +121,14 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	b.twitchAccount.fillIn(b.userStore)
 
 	return b, nil
+}
+
+func (b *Bot) GetTokenSource() oauth2.TokenSource {
+	return b.TokenSource
+}
+
+func (b *Bot) OnNewChannelJoined(cb func(channelID string)) {
+	b.onNewChannelJoined = cb
 }
 
 func (b *Bot) IsApplication() bool {
@@ -156,6 +167,17 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	}
 
 	return -1, nil
+}
+
+func (b *Bot) ChannelIDs() (channelIDs []string) {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for _, botChannel := range b.channels {
+		channelIDs = append(channelIDs, botChannel.Channel.ID())
+	}
+
+	return
 }
 
 func (b *Bot) InChannel(channelID string) bool {
@@ -218,6 +240,18 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 	}
 
 	return nil
+}
+
+func (b *Bot) Join(channelName string) {
+	channelID := b.userStore.GetID(channelName)
+	if channelID == "" {
+		fmt.Println("[pajbot2:pkg/twitch/bot.go] Unable to get ID of channel we just tride to join")
+		return
+	}
+
+	if b.onNewChannelJoined != nil {
+		b.onNewChannelJoined(channelID)
+	}
 }
 
 func (b *Bot) JoinChannels() {
@@ -804,6 +838,10 @@ func (b *Bot) JoinChannel(channelID string) error {
 
 	if err = b.addBotChannel(botChannel); err != nil {
 		return err
+	}
+
+	if b.onNewChannelJoined != nil {
+		b.onNewChannelJoined(channelID)
 	}
 
 	return nil
