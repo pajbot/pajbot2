@@ -532,12 +532,9 @@ func (a *Application) StartBots() error {
 
 func (a *Application) StartPubSubClient() error {
 	cfg := &a.config.PubSub
-	a.TwitchPubSub = twitchpubsub.NewClient()
+	a.TwitchPubSub = twitchpubsub.NewClient(twitchpubsub.DefaultHost)
 
-	err := a.TwitchPubSub.Connect()
-	if err != nil {
-		return err
-	}
+	go a.TwitchPubSub.Start()
 
 	if cfg.ChannelID == "" || cfg.UserID == "" || cfg.UserToken == "" {
 		return errors.New("Missing PubSub configuration stuff")
