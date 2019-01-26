@@ -243,6 +243,7 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 }
 
 func (b *Bot) Join(channelName string) {
+	b.Client.Join(channelName)
 	channelID := b.userStore.GetID(channelName)
 	if channelID == "" {
 		fmt.Println("[pajbot2:pkg/twitch/bot.go] Unable to get ID of channel we just tride to join")
