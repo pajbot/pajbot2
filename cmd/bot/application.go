@@ -552,11 +552,15 @@ func (a *Application) StartPubSubClient() error {
 		const ActionTimeout = 1
 		const ActionBan = 2
 		const ActionUnban = 3
+		var actionContext string
 		duration := 0
 
 		content := fmt.Sprintf("Moderation action: %+v", event)
 		fmt.Println(content)
-		var actionContext *string
+		fullContext := a.twitchUserContext.GetContext(channelID, event.TargetUserID)
+		if fullContext != nil {
+			actionContext = fullContext[len(fullContext)-1]
+		}
 		action := 0
 		reason := ""
 		const queryF = "INSERT INTO `ModerationAction` (ChannelID, UserID, Action, Duration, TargetID, Reason, Context) VALUES (?, ?, ?, ?, ?, ?, ?);"
