@@ -147,5 +147,6 @@ func init() {
 	Register(&reportSpec)
 	Register(&testSpec)
 	Register(basicCommandsModuleSpec)
+	Register(otherCommandsModuleSpec)
 	Register(actionPerformerModuleSpec)
 }

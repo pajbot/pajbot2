@@ -39,24 +39,10 @@ func (m *basicCommandsModule) registerCommand(aliases []string, command pkg.Cust
 func (m *basicCommandsModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.botChannel = botChannel
 
-	m.registerCommand([]string{"!userid"}, &commands.GetUserID{})
-	m.registerCommand([]string{"!username"}, &commands.GetUserName{})
-	m.registerCommand([]string{"!pb2points"}, &commands.GetPoints{})
-	m.registerCommand([]string{"!pb2roulette"}, &commands.Roulette{})
-	m.registerCommand([]string{"!pb2givepoints"}, &commands.GivePoints{})
-	// m.registerCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
-	// m.registerCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
-	m.registerCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
-	m.registerCommand([]string{"!user"}, commands.NewUser())
-	m.registerCommand([]string{"!pb2rank"}, &commands.Rank{})
 	m.registerCommand([]string{"!pb2ping"}, &commands.Ping{})
-	m.registerCommand([]string{"!pb2simplify"}, &commands.Simplify{})
-	// m.registerCommand([]string{"!timemeout"}, &commands.TimeMeOut{})
-	m.registerCommand([]string{"!pb2test"}, &commands.Test{})
 	m.registerCommand([]string{"!pb2join"}, &commands.Join{})
 	m.registerCommand([]string{"!pb2leave"}, &commands.Leave{})
 	m.registerCommand([]string{"!pb2module"}, commands.NewModule())
-	m.registerCommand([]string{"!pb2islive"}, commands.IsLive{})
 
 	return nil
 }
