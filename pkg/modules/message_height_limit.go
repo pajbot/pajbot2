@@ -15,6 +15,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unsafe"
 
@@ -25,6 +26,10 @@ import (
 var _ pkg.Module = &MessageHeightLimit{}
 
 func floatPtr(v float32) *float32 {
+	return &v
+}
+
+func boolPtr(v bool) *bool {
 	return &v
 }
 
@@ -43,6 +48,10 @@ func init() {
 				description:  "Max height of a message before it's timed out",
 				defaultValue: floatPtr(95),
 			},
+			"AsciiArtOnly": &moduleParameterSpec{
+				description:  "Only attempt to catch ascii art",
+				defaultValue: boolPtr(false),
+			},
 		},
 	}
 
@@ -56,6 +65,8 @@ type MessageHeightLimit struct {
 
 	HeightLimit floatParameter `json:",omitempty"`
 
+	AsciiArtOnly boolParameter `json:",omitempty"`
+
 	userViolationCount map[string]int
 }
 
@@ -65,6 +76,9 @@ func NewMessageHeightLimit() pkg.Module {
 
 		HeightLimit: floatParameter{
 			defaultValue: messageHeightLimitSpec.parameters["HeightLimit"].defaultValue.(*float32),
+		},
+		AsciiArtOnly: boolParameter{
+			defaultValue: messageHeightLimitSpec.parameters["AsciiArtOnly"].defaultValue.(*bool),
 		},
 		userViolationCount: make(map[string]int),
 	}
@@ -283,6 +297,22 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 				bot.Mention(channel, user, fmt.Sprintf("your message height is %.2f", height))
 				return nil
 			}
+
+			if parts[0] == "!heightlimitonasciionly" {
+				if len(parts) >= 2 {
+					if err := m.AsciiArtOnly.Parse(parts[1]); err != nil {
+						bot.Mention(channel, user, err.Error())
+						return nil
+					}
+
+					bot.Mention(channel, user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+					saveModule(m)
+				} else {
+					bot.Mention(channel, user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+				}
+
+				return nil
+			}
 		}
 	}
 
@@ -313,6 +343,11 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
 		if ratio > 0.5 {
 			timeoutDuration = timeoutDuration + 90
+		} else {
+			if m.AsciiArtOnly.Get() {
+				// Do not deal with tall non-ascii-art messages
+				return nil
+			}
 		}
 
 		timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
