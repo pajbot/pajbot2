@@ -30,10 +30,16 @@ type BotChannel struct {
 	modulesMutex sync.Mutex
 
 	sql *sql.DB
+
+	bot *Bot
 }
 
 func (c *BotChannel) Channel() pkg.Channel {
 	return &c.channel
+}
+
+func (c *BotChannel) Say(message string) {
+	c.bot.Say(&c.channel, message)
 }
 
 func (c *BotChannel) DatabaseID() int64 {
@@ -174,6 +180,7 @@ func (c *BotChannel) Initialize(b *Bot) error {
 		return errors.New("bot channel is already initialized")
 	}
 
+	c.bot = b
 	c.sql = b.sql
 	c.streamStore = b.streamStore
 
