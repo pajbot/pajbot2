@@ -915,5 +915,10 @@ func (b *Bot) MessageReceived(source pkg.PubSubSource, topic string, data []byte
 
 // Quit quits the entire application
 func (b *Bot) Quit(message string) {
+	b.channelsMutex.Lock()
+	for _, channel := range b.channels {
+		channel.Events().Emit("on_quit", nil)
+	}
+	b.channelsMutex.Unlock()
 	time.AfterFunc(250*time.Millisecond, func() { b.QuitChannel <- message })
 }

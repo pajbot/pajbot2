@@ -14,3 +14,7 @@ web/static/build
 # Various
 .DS_Store
 .vscode/
+
+# Coverage files
+coverage.out
+coverage.html

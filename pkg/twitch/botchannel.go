@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/eventemitter"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -31,6 +32,8 @@ type BotChannel struct {
 
 	sql *sql.DB
 
+	eventEmitter *eventemitter.EventEmitter
+
 	bot *Bot
 }
 
@@ -44,6 +47,10 @@ func (c *BotChannel) Say(message string) {
 
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
+}
+
+func (c *BotChannel) Events() *eventemitter.EventEmitter {
+	return c.eventEmitter
 }
 
 func (c *BotChannel) ChannelID() string {
@@ -186,7 +193,11 @@ func (c *BotChannel) Initialize(b *Bot) error {
 
 	c.initialized = true
 
+	c.eventEmitter = eventemitter.New()
+
 	c.loadModules()
+
+	c.eventEmitter.Emit("on_join", nil)
 
 	return nil
 }
@@ -285,6 +296,8 @@ func (c *BotChannel) handleMessage(bot pkg.Sender, channel pkg.Channel, user pkg
 	if channel == nil {
 		return errors.New("channel may not be nil")
 	}
+
+	c.eventEmitter.Emit("on_msg", nil)
 
 	return c.onModules(func(module pkg.Module) error {
 		return module.OnMessage(bot, channel, user, message, action)

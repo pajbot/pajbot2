@@ -1,11 +1,15 @@
 package modules
 
-import "github.com/pajlada/pajbot2/pkg"
+import (
+	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/eventemitter"
+)
 
 type test struct {
 	botChannel pkg.BotChannel
 
-	server *server
+	server      *server
+	connections []*eventemitter.Listener
 }
 
 func newTest() pkg.Module {
@@ -14,7 +18,7 @@ func newTest() pkg.Module {
 	}
 }
 
-var testSpec = moduleSpec{
+var testSpec = &moduleSpec{
 	id:    "test",
 	name:  "Test",
 	maker: newTest,
@@ -28,11 +32,14 @@ func (m *test) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 }
 
 func (m *test) Disable() error {
+	for _, c := range m.connections {
+		c.Disconnected = true
+	}
 	return nil
 }
 
 func (m *test) Spec() pkg.ModuleSpec {
-	return &testSpec
+	return testSpec
 }
 
 func (m *test) BotChannel() pkg.BotChannel {

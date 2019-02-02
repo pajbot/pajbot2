@@ -1,5 +1,7 @@
 package pkg
 
+import "github.com/pajlada/pajbot2/pkg/eventemitter"
+
 type BotChannel interface {
 	DatabaseID() int64
 	Channel() Channel
@@ -10,6 +12,8 @@ type BotChannel interface {
 	DisableModule(string) error
 
 	Stream() Stream
+
+	Events() *eventemitter.EventEmitter
 
 	Say(string)
 }
