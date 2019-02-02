@@ -360,3 +360,14 @@ func (c IsLive) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []strin
 		bot.Mention(channel, user, "offline FeelsBadMan")
 	}
 }
+
+type Quit struct {
+}
+
+func (c Quit) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
+		return
+	}
+
+	bot.Quit("hehe")
+}

@@ -49,6 +49,8 @@ type BotCredentials struct {
 type Bot struct {
 	*twitch.Client
 
+	app pkg.Application
+
 	TokenSource oauth2.TokenSource
 
 	DatabaseID int
@@ -92,6 +94,8 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
+		app: app,
+
 		TokenSource: tokenSource,
 		Client:      twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
 
@@ -518,11 +522,6 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name(), channel, user, rawMessage)
 }
 
-// Quit quits the entire application
-func (b *Bot) Quit(message string) {
-	b.QuitChannel <- message
-}
-
 func (b *Bot) StartChatterPoller() {
 	b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol
@@ -912,4 +911,9 @@ func (b *Bot) MessageReceived(source pkg.PubSubSource, topic string, data []byte
 		b.Untimeout(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target))
 	}
 	return nil
+}
+
+// Quit quits the entire application
+func (b *Bot) Quit(message string) {
+	time.AfterFunc(250*time.Millisecond, func() { b.QuitChannel <- message })
 }
