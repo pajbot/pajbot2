@@ -20,7 +20,7 @@ type BotChannel struct {
 
 	ID int64
 
-	Channel User
+	channel User
 	BotUser User
 
 	initialized bool
@@ -32,20 +32,24 @@ type BotChannel struct {
 	sql *sql.DB
 }
 
+func (c *BotChannel) Channel() pkg.Channel {
+	return &c.channel
+}
+
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
 }
 
 func (c *BotChannel) ChannelID() string {
-	return c.Channel.ID()
+	return c.channel.ID()
 }
 
 func (c *BotChannel) ChannelName() string {
-	return c.Channel.Name()
+	return c.channel.Name()
 }
 
 func (c *BotChannel) Stream() pkg.Stream {
-	return c.streamStore.GetStream(&c.Channel)
+	return c.streamStore.GetStream(&c.channel)
 }
 
 // We assume that modulesMutex is locked already

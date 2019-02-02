@@ -60,7 +60,7 @@ func (m bannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Mess
 }
 
 func (m bannedNames) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.GetChannel() != "forsen" {
+	if source.GetName() != "forsen" {
 		return nil
 	}
 

@@ -45,7 +45,7 @@ func (m MessageLengthLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg
 }
 
 func (m MessageLengthLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if channel.GetChannel() != "forsen" {
+	if channel.GetName() != "forsen" {
 		return nil
 	}
 

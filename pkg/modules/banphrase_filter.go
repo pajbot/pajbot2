@@ -311,12 +311,12 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text 
 			if bp.Triggers(variation) {
 				// fmt.Printf("Banphrase triggered: %#v\n", bp)
 				/*
-					if bp.IsAdvanced() && source.GetChannel() == "forsen" {
+					if bp.IsAdvanced() && source.GetName() == "forsen" {
 						lol := TimeoutData{
 							FullMessage: message.GetText(),
 							Banphrase:   bp,
 							Username:    user.GetName(),
-							Channel:     source.GetChannel(),
+							Channel:     source.GetName(),
 							Timestamp:   time.Now().UTC(),
 						}
 						c := m.server.redis.Get()
@@ -326,7 +326,7 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text 
 					}
 				*/
 
-				if source.GetChannel() == "krakenbul" || bp.GetID() == -1 {
+				if source.GetName() == "krakenbul" || bp.GetID() == -1 {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
 					action.Set(pkg.Timeout{bp.GetLength(), reason})
 					action.SetNotifyModerator(bot.MakeUser("pajlada"))

@@ -137,7 +137,7 @@ func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
 	}
 
 	// TODO: tolower?
-	return u.GetName() == channel.GetChannel()
+	return u.GetName() == channel.GetName()
 }
 
 func (u TwitchUser) GetBadges() map[string]int {

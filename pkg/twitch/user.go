@@ -19,6 +19,14 @@ func (u *User) Name() string {
 	return u.name
 }
 
+func (u *User) GetID() string {
+	return u.id
+}
+
+func (u *User) GetName() string {
+	return u.name
+}
+
 func (u *User) SetName(v string) {
 	u.name = v
 }

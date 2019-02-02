@@ -89,7 +89,7 @@ func (m Pajbot1Commands) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.
 }
 
 func (m Pajbot1Commands) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.GetChannel() != "snusbot" {
+	if source.GetName() != "snusbot" {
 		return nil
 	}
 

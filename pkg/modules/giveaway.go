@@ -57,7 +57,7 @@ func (m giveaway) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) 
 }
 
 func (m *giveaway) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	// if channel.GetChannel() != "forsen" {
+	// if channel.GetName() != "forsen" {
 	// 	return nil
 	// }
 

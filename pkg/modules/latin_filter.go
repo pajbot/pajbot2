@@ -130,7 +130,7 @@ func (m *latinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.Use
 		}{
 			FullMessage: text,
 			Username:    user.GetName(),
-			Channel:     source.GetChannel(),
+			Channel:     source.GetName(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(text)

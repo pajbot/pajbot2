@@ -161,7 +161,7 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	defer b.channelsMutex.Unlock()
 
 	for i, botChannel := range b.channels {
-		if botChannel.Channel.ID() == channelID {
+		if botChannel.Channel().GetID() == channelID {
 			return i, botChannel
 		}
 	}
@@ -174,7 +174,7 @@ func (b *Bot) ChannelIDs() (channelIDs []string) {
 	defer b.channelsMutex.Unlock()
 
 	for _, botChannel := range b.channels {
-		channelIDs = append(channelIDs, botChannel.Channel.ID())
+		channelIDs = append(channelIDs, botChannel.Channel().GetID())
 	}
 
 	return
@@ -185,7 +185,7 @@ func (b *Bot) InChannel(channelID string) bool {
 	defer b.channelsMutex.Unlock()
 
 	for _, botChannel := range b.channels {
-		if botChannel.Channel.ID() == channelID {
+		if botChannel.Channel().GetID() == channelID {
 			return true
 		}
 	}
@@ -213,11 +213,11 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 	for rows.Next() {
 		var botChannel BotChannel
 
-		if err = rows.Scan(&botChannel.ID, &botChannel.Channel.id); err != nil {
+		if err = rows.Scan(&botChannel.ID, &botChannel.channel.id); err != nil {
 			return err
 		}
 
-		channelIDs = append(channelIDs, botChannel.Channel.ID())
+		channelIDs = append(channelIDs, botChannel.Channel().GetID())
 		channels = append(channels, &botChannel)
 	}
 
@@ -225,14 +225,14 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 
 	for id, name := range m {
 		for _, c := range channels {
-			if c.Channel.ID() == id {
-				c.Channel.SetName(name)
+			if c.Channel().GetID() == id {
+				c.channel.SetName(name)
 			}
 		}
 	}
 
 	for _, c := range channels {
-		if c.Channel.Valid() {
+		if c.channel.Valid() {
 			if err = b.addBotChannel(c); err != nil {
 				return nil
 			}
@@ -260,7 +260,7 @@ func (b *Bot) JoinChannels() {
 	defer b.channelsMutex.Unlock()
 
 	for _, c := range b.channels {
-		b.Join(c.Channel.Name())
+		b.Join(c.Channel().GetName())
 	}
 }
 
@@ -373,11 +373,11 @@ func (b *Bot) Connected() bool {
 }
 
 func (b *Bot) Say(channel pkg.Channel, message string) {
-	b.Client.Say(channel.GetChannel(), message)
+	b.Client.Say(channel.GetName(), message)
 }
 
 func (b *Bot) Mention(channel pkg.Channel, user pkg.User, message string) {
-	b.Client.Say(channel.GetChannel(), "@"+user.GetName()+", "+message)
+	b.Client.Say(channel.GetName(), "@"+user.GetName()+", "+message)
 }
 
 func (b *Bot) Whisper(user pkg.User, message string) {
@@ -826,16 +826,16 @@ func (b *Bot) JoinChannel(channelID string) error {
 	botChannel := &BotChannel{
 		ID: id,
 
-		Channel: User{
+		channel: User{
 			id: channelID,
 		},
 	}
-	err = botChannel.Channel.fillIn(b.userStore)
+	err = botChannel.channel.fillIn(b.userStore)
 	if err != nil {
 		return err
 	}
 
-	b.Join(botChannel.Channel.Name())
+	b.Join(botChannel.Channel().GetName())
 
 	if err = b.addBotChannel(botChannel); err != nil {
 		return err
@@ -859,7 +859,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()
 
-	b.Depart(botChannel.Channel.Name())
+	b.Depart(botChannel.Channel().GetName())
 
 	res, err := b.sql.Exec(queryF, botChannel.DatabaseID())
 	if err != nil {

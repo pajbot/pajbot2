@@ -50,7 +50,7 @@ func (m LinkFilter) OnMessage(bot pkg.Sender, channel pkg.Channel, source pkg.Us
 		return nil
 	}
 
-	if channel.GetChannel() != "forsen" {
+	if channel.GetName() != "forsen" {
 		return nil
 	}
 

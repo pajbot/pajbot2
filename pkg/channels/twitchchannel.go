@@ -5,7 +5,7 @@ type TwitchChannel struct {
 	ID      string
 }
 
-func (c TwitchChannel) GetChannel() string {
+func (c TwitchChannel) GetName() string {
 	return c.Channel
 }
 
