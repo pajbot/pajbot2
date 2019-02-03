@@ -5,6 +5,10 @@ import (
 	"github.com/pajlada/pajbot2/pkg/eventemitter"
 )
 
+func init() {
+	Register(testSpec)
+}
+
 type test struct {
 	botChannel pkg.BotChannel
 
