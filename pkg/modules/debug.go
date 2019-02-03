@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 type pb2Say struct {
@@ -14,7 +15,32 @@ func (c pb2Say) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.C
 		return
 	}
 
+	if len(parts) < 2 {
+		return
+	}
+
 	botChannel.Say(strings.Join(parts[1:], " "))
+}
+
+type pb2Whisper struct {
+}
+
+func (c pb2Whisper) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
+		return
+	}
+
+	if len(parts) < 3 {
+		return
+	}
+
+	username := utils.FilterUsername(parts[1])
+	if username == "" {
+		// Invalid username
+		return
+	}
+
+	botChannel.Bot().Whisper(botChannel.Bot().MakeUser(username), strings.Join(parts[2:], " "))
 }
 
 func init() {
@@ -54,6 +80,7 @@ func (m *debugModule) Initialize(botChannel pkg.BotChannel, settings []byte) err
 	m.botChannel = botChannel
 
 	m.registerCommand([]string{"!pb2say"}, &pb2Say{})
+	m.registerCommand([]string{"!pb2whisper"}, &pb2Whisper{})
 
 	return nil
 }
@@ -70,7 +97,16 @@ func (m *debugModule) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *debugModule) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
+func (m *debugModule) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
+	parts := strings.Split(message.GetText(), " ")
+	if len(parts) == 0 {
+		return nil
+	}
+
+	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
+		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, nil)
+	}
+
 	return nil
 }
 
