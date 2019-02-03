@@ -200,7 +200,7 @@ func (m *MessageHeightLimit) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *MessageHeightLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m *MessageHeightLimit) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
@@ -256,7 +256,7 @@ func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, messa
 	return float32(height)
 }
 
-func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !messageHeightLimitLibraryInitialized {
 		return nil
 	}
@@ -273,42 +273,42 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 		return nil
 	}
 
-	if user.IsModerator() || user.IsBroadcaster(channel) || user.HasPermission(channel, pkg.PermissionModeration) {
+	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) || user.HasPermission(bot.Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
 			if parts[0] == "!heightlimit" {
 				if len(parts) >= 2 {
 					if err := m.HeightLimit.Parse(parts[1]); err != nil {
-						bot.Mention(channel, user, err.Error())
+						bot.Mention(user, err.Error())
 						return nil
 					}
 
-					bot.Mention(channel, user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
+					bot.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
 					saveModule(m)
 				} else {
-					bot.Mention(channel, user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
+					bot.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
 				}
 
 				return nil
 			}
 
 			if parts[0] == "!heighttest" {
-				height := m.getHeight(channel, user, message)
-				bot.Mention(channel, user, fmt.Sprintf("your message height is %.2f", height))
+				height := m.getHeight(bot.Channel(), user, message)
+				bot.Mention(user, fmt.Sprintf("your message height is %.2f", height))
 				return nil
 			}
 
 			if parts[0] == "!heightlimitonasciionly" {
 				if len(parts) >= 2 {
 					if err := m.AsciiArtOnly.Parse(parts[1]); err != nil {
-						bot.Mention(channel, user, err.Error())
+						bot.Mention(user, err.Error())
 						return nil
 					}
 
-					bot.Mention(channel, user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+					bot.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
 					saveModule(m)
 				} else {
-					bot.Mention(channel, user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+					bot.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
 				}
 
 				return nil
@@ -319,8 +319,8 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 	const minTimeoutLength = 10
 	const maxTimeoutLength = 1800
 
-	height := m.getHeight(channel, user, message)
-	// bot.Mention(channel, user, fmt.Sprintf("Message height: %f\n", height))
+	height := m.getHeight(bot.Channel(), user, message)
+	// bot.Mention(user, fmt.Sprintf("Message height: %f\n", height))
 
 	if height > m.HeightLimit.Get() {
 		// Message height is too tall
@@ -358,7 +358,7 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user
 			timeoutDuration = timeoutDuration * userViolations
 			timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
 			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f A", height, ratio)
-			bot.Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
+			bot.Bot().Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
 		} else {
 			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f", height, ratio)
 		}
