@@ -16,4 +16,6 @@ type BotChannel interface {
 	Events() *eventemitter.EventEmitter
 
 	Say(string)
+
+	Bot() Sender
 }

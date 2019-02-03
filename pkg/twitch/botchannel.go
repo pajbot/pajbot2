@@ -41,6 +41,10 @@ func (c *BotChannel) Channel() pkg.Channel {
 	return &c.channel
 }
 
+func (c *BotChannel) Bot() pkg.Sender {
+	return c.bot
+}
+
 func (c *BotChannel) Say(message string) {
 	c.bot.Say(&c.channel, message)
 }
