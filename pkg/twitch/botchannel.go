@@ -49,6 +49,14 @@ func (c *BotChannel) Say(message string) {
 	c.bot.Say(&c.channel, message)
 }
 
+func (c *BotChannel) Mention(user pkg.User, message string) {
+	c.bot.Mention(&c.channel, user, message)
+}
+
+func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
+	c.bot.Timeout(&c.channel, user, duration, reason)
+}
+
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
 }

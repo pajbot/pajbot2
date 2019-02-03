@@ -39,7 +39,7 @@ func (m *CustomCommands) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(bot, m.botChannel, parts, source, user, message, action)
+		command.Trigger(m.botChannel, parts, source, user, message, action)
 	}
 
 	return nil

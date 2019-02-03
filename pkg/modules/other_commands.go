@@ -80,7 +80,7 @@ func (m *otherCommandsModule) OnMessage(bot pkg.Sender, channel pkg.Channel, use
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(bot, m.botChannel, parts, channel, user, message, action)
+		command.Trigger(m.botChannel, parts, channel, user, message, action)
 	}
 
 	return nil

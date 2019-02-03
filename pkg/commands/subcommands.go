@@ -26,14 +26,14 @@ func (c *subCommands) addSC(name string, sc *subCommand) {
 	c.add(name+"s", sc)
 }
 
-type subCommandFunc func(pkg.Sender, pkg.BotChannel, userTarget, pkg.Channel, pkg.User, []string) string
+type subCommandFunc func(pkg.BotChannel, userTarget, pkg.Channel, pkg.User, []string) string
 
 type subCommand struct {
 	permission pkg.Permission
 	cb         subCommandFunc
 }
 
-func (c *subCommand) run(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+func (c *subCommand) run(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 	if c.permission != pkg.PermissionNone {
 		if !user.HasPermission(channel, c.permission) {
 			return "you do not have permission to use this command"
@@ -41,5 +41,5 @@ func (c *subCommand) run(bot pkg.Sender, botChannel pkg.BotChannel, target userT
 
 	}
 
-	return c.cb(bot, botChannel, target, channel, user, parts)
+	return c.cb(botChannel, target, channel, user, parts)
 }

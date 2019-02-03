@@ -9,12 +9,12 @@ import (
 type pb2Say struct {
 }
 
-func (c pb2Say) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c pb2Say) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
 		return
 	}
 
-	bot.Say(botChannel.Channel(), strings.Join(parts[1:], " "))
+	botChannel.Say(strings.Join(parts[1:], " "))
 }
 
 func init() {
@@ -81,7 +81,7 @@ func (m *debugModule) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.Us
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(bot, m.botChannel, parts, channel, user, message, action)
+		command.Trigger(m.botChannel, parts, channel, user, message, action)
 	}
 
 	return nil

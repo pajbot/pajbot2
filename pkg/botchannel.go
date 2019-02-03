@@ -16,6 +16,10 @@ type BotChannel interface {
 	Events() *eventemitter.EventEmitter
 
 	Say(string)
+	Mention(User, string)
+
+	// Moderation
+	Timeout(User, int, string)
 
 	Bot() Sender
 }
