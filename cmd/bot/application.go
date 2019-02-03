@@ -18,7 +18,6 @@ import (
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
-	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/oauth2"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
