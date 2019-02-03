@@ -50,11 +50,11 @@ func (m *test) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m test) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	bot.Mention(channel, user, "test module xd")
+func (m test) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	bot.Mention(user, "test module xd")
 	return nil
 }

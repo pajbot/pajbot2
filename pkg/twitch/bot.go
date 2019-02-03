@@ -431,7 +431,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 
 	_, botChannel := b.getBotChannel(channelID)
 	if botChannel == nil {
-		fmt.Println("Whisper received with context channel being", channelName, "without having a BotChannel there")
+		// Whisper was not prefixed with a channel for context, possibly send as a "raw whisper" event?
 		return
 	}
 
@@ -439,7 +439,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 
 	message := NewTwitchMessage(rawMessage)
 
-	err := botChannel.handleWhisper(b, twitchUser, message)
+	err := botChannel.handleWhisper(twitchUser, message)
 	if err != nil {
 		fmt.Println("Error occured while forwarding whisper to bot channel:", err)
 	}
@@ -477,7 +477,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 		return
 	}
 
-	err := botChannel.handleMessage(b, channel, twitchUser, message, action)
+	err := botChannel.handleMessage(twitchUser, message, action)
 	if err != nil {
 		fmt.Println("Error occured while forwarding message to bot channel:", err)
 	}

@@ -288,11 +288,11 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m *pajbot1BanphraseFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *pajbot1BanphraseFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text string, action pkg.Action) error {
+func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action pkg.Action) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(text, true)
 	if err != nil {
 		return err
@@ -326,10 +326,10 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text 
 					}
 				*/
 
-				if source.GetName() == "krakenbul" || bp.GetID() == -1 {
+				if bp.GetID() == -1 {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
 					action.Set(pkg.Timeout{bp.GetLength(), reason})
-					action.SetNotifyModerator(bot.MakeUser("pajlada"))
+					action.SetNotifyModerator(bot.Bot().MakeUser("pajlada"))
 					// fmt.Printf("Banphrase triggered: %#v for user %s", bp, user.GetName())
 					return nil
 				}
@@ -347,8 +347,8 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.Sender, source pkg.Channel, text 
 	return nil
 }
 
-func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if user.IsModerator() || user.IsBroadcaster(source) {
+func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) {
 		return nil
 	}
 
@@ -356,8 +356,8 @@ func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.Sender, source pkg.Channel, u
 		return nil
 	}
 
-	m.check(bot, source, message.GetText(), action)
-	m.check(bot, source, user.GetName(), action)
+	m.check(bot, message.GetText(), action)
+	m.check(bot, user.GetName(), action)
 
 	return nil
 }

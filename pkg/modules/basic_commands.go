@@ -60,18 +60,18 @@ func (m *basicCommandsModule) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *basicCommandsModule) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *basicCommandsModule) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *basicCommandsModule) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *basicCommandsModule) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) == 0 {
 		return nil
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.botChannel, parts, channel, user, message, action)
+		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, action)
 	}
 
 	return nil

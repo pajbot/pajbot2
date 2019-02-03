@@ -57,10 +57,10 @@ func (m *goodbye) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m goodbye) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m goodbye) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m goodbye) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m goodbye) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return nil
 }

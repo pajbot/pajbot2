@@ -22,8 +22,8 @@ type Module interface {
 	// Returns the bot channel that the module has saved
 	BotChannel() BotChannel
 
-	OnWhisper(bot Sender, source User, message Message) error
-	OnMessage(bot Sender, source Channel, user User, message Message, action Action) error
+	OnWhisper(bot BotChannel, user User, message Message) error
+	OnMessage(bot BotChannel, user User, message Message, action Action) error
 }
 
 type ModuleMaker func() Module

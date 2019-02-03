@@ -73,12 +73,8 @@ func (c *Pajbot1Command) IsTriggered(parts []string) bool {
 	return false
 }
 
-func (c *Pajbot1Command) Trigger(source pkg.Channel, user pkg.User, parts []string, sender pkg.Sender) error {
-	sender.Say(source, c.Action)
-
-	if user.HasGlobalPermission(pkg.PermissionReport) {
-		sender.Say(source, "You have report permissions!")
-	}
+func (c *Pajbot1Command) Trigger(bot pkg.BotChannel, user pkg.User, parts []string) error {
+	bot.Say(c.Action)
 
 	return nil
 }

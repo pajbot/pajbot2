@@ -304,23 +304,16 @@ func (c *BotChannel) onModules(cb func(module pkg.Module) error) (err error) {
 	return
 }
 
-func (c *BotChannel) handleMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
-	if channel == nil {
-		return errors.New("channel may not be nil")
-	}
-
+func (c *BotChannel) handleMessage(user pkg.User, message *TwitchMessage, action pkg.Action) error {
 	c.eventEmitter.Emit("on_msg", nil)
 
 	return c.onModules(func(module pkg.Module) error {
-		return module.OnMessage(bot, channel, user, message, action)
+		return module.OnMessage(c, user, message, action)
 	})
 }
 
-func (c *BotChannel) handleWhisper(bot pkg.Sender, user pkg.User, message *TwitchMessage) error {
-	fmt.Println("handle whisper", message.GetText())
+func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error {
 	return c.onModules(func(module pkg.Module) error {
-		return module.OnWhisper(bot, user, message)
+		return module.OnWhisper(c, user, message)
 	})
-
-	return nil
 }
