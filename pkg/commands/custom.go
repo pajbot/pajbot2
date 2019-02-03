@@ -21,64 +21,64 @@ func init() {
 type GetUserID struct {
 }
 
-func (c GetUserID) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c GetUserID) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	usernames := utils.FilterUsernames(parts[1:])
 
 	if len(usernames) == 0 {
-		bot.Mention(channel, user, "usage: !userid USERNAME (i.e. !userid pajlada)")
+		botChannel.Mention(user, "usage: !userid USERNAME (i.e. !userid pajlada)")
 		return
 	}
 
-	userIDs := bot.GetUserStore().GetIDs(usernames)
+	userIDs := botChannel.Bot().GetUserStore().GetIDs(usernames)
 	var results []string
 	for username, userID := range userIDs {
 		results = append(results, username+"="+userID)
 	}
 
 	if len(results) == 0 {
-		bot.Mention(channel, user, "no valid usernames were given")
+		botChannel.Mention(user, "no valid usernames were given")
 		return
 	}
 
-	bot.Mention(channel, user, strings.Join(results, ", "))
+	botChannel.Mention(user, strings.Join(results, ", "))
 }
 
 type GetUserName struct {
 }
 
-func (c GetUserName) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c GetUserName) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	userIDs := utils.FilterUserIDs(parts[1:])
 
 	if len(userIDs) == 0 {
-		bot.Mention(channel, user, "usage: !username USERID (i.e. !username 11148817)")
+		botChannel.Mention(user, "usage: !username USERID (i.e. !username 11148817)")
 		return
 	}
 
-	names := bot.GetUserStore().GetNames(userIDs)
+	names := botChannel.Bot().GetUserStore().GetNames(userIDs)
 	var results []string
 	for userID, username := range names {
 		results = append(results, userID+"="+username)
 	}
 
 	if len(results) == 0 {
-		bot.Mention(channel, user, "no valid user ids were given")
+		botChannel.Mention(user, "no valid user ids were given")
 		return
 	}
 
-	bot.Mention(channel, user, strings.Join(results, ", "))
+	botChannel.Mention(user, strings.Join(results, ", "))
 }
 
 type GetPoints struct {
 }
 
-func (c GetPoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c GetPoints) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	var potentialTarget string
 	targetID := user.GetID()
 
 	if len(parts) >= 2 {
 		potentialTarget = utils.FilterUsername(parts[1])
 		if potentialTarget != "" {
-			potentialTargetID := bot.GetUserStore().GetID(potentialTarget)
+			potentialTargetID := botChannel.Bot().GetUserStore().GetID(potentialTarget)
 			if potentialTargetID != "" {
 				targetID = potentialTargetID
 			} else {
@@ -87,81 +87,81 @@ func (c GetPoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []st
 		}
 	}
 
-	points := bot.GetPoints(channel, targetID)
+	points := botChannel.Bot().GetPoints(channel, targetID)
 	if potentialTarget == "" {
-		bot.Mention(channel, user, "you have "+strconv.FormatUint(points, 10)+" points")
+		botChannel.Mention(user, "you have "+strconv.FormatUint(points, 10)+" points")
 	} else {
-		bot.Mention(channel, user, potentialTarget+" has "+strconv.FormatUint(points, 10)+" points")
+		botChannel.Mention(user, potentialTarget+" has "+strconv.FormatUint(points, 10)+" points")
 	}
 }
 
 type AddPoints struct {
 }
 
-func (c AddPoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	_, points := bot.AddPoints(channel, user.GetID(), uint64(rand.Int31n(50)))
-	bot.Mention(channel, user, "you now have "+strconv.FormatUint(points, 10)+" points")
+func (c AddPoints) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	_, points := botChannel.Bot().AddPoints(channel, user.GetID(), uint64(rand.Int31n(50)))
+	botChannel.Mention(user, "you now have "+strconv.FormatUint(points, 10)+" points")
 }
 
 type RemovePoints struct {
 }
 
-func (c RemovePoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	_, points := bot.RemovePoints(channel, user.GetID(), uint64(rand.Int31n(50)))
-	bot.Mention(channel, user, "you now have "+strconv.FormatUint(points, 10)+" points")
+func (c RemovePoints) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	_, points := botChannel.Bot().RemovePoints(channel, user.GetID(), uint64(rand.Int31n(50)))
+	botChannel.Mention(user, "you now have "+strconv.FormatUint(points, 10)+" points")
 }
 
 type Roulette struct {
 }
 
-func (c Roulette) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Roulette) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if len(parts) < 2 {
-		bot.Mention(channel, user, "usage: !roulette 500 or !roulette all")
+		botChannel.Mention(user, "usage: !roulette 500 or !roulette all")
 		return
 	}
 
 	var pointsToRoulette uint64
 
 	if strings.ToLower(parts[1]) == "all" {
-		pointsToRoulette = bot.GetPoints(channel, user.GetID())
+		pointsToRoulette = botChannel.Bot().GetPoints(channel, user.GetID())
 	} else {
 		var err error
 		pointsToRoulette, err = strconv.ParseUint(parts[1], 10, 64)
 
 		if err != nil {
-			bot.Mention(channel, user, "usage: !roulette 500 or !roulette all")
+			botChannel.Mention(user, "usage: !roulette 500 or !roulette all")
 			return
 		}
 	}
 
 	if pointsToRoulette == 0 {
-		bot.Mention(channel, user, "you have 0 points, you can't roulette ResidentSleeper")
+		botChannel.Mention(user, "you have 0 points, you can't roulette ResidentSleeper")
 		return
 	}
 
-	if result, _ := bot.RemovePoints(channel, user.GetID(), pointsToRoulette); !result {
-		bot.Mention(channel, user, "you don't have enough points ResidentSleeper")
+	if result, _ := botChannel.Bot().RemovePoints(channel, user.GetID(), pointsToRoulette); !result {
+		botChannel.Mention(user, "you don't have enough points ResidentSleeper")
 		return
 	}
 
 	if rand.Int31n(2) == 0 {
 		// loss
-		bot.Mention(channel, user, "you lost OMEGALUL")
+		botChannel.Mention(user, "you lost OMEGALUL")
 	} else {
 		// win
 		// TODO: Check for integer overflow?
-		_, newPoints := bot.AddPoints(channel, user.GetID(), pointsToRoulette*2)
-		bot.Mention(channel, user, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
+		_, newPoints := botChannel.Bot().AddPoints(channel, user.GetID(), pointsToRoulette*2)
+		botChannel.Mention(user, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
 	}
 }
 
 type GivePoints struct {
 }
 
-func (c GivePoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c GivePoints) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	const USAGE = `usage: !givepoints USER POINTS`
 	if len(parts) < 3 {
-		bot.Mention(channel, user, USAGE)
+		botChannel.Mention(user, USAGE)
 		return
 	}
 
@@ -171,7 +171,7 @@ func (c GivePoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []s
 		return
 	}
 
-	targetID := bot.GetUserStore().GetID(target)
+	targetID := botChannel.Bot().GetUserStore().GetID(target)
 	if targetID == "" {
 		// Invalid username
 		return
@@ -180,51 +180,51 @@ func (c GivePoints) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []s
 	var pointsToGive uint64
 
 	if strings.ToLower(parts[2]) == "all" {
-		pointsToGive = bot.GetPoints(channel, user.GetID())
+		pointsToGive = botChannel.Bot().GetPoints(channel, user.GetID())
 	} else {
 		var err error
 		pointsToGive, err = strconv.ParseUint(parts[2], 10, 64)
 
 		if err != nil {
-			bot.Mention(channel, user, USAGE)
+			botChannel.Mention(user, USAGE)
 			return
 		}
 	}
 
 	if pointsToGive == 0 {
-		bot.Mention(channel, user, USAGE)
+		botChannel.Mention(user, USAGE)
 		return
 	}
 
-	if result, _ := bot.RemovePoints(channel, user.GetID(), pointsToGive); !result {
-		bot.Mention(channel, user, "you don't have enough points ResidentSleeper")
+	if result, _ := botChannel.Bot().RemovePoints(channel, user.GetID(), pointsToGive); !result {
+		botChannel.Mention(user, "you don't have enough points ResidentSleeper")
 		return
 	}
 
-	bot.AddPoints(channel, targetID, pointsToGive)
-	bot.Mention(channel, user, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
+	botChannel.Bot().AddPoints(channel, targetID, pointsToGive)
+	botChannel.Mention(user, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
 }
 
 type Ping struct {
 }
 
-func (c Ping) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	bot.Mention(channel, user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
+func (c Ping) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	botChannel.Mention(user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
 }
 
 type Simplify struct {
 }
 
-func (c Simplify) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Simplify) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if user.IsModerator() || user.IsBroadcaster(channel) {
 		if len(parts) > 1 {
 			normalizedMessage, err := normalize.Normalize(strings.Join(parts[1:], " "))
 			if err != nil {
-				bot.Mention(channel, user, fmt.Sprintf("error normalizing string: %s", err.Error()))
+				botChannel.Mention(user, fmt.Sprintf("error normalizing string: %s", err.Error()))
 				return
 			}
 
-			bot.Mention(channel, user, fmt.Sprintf("normalized string: '%s'", normalizedMessage))
+			botChannel.Mention(user, fmt.Sprintf("normalized string: '%s'", normalizedMessage))
 		}
 	}
 }
@@ -232,14 +232,14 @@ func (c Simplify) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []str
 type TimeMeOut struct {
 }
 
-func (c TimeMeOut) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c TimeMeOut) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if len(parts) < 2 {
 		return
 	}
 
 	timeoutDuration, err := time.ParseDuration(parts[1])
 	if err != nil {
-		bot.Mention(channel, user, "invalid duration format. use !timemeout 1s or !timemeout 5m")
+		botChannel.Mention(user, "invalid duration format. use !timemeout 1s or !timemeout 5m")
 		return
 	}
 
@@ -249,15 +249,15 @@ func (c TimeMeOut) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []st
 		reason = strings.Join(parts[2:], " ")
 	}
 
-	bot.Timeout(channel, user, int(timeoutDuration.Seconds()), reason)
+	botChannel.Timeout(user, int(timeoutDuration.Seconds()), reason)
 }
 
 type Join struct {
 }
 
-func (c *Join) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *Join) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		bot.Mention(channel, user, "you do not have permission to use this command. Admin permission is required")
+		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
 		return
 	}
 
@@ -267,32 +267,32 @@ func (c *Join) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, bot.TwitchAccount().Name()) {
-		bot.Mention(channel, user, "I cannot join my own channel")
+	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
+		botChannel.Mention(user, "I cannot join my own channel")
 		return
 	}
 
-	channelID := bot.GetUserStore().GetID(channelName)
+	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
 	if channelID == "" {
-		bot.Mention(channel, user, "no channel with that name exists")
+		botChannel.Mention(user, "no channel with that name exists")
 		return
 	}
 
-	err := bot.JoinChannel(channelID)
+	err := botChannel.Bot().JoinChannel(channelID)
 	if err != nil {
-		bot.Mention(channel, user, err.Error())
+		botChannel.Mention(user, err.Error())
 		return
 	}
 
-	bot.Mention(channel, user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
+	botChannel.Mention(user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
 }
 
 type Leave struct {
 }
 
-func (c *Leave) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *Leave) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		bot.Mention(channel, user, "you do not have permission to use this command. Admin permission is required")
+		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
 		return
 	}
 
@@ -302,30 +302,30 @@ func (c *Leave) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []strin
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, bot.TwitchAccount().Name()) {
-		bot.Mention(channel, user, "I cannot leave my own channel")
+	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
+		botChannel.Mention(user, "I cannot leave my own channel")
 		return
 	}
 
-	channelID := bot.GetUserStore().GetID(channelName)
+	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
 	if channelID == "" {
-		bot.Mention(channel, user, "no channel with that name exists")
+		botChannel.Mention(user, "no channel with that name exists")
 		return
 	}
 
-	err := bot.LeaveChannel(channelID)
+	err := botChannel.Bot().LeaveChannel(channelID)
 	if err != nil {
-		bot.Mention(channel, user, "Error leaving channel: "+err.Error())
+		botChannel.Mention(user, "Error leaving channel: "+err.Error())
 		return
 	}
 
-	bot.Mention(channel, user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
+	botChannel.Mention(user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
 }
 
 type Test struct {
 }
 
-func (c Test) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Test) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if !user.IsModerator() && !user.IsBroadcaster(channel) {
 		return
 	}
@@ -336,27 +336,38 @@ func (c Test) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string,
 
 	variations, _, err := utils.MakeVariations(strings.Join(parts[1:], " "), true)
 	if err != nil {
-		bot.Mention(channel, user, err.Error())
+		botChannel.Mention(user, err.Error())
 		return
 	}
 
 	for _, variation := range variations {
-		bot.Mention(channel, user, fmt.Sprintf("variation %s", variation))
+		botChannel.Mention(user, fmt.Sprintf("variation %s", variation))
 	}
 }
 
 type IsLive struct {
 }
 
-func (c IsLive) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c IsLive) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	if !user.IsModerator() && !user.IsBroadcaster(channel) {
 		return
 	}
 
 	if botChannel.Stream().Status().Live() {
 		startedAt := botChannel.Stream().Status().StartedAt()
-		bot.Mention(channel, user, fmt.Sprintf("LIVE FOR %s KKona", utils.TimeSince(startedAt)))
+		botChannel.Mention(user, fmt.Sprintf("LIVE FOR %s KKona", utils.TimeSince(startedAt)))
 	} else {
-		bot.Mention(channel, user, "offline FeelsBadMan")
+		botChannel.Mention(user, "offline FeelsBadMan")
 	}
+}
+
+type Quit struct {
+}
+
+func (c Quit) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
+		return
+	}
+
+	botChannel.Bot().Quit("hehe")
 }

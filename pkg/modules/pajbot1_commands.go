@@ -84,15 +84,11 @@ func (m *Pajbot1Commands) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m Pajbot1Commands) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m Pajbot1Commands) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m Pajbot1Commands) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.GetChannel() != "snusbot" {
-		return nil
-	}
-
+func (m Pajbot1Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) == 0 {
 		return nil
@@ -100,7 +96,7 @@ func (m Pajbot1Commands) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.
 
 	for _, command := range m.commands {
 		if command.IsTriggered(parts) {
-			err := command.Trigger(source, user, parts, bot)
+			err := command.Trigger(bot, user, parts)
 			if err != nil {
 				return err
 			}

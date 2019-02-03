@@ -41,16 +41,12 @@ func (m LinkFilter) Name() string {
 	return "LinkFilter"
 }
 
-func (m LinkFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m LinkFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m LinkFilter) OnMessage(bot pkg.Sender, channel pkg.Channel, source pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.IsModerator() || source.IsBroadcaster(channel) {
-		return nil
-	}
-
-	if channel.GetChannel() != "forsen" {
+func (m LinkFilter) OnMessage(bot pkg.BotChannel, source pkg.User, message pkg.Message, action pkg.Action) error {
+	if source.IsModerator() || source.IsBroadcaster(bot.Channel()) {
 		return nil
 	}
 

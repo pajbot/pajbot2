@@ -18,7 +18,6 @@ import (
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
-	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/oauth2"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
@@ -555,8 +554,6 @@ func (a *Application) StartPubSubClient() error {
 		var actionContext string
 		duration := 0
 
-		content := fmt.Sprintf("Moderation action: %+v", event)
-		fmt.Println(content)
 		fullContext := a.twitchUserContext.GetContext(channelID, event.TargetUserID)
 		if fullContext != nil {
 			actionContext = fullContext[len(fullContext)-1]
@@ -567,11 +564,9 @@ func (a *Application) StartPubSubClient() error {
 		switch event.ModerationAction {
 		case "timeout":
 			action = ActionTimeout
-			content = fmt.Sprintf("%s timed out %s for %s seconds", event.CreatedBy, event.Arguments[0], event.Arguments[1])
 			duration, _ = strconv.Atoi(event.Arguments[1])
 			if len(event.Arguments[2]) > 0 {
 				reason = event.Arguments[2]
-				content += " for reason: \"" + reason + "\""
 			}
 
 			e := pkg.PubSubTimeoutEvent{
@@ -594,10 +589,8 @@ func (a *Application) StartPubSubClient() error {
 
 		case "ban":
 			action = ActionBan
-			content = fmt.Sprintf("%s banned %s", event.CreatedBy, event.Arguments[0])
 			if len(event.Arguments[1]) > 0 {
 				reason = event.Arguments[1]
-				content += " for reason: \"" + reason + "\""
 			}
 
 			e := pkg.PubSubBanEvent{
@@ -619,7 +612,6 @@ func (a *Application) StartPubSubClient() error {
 
 		case "unban", "untimeout":
 			action = ActionUnban
-			content = fmt.Sprintf("%s unbanned %s", event.CreatedBy, event.Arguments[0])
 		}
 
 		if action != 0 {

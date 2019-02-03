@@ -40,15 +40,11 @@ func (m *MessageLengthLimit) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m MessageLengthLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m MessageLengthLimit) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m MessageLengthLimit) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if channel.GetChannel() != "forsen" {
-		return nil
-	}
-
+func (m MessageLengthLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return nil
 
 	if user.GetName() == "gazatu2" {

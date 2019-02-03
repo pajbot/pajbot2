@@ -145,8 +145,9 @@ func init() {
 	Register(&nukeSpec)
 	Register(&pajbot1CommandsSpec)
 	Register(&reportSpec)
-	Register(&testSpec)
 	Register(basicCommandsModuleSpec)
 	Register(otherCommandsModuleSpec)
 	Register(actionPerformerModuleSpec)
+	Register(welcomeSpec)
+	Register(goodbyeSpec)
 }

@@ -44,10 +44,10 @@ func (m *ActionPerformer) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m ActionPerformer) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m ActionPerformer) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m ActionPerformer) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m ActionPerformer) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return action.Do()
 }

@@ -205,7 +205,7 @@ func (m *MessageHeightLimit) OnWhisper(bot pkg.Sender, user pkg.User, message pk
 }
 
 func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, message pkg.Message) float32 {
-	channelString := C.CString(channel.GetChannel())
+	channelString := C.CString(channel.GetName())
 	input := C.CString(message.GetText())
 	loginName := C.CString(user.GetName())
 	displayName := C.CString(user.GetDisplayName())

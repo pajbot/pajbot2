@@ -61,7 +61,7 @@ func (a Ban) Priority() int {
 func (a TwitchAction) Do() error {
 	if a.action != nil {
 		if a.NotifyModerator() != nil {
-			a.Sender.Whisper(a.NotifyModerator(), fmt.Sprintf("%s triggered bad banphrase in %s", a.User.GetName(), a.Channel.GetChannel()))
+			a.Sender.Whisper(a.NotifyModerator(), fmt.Sprintf("%s triggered bad banphrase in %s", a.User.GetName(), a.Channel.GetName()))
 		}
 		return a.action.Do(a.Sender, a.Channel, a.User)
 	}

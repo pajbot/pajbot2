@@ -112,11 +112,11 @@ func (m *latinFilter) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *latinFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *latinFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *latinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !user.IsModerator() || true {
 		text := message.GetText()
 
@@ -130,7 +130,7 @@ func (m *latinFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.Use
 		}{
 			FullMessage: text,
 			Username:    user.GetName(),
-			Channel:     source.GetChannel(),
+			Channel:     bot.Channel().GetName(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(text)

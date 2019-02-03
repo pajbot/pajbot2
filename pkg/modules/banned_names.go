@@ -25,7 +25,7 @@ var bannedNamesSpec = moduleSpec{
 	name:  "Banned names",
 	maker: newBannedNames,
 
-	enabledByDefault: true,
+	enabledByDefault: false,
 }
 
 func (m *bannedNames) Initialize(botChannel pkg.BotChannel, settings []byte) error {
@@ -55,15 +55,11 @@ func (m *bannedNames) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m bannedNames) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m bannedNames) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m bannedNames) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.GetChannel() != "forsen" {
-		return nil
-	}
-
+func (m bannedNames) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	usernameBytes := []byte(user.GetName())
 	for _, badUsername := range m.badUsernames {
 		if badUsername.Match(usernameBytes) {

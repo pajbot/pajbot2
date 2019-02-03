@@ -30,7 +30,7 @@ var reportSpec = moduleSpec{
 	maker: newReport,
 }
 
-func (m *Report) ProcessReport(bot pkg.Sender, source pkg.Channel, user pkg.User, parts []string) error {
+func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string) error {
 	duration := 600
 
 	if parts[0] == "!report" {
@@ -40,8 +40,8 @@ func (m *Report) ProcessReport(bot pkg.Sender, source pkg.Channel, user pkg.User
 		return nil
 	}
 
-	if !user.HasPermission(source, pkg.PermissionReport) {
-		bot.Whisper(user, "you don't have permissions to use the !report command")
+	if !user.HasPermission(bot.Channel(), pkg.PermissionReport) {
+		bot.Bot().Whisper(user, "you don't have permissions to use the !report command")
 		return nil
 	}
 
@@ -58,7 +58,7 @@ func (m *Report) ProcessReport(bot pkg.Sender, source pkg.Channel, user pkg.User
 		reason = strings.Join(parts[2:], " ")
 	}
 
-	m.report(bot, user, source, reportedUsername, reason, duration)
+	m.report(bot.Bot(), user, bot.Channel(), reportedUsername, reason, duration)
 
 	return nil
 }
@@ -81,26 +81,25 @@ func (m *Report) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *Report) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *Report) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
 
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}
-	channel := bot.MakeChannel(m.botChannel.ChannelName())
 
-	m.ProcessReport(bot, channel, source, parts)
+	m.ProcessReport(bot, source, parts)
 	return nil
 }
 
 func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) {
-	// s := fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetChannel(), reason, targetUsername)
+	// s := fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetName(), reason, targetUsername)
 
 	r := report.Report{
 		Channel: report.ReportUser{
 			ID:   targetChannel.GetID(),
-			Name: targetChannel.GetChannel(),
+			Name: targetChannel.GetName(),
 			Type: "twitch",
 		},
 		Reporter: report.ReportUser{
@@ -138,12 +137,12 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
 }
 
-func (m *Report) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *Report) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}
 
-	m.ProcessReport(bot, source, user, parts)
+	m.ProcessReport(bot, user, parts)
 	return nil
 }

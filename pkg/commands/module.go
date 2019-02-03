@@ -20,14 +20,14 @@ func NewModule() pkg.CustomCommand {
 
 	u.subCommands.add("list", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			return "list modules"
 		},
 	})
 
 	u.subCommands.add("enable", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 3 {
 				return "usage: !module enable MODULE_ID"
 			}
@@ -45,7 +45,7 @@ func NewModule() pkg.CustomCommand {
 
 	u.subCommands.addSC("disable", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(bot pkg.Sender, botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
 			if len(parts) < 3 {
 				return "usage: !module disable MODULE_ID"
 			}
@@ -64,16 +64,16 @@ func NewModule() pkg.CustomCommand {
 	return u
 }
 
-func (c *moduleCommand) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *moduleCommand) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	subCommandName := c.defaultSubCommand
 	if len(parts) >= 2 {
 		subCommandName = strings.ToLower(parts[1])
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(bot, botChannel, userTarget{}, channel, user, parts)
+		response := subCommand.run(botChannel, userTarget{}, channel, user, parts)
 		if response != "" {
-			bot.Mention(channel, user, response)
+			botChannel.Mention(user, response)
 		}
 	}
 }

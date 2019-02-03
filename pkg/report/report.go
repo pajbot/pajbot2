@@ -18,7 +18,7 @@ type ReportUser struct {
 	Type string `json:",omitempty"`
 }
 
-func (u ReportUser) GetChannel() string {
+func (u ReportUser) GetName() string {
 	return u.Name
 }
 

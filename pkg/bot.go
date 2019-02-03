@@ -43,4 +43,6 @@ type Sender interface {
 
 	// Connect to the OnNewChannelJoined callback
 	OnNewChannelJoined(cb func(channelID string))
+
+	Quit(message string)
 }

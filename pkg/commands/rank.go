@@ -10,14 +10,14 @@ import (
 type Rank struct {
 }
 
-func (c Rank) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Rank) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
 	var potentialTarget string
 	targetID := user.GetID()
 
 	if len(parts) >= 2 {
 		potentialTarget = utils.FilterUsername(parts[1])
 		if potentialTarget != "" {
-			potentialTargetID := bot.GetUserStore().GetID(potentialTarget)
+			potentialTargetID := botChannel.Bot().GetUserStore().GetID(potentialTarget)
 			if potentialTargetID != "" {
 				targetID = potentialTargetID
 			} else {
@@ -26,10 +26,10 @@ func (c Rank) Trigger(bot pkg.Sender, botChannel pkg.BotChannel, parts []string,
 		}
 	}
 
-	rank := bot.PointRank(channel, targetID)
+	rank := botChannel.Bot().PointRank(channel, targetID)
 	if potentialTarget == "" {
-		bot.Mention(channel, user, "you are rank "+strconv.FormatUint(rank, 10)+" in points")
+		botChannel.Mention(user, "you are rank "+strconv.FormatUint(rank, 10)+" in points")
 	} else {
-		bot.Mention(channel, user, potentialTarget+" is rank "+strconv.FormatUint(rank, 10)+" in points")
+		botChannel.Mention(user, potentialTarget+" is rank "+strconv.FormatUint(rank, 10)+" in points")
 	}
 }

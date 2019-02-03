@@ -1,11 +1,19 @@
 package modules
 
-import "github.com/pajlada/pajbot2/pkg"
+import (
+	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/eventemitter"
+)
+
+func init() {
+	Register(testSpec)
+}
 
 type test struct {
 	botChannel pkg.BotChannel
 
-	server *server
+	server      *server
+	connections []*eventemitter.Listener
 }
 
 func newTest() pkg.Module {
@@ -14,7 +22,7 @@ func newTest() pkg.Module {
 	}
 }
 
-var testSpec = moduleSpec{
+var testSpec = &moduleSpec{
 	id:    "test",
 	name:  "Test",
 	maker: newTest,
@@ -28,22 +36,25 @@ func (m *test) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 }
 
 func (m *test) Disable() error {
+	for _, c := range m.connections {
+		c.Disconnected = true
+	}
 	return nil
 }
 
 func (m *test) Spec() pkg.ModuleSpec {
-	return &testSpec
+	return testSpec
 }
 
 func (m *test) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m test) OnWhisper(bot pkg.Sender, user pkg.User, message pkg.Message) error {
+func (m test) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m test) OnMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	bot.Mention(channel, user, "test module xd")
+func (m test) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+	bot.Mention(user, "test module xd")
 	return nil
 }

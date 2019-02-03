@@ -1,6 +1,6 @@
 package pkg
 
 type Channel interface {
-	GetChannel() string
+	GetName() string
 	GetID() string
 }

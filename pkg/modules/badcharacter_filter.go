@@ -40,11 +40,11 @@ func (m *badCharacterFilter) BotChannel() pkg.BotChannel {
 	return m.botChannel
 }
 
-func (m *badCharacterFilter) OnWhisper(bot pkg.Sender, source pkg.User, message pkg.Message) error {
+func (m *badCharacterFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
 	return nil
 }
 
-func (m *badCharacterFilter) OnMessage(bot pkg.Sender, source pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *badCharacterFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {

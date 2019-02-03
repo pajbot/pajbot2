@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/eventemitter"
 	"github.com/pajlada/pajbot2/pkg/modules"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
@@ -20,7 +21,7 @@ type BotChannel struct {
 
 	ID int64
 
-	Channel User
+	channel User
 	BotUser User
 
 	initialized bool
@@ -30,22 +31,50 @@ type BotChannel struct {
 	modulesMutex sync.Mutex
 
 	sql *sql.DB
+
+	eventEmitter *eventemitter.EventEmitter
+
+	bot *Bot
+}
+
+func (c *BotChannel) Channel() pkg.Channel {
+	return &c.channel
+}
+
+func (c *BotChannel) Bot() pkg.Sender {
+	return c.bot
+}
+
+func (c *BotChannel) Say(message string) {
+	c.bot.Say(&c.channel, message)
+}
+
+func (c *BotChannel) Mention(user pkg.User, message string) {
+	c.bot.Mention(&c.channel, user, message)
+}
+
+func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
+	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
 }
 
+func (c *BotChannel) Events() *eventemitter.EventEmitter {
+	return c.eventEmitter
+}
+
 func (c *BotChannel) ChannelID() string {
-	return c.Channel.ID()
+	return c.channel.ID()
 }
 
 func (c *BotChannel) ChannelName() string {
-	return c.Channel.Name()
+	return c.channel.Name()
 }
 
 func (c *BotChannel) Stream() pkg.Stream {
-	return c.streamStore.GetStream(&c.Channel)
+	return c.streamStore.GetStream(&c.channel)
 }
 
 // We assume that modulesMutex is locked already
@@ -170,12 +199,17 @@ func (c *BotChannel) Initialize(b *Bot) error {
 		return errors.New("bot channel is already initialized")
 	}
 
+	c.bot = b
 	c.sql = b.sql
 	c.streamStore = b.streamStore
 
 	c.initialized = true
 
+	c.eventEmitter = eventemitter.New()
+
 	c.loadModules()
+
+	c.eventEmitter.Emit("on_join", nil)
 
 	return nil
 }
@@ -270,21 +304,16 @@ func (c *BotChannel) onModules(cb func(module pkg.Module) error) (err error) {
 	return
 }
 
-func (c *BotChannel) handleMessage(bot pkg.Sender, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) error {
-	if channel == nil {
-		return errors.New("channel may not be nil")
-	}
+func (c *BotChannel) handleMessage(user pkg.User, message *TwitchMessage, action pkg.Action) error {
+	c.eventEmitter.Emit("on_msg", nil)
 
 	return c.onModules(func(module pkg.Module) error {
-		return module.OnMessage(bot, channel, user, message, action)
+		return module.OnMessage(c, user, message, action)
 	})
 }
 
-func (c *BotChannel) handleWhisper(bot pkg.Sender, user pkg.User, message *TwitchMessage) error {
-	fmt.Println("handle whisper", message.GetText())
+func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error {
 	return c.onModules(func(module pkg.Module) error {
-		return module.OnWhisper(bot, user, message)
+		return module.OnWhisper(c, user, message)
 	})
-
-	return nil
 }

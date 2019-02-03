@@ -49,6 +49,8 @@ type BotCredentials struct {
 type Bot struct {
 	*twitch.Client
 
+	app pkg.Application
+
 	TokenSource oauth2.TokenSource
 
 	DatabaseID int
@@ -92,6 +94,8 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
+		app: app,
+
 		TokenSource: tokenSource,
 		Client:      twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
 
@@ -161,7 +165,7 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	defer b.channelsMutex.Unlock()
 
 	for i, botChannel := range b.channels {
-		if botChannel.Channel.ID() == channelID {
+		if botChannel.Channel().GetID() == channelID {
 			return i, botChannel
 		}
 	}
@@ -174,7 +178,7 @@ func (b *Bot) ChannelIDs() (channelIDs []string) {
 	defer b.channelsMutex.Unlock()
 
 	for _, botChannel := range b.channels {
-		channelIDs = append(channelIDs, botChannel.Channel.ID())
+		channelIDs = append(channelIDs, botChannel.Channel().GetID())
 	}
 
 	return
@@ -185,7 +189,7 @@ func (b *Bot) InChannel(channelID string) bool {
 	defer b.channelsMutex.Unlock()
 
 	for _, botChannel := range b.channels {
-		if botChannel.Channel.ID() == channelID {
+		if botChannel.Channel().GetID() == channelID {
 			return true
 		}
 	}
@@ -213,11 +217,11 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 	for rows.Next() {
 		var botChannel BotChannel
 
-		if err = rows.Scan(&botChannel.ID, &botChannel.Channel.id); err != nil {
+		if err = rows.Scan(&botChannel.ID, &botChannel.channel.id); err != nil {
 			return err
 		}
 
-		channelIDs = append(channelIDs, botChannel.Channel.ID())
+		channelIDs = append(channelIDs, botChannel.Channel().GetID())
 		channels = append(channels, &botChannel)
 	}
 
@@ -225,14 +229,14 @@ func (b *Bot) LoadChannels(sql *sql.DB) error {
 
 	for id, name := range m {
 		for _, c := range channels {
-			if c.Channel.ID() == id {
-				c.Channel.SetName(name)
+			if c.Channel().GetID() == id {
+				c.channel.SetName(name)
 			}
 		}
 	}
 
 	for _, c := range channels {
-		if c.Channel.Valid() {
+		if c.channel.Valid() {
 			if err = b.addBotChannel(c); err != nil {
 				return nil
 			}
@@ -260,7 +264,7 @@ func (b *Bot) JoinChannels() {
 	defer b.channelsMutex.Unlock()
 
 	for _, c := range b.channels {
-		b.Join(c.Channel.Name())
+		b.Join(c.Channel().GetName())
 	}
 }
 
@@ -373,11 +377,11 @@ func (b *Bot) Connected() bool {
 }
 
 func (b *Bot) Say(channel pkg.Channel, message string) {
-	b.Client.Say(channel.GetChannel(), message)
+	b.Client.Say(channel.GetName(), message)
 }
 
 func (b *Bot) Mention(channel pkg.Channel, user pkg.User, message string) {
-	b.Client.Say(channel.GetChannel(), "@"+user.GetName()+", "+message)
+	b.Client.Say(channel.GetName(), "@"+user.GetName()+", "+message)
 }
 
 func (b *Bot) Whisper(user pkg.User, message string) {
@@ -427,7 +431,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 
 	_, botChannel := b.getBotChannel(channelID)
 	if botChannel == nil {
-		fmt.Println("Whisper received with context channel being", channelName, "without having a BotChannel there")
+		// Whisper was not prefixed with a channel for context, possibly send as a "raw whisper" event?
 		return
 	}
 
@@ -435,7 +439,7 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 
 	message := NewTwitchMessage(rawMessage)
 
-	err := botChannel.handleWhisper(b, twitchUser, message)
+	err := botChannel.handleWhisper(twitchUser, message)
 	if err != nil {
 		fmt.Println("Error occured while forwarding whisper to bot channel:", err)
 	}
@@ -473,7 +477,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 		return
 	}
 
-	err := botChannel.handleMessage(b, channel, twitchUser, message, action)
+	err := botChannel.handleMessage(twitchUser, message, action)
 	if err != nil {
 		fmt.Println("Error occured while forwarding message to bot channel:", err)
 	}
@@ -516,11 +520,6 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 	}
 
 	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name(), channel, user, rawMessage)
-}
-
-// Quit quits the entire application
-func (b *Bot) Quit(message string) {
-	b.QuitChannel <- message
 }
 
 func (b *Bot) StartChatterPoller() {
@@ -826,16 +825,16 @@ func (b *Bot) JoinChannel(channelID string) error {
 	botChannel := &BotChannel{
 		ID: id,
 
-		Channel: User{
+		channel: User{
 			id: channelID,
 		},
 	}
-	err = botChannel.Channel.fillIn(b.userStore)
+	err = botChannel.channel.fillIn(b.userStore)
 	if err != nil {
 		return err
 	}
 
-	b.Join(botChannel.Channel.Name())
+	b.Join(botChannel.Channel().GetName())
 
 	if err = b.addBotChannel(botChannel); err != nil {
 		return err
@@ -859,7 +858,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()
 
-	b.Depart(botChannel.Channel.Name())
+	b.Depart(botChannel.Channel().GetName())
 
 	res, err := b.sql.Exec(queryF, botChannel.DatabaseID())
 	if err != nil {
@@ -912,4 +911,14 @@ func (b *Bot) MessageReceived(source pkg.PubSubSource, topic string, data []byte
 		b.Untimeout(b.MakeChannel(msg.Channel), b.MakeUser(msg.Target))
 	}
 	return nil
+}
+
+// Quit quits the entire application
+func (b *Bot) Quit(message string) {
+	b.channelsMutex.Lock()
+	for _, channel := range b.channels {
+		channel.Events().Emit("on_quit", nil)
+	}
+	b.channelsMutex.Unlock()
+	time.AfterFunc(250*time.Millisecond, func() { b.QuitChannel <- message })
 }
