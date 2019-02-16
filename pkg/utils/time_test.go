@@ -12,10 +12,33 @@ func testRelTime(t *testing.T, t1, t2 time.Time, expectedResult string) {
 	if result != expectedResult {
 		t.Error("Got '" + result + "', expected '" + expectedResult + "'")
 	}
+
+	var diff time.Duration
+	if t1.After(t2) {
+		diff = t1.Sub(t2)
+	} else {
+		diff = t2.Sub(t1)
+	}
+
+	result = DurationString(diff)
+	if result != expectedResult {
+		t.Error("Got '" + result + "', expected '" + expectedResult + "'")
+	}
 }
 
 func testCustomRelTime(t *testing.T, t1, t2 time.Time, numParts int, glue string, expectedResult string) {
 	result := CustomRelTime(t1, t2, numParts, glue)
+	if result != expectedResult {
+		t.Error("Got '" + result + "', expected '" + expectedResult + "'")
+	}
+
+	var diff time.Duration
+	if t1.After(t2) {
+		diff = t1.Sub(t2)
+	} else {
+		diff = t2.Sub(t1)
+	}
+	result = CustomDurationString(diff, numParts, glue)
 	if result != expectedResult {
 		t.Error("Got '" + result + "', expected '" + expectedResult + "'")
 	}
