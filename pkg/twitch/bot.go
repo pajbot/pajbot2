@@ -391,6 +391,9 @@ func (b *Bot) Whisper(user pkg.User, message string) {
 func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
+		time.AfterFunc(1200*time.Millisecond, func() {
+			b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
+		})
 	}
 }
 
