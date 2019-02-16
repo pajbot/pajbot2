@@ -9,6 +9,7 @@ import (
 	"github.com/pajlada/botsync/pkg/client"
 	"github.com/pajlada/botsync/pkg/protocol"
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 func init() {
@@ -116,7 +117,9 @@ func (m *afk) onMessage(message *protocol.Message) {
 			fmt.Println("Error parsing afk message:", err)
 			return
 		}
-		m.botChannel.Say(parameters.UserName + " just went afk: " + parameters.Reason)
+		if !message.Historic {
+			m.botChannel.Say(parameters.UserName + " just went afk: " + parameters.Reason)
+		}
 		afkDatabase[parameters.UserID] = true
 
 	case "back":
@@ -126,7 +129,10 @@ func (m *afk) onMessage(message *protocol.Message) {
 			fmt.Println("Error parsing afk message:", err)
 			return
 		}
-		m.botChannel.Say(parameters.UserName + " just went came back from being afk (" + parameters.AFKChannelName + "): " + parameters.Reason)
+		afkDuration := time.Millisecond * time.Duration(parameters.Duration)
+		response := fmt.Sprintf("%s just came back after %s: %s",
+			parameters.UserName, utils.DurationString(afkDuration), parameters.Reason)
+		m.botChannel.Say(response)
 		delete(afkDatabase, parameters.UserID)
 	}
 }
