@@ -55,6 +55,8 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	conn := NewWSConn(ws, messageType, c)
 
+	fmt.Println("aaaaaaaaa")
+
 	// Create a custom connection
 	Hub.register <- conn
 	conn.onConnected()

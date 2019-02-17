@@ -29,8 +29,11 @@ type Sender interface {
 	ChannelIDs() []string
 
 	InChannel(string) bool
+	InChannelName(string) bool
 	GetUserStore() UserStore
 	GetUserContext() UserContext
+
+	GetBotChannel(channelName string) BotChannel
 
 	MakeUser(string) User
 	MakeChannel(string) Channel

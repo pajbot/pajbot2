@@ -80,9 +80,9 @@ func New(app pkg.Application) (*Holder, error) {
 		return nil, err
 	}
 
-	h.pubSub.Subscribe(h, "HandleReport")
-	h.pubSub.Subscribe(h, "TimeoutEvent")
-	h.pubSub.Subscribe(h, "BanEvent")
+	h.pubSub.Subscribe(h, "HandleReport", nil)
+	h.pubSub.Subscribe(h, "TimeoutEvent", nil)
+	h.pubSub.Subscribe(h, "BanEvent", nil)
 	h.pubSub.HandleSubscribe(h, "ReportReceived")
 
 	return h, nil
@@ -398,14 +398,30 @@ func (h *Holder) MessageReceived(source pkg.PubSubSource, topic string, data []b
 	return nil
 }
 
-func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string) (error, bool) {
+type reportReceivedParameters struct {
+	ChannelID string
+}
+
+func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, parameters json.RawMessage) (error, bool) {
 	switch topic {
 	case "ReportReceived":
+		fmt.Println("aaaaaaaaaaaaaaaa")
 		user := source.AuthenticatedUser()
 		if user == nil {
 			fmt.Println("no user")
 			return nil, false
 		}
+
+		fmt.Println("Parameters:", string(parameters))
+
+		var parsedParams reportReceivedParameters
+		err := json.Unmarshal(parameters, &parsedParams)
+		if err != nil {
+			fmt.Println("Error parsing subscription parameters:", err)
+			return nil, false
+		}
+
+		fmt.Println("Channel ID:", parsedParams.ChannelID)
 
 		fmt.Println("User name:", user.GetName())
 

@@ -1,7 +1,9 @@
 package pkg
 
+import "encoding/json"
+
 type PubSub interface {
-	Subscribe(source PubSubSource, topic string)
+	Subscribe(source PubSubSource, topic string, parameters json.RawMessage)
 	Publish(source PubSubSource, topic string, data interface{})
 
 	HandleSubscribe(connection PubSubSubscriptionHandler, topic string)
@@ -14,7 +16,7 @@ type PubSubConnection interface {
 }
 
 type PubSubSubscriptionHandler interface {
-	ConnectionSubscribed(source PubSubSource, topic string) (error, bool)
+	ConnectionSubscribed(source PubSubSource, topic string, parameters json.RawMessage) (error, bool)
 }
 
 // PubSubSource is an interface that is responsible for a message being written into pubsub

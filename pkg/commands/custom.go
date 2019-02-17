@@ -205,13 +205,6 @@ func (c GivePoints) Trigger(botChannel pkg.BotChannel, parts []string, channel p
 	botChannel.Mention(user, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
 }
 
-type Ping struct {
-}
-
-func (c Ping) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	botChannel.Mention(user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
-}
-
 type Simplify struct {
 }
 
@@ -359,15 +352,4 @@ func (c IsLive) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.C
 	} else {
 		botChannel.Mention(user, "offline FeelsBadMan")
 	}
-}
-
-type Quit struct {
-}
-
-func (c Quit) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
-		return
-	}
-
-	botChannel.Bot().Quit("hehe")
 }

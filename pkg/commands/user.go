@@ -5,9 +5,18 @@ import (
 	"strings"
 
 	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajlada/pajbot2/pkg/commandlist"
 	"github.com/pajlada/pajbot2/pkg/users"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
+
+func init() {
+	commandlist.Register(pkg.CommandInfo{
+		Name:        "user",
+		Description: "do user things",
+		Maker:       NewUser,
+	})
+}
 
 type userTarget struct {
 	id   string
@@ -47,15 +56,21 @@ func updatePermissions(action, channelID string, target userTarget, parts []stri
 }
 
 type User struct {
+	base
+
 	subCommands       *subCommands
 	defaultSubCommand string
 }
 
-func NewUser() *User {
+func NewUser() pkg.CustomCommand2 {
 	u := &User{
+		base:              newBase(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "print",
 	}
+
+	u.base.UserCooldown = 0
+	u.base.GlobalCooldown = 0
 
 	u.subCommands.add("print", &subCommand{
 		permission: pkg.PermissionNone,
@@ -143,7 +158,7 @@ func NewUser() *User {
 	return u
 }
 
-func (c *User) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *User) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
 	if len(parts) < 2 {
 		return
 	}
@@ -171,7 +186,7 @@ func (c *User) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Ch
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(botChannel, target, channel, user, parts)
+		response := subCommand.run(botChannel, target, botChannel.Channel(), user, parts)
 		if response != "" {
 			botChannel.Mention(user, response)
 		}
