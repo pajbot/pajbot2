@@ -17,8 +17,13 @@ type CustomCommand2 interface {
 	AddCooldown(User)
 }
 
+type CommandMatcher interface {
+	Register(aliases []string, command interface{}) interface{}
+	Deregister(command interface{})
+	Match(text string) (interface{}, []string)
+}
+
 type CommandsManager interface {
-	Register(aliases []string, command CustomCommand2) CustomCommand2
-	Deregister(command CustomCommand2)
+	CommandMatcher
 	OnMessage(bot BotChannel, user User, message Message, action Action) error
 }
