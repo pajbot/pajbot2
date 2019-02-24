@@ -222,6 +222,11 @@ func (a *Application) InitializeSQL() error {
 		return err
 	}
 
+	err = a.sqlClient.Ping()
+	if err != nil {
+		return err
+	}
+
 	state.StoreSQL(a.sqlClient)
 
 	users.InitServer(a.sqlClient)
