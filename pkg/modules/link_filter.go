@@ -5,6 +5,11 @@ import (
 	"mvdan.cc/xurls"
 )
 
+var (
+	relaxedRegexp = xurls.Relaxed()
+	strictRegexp  = xurls.Strict()
+)
+
 type LinkFilter struct {
 	botChannel pkg.BotChannel
 }
@@ -50,7 +55,7 @@ func (m LinkFilter) OnMessage(bot pkg.BotChannel, source pkg.User, message pkg.M
 		return nil
 	}
 
-	links := xurls.Relaxed().FindAllString(message.GetText(), -1)
+	links := relaxedRegexp.FindAllString(message.GetText(), -1)
 	if len(links) > 0 {
 		action.Set(pkg.Timeout{180, "No links allowed"})
 	}
