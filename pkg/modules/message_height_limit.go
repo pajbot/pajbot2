@@ -273,6 +273,10 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 		return nil
 	}
 
+	if user.GetName() == "botfactory" {
+		return nil
+	}
+
 	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) || user.HasPermission(bot.Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
