@@ -42,6 +42,7 @@ func main() {
 	}
 
 	bot.AddHandler(onMessage)
+	bot.AddHandler(onUserBanned)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = bot.Open()
@@ -138,4 +139,48 @@ func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, msg)
 		return
 	}
+
+	if parts[0] == "$test" {
+		auditLog, err := s.GuildAuditLog(m.GuildID, "", "", 22, 1)
+		if err != nil {
+			fmt.Println("Error getting user ban data", err)
+			return
+		}
+		fmt.Println(auditLog)
+		return
+	}
+
+}
+
+func onUserBanned(s *discordgo.Session, m *discordgo.GuildBanAdd) {
+	auditLog, err := s.GuildAuditLog(m.GuildID, "", "", 22, 1)
+	if err != nil {
+		fmt.Println("Error getting user ban data", err)
+		return
+	}
+	fmt.Println(auditLog)
+	if len(auditLog.AuditLogEntries) != 1 {
+		fmt.Println("Unable to get the single ban entry")
+		return
+	}
+	if len(auditLog.Users) != 2 {
+		fmt.Println("length of users is wrong")
+		return
+	}
+	banner := auditLog.Users[0]
+	bannedUser := auditLog.Users[1]
+	if bannedUser.ID != m.User.ID {
+		fmt.Println("got log for wrong use Pepega")
+		return
+	}
+	fmt.Println(auditLog.Users)
+	entry := auditLog.AuditLogEntries[0]
+	// var username string
+	// for _ user := range auditLog.Users {
+	// 	if user.ID == entry.
+	// }
+	fmt.Println(entry)
+	fmt.Println("Entry User ID:", entry.UserID)
+	fmt.Println("target user ID:", m.User.ID)
+	s.ChannelMessageSend(moderationActionChannelID, fmt.Sprintf("%s was banned by %s: %s", m.User.Mention(), banner.Username, entry.Reason))
 }
