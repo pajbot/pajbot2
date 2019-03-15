@@ -23,6 +23,8 @@ var (
 const (
 	// TODO: Make this a choice somewhere :pepega:
 	moderationActionChannelID = `516960063081021460`
+
+	weebChannelID = `500650560614301696`
 )
 
 func init() {
@@ -43,6 +45,8 @@ func main() {
 
 	bot.AddHandler(onMessage)
 	bot.AddHandler(onUserBanned)
+	bot.AddHandler(onMessageReactionAdded)
+	bot.AddHandler(onMessageReactionRemoved)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = bot.Open()
@@ -183,4 +187,68 @@ func onUserBanned(s *discordgo.Session, m *discordgo.GuildBanAdd) {
 	fmt.Println("Entry User ID:", entry.UserID)
 	fmt.Println("target user ID:", m.User.ID)
 	s.ChannelMessageSend(moderationActionChannelID, fmt.Sprintf("%s was banned by %s: %s", m.User.Mention(), banner.Username, entry.Reason))
+}
+
+// const weebMessageID = `552788256333234176`
+const weebMessageID = `552791672854151190`
+const reactionBye = "👋"
+
+func onMessageReactionAdded(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
+	if m.MessageID == weebMessageID {
+		if m.Emoji.Name == reactionBye {
+			c, err := s.State.Channel(weebChannelID)
+			if err != nil {
+				fmt.Println("err:", err)
+				return
+			}
+			var overwriteDenies int
+			for _, overwrite := range c.PermissionOverwrites {
+				if overwrite.Type == "member" && overwrite.ID == m.UserID {
+					overwriteDenies = overwrite.Deny
+				}
+			}
+			if overwriteDenies != 0 {
+				// s.ChannelMessageSend(m.ChannelID, "cannot set your permissions - you have weird permissions set from before")
+				return
+			}
+
+			err = s.ChannelPermissionSet(weebChannelID, m.UserID, "member", 0, discordgo.PermissionReadMessages)
+			if err != nil {
+				fmt.Println("uh oh something went wrong")
+				return
+			}
+
+			// s.ChannelMessageSend(m.ChannelID, "added permission")
+		}
+	}
+}
+
+func onMessageReactionRemoved(s *discordgo.Session, m *discordgo.MessageReactionRemove) {
+	if m.MessageID == weebMessageID {
+		if m.Emoji.Name == reactionBye {
+			c, err := s.State.Channel(weebChannelID)
+			if err != nil {
+				fmt.Println("err:", err)
+				return
+			}
+			var overwriteDenies int
+			for _, overwrite := range c.PermissionOverwrites {
+				if overwrite.Type == "member" && overwrite.ID == m.UserID {
+					overwriteDenies = overwrite.Deny
+				}
+			}
+
+			if overwriteDenies != discordgo.PermissionReadMessages {
+				// s.ChannelMessageSend(m.ChannelID, "not allowed to remove that permission buddy")
+				return
+			}
+
+			err = s.ChannelPermissionDelete(weebChannelID, m.UserID)
+			if err != nil {
+				fmt.Println("uh oh something went wrong")
+				return
+			}
+			// s.ChannelMessageSend(m.ChannelID, "removed permission")
+		}
+	}
 }
