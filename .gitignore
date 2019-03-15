@@ -18,3 +18,5 @@ web/static/build
 # Coverage files
 coverage.out
 coverage.html
+
+.gdb_history
