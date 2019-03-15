@@ -32,6 +32,7 @@ func WebWrite(w http.ResponseWriter, data interface{}) {
 func WebWriteError(w http.ResponseWriter, code int, errorString string) {
 	msg := NewWebAPIError(code, errorString)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
 	WebWrite(w, msg)

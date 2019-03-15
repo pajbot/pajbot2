@@ -186,6 +186,19 @@ func (b *Bot) GetBotChannel(channelName string) pkg.BotChannel {
 	return nil
 }
 
+func (b *Bot) GetBotChannelByID(channelID string) pkg.BotChannel {
+	i, botChannel := b.getBotChannel(channelID)
+
+	if botChannel == nil {
+		return nil
+	}
+
+	fmt.Println("Bot channel returned:", botChannel)
+	fmt.Println("i:", i)
+
+	return botChannel
+}
+
 func (b *Bot) ChannelIDs() (channelIDs []string) {
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()

@@ -14,6 +14,7 @@ var (
 	sqlClient       *sql.DB
 	twitchUserStore pkg.UserStore
 	pubSub          pkg.PubSub
+	application     pkg.Application
 
 	mutex = &sync.RWMutex{}
 
@@ -38,6 +39,12 @@ func StorePubSub(pubSub_ pkg.PubSub) {
 	mutex.Unlock()
 }
 
+func StoreApplication(application_ pkg.Application) {
+	mutex.Lock()
+	application = application_
+	mutex.Unlock()
+}
+
 type Session struct {
 	ID     string
 	UserID uint64
@@ -50,6 +57,7 @@ type State struct {
 	SQL             *sql.DB
 	TwitchUserStore pkg.UserStore
 	PubSub          pkg.PubSub
+	Application     pkg.Application
 	Session         *Session
 	SessionID       *string
 }
@@ -82,6 +90,7 @@ func Context(w http.ResponseWriter, r *http.Request) State {
 		SQL:             sqlClient,
 		TwitchUserStore: twitchUserStore,
 		PubSub:          pubSub,
+		Application:     application,
 	}
 	mutex.RUnlock()
 

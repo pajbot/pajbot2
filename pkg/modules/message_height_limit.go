@@ -41,6 +41,8 @@ func init() {
 		name:  "Message height limit",
 		maker: NewMessageHeightLimit,
 
+		moduleType: pkg.ModuleTypeFilter,
+
 		enabledByDefault: false,
 
 		parameters: map[string]*moduleParameterSpec{
@@ -136,7 +138,9 @@ func initCLR() error {
 func initChannel(channelName string) error {
 	channel := C.CString(channelName)
 
+	fmt.Println("init channel", channelName)
 	res := C.InitChannel(channel)
+	fmt.Println("done")
 
 	if res != 1 {
 		return errors.New("Failed to init Channel " + channelName)
@@ -166,24 +170,32 @@ func initMessageHeightLimitLibrary() error {
 }
 
 func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []byte) (err error) {
+	fmt.Println("Initializing message height limit")
 	m.botChannel = botChannel
 
 	if !clrInitialized {
+		fmt.Println("init clr..")
 		err = initCLR()
 		if err != nil {
 			return
 		}
+		fmt.Println("done")
 
 		err = initMessageHeightLimitLibrary()
+		fmt.Println("done init height limit library")
 	}
 
+	fmt.Println("init channel")
 	if err := initChannel(botChannel.ChannelName()); err != nil {
 		return err
 	}
+	fmt.Println("done")
 
 	if err := loadModule(settings, m); err != nil {
 		fmt.Println("Error loading module:", err)
 	}
+
+	fmt.Println("Done")
 
 	return
 }
@@ -367,6 +379,7 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f", height, ratio)
 		}
 
+		fmt.Println("message is too tall")
 		reason = fmt.Sprintf("Your message is too tall: %.0f (%d)", height, userViolations)
 		action.Set(pkg.Timeout{
 			Duration: timeoutDuration,

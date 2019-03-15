@@ -34,6 +34,7 @@ type Sender interface {
 	GetUserContext() UserContext
 
 	GetBotChannel(channelName string) BotChannel
+	GetBotChannelByID(channelID string) BotChannel
 
 	MakeUser(string) User
 	MakeChannel(string) Channel

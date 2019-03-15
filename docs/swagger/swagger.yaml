@@ -1,0 +1,68 @@
+basePath: '{{.BasePath}}'
+definitions:
+  moderation.CheckMessageSuccessResponse:
+    properties:
+      banned:
+        type: boolean
+      filter_data:
+        items:
+          $ref: '#/definitions/moderation.filterData'
+        type: array
+      input_message:
+        type: string
+    type: object
+  moderation.filterData:
+    properties:
+      action_type:
+        type: integer
+      reason:
+        type: string
+    type: object
+  utils.WebAPIError:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+    type: object
+host: localhost:2355
+info:
+  contact:
+    email: rasmus.karlsson@pajlada.com
+    name: pajlada
+    url: https://pajlada.se
+  description: API for pajbot2
+  license:
+    name: MIT
+    url: https://github.com/pajlada/pajbot2/blob/master/LICENSE
+  title: pajbot2 API
+  version: "1.0"
+paths:
+  /api/channel/{channelID}/moderation/check_message:
+    get:
+      parameters:
+      - description: ID of channel to run the test in
+        in: path
+        name: channelID
+        required: true
+        type: string
+      - description: message to test against the bots filters
+        in: query
+        name: message
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/moderation.CheckMessageSuccessResponse'
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.WebAPIError'
+            type: object
+      summary: Check a message in a bots filter
+swagger: "2.0"

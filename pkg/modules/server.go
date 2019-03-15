@@ -24,11 +24,11 @@ func InitServer(app pkg.Application, pajbot1Config *config.Pajbot1Config, report
 
 	_server.sql = app.SQL()
 	_server.oldSession, err = sql.Open("mysql", pajbot1Config.SQL.DSN)
-	_server.pubSub = app.PubSub()
-	_server.reportHolder = reportHolder
 	if err != nil {
 		return err
 	}
+	_server.pubSub = app.PubSub()
+	_server.reportHolder = reportHolder
 
 	return nil
 }
@@ -49,6 +49,8 @@ type moduleSpec struct {
 	// i.e. "Report"
 	name string
 
+	moduleType pkg.ModuleType
+
 	enabledByDefault bool
 
 	priority int
@@ -62,6 +64,10 @@ func (s *moduleSpec) ID() string {
 
 func (s *moduleSpec) Name() string {
 	return s.name
+}
+
+func (s *moduleSpec) Type() pkg.ModuleType {
+	return s.moduleType
 }
 
 func (s *moduleSpec) EnabledByDefault() bool {

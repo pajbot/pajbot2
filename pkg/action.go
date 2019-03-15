@@ -2,14 +2,26 @@ package pkg
 
 import "fmt"
 
-type ActionType interface {
+type ActionType int
+
+const (
+	ActionTypeTimeout ActionType = iota
+	ActionTypeBan
+)
+
+type ActionPerformer interface {
 	Do(Sender, Channel, User) error
 	Priority() int
+	Type() ActionType
 }
 
 type Action interface {
 	Do() error
-	Set(ActionType)
+	Set(ActionPerformer)
+	Get() ActionPerformer
+
+	SetReason(string)
+	Reason() string
 
 	NotifyModerator() User
 	SetNotifyModerator(User)
@@ -24,7 +36,11 @@ type TwitchAction struct {
 
 	User User
 
-	action ActionType
+	Soft bool
+
+	action ActionPerformer
+
+	reason string
 
 	notifyModerator User
 }
@@ -44,6 +60,10 @@ func (a Timeout) Priority() int {
 	return 100 + a.Duration
 }
 
+func (a Timeout) Type() ActionType {
+	return ActionTypeTimeout
+}
+
 type Ban struct {
 	Reason string
 }
@@ -58,7 +78,15 @@ func (a Ban) Priority() int {
 	return 0
 }
 
+func (a Ban) Type() ActionType {
+	return ActionTypeBan
+}
+
 func (a TwitchAction) Do() error {
+	if a.Soft {
+		return nil
+	}
+
 	if a.action != nil {
 		if a.NotifyModerator() != nil {
 			a.Sender.Whisper(a.NotifyModerator(), fmt.Sprintf("%s triggered bad banphrase in %s", a.User.GetName(), a.Channel.GetName()))
@@ -69,7 +97,7 @@ func (a TwitchAction) Do() error {
 	return nil
 }
 
-func (a *TwitchAction) Set(action ActionType) {
+func (a *TwitchAction) Set(action ActionPerformer) {
 	if a.action == nil {
 		a.action = action
 	} else {
@@ -77,6 +105,18 @@ func (a *TwitchAction) Set(action ActionType) {
 			a.action = action
 		}
 	}
+}
+
+func (a *TwitchAction) Get() ActionPerformer {
+	return a.action
+}
+
+func (a *TwitchAction) SetReason(reason string) {
+	a.reason = reason
+}
+
+func (a *TwitchAction) Reason() string {
+	return a.reason
 }
 
 func (a TwitchAction) NotifyModerator() User {

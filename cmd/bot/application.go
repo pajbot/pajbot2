@@ -75,7 +75,7 @@ var _ pkg.Application = &Application{}
 
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
-	a := Application{
+	a := &Application{
 		twitchBots: botstore.New(),
 	}
 
@@ -87,10 +87,11 @@ func newApplication() *Application {
 	a.Quit = make(chan string)
 	a.pubSub = pubsub.New()
 	state.StorePubSub(a.pubSub)
+	state.StoreApplication(a)
 
 	go a.pubSub.Run()
 
-	return &a
+	return a
 }
 
 func (a *Application) UserStore() pkg.UserStore {
