@@ -505,6 +505,9 @@ func (a *Application) StartBots() error {
 				// Store message in our twitch message context class
 				a.twitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
 
+				message.Text = strings.TrimPrefix(message.Text, "@"+bot.TwitchAccount().Name()+" ")
+				message.Text = strings.TrimPrefix(message.Text, bot.TwitchAccount().Name()+" ")
+
 				// Forward to bot to let its modules work
 				bot.HandleMessage(channelName, user, message)
 			})
