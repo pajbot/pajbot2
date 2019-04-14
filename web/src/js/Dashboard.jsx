@@ -125,7 +125,7 @@ export default class Dashboard extends Component {
               <div className="input-group input-group-sm mb-3">
                 <input type="text" className="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" />
                 <div className="input-group-append">
-                  <input type="submit" className="btn btn-outline-secondary" type="submit" id="button-addon2" value="Look up user" />
+                  <input type="submit" className="btn btn-primary" type="submit" id="button-addon2" value="Look up user" />
                 </div>
               </div>
             </form>
