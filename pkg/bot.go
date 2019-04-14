@@ -11,7 +11,13 @@ type Sender interface {
 	Say(Channel, string)
 	Mention(Channel, User, string)
 	Whisper(User, string)
+
+	// Timeout times the user out immediately, and then again after X seconds
 	Timeout(Channel, User, int, string)
+
+	// SingleTimeout times the user out a single time immediately
+	SingleTimeout(Channel, User, int, string)
+
 	Ban(Channel, User, string)
 
 	GetPoints(Channel, string) uint64

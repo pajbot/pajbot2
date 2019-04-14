@@ -436,6 +436,12 @@ func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason s
 	}
 }
 
+func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
+	if !user.IsModerator() {
+		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
+	}
+}
+
 func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".ban %s %s", user.GetName(), reason))

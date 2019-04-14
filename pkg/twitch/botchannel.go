@@ -57,6 +57,10 @@ func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
 	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
+func (c *BotChannel) SingleTimeout(user pkg.User, duration int, reason string) {
+	c.bot.SingleTimeout(&c.channel, user, duration, reason)
+}
+
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
 }

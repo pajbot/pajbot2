@@ -23,6 +23,7 @@ type BotChannel interface {
 
 	// Moderation
 	Timeout(User, int, string)
+	SingleTimeout(User, int, string)
 
 	Bot() Sender
 }
