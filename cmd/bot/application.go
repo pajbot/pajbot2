@@ -27,7 +27,7 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 
 	"github.com/gempir/go-twitch-irc"
-	"github.com/pajlada/go-twitch-pubsub"
+	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/auth"
