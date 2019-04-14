@@ -245,41 +245,6 @@ func (c TimeMeOut) Trigger(botChannel pkg.BotChannel, parts []string, channel pk
 	botChannel.Timeout(user, int(timeoutDuration.Seconds()), reason)
 }
 
-type Join struct {
-}
-
-func (c *Join) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
-		return
-	}
-
-	if len(parts) < 2 {
-		return
-	}
-
-	channelName := parts[1]
-
-	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
-		botChannel.Mention(user, "I cannot join my own channel")
-		return
-	}
-
-	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
-	if channelID == "" {
-		botChannel.Mention(user, "no channel with that name exists")
-		return
-	}
-
-	err := botChannel.Bot().JoinChannel(channelID)
-	if err != nil {
-		botChannel.Mention(user, err.Error())
-		return
-	}
-
-	botChannel.Mention(user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
-}
-
 type Leave struct {
 }
 

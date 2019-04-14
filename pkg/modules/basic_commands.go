@@ -32,7 +32,7 @@ func (m *basicCommandsModule) Initialize(botChannel pkg.BotChannel, settings []b
 	m.botChannel = botChannel
 
 	m.commands.Register([]string{"!pb2ping"}, commands.NewPing())
-	// m.commands.Register([]string{"!pb2join"}, &commands.Join{})
+	m.commands.Register([]string{"!pb2join"}, commands.NewJoin())
 	// m.commands.Register([]string{"!pb2leave"}, &commands.Leave{})
 	m.commands.Register([]string{"!pb2module"}, commands.NewModule())
 	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit())
