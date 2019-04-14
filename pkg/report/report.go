@@ -206,7 +206,6 @@ func (h *Holder) insertHistoricReport(report Report, action handleReportMessage)
 INSERT INTO
 	ReportHistory
 (
-id,
 channel_id, channel_name, channel_type,
 reporter_id, reporter_name,
 target_id, target_name,
@@ -218,7 +217,6 @@ time_handled
 )
 
 VALUES (
-?,
 ?,?,?,
 ?,?,
 ?,?,
@@ -234,7 +232,6 @@ VALUES (
 		actionDuration = *action.Duration
 	}
 	_, err := h.db.Exec(queryF,
-		report.ID,
 		report.Channel.ID, report.Channel.Name, report.Channel.Type,
 		report.Reporter.ID, report.Reporter.Name,
 		report.Target.ID, report.Target.Name,
