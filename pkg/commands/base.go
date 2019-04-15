@@ -7,7 +7,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg"
 )
 
-type base struct {
+type Base struct {
 	cooldownMutex  *sync.RWMutex
 	userCooldowns  map[string]bool
 	globalCooldown bool
@@ -16,8 +16,8 @@ type base struct {
 	GlobalCooldown int
 }
 
-func newBase() base {
-	return base{
+func NewBase() Base {
+	return Base{
 		cooldownMutex: &sync.RWMutex{},
 		userCooldowns: make(map[string]bool),
 
@@ -26,26 +26,26 @@ func newBase() base {
 	}
 }
 
-func (c *base) addCooldown(userID string) {
+func (c *Base) addCooldown(userID string) {
 	c.cooldownMutex.Lock()
 	c.userCooldowns[userID] = true
 	c.globalCooldown = true
 	c.cooldownMutex.Unlock()
 }
 
-func (c *base) removeGlobalCooldown() {
+func (c *Base) removeGlobalCooldown() {
 	c.cooldownMutex.Lock()
 	c.globalCooldown = false
 	c.cooldownMutex.Unlock()
 }
 
-func (c *base) removeCooldown(userID string) {
+func (c *Base) removeCooldown(userID string) {
 	c.cooldownMutex.Lock()
 	delete(c.userCooldowns, userID)
 	c.cooldownMutex.Unlock()
 }
 
-func (c *base) hasCooldown(userID string) (ok bool) {
+func (c *Base) hasCooldown(userID string) (ok bool) {
 	c.cooldownMutex.RLock()
 	if c.globalCooldown {
 		ok = true
@@ -56,16 +56,40 @@ func (c *base) hasCooldown(userID string) (ok bool) {
 	return ok
 }
 
-func (c *base) HasCooldown(user pkg.User) bool {
+func (c *Base) HasCooldown(user pkg.User) bool {
 	return c.hasCooldown(user.GetID())
 }
 
-func (c *base) AddCooldown(user pkg.User) {
+func (c *Base) HasUserIDCooldown(userID string) bool {
+	return c.hasCooldown(userID)
+}
+
+func (c *Base) AddCooldown(user pkg.User) {
 	c.addCooldown(user.GetID())
 
 	time.AfterFunc(time.Duration(c.UserCooldown)*time.Second, func() {
 		c.removeCooldown(user.GetID())
 	})
+	time.AfterFunc(time.Duration(c.GlobalCooldown)*time.Second, func() {
+		c.removeGlobalCooldown()
+	})
+}
+
+func (c *Base) AddUserIDCooldown(userID string) {
+	c.cooldownMutex.Lock()
+	c.userCooldowns[userID] = true
+	c.cooldownMutex.Unlock()
+
+	time.AfterFunc(time.Duration(c.UserCooldown)*time.Second, func() {
+		c.removeCooldown(userID)
+	})
+}
+
+func (c *Base) AddGlobalCooldown() {
+	c.cooldownMutex.Lock()
+	c.globalCooldown = true
+	c.cooldownMutex.Unlock()
+
 	time.AfterFunc(time.Duration(c.GlobalCooldown)*time.Second, func() {
 		c.removeGlobalCooldown()
 	})

@@ -17,12 +17,12 @@ func init() {
 }
 
 type Ping struct {
-	base
+	Base
 }
 
 func NewPing() pkg.CustomCommand2 {
 	return &Ping{
-		base: newBase(),
+		Base: NewBase(),
 	}
 }
 

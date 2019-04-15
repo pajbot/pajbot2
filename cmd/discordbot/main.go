@@ -1,23 +1,47 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
+	"regexp"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/pajlada/pajbot2/internal/config"
+	"github.com/pajlada/pajbot2/pkg/commandmatcher"
+	"github.com/pajlada/stupidmigration"
+
+	_ "github.com/lib/pq"
 )
 
 var (
 	token string
 
-	moderatorRoles = []string{
-		"Snus Addict",
-		"Roleplayer",
-		"Moderators",
+	adminRole         = "104258168128802816"
+	moderatorRole     = "132930561361707010"
+	miniModeratorRole = "531783703882629126"
+	mutedRole         = "431734043881504778"
+
+	adminRoles = []string{
+		adminRole,
 	}
+
+	moderatorRoles = []string{
+		adminRole,
+		moderatorRole,
+	}
+
+	miniModeratorRoles = []string{
+		adminRole,
+		moderatorRole,
+		miniModeratorRole,
+	}
+
+	commands = commandmatcher.NewMatcher()
 )
 
 const (
@@ -27,6 +51,8 @@ const (
 	weebChannelID = `500650560614301696`
 )
 
+var sqlClient *sql.DB
+
 func init() {
 	token = os.Getenv("PAJBOT2_DISCORD_BOT_TOKEN")
 
@@ -34,6 +60,124 @@ func init() {
 		fmt.Println("Missing bot token")
 		os.Exit(1)
 	}
+
+	var err error
+	sqlClient, err = sql.Open("postgres", config.GetDSN())
+	if err != nil {
+		fmt.Println("Unable to connect to mysql", err)
+		os.Exit(1)
+	}
+
+	err = sqlClient.Ping()
+	if err != nil {
+		fmt.Println("Unable to ping mysql", err)
+		os.Exit(1)
+	}
+
+	err = stupidmigration.Migrate("migrations", sqlClient)
+	if err != nil {
+		fmt.Println("Unable to run SQL migrations", err)
+		os.Exit(1)
+	}
+}
+
+func registerCommands() {
+	// TODO: unmute
+
+	commands.Register([]string{"$mute"}, newMute())
+
+	commands.Register([]string{"$ping"}, newPing())
+
+	commands.Register([]string{"$ban"}, newBan())
+
+	commands.Register([]string{"$channelinfo"}, newChannelInfo())
+	commands.Register([]string{"$guildinfo", "$serverinfo"}, newGuildInfo())
+
+	commands.Register([]string{"$test-minimod"}, func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string) {
+		hasAccess, err := memberInRoles(s, m.GuildID, m.Author.ID, miniModeratorRoles)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		if !hasAccess {
+			// No permission
+			return
+		}
+
+		s.ChannelMessageSend(m.ChannelID, "you are >= minimod")
+	})
+
+	commands.Register([]string{"$test-mod"}, func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string) {
+		hasAccess, err := memberInRoles(s, m.GuildID, m.Author.ID, moderatorRoles)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		if !hasAccess {
+			// No permission
+			return
+		}
+
+		s.ChannelMessageSend(m.ChannelID, "you are >= mod")
+	})
+
+	commands.Register([]string{"$test-admin"}, func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string) {
+		hasAccess, err := memberInRoles(s, m.GuildID, m.Author.ID, adminRoles)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		if !hasAccess {
+			// No permission
+			return
+		}
+
+		s.ChannelMessageSend(m.ChannelID, "you are >= admin")
+	})
+
+	commands.Register([]string{"$roles"}, func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string) {
+		if m.Author.ID != "85699361769553920" {
+			return
+		}
+
+		roles, err := s.GuildRoles(m.GuildID)
+		if err != nil {
+			fmt.Println("Error getting roles:", err)
+			return
+		}
+
+		response := "```"
+		for _, role := range roles {
+			if role.Managed {
+				continue
+			}
+			response += fmt.Sprintf("%s = %s\n", role.ID, role.Name)
+		}
+		response += "```"
+
+		s.ChannelMessageSend(m.ChannelID, response)
+	})
+
+	commands.Register([]string{"$userid"}, func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string) {
+		hasAccess, err := memberInRoles(s, m.GuildID, m.Author.ID, miniModeratorRoles)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		if !hasAccess {
+			// No permission
+			return
+		}
+
+		if len(parts) < 2 {
+			return
+		}
+
+		target := parts[1]
+		targetID := cleanUserID(parts[1])
+
+		s.ChannelMessageSend(m.ChannelID, "User ID of "+target+" is `"+targetID+"`")
+	})
 }
 
 func main() {
@@ -42,6 +186,59 @@ func main() {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
+
+	go func() {
+		for {
+			<-time.After(3 * time.Second)
+			now := time.Now()
+			const query = `SELECT id, action, timepoint FROM discord_queue ORDER BY timepoint DESC LIMIT 30;`
+			rows, err := sqlClient.Query(query)
+			if err != nil {
+				fmt.Println("err:", err)
+				continue
+			}
+			var actionsToRemove []int64
+			defer rows.Close()
+			for rows.Next() {
+				var (
+					id           int64
+					actionString string
+					timepoint    time.Time
+				)
+				if err := rows.Scan(&id, &actionString, &timepoint); err != nil {
+					fmt.Println("Error scanning:", err)
+				}
+				if timepoint.After(now) {
+					continue
+				}
+
+				var action Action
+				err = json.Unmarshal([]byte(actionString), &action)
+				if err != nil {
+					fmt.Println("Error unmarshaling action:", err)
+					continue
+				}
+				fmt.Println("Perform", action.Type)
+
+				switch action.Type {
+				case "unmute":
+					err = bot.GuildMemberRoleRemove(action.GuildID, action.UserID, action.RoleID)
+					if err != nil {
+						fmt.Println("Error removing role")
+						continue
+					}
+
+					actionsToRemove = append(actionsToRemove, id)
+				}
+			}
+
+			for _, actionID := range actionsToRemove {
+				sqlClient.Exec("DELETE FROM discord_queue WHERE id=$1", actionID)
+			}
+		}
+	}()
+
+	registerCommands()
 
 	bot.AddHandler(onMessage)
 	bot.AddHandler(onUserBanned)
@@ -80,7 +277,7 @@ func memberInRoles(s *discordgo.Session, guildID string, userID string, roles []
 			return false, err
 		}
 		for _, tRole := range roles {
-			if role.Name == tRole {
+			if role.ID == tRole {
 				return true, nil
 			}
 		}
@@ -89,71 +286,45 @@ func memberInRoles(s *discordgo.Session, guildID string, userID string, roles []
 	return false, nil
 }
 
+var patternUserIDReplacer = regexp.MustCompile(`^<@!?([0-9]+)>$`)
+var patternUserID = regexp.MustCompile(`^[0-9]+$`)
+
+func cleanUserID(input string) string {
+	output := patternUserIDReplacer.ReplaceAllString(input, "$1")
+
+	if !patternUserID.MatchString(output) {
+		return ""
+	}
+
+	return output
+}
+
 func onMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	parts := strings.Split(m.Content, " ")
-
-	if parts[0] == "$ban" {
-		hasAccess, err := memberInRoles(s, m.GuildID, m.Author.ID, moderatorRoles)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-		if hasAccess {
-			if len(m.Mentions) == 0 {
-				s.ChannelMessageSend(m.ChannelID, "missing user arg. usage: $ban <user> <reason>")
+	c, parts := commands.Match(m.Content)
+	if c != nil {
+		if cmd, ok := c.(Command); ok {
+			id := m.ChannelID + m.Author.ID
+			if cmd.HasUserIDCooldown(id) {
 				return
 			}
 
-			target := m.Mentions[0]
-
-			if len(parts) < 3 {
-				s.ChannelMessageSend(m.ChannelID, "missing reason arg. usage: $ban <user> <reason>")
-				return
+			switch cmd.Run(s, m, parts) {
+			case CommandResultUserCooldown:
+				cmd.AddUserIDCooldown(id)
+			case CommandResultGlobalCooldown:
+				cmd.AddGlobalCooldown()
+			case CommandResultFullCooldown:
+				cmd.AddUserIDCooldown(id)
+				cmd.AddGlobalCooldown()
 			}
-
-			reason := strings.Join(parts[2:], " ")
-
-			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Banning %s (%s) for reason: `%s`", target.Username, target.ID, reason))
-			s.ChannelMessageSend(moderationActionChannelID, fmt.Sprintf("%s banned %s (%s) for reason: `%s`", m.Author.Username, target.Username, target.ID, reason))
-			return
+		} else if f, ok := c.(func(s *discordgo.Session, m *discordgo.MessageCreate, parts []string)); ok {
+			f(s, m, parts)
 		}
-
-		s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s, you don't have permission dummy", m.Author.Mention()))
-
-		return
 	}
-
-	if parts[0] == "$channelinfo" {
-		msg := fmt.Sprintf("Channel ID: %s", m.ChannelID)
-		s.ChannelMessageSend(m.ChannelID, msg)
-		return
-	}
-
-	// if not pajlada xd
-	if m.Author.ID != "85699361769553920" {
-		return
-	}
-
-	if parts[0] == "$guildinfo" {
-		msg := fmt.Sprintf("Server ID: %s", m.GuildID)
-		s.ChannelMessageSend(m.ChannelID, msg)
-		return
-	}
-
-	if parts[0] == "$test" {
-		auditLog, err := s.GuildAuditLog(m.GuildID, "", "", 22, 1)
-		if err != nil {
-			fmt.Println("Error getting user ban data", err)
-			return
-		}
-		fmt.Println(auditLog)
-		return
-	}
-
 }
 
 func onUserBanned(s *discordgo.Session, m *discordgo.GuildBanAdd) {

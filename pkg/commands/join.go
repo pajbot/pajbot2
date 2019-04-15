@@ -17,12 +17,12 @@ func init() {
 }
 
 type Join struct {
-	base
+	Base
 }
 
 func NewJoin() pkg.CustomCommand2 {
 	return &Join{
-		base: newBase(),
+		Base: NewBase(),
 	}
 }
 

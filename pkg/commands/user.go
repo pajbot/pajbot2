@@ -56,7 +56,7 @@ func updatePermissions(action, channelID string, target userTarget, parts []stri
 }
 
 type User struct {
-	base
+	Base
 
 	subCommands       *subCommands
 	defaultSubCommand string
@@ -64,13 +64,13 @@ type User struct {
 
 func NewUser() pkg.CustomCommand2 {
 	u := &User{
-		base:              newBase(),
+		Base:              NewBase(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "print",
 	}
 
-	u.base.UserCooldown = 0
-	u.base.GlobalCooldown = 0
+	u.Base.UserCooldown = 0
+	u.Base.GlobalCooldown = 0
 
 	u.subCommands.add("print", &subCommand{
 		permission: pkg.PermissionNone,

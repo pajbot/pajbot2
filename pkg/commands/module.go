@@ -8,7 +8,7 @@ import (
 )
 
 type moduleCommand struct {
-	base
+	Base
 
 	subCommands       *subCommands
 	defaultSubCommand string
@@ -16,13 +16,13 @@ type moduleCommand struct {
 
 func NewModule() pkg.CustomCommand2 {
 	u := &moduleCommand{
-		base:              newBase(),
+		Base:              NewBase(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "list",
 	}
 
-	u.base.UserCooldown = 0
-	u.base.GlobalCooldown = 0
+	u.Base.UserCooldown = 0
+	u.Base.GlobalCooldown = 0
 
 	u.subCommands.add("list", &subCommand{
 		permission: pkg.PermissionAdmin,

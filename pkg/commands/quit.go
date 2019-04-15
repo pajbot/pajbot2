@@ -14,12 +14,12 @@ func init() {
 }
 
 type Quit struct {
-	base
+	Base
 }
 
 func NewQuit() pkg.CustomCommand2 {
 	c := &Quit{
-		base: newBase(),
+		Base: NewBase(),
 	}
 
 	return c
