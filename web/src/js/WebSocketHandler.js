@@ -6,15 +6,19 @@ export default class WebSocketHandler {
     this.cbs = {};
   }
 
-  subscribe(topic, cb) {
+  subscribe(topic, cb, params) {
+    console.log('Params:', params);
     if (typeof this.cbs[topic] !== 'undefined') {
       return;
     }
 
-    this.cbs[topic] = cb;
+    this.cbs[topic] = {
+      cb: cb,
+      params: params,
+    };
 
     if (this.isOpen) {
-      this.sendSubscribe(topic);
+      this.sendSubscribe(topic, params);
     }
   }
 
@@ -32,11 +36,15 @@ export default class WebSocketHandler {
     this.socket.send(JSON.stringify(payload));
   }
 
-  sendSubscribe(topic) {
+  sendSubscribe(topic, params) {
+    console.log('Params2:', params);
     let payload = {
       'Type': 'Subscribe',
       'Topic': topic,
+      'Data': params,
     };
+
+    console.log('Sending', payload);
 
     this.send(payload);
   }
@@ -62,7 +70,7 @@ export default class WebSocketHandler {
       this.isOpen = true;
 
       for (let topic in this.cbs) {
-        this.sendSubscribe(topic);
+        this.sendSubscribe(topic, this.cbs[topic].params);
       }
     };
 
@@ -82,7 +90,7 @@ export default class WebSocketHandler {
 
         if (typeof json['Type'] === 'string') {
           if (typeof json['Topic'] === 'string') {
-            let cb = this.cbs[json['Topic']];
+            let cb = this.cbs[json['Topic']].cb;
             if (cb !== undefined) {
               cb(json['Data']);
             }

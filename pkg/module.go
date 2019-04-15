@@ -26,11 +26,19 @@ type Module interface {
 	OnMessage(bot BotChannel, user User, message Message, action Action) error
 }
 
+type ModuleType uint
+
+const (
+	ModuleTypeUnsorted = 0
+	ModuleTypeFilter   = 1
+)
+
 type ModuleMaker func() Module
 
 type ModuleSpec interface {
 	ID() string
 	Name() string
+	Type() ModuleType
 	EnabledByDefault() bool
 
 	Maker() ModuleMaker

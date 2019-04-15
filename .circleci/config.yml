@@ -81,8 +81,8 @@ jobs:
     # for this job, so skip the submodule update.
     - run:
         name: Get go dependencies
-        working_directory: ./cmd/bot
-        command: go get
+        working_directory: ./
+        command: go get ./cmd/...
     - run:
         name: Run Go unit tests
         command: go test -v ./pkg/... ./cmd/...

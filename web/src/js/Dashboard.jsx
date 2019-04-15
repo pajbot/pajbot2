@@ -23,29 +23,50 @@ function parseError(response, onErrorParsed) {
 
 export default class Dashboard extends Component {
 
-  state = {
-    reports: [],
-    userLookupLoading: false,
-    userLookupData: null,
-  };
 
   constructor(props) {
     super(props);
 
-    this.ws = new WebSocketHandler(props.wshost);
-
-    this.ws.subscribe('ReportReceived', (json) => {
-      this.addToVisibleReports(json);
-    });
+    this.ws = new WebSocketHandler(props.element.getAttribute('data-wshost'));
 
     this.ws.subscribe('ReportHandled', (json) => {
       this.removeVisibleReport(json.ReportID);
+    });
+
+
+    let extra = JSON.parse(props.element.getAttribute('data-extra'));
+
+    if (extra.Bots == null) {
+      extra.Bots = [];
+    }
+
+    console.log(extra);
+
+    this.state = {
+      bots: extra.Bots,
+      channel: extra.Channel,
+      currentBot: extra.Bots[0] || null,
+      reports: [],
+      userLookupLoading: false,
+      userLookupData: null,
+    };
+
+
+    console.log('Subscribe to report received', this.state.channel.ID);
+    this.ws.subscribe('ReportReceived', (json) => {
+      this.addToVisibleReports(json);
+    }, {
+      ChannelID: this.state.channel.ID,
     });
 
     this.ws.connect();
   }
 
   render() {
+    if (this.state.channel.ID == "") {
+      return <section><h2>No bot is running in this channel</h2></section>;
+    }
+
     return (
       <section>
         <div className="alert alert-danger fade show" role="alert" hidden={!this.state.errorMessage}>
@@ -54,6 +75,22 @@ export default class Dashboard extends Component {
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
+        <table className="table table-sm">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Connected</th>
+            </tr>
+          </thead>
+          <tbody>
+          {this.state.bots.map((bot, index) =>
+            <tr key={index}>
+              <td>{bot.Name}</td>
+              <td>{bot.Connected ? "Yes" : "No"}</td>
+            </tr>
+          )}
+          </tbody>
+        </table>
         <div className="row dashboard">
           <div className="col reports">
             <h4>Reports</h4>
@@ -88,7 +125,7 @@ export default class Dashboard extends Component {
               <div className="input-group input-group-sm mb-3">
                 <input type="text" className="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="button-addon2" />
                 <div className="input-group-append">
-                  <input type="submit" className="btn btn-outline-secondary" type="submit" id="button-addon2" value="Look up user" />
+                  <input type="submit" className="btn btn-primary" type="submit" id="button-addon2" value="Look up user" />
                 </div>
               </div>
             </form>
@@ -175,7 +212,7 @@ export default class Dashboard extends Component {
       userLookupName: username,
     });
 
-    fetch('/api/channel/11148817/moderation/user?user_name='+username)
+    fetch('/api/channel/' + this.state.channel.ID + '/moderation/user?user_name='+username)
       .then(jsonifyResponse)
       .then((myJson) => {
         this.setState({

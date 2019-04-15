@@ -8,15 +8,21 @@ import (
 )
 
 type moduleCommand struct {
+	Base
+
 	subCommands       *subCommands
 	defaultSubCommand string
 }
 
-func NewModule() pkg.CustomCommand {
+func NewModule() pkg.CustomCommand2 {
 	u := &moduleCommand{
+		Base:              NewBase(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "list",
 	}
+
+	u.Base.UserCooldown = 0
+	u.Base.GlobalCooldown = 0
 
 	u.subCommands.add("list", &subCommand{
 		permission: pkg.PermissionAdmin,
@@ -64,14 +70,14 @@ func NewModule() pkg.CustomCommand {
 	return u
 }
 
-func (c *moduleCommand) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *moduleCommand) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
 	subCommandName := c.defaultSubCommand
 	if len(parts) >= 2 {
 		subCommandName = strings.ToLower(parts[1])
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(botChannel, userTarget{}, channel, user, parts)
+		response := subCommand.run(botChannel, userTarget{}, botChannel.Channel(), user, parts)
 		if response != "" {
 			botChannel.Mention(user, response)
 		}

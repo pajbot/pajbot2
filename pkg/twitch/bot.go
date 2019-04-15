@@ -118,9 +118,9 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 		QuitChannel: app.QuitChannel(),
 	}
 
-	b.pubSub.Subscribe(b, "Ban")
-	b.pubSub.Subscribe(b, "Timeout")
-	b.pubSub.Subscribe(b, "Untimeout")
+	b.pubSub.Subscribe(b, "Ban", nil)
+	b.pubSub.Subscribe(b, "Timeout", nil)
+	b.pubSub.Subscribe(b, "Untimeout", nil)
 
 	b.twitchAccount.fillIn(b.userStore)
 
@@ -173,6 +173,32 @@ func (b *Bot) getBotChannel(channelID string) (int, *BotChannel) {
 	return -1, nil
 }
 
+func (b *Bot) GetBotChannel(channelName string) pkg.BotChannel {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for _, botChannel := range b.channels {
+		if botChannel.Channel().GetName() == channelName {
+			return botChannel
+		}
+	}
+
+	return nil
+}
+
+func (b *Bot) GetBotChannelByID(channelID string) pkg.BotChannel {
+	i, botChannel := b.getBotChannel(channelID)
+
+	if botChannel == nil {
+		return nil
+	}
+
+	fmt.Println("Bot channel returned:", botChannel)
+	fmt.Println("i:", i)
+
+	return botChannel
+}
+
 func (b *Bot) ChannelIDs() (channelIDs []string) {
 	b.channelsMutex.Lock()
 	defer b.channelsMutex.Unlock()
@@ -190,6 +216,19 @@ func (b *Bot) InChannel(channelID string) bool {
 
 	for _, botChannel := range b.channels {
 		if botChannel.Channel().GetID() == channelID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (b *Bot) InChannelName(channelName string) bool {
+	b.channelsMutex.Lock()
+	defer b.channelsMutex.Unlock()
+
+	for _, botChannel := range b.channels {
+		if botChannel.Channel().GetName() == channelName {
 			return true
 		}
 	}
@@ -394,6 +433,12 @@ func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason s
 		time.AfterFunc(1200*time.Millisecond, func() {
 			b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
 		})
+	}
+}
+
+func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
+	if !user.IsModerator() {
+		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
 	}
 }
 

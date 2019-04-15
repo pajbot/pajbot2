@@ -205,13 +205,6 @@ func (c GivePoints) Trigger(botChannel pkg.BotChannel, parts []string, channel p
 	botChannel.Mention(user, "you gave away "+strconv.FormatUint(pointsToGive, 10)+" points to @"+target)
 }
 
-type Ping struct {
-}
-
-func (c Ping) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	botChannel.Mention(user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
-}
-
 type Simplify struct {
 }
 
@@ -252,76 +245,6 @@ func (c TimeMeOut) Trigger(botChannel pkg.BotChannel, parts []string, channel pk
 	botChannel.Timeout(user, int(timeoutDuration.Seconds()), reason)
 }
 
-type Join struct {
-}
-
-func (c *Join) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
-		return
-	}
-
-	if len(parts) < 2 {
-		return
-	}
-
-	channelName := parts[1]
-
-	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
-		botChannel.Mention(user, "I cannot join my own channel")
-		return
-	}
-
-	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
-	if channelID == "" {
-		botChannel.Mention(user, "no channel with that name exists")
-		return
-	}
-
-	err := botChannel.Bot().JoinChannel(channelID)
-	if err != nil {
-		botChannel.Mention(user, err.Error())
-		return
-	}
-
-	botChannel.Mention(user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
-}
-
-type Leave struct {
-}
-
-func (c *Leave) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
-		return
-	}
-
-	if len(parts) < 2 {
-		return
-	}
-
-	channelName := parts[1]
-
-	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
-		botChannel.Mention(user, "I cannot leave my own channel")
-		return
-	}
-
-	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
-	if channelID == "" {
-		botChannel.Mention(user, "no channel with that name exists")
-		return
-	}
-
-	err := botChannel.Bot().LeaveChannel(channelID)
-	if err != nil {
-		botChannel.Mention(user, "Error leaving channel: "+err.Error())
-		return
-	}
-
-	botChannel.Mention(user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
-}
-
 type Test struct {
 }
 
@@ -359,15 +282,4 @@ func (c IsLive) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.C
 	} else {
 		botChannel.Mention(user, "offline FeelsBadMan")
 	}
-}
-
-type Quit struct {
-}
-
-func (c Quit) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if !user.HasPermission(botChannel.Channel(), pkg.PermissionAdmin) {
-		return
-	}
-
-	botChannel.Bot().Quit("hehe")
 }

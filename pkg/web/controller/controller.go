@@ -6,6 +6,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/web/controller/admin"
 	"github.com/pajlada/pajbot2/pkg/web/controller/api"
 	"github.com/pajlada/pajbot2/pkg/web/controller/banphrases"
+	"github.com/pajlada/pajbot2/pkg/web/controller/channel"
 	"github.com/pajlada/pajbot2/pkg/web/controller/dashboard"
 	"github.com/pajlada/pajbot2/pkg/web/controller/home"
 	"github.com/pajlada/pajbot2/pkg/web/controller/logout"
@@ -15,6 +16,8 @@ import (
 )
 
 func LoadRoutes(a pkg.Application, cfg *config.Config) {
+	channel.Load(a, cfg)
+
 	dashboard.Load()
 	home.Load()
 	api.Load(a, cfg)
@@ -32,4 +35,7 @@ func LoadRoutes(a pkg.Application, cfg *config.Config) {
 
 	// /admin
 	admin.Load(a)
+
+	// /commands
+	router.Get("/commands", handleCommands)
 }

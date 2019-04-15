@@ -15,11 +15,15 @@ type BotChannel interface {
 
 	Events() *eventemitter.EventEmitter
 
+	HandleMessage(user User, message Message, action Action) error
+	OnModules(cb func(module Module) error) error
+
 	Say(string)
 	Mention(User, string)
 
 	// Moderation
 	Timeout(User, int, string)
+	SingleTimeout(User, int, string)
 
 	Bot() Sender
 }

@@ -62,7 +62,10 @@ func (ps *PubSub) Run() {
 			case operationPublish:
 				ps.publish(msg.source, msg.topic, msg.data)
 			case operationSubscribe:
-				ps.Subscribe(msg.source, msg.topic)
+				subscriptionParameters, ok := msg.data.(json.RawMessage)
+				if ok {
+					ps.Subscribe(msg.source, msg.topic, subscriptionParameters)
+				}
 
 			default:
 				fmt.Printf("Unhandled operation: %v\n", msg.operation)
@@ -102,9 +105,15 @@ type pubsubMessage struct {
 	Data  interface{} `json:",omitempty"`
 }
 
+type incomingMessage struct {
+	Type  string
+	Topic string
+	Data  json.RawMessage
+}
+
 // HandleJSON handles a json blob (bytes) from the given source (source)
 func (ps *PubSub) HandleJSON(source pkg.PubSubSource, bytes []byte) error {
-	var msg pubsubMessage
+	var msg incomingMessage
 	err := json.Unmarshal(bytes, &msg)
 	if err != nil {
 		return err
@@ -122,6 +131,7 @@ func (ps *PubSub) HandleJSON(source pkg.PubSubSource, bytes []byte) error {
 		ps.c <- Message{
 			operation: operationSubscribe,
 			topic:     msg.Topic,
+			data:      msg.Data,
 			source:    source,
 		}
 	}
@@ -129,8 +139,8 @@ func (ps *PubSub) HandleJSON(source pkg.PubSubSource, bytes []byte) error {
 	return nil
 }
 
-func (ps *PubSub) Subscribe(source pkg.PubSubSource, topic string) {
-	successfulAuthorization := ps.notifySubscriptionHandlers(source, topic)
+func (ps *PubSub) Subscribe(source pkg.PubSubSource, topic string, parameters json.RawMessage) {
+	successfulAuthorization := ps.notifySubscriptionHandlers(source, topic, parameters)
 	if !successfulAuthorization {
 		fmt.Printf("[%s] Failed authorization:\n", topic)
 		// fmt.Printf("[%s] Failed authorization: %+v\n", topic, auth)
@@ -146,12 +156,12 @@ func (ps *PubSub) Subscribe(source pkg.PubSubSource, topic string) {
 	}
 }
 
-func (ps *PubSub) notifySubscriptionHandlers(source pkg.PubSubSource, topic string) bool {
+func (ps *PubSub) notifySubscriptionHandlers(source pkg.PubSubSource, topic string, parameters json.RawMessage) bool {
 	ps.onSubscribeMutex.Lock()
 	defer ps.onSubscribeMutex.Unlock()
 
 	for _, handler := range ps.onSubscribe[topic] {
-		err, successfulAuthorization := handler.ConnectionSubscribed(source, topic)
+		err, successfulAuthorization := handler.ConnectionSubscribed(source, topic, parameters)
 		if err != nil {
 			fmt.Println("Error in subscription handler:", err)
 		}

@@ -57,6 +57,10 @@ func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
 	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
+func (c *BotChannel) SingleTimeout(user pkg.User, duration int, reason string) {
+	c.bot.SingleTimeout(&c.channel, user, duration, reason)
+}
+
 func (c *BotChannel) DatabaseID() int64 {
 	return c.ID
 }
@@ -291,7 +295,7 @@ func (c *BotChannel) loadModules() {
 	}
 }
 
-func (c *BotChannel) onModules(cb func(module pkg.Module) error) (err error) {
+func (c *BotChannel) OnModules(cb func(module pkg.Module) error) (err error) {
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
@@ -304,16 +308,20 @@ func (c *BotChannel) onModules(cb func(module pkg.Module) error) (err error) {
 	return
 }
 
-func (c *BotChannel) handleMessage(user pkg.User, message *TwitchMessage, action pkg.Action) error {
+func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
+	return c.handleMessage(user, message, action)
+}
+
+func (c *BotChannel) handleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
 	c.eventEmitter.Emit("on_msg", nil)
 
-	return c.onModules(func(module pkg.Module) error {
+	return c.OnModules(func(module pkg.Module) error {
 		return module.OnMessage(c, user, message, action)
 	})
 }
 
 func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error {
-	return c.onModules(func(module pkg.Module) error {
+	return c.OnModules(func(module pkg.Module) error {
 		return module.OnWhisper(c, user, message)
 	})
 }

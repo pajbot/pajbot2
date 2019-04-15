@@ -28,6 +28,8 @@ var pajbot1BanphraseSpec = moduleSpec{
 	name:  "pajbot1 banphrase",
 	maker: newPajbot1BanphraseFilter,
 
+	moduleType: pkg.ModuleTypeFilter,
+
 	enabledByDefault: true,
 }
 
@@ -262,7 +264,7 @@ func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings 
 
 	err := m.loadPajbot1Banphrases()
 	if err != nil {
-		return err
+		// return err
 	}
 
 	return nil
@@ -295,6 +297,7 @@ func (m *pajbot1BanphraseFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, 
 func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action pkg.Action) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(text, true)
 	if err != nil {
+		fmt.Println("Error making variations:", err)
 		return err
 	}
 
@@ -328,7 +331,11 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action p
 
 				if bp.GetID() == -1 {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
-					action.Set(pkg.Timeout{bp.GetLength(), reason})
+					action.Set(pkg.Timeout{
+						Duration: bp.GetLength(),
+						Reason:   reason,
+					})
+					action.SetReason(reason)
 					action.SetNotifyModerator(bot.Bot().MakeUser("pajlada"))
 					// fmt.Printf("Banphrase triggered: %#v for user %s", bp, user.GetName())
 					return nil

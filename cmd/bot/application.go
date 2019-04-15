@@ -27,7 +27,7 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 
 	"github.com/gempir/go-twitch-irc"
-	"github.com/pajlada/go-twitch-pubsub"
+	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/auth"
@@ -75,7 +75,7 @@ var _ pkg.Application = &Application{}
 
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
-	a := Application{
+	a := &Application{
 		twitchBots: botstore.New(),
 	}
 
@@ -87,10 +87,11 @@ func newApplication() *Application {
 	a.Quit = make(chan string)
 	a.pubSub = pubsub.New()
 	state.StorePubSub(a.pubSub)
+	state.StoreApplication(a)
 
 	go a.pubSub.Run()
 
-	return &a
+	return a
 }
 
 func (a *Application) UserStore() pkg.UserStore {
@@ -218,6 +219,11 @@ func (a *Application) LoadExternalEmotes() error {
 func (a *Application) InitializeSQL() error {
 	var err error
 	a.sqlClient, err = sql.Open("mysql", a.config.SQL.DSN)
+	if err != nil {
+		return err
+	}
+
+	err = a.sqlClient.Ping()
 	if err != nil {
 		return err
 	}
@@ -498,6 +504,9 @@ func (a *Application) StartBots() error {
 
 				// Store message in our twitch message context class
 				a.twitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
+
+				message.Text = strings.TrimPrefix(message.Text, "@"+bot.TwitchAccount().Name()+" ")
+				message.Text = strings.TrimPrefix(message.Text, bot.TwitchAccount().Name()+" ")
 
 				// Forward to bot to let its modules work
 				bot.HandleMessage(channelName, user, message)

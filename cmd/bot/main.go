@@ -33,6 +33,19 @@ var validURLs = []string{
 	"www.com",          // Meme
 }
 
+// @title pajbot2 API
+// @version 1.0
+// @description API for pajbot2
+
+// @contact.name pajlada
+// @contact.url https://pajlada.se
+// @contact.email rasmus.karlsson@pajlada.com
+
+// @license.name MIT
+// @license.url https://github.com/pajlada/pajbot2/blob/master/LICENSE
+
+// @host localhost:2355
+
 func main() {
 	common.BuildTime = buildTime
 

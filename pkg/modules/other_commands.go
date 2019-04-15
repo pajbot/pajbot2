@@ -47,7 +47,6 @@ func (m *otherCommandsModule) Initialize(botChannel pkg.BotChannel, settings []b
 	// m.registerCommand([]string{"!pb2addpoints"}, &commands.AddPoints{})
 	// m.registerCommand([]string{"!pb2removepoints"}, &commands.RemovePoints{})
 	m.registerCommand([]string{"!roffle", "!join"}, commands.NewRaffle())
-	m.registerCommand([]string{"!user"}, commands.NewUser())
 	m.registerCommand([]string{"!pb2rank"}, &commands.Rank{})
 	m.registerCommand([]string{"!pb2simplify"}, &commands.Simplify{})
 	// m.registerCommand([]string{"!timemeout"}, &commands.TimeMeOut{})

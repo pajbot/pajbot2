@@ -1,8 +1,6 @@
 package modules
 
 import (
-	"strings"
-
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/commands"
 )
@@ -12,7 +10,7 @@ type basicCommandsModule struct {
 
 	server *server
 
-	commands map[string]pkg.CustomCommand
+	commands pkg.CommandsManager
 }
 
 var basicCommandsModuleSpec = &moduleSpec{
@@ -26,24 +24,20 @@ func newBasicCommandsModule() pkg.Module {
 	return &basicCommandsModule{
 		server: &_server,
 
-		commands: make(map[string]pkg.CustomCommand),
-	}
-}
-
-func (m *basicCommandsModule) registerCommand(aliases []string, command pkg.CustomCommand) {
-	for _, alias := range aliases {
-		m.commands[alias] = command
+		commands: commands.NewCommands(),
 	}
 }
 
 func (m *basicCommandsModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 	m.botChannel = botChannel
 
-	m.registerCommand([]string{"!pb2ping"}, &commands.Ping{})
-	m.registerCommand([]string{"!pb2join"}, &commands.Join{})
-	m.registerCommand([]string{"!pb2leave"}, &commands.Leave{})
-	m.registerCommand([]string{"!pb2module"}, commands.NewModule())
-	m.registerCommand([]string{"!pb2quit"}, &commands.Quit{})
+	m.commands.Register([]string{"!pb2ping"}, commands.NewPing())
+	m.commands.Register([]string{"!pb2join"}, commands.NewJoin())
+	m.commands.Register([]string{"!pb2leave"}, commands.NewLeave())
+	m.commands.Register([]string{"!pb2module"}, commands.NewModule())
+	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit())
+
+	m.commands.Register([]string{"!user"}, commands.NewUser())
 
 	return nil
 }
@@ -65,14 +59,5 @@ func (m *basicCommandsModule) OnWhisper(bot pkg.BotChannel, source pkg.User, mes
 }
 
 func (m *basicCommandsModule) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	parts := strings.Split(message.GetText(), " ")
-	if len(parts) == 0 {
-		return nil
-	}
-
-	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, action)
-	}
-
-	return nil
+	return m.commands.OnMessage(bot, user, message, action)
 }
