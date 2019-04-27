@@ -64,7 +64,7 @@ func main() {
 	case "check":
 		_, err := config.LoadConfig(*configPath)
 		if err != nil {
-			fmt.Println("An error occured while loading the config file:", err)
+			fmt.Println("An error occurred while loading the config file:", err)
 			os.Exit(1)
 		} else {
 			fmt.Println("No errors found in the config file")
@@ -112,17 +112,17 @@ func runCmd() {
 
 	err := application.LoadConfig(*configPath)
 	if err != nil {
-		log.Fatal("An error occured while loading the config file: ", err)
+		log.Fatal("An error occurred while loading the config file: ", err)
 	}
 
 	err = application.InitializeOAuth2Configs()
 	if err != nil {
-		log.Fatal("An error occured while initializing oauth2 config: ", err)
+		log.Fatal("An error occurred while initializing oauth2 config: ", err)
 	}
 
 	err = application.InitializeAPIs()
 	if err != nil {
-		log.Fatal("An error occured while initializing APIs: ", err)
+		log.Fatal("An error occurred while initializing APIs: ", err)
 	}
 
 	err = application.InitializeSQL()
@@ -132,7 +132,7 @@ func runCmd() {
 
 	err = application.RunDatabaseMigrations()
 	if err != nil {
-		log.Fatal("An error occured while running database migrations: ", err)
+		log.Fatal("An error occurred while running database migrations: ", err)
 	}
 
 	err = application.ProvideAdminPermissionsToAdmin()
@@ -147,12 +147,12 @@ func runCmd() {
 
 	err = application.LoadExternalEmotes()
 	if err != nil {
-		log.Fatal("An error occured while loading external emotes: ", err)
+		log.Fatal("An error occurred while loading external emotes: ", err)
 	}
 
 	err = application.StartWebServer()
 	if err != nil {
-		log.Fatal("An error occured while starting the web server: ", err)
+		log.Fatal("An error occurred while starting the web server: ", err)
 	}
 
 	err = application.StartPubSubClient()
@@ -162,12 +162,12 @@ func runCmd() {
 
 	err = application.LoadBots()
 	if err != nil {
-		log.Fatal("An error occured while loading bots: ", err)
+		log.Fatal("An error occurred while loading bots: ", err)
 	}
 
 	err = application.StartBots()
 	if err != nil {
-		log.Fatal("An error occured while starting bots: ", err)
+		log.Fatal("An error occurred while starting bots: ", err)
 	}
 
 	log.Fatal(application.Run())

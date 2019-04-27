@@ -16,13 +16,13 @@ func fixCmd() {
 
 	err := app.LoadConfig(*configPath)
 	if err != nil {
-		fmt.Println("An error occured while loading the config file: ", err)
+		fmt.Println("An error occurred while loading the config file: ", err)
 		os.Exit(1)
 	}
 
 	err = app.InitializeAPIs()
 	if err != nil {
-		fmt.Println("An error occured while initializing APIs: ", err)
+		fmt.Println("An error occurred while initializing APIs: ", err)
 		os.Exit(1)
 	}
 
