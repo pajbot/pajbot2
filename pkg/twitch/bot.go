@@ -495,7 +495,7 @@ func (b *Bot) HandleWhisper(message twitch.WhisperMessage) {
 
 	err := botChannel.handleWhisper(twitchUser, pbMessage)
 	if err != nil {
-		fmt.Println("Error occured while forwarding whisper to bot channel:", err)
+		fmt.Println("Error occurred while forwarding whisper to bot channel:", err)
 	}
 }
 
@@ -533,7 +533,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *tw
 
 	err := botChannel.handleMessage(twitchUser, message, action)
 	if err != nil {
-		fmt.Println("Error occured while forwarding message to bot channel:", err)
+		fmt.Println("Error occurred while forwarding message to bot channel:", err)
 	}
 }
 

@@ -76,7 +76,7 @@ func (s *SessionStore) Get(db *sql.DB, sessionID string) *Session {
 		return nil
 	case err != nil:
 		fmt.Println("SQL Error:", err)
-		// some query or mysql error occured
+		// some query or mysql error occurred
 		return nil
 	default:
 		return &Session{

@@ -41,7 +41,7 @@ func templatePath(templateName string) string {
 
 var validThemes = []string{"default", "dark"}
 
-// get theme from cookie of request. return default if cookie is non-existant or invalid
+// get theme from cookie of request. return default if cookie is non-existent or invalid
 func getTheme(r *http.Request) (theme string) {
 	theme = defaultTheme
 
