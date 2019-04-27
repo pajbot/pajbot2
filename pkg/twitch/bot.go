@@ -638,10 +638,8 @@ func (p *PointServer) Send(command uint8, body []byte) bool {
 	bodyLength := make([]byte, 4)
 	binary.BigEndian.PutUint32(bodyLength, uint32(len(body)))
 
-	instant := false
-
 	// Write header (Command + Body length)
-	instant = p.Write(append([]byte{command}, bodyLength...))
+	instant := p.Write(append([]byte{command}, bodyLength...))
 
 	// Write body
 	instant = p.Write(body)

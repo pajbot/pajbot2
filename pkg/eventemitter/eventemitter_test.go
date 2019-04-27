@@ -80,7 +80,7 @@ func TestMultipleListeners(t *testing.T) {
 		return nil
 	}, 100)
 	assertErrorsEqual(t, nil, err)
-	n, err := e.Emit("asd", nil)
+	n, _ := e.Emit("asd", nil)
 	assertIntsEqual(t, 2, n)
 }
 
@@ -94,7 +94,7 @@ func TestListenerError(t *testing.T) {
 		return nil
 	}, 100)
 	assertErrorsEqual(t, nil, err)
-	n, err := e.Emit("asd", nil)
+	n, _ := e.Emit("asd", nil)
 	assertIntsEqual(t, 0, n)
 }
 

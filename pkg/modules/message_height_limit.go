@@ -368,19 +368,18 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 
 		timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
 
+		const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
+
 		if ratio > 0.5 && height > 140.0 {
 			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
 			userViolations = m.userViolationCount[user.GetID()]
 			timeoutDuration = timeoutDuration * userViolations
 			timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
-			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f A", height, ratio)
+			reason = fmt.Sprintf("", height, ratio)
 			bot.Bot().Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
-		} else {
-			reason = fmt.Sprintf("Your message is too tall: %.1f - %.3f", height, ratio)
 		}
 
-		fmt.Println("message is too tall")
-		reason = fmt.Sprintf("Your message is too tall: %.0f (%d)", height, userViolations)
+		reason = fmt.Sprintf(reasonFmt, height, ratio, userViolations)
 		action.Set(pkg.Timeout{
 			Duration: timeoutDuration,
 			Reason:   reason,
