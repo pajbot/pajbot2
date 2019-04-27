@@ -375,7 +375,6 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 			userViolations = m.userViolationCount[user.GetID()]
 			timeoutDuration = timeoutDuration * userViolations
 			timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
-			reason = fmt.Sprintf("", height, ratio)
 			bot.Bot().Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
 		}
 
