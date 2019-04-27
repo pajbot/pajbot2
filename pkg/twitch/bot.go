@@ -928,8 +928,6 @@ func (b *Bot) LeaveChannel(channelID string) error {
 	}
 
 	return nil
-
-	return errors.New("we have not joined this channel")
 }
 
 func (b *Bot) MessageReceived(source pkg.PubSubSource, topic string, data []byte) error {
