@@ -159,7 +159,7 @@ func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.M
 
 			if !allowed {
 				if lol.Message == "" {
-					lol.Message = text[maxpenis(0, i-2):len(text)]
+					lol.Message = text[maxpenis(0, i-2):]
 				}
 
 				alreadySet := false

@@ -46,11 +46,11 @@ func init() {
 		enabledByDefault: false,
 
 		parameters: map[string]*moduleParameterSpec{
-			"HeightLimit": &moduleParameterSpec{
+			"HeightLimit": {
 				description:  "Max height of a message before it's timed out",
 				defaultValue: floatPtr(95),
 			},
-			"AsciiArtOnly": &moduleParameterSpec{
+			"AsciiArtOnly": {
 				description:  "Only attempt to catch ascii art",
 				defaultValue: boolPtr(false),
 			},

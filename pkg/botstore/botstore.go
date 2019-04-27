@@ -43,7 +43,7 @@ func (s *BotStore) GetBotFromChannel(channelID string) pkg.Sender {
 	for _, b := range s.store {
 		botExists := b.InChannel(channelID)
 		if botExists {
-			return b;
+			return b
 		}
 	}
 

@@ -8,15 +8,15 @@ import (
 func TestChunkStringSlice(t *testing.T) {
 	in := []string{"a", "b", "c", "d", "e"}
 	expected := [][]string{
-		[]string{
+		{
 			"a",
 			"b",
 		},
-		[]string{
+		{
 			"c",
 			"d",
 		},
-		[]string{
+		{
 			"e",
 		},
 	}
@@ -34,7 +34,7 @@ func TestChunkStringSlice(t *testing.T) {
 func TestChunkStringSlice2(t *testing.T) {
 	in := []string{"a", "b", "c", "d", "e"}
 	expected := [][]string{
-		[]string{
+		{
 			"a",
 			"b",
 			"c",
@@ -56,7 +56,7 @@ func TestChunkStringSlice2(t *testing.T) {
 func TestChunkStringSlice3(t *testing.T) {
 	in := []string{"a", "b", "c", "d", "e"}
 	expected := [][]string{
-		[]string{
+		{
 			"a",
 			"b",
 			"c",

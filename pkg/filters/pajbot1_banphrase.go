@@ -2,8 +2,8 @@ package filters
 
 import (
 	"database/sql"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 // BanphraseOperator is a banphrase operator
