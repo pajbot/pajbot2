@@ -91,7 +91,13 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 
 	rawMessage := "@badges=subscriber/36;color=#CC44FF;display-name=p;emotes=;flags=6-10:S.5;id=ccee20ef-9e0b-43eb-abe8-4fe9ae98e411;mod=0;room-id=11148817;subscriber=0;tmi-sent-ts=1551384658800;turbo=0;user-id=245004819;user-type= :p!p@p.tmi.twitch.tv PRIVMSG #" + channelName + " :" + message
 
-	_, twitchUser, packedMessage := twitch.ParseMessage(rawMessage)
+	msg := twitch.ParseMessage(rawMessage)
+
+	privMsg, ok := msg.(*twitch.PrivateMessage)
+	if !ok {
+		utils.WebWriteError(w, 404, "invalid message")
+		return
+	}
 
 	response := CheckMessageSuccessResponse{
 		Banned:       false,
@@ -101,7 +107,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 	for _, botChannel := range botChannels {
 		// run message through modules on all bot channels until we detect an issue
 		fmt.Println("Check message:", botChannel.ChannelName())
-		lolMessage := pb2twitch.NewTwitchMessage(*packedMessage)
+		lolMessage := pb2twitch.NewTwitchMessage(privMsg)
 		botChannel.OnModules(func(module pkg.Module) error {
 			if module.Spec().Type() != pkg.ModuleTypeFilter {
 				return nil
@@ -109,7 +115,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 			action := &pkg.TwitchAction{
 				Sender:  botChannel.Bot(),
 				Channel: botChannel.Channel(),
-				User:    users.NewTwitchUser(*twitchUser, packedMessage.Tags["user-id"]),
+				User:    users.NewTwitchUser(privMsg.User, privMsg.Tags["user-id"]),
 				Soft:    true,
 			}
 			module.OnMessage(botChannel, action.User, lolMessage, action)

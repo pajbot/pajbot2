@@ -356,7 +356,7 @@ func (h *emoteReader) Get() pkg.Emote {
 
 // TwitchMessage is a wrapper for twitch.Message with some extra stuff
 type TwitchMessage struct {
-	twitch.Message
+	baseMessage twitch.Message
 
 	twitchEmotes      []*common.Emote
 	twitchEmoteReader *emoteReader
@@ -372,7 +372,7 @@ type TwitchMessage struct {
 
 func NewTwitchMessage(message twitch.Message) *TwitchMessage {
 	msg := &TwitchMessage{
-		Message: message,
+		baseMessage: message,
 	}
 	msg.twitchEmoteReader = newEmoteHolder(&msg.twitchEmotes)
 	msg.bttvEmoteReader = newEmoteHolder(&msg.bttvEmotes)
@@ -381,7 +381,13 @@ func NewTwitchMessage(message twitch.Message) *TwitchMessage {
 }
 
 func (m TwitchMessage) GetText() string {
-	return m.Text
+	switch msg := m.baseMessage.(type) {
+	case *twitch.PrivateMessage:
+		return msg.Message
+	case *twitch.WhisperMessage:
+		return msg.Message
+	}
+	return ""
 }
 
 func (m TwitchMessage) GetTwitchReader() pkg.EmoteReader {
@@ -454,12 +460,12 @@ func (b *Bot) Untimeout(channel pkg.Channel, user pkg.User) {
 	}
 }
 
-func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
-	twitchUser := users.NewTwitchUser(user, rawMessage.Tags["user-id"])
+func (b *Bot) HandleWhisper(message twitch.WhisperMessage) {
+	twitchUser := users.NewTwitchUser(message.User, message.Tags["user-id"])
 
 	// Find out what bot channel this whisper is related to
 
-	parts := strings.Split(rawMessage.Text, " ")
+	parts := strings.Split(message.Message, " ")
 	if len(parts) == 0 {
 		return
 	}
@@ -483,20 +489,20 @@ func (b *Bot) HandleWhisper(user twitch.User, rawMessage twitch.Message) {
 		return
 	}
 
-	rawMessage.Text = strings.Join(parts[1:], " ")
+	message.Message = strings.Join(parts[1:], " ")
 
-	message := NewTwitchMessage(rawMessage)
+	pbMessage := NewTwitchMessage(&message)
 
-	err := botChannel.handleWhisper(twitchUser, message)
+	err := botChannel.handleWhisper(twitchUser, pbMessage)
 	if err != nil {
 		fmt.Println("Error occured while forwarding whisper to bot channel:", err)
 	}
 }
 
-func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
+func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *twitch.PrivateMessage) {
 	message := NewTwitchMessage(rawMessage)
 
-	twitchUser := users.NewTwitchUser(user, message.Tags["user-id"])
+	twitchUser := users.NewTwitchUser(user, rawMessage.Tags["user-id"])
 
 	channel := &channels.TwitchChannel{
 		Channel: channelName,
@@ -531,22 +537,22 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage twi
 	}
 }
 
-func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMessage twitch.Message) {
-	if len(rawMessage.Tags) > 2 {
-		if channelID, ok := rawMessage.Tags["room-id"]; ok {
+func (b *Bot) HandleRoomstateMessage(message twitch.RoomStateMessage) {
+	if len(message.Tags) > 2 {
+		if channelID, ok := message.Tags["room-id"]; ok {
 			// Joined channel
-			b.streamStore.JoinStream(&SimpleAccount{channelID, channelName})
+			b.streamStore.JoinStream(&SimpleAccount{channelID, message.Channel})
 		} else {
-			fmt.Println("room-id not set in roomstate message:", rawMessage.Raw)
+			fmt.Println("room-id not set in roomstate message:", message.Raw)
 		}
 	}
 	subMode := ModeUnset
 
 	channel := &channels.TwitchChannel{
-		Channel: channelName,
+		Channel: message.Channel,
 	}
 
-	if readSubMode, ok := rawMessage.Tags["subs-only"]; ok {
+	if readSubMode, ok := message.Tags["subs-only"]; ok {
 		if readSubMode == "1" {
 			subMode = ModeEnabled
 		} else {
@@ -566,8 +572,6 @@ func (b *Bot) HandleRoomstateMessage(channelName string, user twitch.User, rawMe
 			}
 		}
 	}
-
-	// fmt.Printf("%s - #%s: %#v: %#v\n", b.Name(), channel, user, rawMessage)
 }
 
 func (b *Bot) StartChatterPoller() {
@@ -842,7 +846,7 @@ func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *Twit
 
 func (b *Bot) MakeUser(username string) pkg.User {
 	return users.NewTwitchUser(twitch.User{
-		Username:    username,
+		Name:        username,
 		DisplayName: username,
 	}, b.userStore.GetID(username))
 }
