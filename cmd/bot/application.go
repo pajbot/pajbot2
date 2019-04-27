@@ -486,36 +486,36 @@ func (a *Application) StartBots() error {
 		}
 
 		go func(bot *pb2twitch.Bot) {
-			bot.OnNewWhisper(bot.HandleWhisper)
+			bot.OnWhisperMessage(bot.HandleWhisper)
 
-			bot.OnNewMessage(func(channelName string, user twitch.User, message twitch.Message) {
+			bot.OnPrivateMessage(func(message twitch.PrivateMessage) {
 				channelID := message.Tags["room-id"]
 				if channelID == "" {
 					fmt.Printf("Missing room-id tag in message: %+v\n", message)
 					return
 				}
 
-				if user.UserID == bot.TwitchAccount().ID() {
+				if message.User.ID == bot.TwitchAccount().ID() {
 					// Ignore messages from self
 					return
 				}
 
-				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), user.Username, message.Text)
+				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), message.User.Name, message.Message)
 
 				// Store message in our twitch message context class
-				a.twitchUserContext.AddContext(channelID, user.UserID, formattedMessage)
+				a.twitchUserContext.AddContext(channelID, message.User.ID, formattedMessage)
 
-				message.Text = strings.TrimPrefix(message.Text, "@"+bot.TwitchAccount().Name()+" ")
-				message.Text = strings.TrimPrefix(message.Text, bot.TwitchAccount().Name()+" ")
+				message.Message = strings.TrimPrefix(message.Message, "@"+bot.TwitchAccount().Name()+" ")
+				message.Message = strings.TrimPrefix(message.Message, bot.TwitchAccount().Name()+" ")
 
 				// Forward to bot to let its modules work
-				bot.HandleMessage(channelName, user, message)
+				bot.HandleMessage(message.Channel, message.User, &message)
 			})
 
-			bot.OnNewRoomstateMessage(bot.HandleRoomstateMessage)
+			bot.OnRoomStateMessage(bot.HandleRoomstateMessage)
 
-			bot.OnNewUnsetMessage(func(rawMessage string) {
-				fmt.Println("Unparsed message:", rawMessage)
+			bot.OnUnsetMessage(func(message twitch.RawMessage) {
+				fmt.Println("Unparsed message:", message.Raw)
 			})
 
 			// Ensure that the bot has joined its own chat

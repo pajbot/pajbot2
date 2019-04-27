@@ -34,8 +34,8 @@ func NewTwitchUser(user twitch.User, id string) *TwitchUser {
 func NewSimpleTwitchUser(userID, userName string) *TwitchUser {
 	u := &TwitchUser{
 		User: twitch.User{
-			UserID:      userID,
-			Username:    userName,
+			ID:          userID,
+			Name:        userName,
 			DisplayName: userName,
 		},
 
@@ -117,7 +117,7 @@ func (u *TwitchUser) HasChannelPermission(channel pkg.Channel, permission pkg.Pe
 }
 
 func (u TwitchUser) GetName() string {
-	return u.Username
+	return u.Name
 
 }
 func (u TwitchUser) GetDisplayName() string {
@@ -128,7 +128,8 @@ func (u TwitchUser) GetID() string {
 }
 
 func (u TwitchUser) IsModerator() bool {
-	return u.UserType == "mod"
+	_, ok := u.Badges["moderator"]
+	return ok
 }
 
 func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
