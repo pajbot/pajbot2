@@ -14,6 +14,8 @@ type Base struct {
 
 	UserCooldown   int
 	GlobalCooldown int
+
+	Description string
 }
 
 func NewBase() Base {

@@ -62,3 +62,18 @@ func (m *CommandMatcher) Match(text string) (interface{}, []string) {
 
 	return nil, parts
 }
+
+func (m *CommandMatcher) ForEach(cb func([]string, interface{})) {
+	m.commandsMutex.Lock()
+	defer m.commandsMutex.Unlock()
+
+	uniqueCommands := map[interface{}][]string{}
+
+	for alias, cmd := range m.commands {
+		uniqueCommands[cmd] = append(uniqueCommands[cmd], alias)
+	}
+
+	for cmd, aliases := range uniqueCommands {
+		cb(aliases, cmd)
+	}
+}
