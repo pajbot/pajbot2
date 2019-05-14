@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/dankeroni/gotwitch"
-	twitch "github.com/gempir/go-twitch-irc"
+	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/channels"

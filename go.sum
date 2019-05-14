@@ -46,6 +46,8 @@ github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad h1:Qk76DOWdOp+GlyDKB
 github.com/dustin/gojson v0.0.0-20160307161227-2e71ec9dd5ad/go.mod h1:mPKfmRa823oBIgl2r20LeMSpTAteW5j7FLkc0vjmzyQ=
 github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17 h1:GOfMz6cRgTJ9jWV0qAezv642OhPnKEG7gtUjJSdStHE=
 github.com/garyburd/go-oauth v0.0.0-20180319155456-bca2e7f09a17/go.mod h1:HfkOCN6fkKKaPSAeNq/er3xObxTW4VLeY6UUK895gLQ=
+github.com/gempir/go-twitch-irc/v2 v2.1.0 h1:AIAlSZFJ2RvuHyLYeF7gNUKMiDn2dx/wU5Yz7QITgUc=
+github.com/gempir/go-twitch-irc/v2 v2.1.0/go.mod h1:0HXoEr9l7gNjwajosptV0w0xGpHeU6gsD7JDlfvjTYI=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=

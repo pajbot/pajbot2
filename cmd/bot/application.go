@@ -26,7 +26,7 @@ import (
 	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
 
-	"github.com/gempir/go-twitch-irc"
+	"github.com/gempir/go-twitch-irc/v2"
 	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
