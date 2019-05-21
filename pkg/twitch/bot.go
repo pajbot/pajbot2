@@ -80,7 +80,7 @@ type Bot struct {
 
 	IsConnected bool
 
-	onNewChannelJoined func(channelID string)
+	onNewChannelJoined func(channel pkg.Channel)
 }
 
 var _ pkg.PubSubConnection = &Bot{}
@@ -131,7 +131,7 @@ func (b *Bot) GetTokenSource() oauth2.TokenSource {
 	return b.TokenSource
 }
 
-func (b *Bot) OnNewChannelJoined(cb func(channelID string)) {
+func (b *Bot) OnNewChannelJoined(cb func(channel pkg.Channel)) {
 	b.onNewChannelJoined = cb
 }
 
@@ -294,7 +294,10 @@ func (b *Bot) Join(channelName string) {
 	}
 
 	if b.onNewChannelJoined != nil {
-		b.onNewChannelJoined(channelID)
+		b.onNewChannelJoined(&channels.TwitchChannel{
+			Channel: channelName,
+			ID:      channelID,
+		})
 	}
 }
 
@@ -891,7 +894,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 	}
 
 	if b.onNewChannelJoined != nil {
-		b.onNewChannelJoined(channelID)
+		b.onNewChannelJoined(botChannel.Channel())
 	}
 
 	return nil

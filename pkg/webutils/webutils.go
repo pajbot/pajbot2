@@ -9,7 +9,7 @@ import (
 	"github.com/pajlada/pajbot2/pkg/web/state"
 )
 
-func RequirePermission(w http.ResponseWriter, c state.State, permission pkg.Permission) bool {
+func RequirePermission(w http.ResponseWriter, c state.State, channel pkg.Channel, permission pkg.Permission) bool {
 	if c.Session == nil {
 		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
 		return false
@@ -21,10 +21,16 @@ func RequirePermission(w http.ResponseWriter, c state.State, permission pkg.Perm
 		return false
 	}
 
-	if !user.HasGlobalPermission(pkg.PermissionModeration) {
-		utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
-		return false
+	if channel != nil {
+		if user.HasPermission(channel, permission) {
+			return true
+		}
+	} else {
+		if user.HasGlobalPermission(permission) {
+			return true
+		}
 	}
 
-	return true
+	utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
+	return false
 }

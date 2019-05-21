@@ -1,8 +1,9 @@
 package botstore
 
 import (
-	"github.com/pajlada/pajbot2/pkg"
 	"strings"
+
+	"github.com/pajlada/pajbot2/pkg"
 )
 
 var _ pkg.BotStore = &BotStore{}

@@ -52,7 +52,7 @@ type Sender interface {
 	LeaveChannel(channelID string) error
 
 	// Connect to the OnNewChannelJoined callback
-	OnNewChannelJoined(cb func(channelID string))
+	OnNewChannelJoined(cb func(channel Channel))
 
 	Quit(message string)
 }

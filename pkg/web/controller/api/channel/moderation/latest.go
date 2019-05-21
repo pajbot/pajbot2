@@ -51,10 +51,15 @@ type moderationResponse struct {
 func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 	c := state.Context(w, r)
 
+	if c.Channel == nil {
+		utils.WebWriteError(w, 500, "this is not a channel we are in")
+		return
+	}
+
 	vars := mux.Vars(r)
 	response := moderationResponse{}
 
-	response.ChannelID = vars["channelID"]
+	response.ChannelID = c.Channel.GetID()
 
 	fmt.Println("Channel ID:", vars)
 

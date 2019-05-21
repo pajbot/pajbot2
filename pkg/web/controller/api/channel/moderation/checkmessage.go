@@ -42,12 +42,11 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
-	channelID := vars["channelID"]
 	message := vars["message"]
 
-	if channelID == "" {
+	if c.Channel == nil {
 		// ERROR: Missing required ChannelID parameter
-		utils.WebWriteError(w, 400, "Missing required channelID parameter")
+		utils.WebWriteError(w, 400, "bad channel")
 		return
 	}
 
@@ -66,8 +65,6 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 	var botChannels []pkg.BotChannel
 	var channelName string
 
-	fmt.Println("Channel ID:", channelID)
-
 	for it := c.Application.TwitchBots().Iterate(); it.Next(); {
 		bot := it.Value()
 		if bot == nil {
@@ -76,7 +73,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		botChannel := bot.GetBotChannelByID(channelID)
+		botChannel := bot.GetBotChannelByID(c.Channel.GetID())
 
 		if botChannel != nil {
 			botChannels = append(botChannels, botChannel)

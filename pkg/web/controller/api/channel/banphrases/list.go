@@ -3,7 +3,6 @@ package banphrases
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 	"github.com/pajlada/pajbot2/pkg/web/state"
@@ -25,14 +24,18 @@ type listResponse struct {
 func handleList(w http.ResponseWriter, r *http.Request) {
 	c := state.Context(w, r)
 
-	if !webutils.RequirePermission(w, c, pkg.PermissionModeration) {
+	if c.Channel == nil {
+		utils.WebWriteError(w, 400, "Missing channel argument")
 		return
 	}
 
-	vars := mux.Vars(r)
+	if !webutils.RequirePermission(w, c, c.Channel, pkg.PermissionModeration) {
+		return
+	}
+
 	var response listResponse
 
-	response.ChannelID = vars["channelID"]
+	response.ChannelID = c.Channel.GetID()
 
 	const queryF = "SELECT `id`, `enabled`, `description`, `phrase` FROM `Banphrase`"
 

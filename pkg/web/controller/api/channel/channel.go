@@ -12,11 +12,11 @@ import (
 
 func root(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Channel root for channel ID '%s'", vars["channelID"])
+	fmt.Fprintf(w, "Channel root for channel ID '%s'", vars["channel_id"])
 }
 
 func Load(parent *mux.Router) {
-	m := parent.PathPrefix(`/channel/{channelID:\w+}`).Subrouter()
+	m := parent.PathPrefix(`/channel/{channel_id:\w+}`).Subrouter()
 
 	router.RGet(m, "", root)
 

@@ -10,7 +10,7 @@ import (
 
 func root(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Channel moderation root for channel ID '%s'", vars["channelID"])
+	fmt.Fprintf(w, "Channel moderation root for channel ID '%s'", vars["channel_id"])
 }
 
 func Load(parent *mux.Router) {

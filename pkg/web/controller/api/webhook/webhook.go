@@ -62,10 +62,6 @@ func apiHook(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiFollowers(w http.ResponseWriter, r *http.Request) {
-	v := mux.Vars(r)
-	channel := v["channelID"]
-	fmt.Println("Channel ID:", channel)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("ERROR", err)
@@ -78,10 +74,6 @@ func apiFollowers(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiStreams(w http.ResponseWriter, r *http.Request) {
-	v := mux.Vars(r)
-	channel := v["channelID"]
-	fmt.Println("Channel ID:", channel)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("ERROR", err)
@@ -94,10 +86,6 @@ func apiStreams(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUserChanged(w http.ResponseWriter, r *http.Request) {
-	v := mux.Vars(r)
-	channel := v["channelID"]
-	fmt.Println("Channel ID:", channel)
-
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		fmt.Println("ERROR", err)
@@ -113,10 +101,10 @@ func Load(parent *mux.Router) {
 	m := parent.PathPrefix("/webhook").Subrouter()
 
 	router.RGet(m, `/{channel:\w+}`, apiHook)
-	router.RGet(m, `/{channelID:\w+}/{topic:\w+}`, verifyHandler)
-	router.RPost(m, `/{channelID:\w+}/followers`, apiFollowers)
-	router.RPost(m, `/{channelID:\w+}/streams`, apiStreams)
-	router.RPost(m, `/{channelID:\w+}/user_changed`, apiUserChanged)
+	router.RGet(m, `/{channel_id:\w+}/{topic:\w+}`, verifyHandler)
+	router.RPost(m, `/{channel_id:\w+}/followers`, apiFollowers)
+	router.RPost(m, `/{channel_id:\w+}/streams`, apiStreams)
+	router.RPost(m, `/{channel_id:\w+}/user_changed`, apiUserChanged)
 }
 
 func verifyHandler(w http.ResponseWriter, r *http.Request) {

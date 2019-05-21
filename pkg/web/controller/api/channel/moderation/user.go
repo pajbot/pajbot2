@@ -25,33 +25,35 @@ func apiUserMissingVariables(w http.ResponseWriter, r *http.Request) {
 func apiUser(w http.ResponseWriter, r *http.Request) {
 	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? AND `TargetID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
 
+	var channel pkg.Channel
+
 	c := state.Context(w, r)
-
-	if !webutils.RequirePermission(w, c, pkg.PermissionModeration) {
-		return
-	}
-
 	vars := mux.Vars(r)
-	response := userResponse{}
 
-	response.Actions = make([]*moderationAction, 0)
-	response.ChannelID = vars["channelID"]
-
-	if response.ChannelID == "" {
-		// ERROR: Missing required ChannelID parameter
-		utils.WebWriteError(w, 400, "Missing required ChannelID parameter")
+	if c.Channel == nil {
+		utils.WebWriteError(w, 400, "Invalid channel_id specified")
 		return
 	}
 
-	if userID := vars["user_id"]; userID != "" {
-		response.TargetID = userID
-	} else if userName := vars["user_name"]; userName != "" {
-		response.TargetID = c.TwitchUserStore.GetID(userName)
+	response := userResponse{
+		Actions:   make([]*moderationAction, 0),
+		ChannelID: c.Channel.GetID(),
 	}
 
-	if response.TargetID == "" {
-		// ERROR: Unable to figure out a valid user ID
-		utils.WebWriteError(w, 400, "Provided user name did not return a valid user ID")
+	if userID, ok := vars["user_id"]; ok {
+		response.TargetID = userID
+	} else if userName, ok := vars["user_name"]; ok {
+		response.TargetID = c.TwitchUserStore.GetID(userName)
+		if response.TargetID == "" {
+			utils.WebWriteError(w, 400, "Invalid user_name")
+			return
+		}
+	} else {
+		utils.WebWriteError(w, 400, "Missing required user_id or user_name parameter")
+		return
+	}
+
+	if !webutils.RequirePermission(w, c, channel, pkg.PermissionModeration) {
 		return
 	}
 
@@ -61,6 +63,8 @@ func apiUser(w http.ResponseWriter, r *http.Request) {
 		utils.WebWriteError(w, 500, "Internal error")
 		return
 	}
+
+	fmt.Println("Query", response.ChannelID, response.TargetID)
 
 	defer rows.Close()
 

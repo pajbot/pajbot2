@@ -6,15 +6,17 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/gorilla/mux"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/utils"
 )
 
 var (
-	sqlClient       *sql.DB
-	twitchUserStore pkg.UserStore
-	pubSub          pkg.PubSub
-	application     pkg.Application
+	sqlClient          *sql.DB
+	twitchUserStore    pkg.UserStore
+	twitchChannelStore pkg.ChannelStore
+	pubSub             pkg.PubSub
+	application        pkg.Application
 
 	mutex = &sync.RWMutex{}
 
@@ -30,6 +32,12 @@ func StoreSQL(sql_ *sql.DB) {
 func StoreTwitchUserStore(twitchUserStore_ pkg.UserStore) {
 	mutex.Lock()
 	twitchUserStore = twitchUserStore_
+	mutex.Unlock()
+}
+
+func StoreTwitchChannelStore(twitchChannelStore_ pkg.ChannelStore) {
+	mutex.Lock()
+	twitchChannelStore = twitchChannelStore_
 	mutex.Unlock()
 }
 
@@ -54,12 +62,17 @@ type Session struct {
 }
 
 type State struct {
-	SQL             *sql.DB
-	TwitchUserStore pkg.UserStore
-	PubSub          pkg.PubSub
-	Application     pkg.Application
-	Session         *Session
-	SessionID       *string
+	SQL                *sql.DB
+	TwitchUserStore    pkg.UserStore
+	TwitchChannelStore pkg.ChannelStore
+	PubSub             pkg.PubSub
+	Application        pkg.Application
+	Session            *Session
+	SessionID          *string
+
+	// Channel is filled in if the user has provided a channel_id argument with the request.
+	// Filled in automatically with the Context function
+	Channel pkg.Channel
 }
 
 func (s *State) CreateSession(userID int64) (sessionID string, err error) {
@@ -87,10 +100,11 @@ INSERT INTO
 func Context(w http.ResponseWriter, r *http.Request) State {
 	mutex.RLock()
 	state := State{
-		SQL:             sqlClient,
-		TwitchUserStore: twitchUserStore,
-		PubSub:          pubSub,
-		Application:     application,
+		SQL:                sqlClient,
+		TwitchUserStore:    twitchUserStore,
+		TwitchChannelStore: twitchChannelStore,
+		PubSub:             pubSub,
+		Application:        application,
 	}
 	mutex.RUnlock()
 
@@ -103,6 +117,13 @@ func Context(w http.ResponseWriter, r *http.Request) State {
 	state.SessionID = getCookie(r, SessionIDCookie)
 	if state.SessionID != nil && *state.SessionID != "" {
 		state.Session = sessionStore.Get(state.SQL, *state.SessionID)
+	}
+
+	// Figure out channel context if this request has one
+	vars := mux.Vars(r)
+
+	if channelID, ok := vars["channel_id"]; ok {
+		state.Channel = state.TwitchChannelStore.TwitchChannel(channelID)
 	}
 
 	return state

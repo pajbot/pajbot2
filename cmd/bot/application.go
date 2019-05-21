@@ -26,12 +26,13 @@ import (
 	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
 
-	"github.com/gempir/go-twitch-irc/v2"
+	twitch "github.com/gempir/go-twitch-irc/v2"
 	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajlada/pajbot2/pkg"
 	"github.com/pajlada/pajbot2/pkg/apirequest"
 	"github.com/pajlada/pajbot2/pkg/auth"
 	"github.com/pajlada/pajbot2/pkg/botstore"
+	"github.com/pajlada/pajbot2/pkg/channels"
 	"github.com/pajlada/pajbot2/pkg/common/config"
 	"github.com/pajlada/pajbot2/pkg/emotes"
 	"github.com/pajlada/pajbot2/pkg/modules"
@@ -62,9 +63,10 @@ type Application struct {
 
 	pubSub *pubsub.PubSub
 
-	twitchUserStore   pkg.UserStore
-	twitchUserContext pkg.UserContext
-	twitchStreamStore *StreamStore
+	twitchUserStore    pkg.UserStore
+	twitchUserContext  pkg.UserContext
+	twitchStreamStore  *StreamStore
+	twitchChannelStore pkg.ChannelStore
 
 	// Oauth configs
 	twitchAuths *auth.TwitchAuths
@@ -83,6 +85,8 @@ func newApplication() *Application {
 	state.StoreTwitchUserStore(a.twitchUserStore)
 	a.twitchUserContext = NewUserContext()
 	a.twitchStreamStore = NewStreamStore()
+	a.twitchChannelStore = channels.NewStore()
+	state.StoreTwitchChannelStore(a.twitchChannelStore)
 
 	a.Quit = make(chan string)
 	a.pubSub = pubsub.New()
@@ -449,14 +453,16 @@ func (a *Application) LoadBots() error {
 		}
 
 		botUserID := botConfig.account.ID()
-		bot.OnNewChannelJoined(func(channelID string) {
+		bot.OnNewChannelJoined(func(channel pkg.Channel) {
 			token, err := bot.GetTokenSource().Token()
 			if err != nil {
 				fmt.Println("Error renewing token: ", err)
 				return
 			}
-			fmt.Println("Listen on", botUserID, " ", channelID)
-			a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channelID), token.AccessToken)
+			fmt.Println("Listen on", botUserID, " ", channel.GetID())
+			a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), token.AccessToken)
+
+			a.twitchChannelStore.RegisterTwitchChannel(channel)
 		})
 
 		err = bot.LoadChannels(a.sqlClient)
