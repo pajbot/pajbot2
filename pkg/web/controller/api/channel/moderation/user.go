@@ -25,8 +25,6 @@ func apiUserMissingVariables(w http.ResponseWriter, r *http.Request) {
 func apiUser(w http.ResponseWriter, r *http.Request) {
 	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? AND `TargetID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
 
-	var channel pkg.Channel
-
 	c := state.Context(w, r)
 	vars := mux.Vars(r)
 
@@ -53,7 +51,7 @@ func apiUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !webutils.RequirePermission(w, c, channel, pkg.PermissionModeration) {
+	if !webutils.RequirePermission(w, c, c.Channel, pkg.PermissionModeration) {
 		return
 	}
 
