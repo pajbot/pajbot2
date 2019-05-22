@@ -102,6 +102,10 @@ func (a *Application) UserStore() pkg.UserStore {
 	return a.twitchUserStore
 }
 
+func (a *Application) ChannelStore() pkg.ChannelStore {
+	return a.twitchChannelStore
+}
+
 func (a *Application) UserContext() pkg.UserContext {
 	return a.twitchUserContext
 }

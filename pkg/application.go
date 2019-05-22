@@ -6,6 +6,7 @@ import (
 
 type Application interface {
 	UserStore() UserStore
+	ChannelStore() ChannelStore
 	UserContext() UserContext
 	StreamStore() StreamStore
 	SQL() *sql.DB
