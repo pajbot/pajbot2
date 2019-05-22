@@ -51,10 +51,11 @@ type HistoricReport struct {
 }
 
 type Holder struct {
-	db        *sql.DB
-	pubSub    pkg.PubSub
-	userStore pkg.UserStore
-	botStore  pkg.BotStore
+	db           *sql.DB
+	pubSub       pkg.PubSub
+	userStore    pkg.UserStore
+	channelStore pkg.ChannelStore
+	botStore     pkg.BotStore
 
 	reportsMutex *sync.Mutex
 	reports      map[uint32]Report
@@ -66,10 +67,11 @@ var _ pkg.PubSubSubscriptionHandler = &Holder{}
 
 func New(app pkg.Application) (*Holder, error) {
 	h := &Holder{
-		db:        app.SQL(),
-		pubSub:    app.PubSub(),
-		userStore: app.UserStore(),
-		botStore:  app.TwitchBots(),
+		db:           app.SQL(),
+		pubSub:       app.PubSub(),
+		userStore:    app.UserStore(),
+		botStore:     app.TwitchBots(),
+		channelStore: app.ChannelStore(),
 
 		reportsMutex: &sync.Mutex{},
 		reports:      make(map[uint32]Report),
@@ -418,13 +420,20 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 			return nil, false
 		}
 
+		channel := h.channelStore.TwitchChannel(parsedParams.ChannelID)
+		if channel == nil {
+			fmt.Println("Channel with id", parsedParams.ChannelID, "is not being moderated by us")
+			return nil, false
+		}
+
 		fmt.Println("Channel ID:", parsedParams.ChannelID)
 
 		fmt.Println("User name:", user.GetName())
 
-		hasPermission := user.HasGlobalPermission(pkg.PermissionModeration)
+		hasPermission := user.HasPermission(channel, pkg.PermissionModeration)
 
 		if !hasPermission {
+			fmt.Println("user", user.GetName(), "does not have permission in channel", channel.GetName())
 			return nil, false
 		}
 
