@@ -203,9 +203,7 @@ func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings 
 	m.addCustomBanphrase("ne6ker")
 	m.addCustomBanphrase("negker")
 	m.addCustomBanphrase("neg6er")
-	m.addCustomBanphrase("negger")
 	m.addCustomBanphrase("ne6ger")
-	m.addCustomBanphrase("negger")
 
 	m.addCustomBanphrase("ni1gg3r")
 
