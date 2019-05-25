@@ -7,7 +7,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/report"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 type Report struct {

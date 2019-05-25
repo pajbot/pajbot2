@@ -21,7 +21,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 	"golang.org/x/oauth2"
 )
 

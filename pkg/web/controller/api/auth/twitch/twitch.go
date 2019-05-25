@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"golang.org/x/oauth2"

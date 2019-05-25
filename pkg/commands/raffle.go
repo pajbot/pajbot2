@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 func NewRaffle() *Raffle {

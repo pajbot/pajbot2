@@ -7,7 +7,7 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 type TwitchUser struct {

@@ -3,7 +3,7 @@ package pkg
 import (
 	"sync"
 
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 type UserStoreRequest struct {

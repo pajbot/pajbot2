@@ -11,7 +11,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
 	"github.com/pajbot/pajbot2/pkg/modules"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 var _ pkg.BotChannel = &BotChannel{}

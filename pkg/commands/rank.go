@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 type Rank struct {

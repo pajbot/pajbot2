@@ -9,7 +9,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	pb2twitch "github.com/pajbot/pajbot2/pkg/twitch"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	_ "github.com/swaggo/echo-swagger" // echo-swagger middleware
 )

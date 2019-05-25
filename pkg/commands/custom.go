@@ -9,7 +9,7 @@ import (
 
 	normalize "github.com/pajlada/lidl-normalize"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 var startTime time.Time

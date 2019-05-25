@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pajlada/botsync/pkg/client"
-	"github.com/pajlada/botsync/pkg/protocol"
+	"github.com/pajbot/botsync/pkg/client"
+	"github.com/pajbot/botsync/pkg/protocol"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 )
 
 func init() {

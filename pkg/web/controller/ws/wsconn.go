@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/tevino/abool"
 )
