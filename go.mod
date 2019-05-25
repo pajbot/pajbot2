@@ -1,6 +1,6 @@
 module github.com/pajbot/pajbot2
 
-go 1.12
+go 1.11
 
 require (
 	github.com/ChimeraCoder/anaconda v2.0.0+incompatible
