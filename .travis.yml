@@ -8,4 +8,6 @@ env:
 
 script:
     - pwd
-    - go test -v ./pkg/... ./cmd/...
+    - go test -v ./pkg/... ./internal/...
+
+install: true
