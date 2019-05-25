@@ -5,5 +5,6 @@ go:
 
 script:
     - pwd
+    - go mod vendor
     - go build
     - go test -v ./pkg/... ./cmd/...
