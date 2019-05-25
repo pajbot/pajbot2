@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/pkg/report"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/report"
 )
 
 type server struct {

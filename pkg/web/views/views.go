@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/utils"
 )
 
 const (

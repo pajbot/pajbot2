@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/filters"
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/filters"
+	"github.com/pajbot/pajbot2/pkg/utils"
 )
 
 type pajbot1BanphraseFilter struct {

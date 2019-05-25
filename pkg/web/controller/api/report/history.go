@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/report"
-	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/pkg/web/router"
-	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/report"
+	"github.com/pajbot/pajbot2/pkg/users"
+	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/state"
 )
 
 func Load(parent *mux.Router) {

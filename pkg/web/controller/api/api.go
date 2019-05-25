@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/pkg/web/controller/api/auth"
-	"github.com/pajlada/pajbot2/pkg/web/controller/api/channel"
-	"github.com/pajlada/pajbot2/pkg/web/controller/api/report"
-	"github.com/pajlada/pajbot2/pkg/web/controller/api/webhook"
-	"github.com/pajlada/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/web/controller/api/auth"
+	"github.com/pajbot/pajbot2/pkg/web/controller/api/channel"
+	"github.com/pajbot/pajbot2/pkg/web/controller/api/report"
+	"github.com/pajbot/pajbot2/pkg/web/controller/api/webhook"
+	"github.com/pajbot/pajbot2/pkg/web/router"
 )
 
 func apiRoot(w http.ResponseWriter, r *http.Request) {

@@ -6,11 +6,11 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg"
-	pb2twitch "github.com/pajlada/pajbot2/pkg/twitch"
-	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg"
+	pb2twitch "github.com/pajbot/pajbot2/pkg/twitch"
+	"github.com/pajbot/pajbot2/pkg/users"
+	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/web/state"
 	_ "github.com/swaggo/echo-swagger" // echo-swagger middleware
 )
 

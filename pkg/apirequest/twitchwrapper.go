@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dankeroni/gotwitch"
-	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
 const WebhookDefaultTime = time.Hour * 24

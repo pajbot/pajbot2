@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg/commandlist"
-	"github.com/pajlada/pajbot2/pkg/web/views"
+	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/web/views"
 )
 
 func handleCommands(w http.ResponseWriter, r *http.Request) {

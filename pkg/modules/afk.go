@@ -8,8 +8,8 @@ import (
 
 	"github.com/pajlada/botsync/pkg/client"
 	"github.com/pajlada/botsync/pkg/protocol"
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/utils"
 )
 
 func init() {

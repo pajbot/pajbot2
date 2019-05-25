@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/web/state"
 )
 
 const ActionUnknown = 0

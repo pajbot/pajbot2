@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type Base struct {

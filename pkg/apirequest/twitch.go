@@ -2,7 +2,7 @@ package apirequest
 
 import (
 	"github.com/dankeroni/gotwitch"
-	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
 // Twitch initialize the gotwitch api

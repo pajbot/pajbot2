@@ -3,7 +3,7 @@ package modules
 import (
 	"regexp"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type bannedNames struct {

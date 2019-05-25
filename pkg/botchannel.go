@@ -1,6 +1,6 @@
 package pkg
 
-import "github.com/pajlada/pajbot2/pkg/eventemitter"
+import "github.com/pajbot/pajbot2/pkg/eventemitter"
 
 type BotChannel interface {
 	DatabaseID() int64

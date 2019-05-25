@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type SubscriptionType int

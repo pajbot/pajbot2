@@ -5,11 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/pkg/web/router"
-	"github.com/pajlada/pajbot2/pkg/web/state"
-	"github.com/pajlada/pajbot2/pkg/web/views"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/users"
+	"github.com/pajbot/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg/web/views"
 )
 
 func Load(a pkg.Application) {

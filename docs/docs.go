@@ -23,7 +23,7 @@ var doc = `{
         },
         "license": {
             "name": "MIT",
-            "url": "https://github.com/pajlada/pajbot2/blob/master/LICENSE"
+            "url": "https://github.com/pajbot/pajbot2/blob/master/LICENSE"
         },
         "version": "1.0"
     },

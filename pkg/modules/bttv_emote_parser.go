@@ -4,9 +4,9 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/common"
-	"github.com/pajlada/pajbot2/pkg/emotes"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/common"
+	"github.com/pajbot/pajbot2/pkg/emotes"
 )
 
 type bttvEmoteParser struct {

@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/common/config"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/twitch"
 )

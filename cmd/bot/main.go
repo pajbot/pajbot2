@@ -7,8 +7,8 @@ import (
 	_ "net/http/pprof"
 	"os"
 
-	"github.com/pajlada/pajbot2/pkg/common"
-	"github.com/pajlada/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/common"
+	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
 var buildTime string
@@ -42,7 +42,7 @@ var validURLs = []string{
 // @contact.email rasmus.karlsson@pajlada.com
 
 // @license.name MIT
-// @license.url https://github.com/pajlada/pajbot2/blob/master/LICENSE
+// @license.url https://github.com/pajbot/pajbot2/blob/master/LICENSE
 
 // @host localhost:2355
 

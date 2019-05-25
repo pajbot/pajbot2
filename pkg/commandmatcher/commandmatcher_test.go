@@ -3,7 +3,7 @@ package commandmatcher
 import (
 	"testing"
 
-	"github.com/pajlada/pajbot2/internal/testhelper"
+	"github.com/pajbot/pajbot2/internal/testhelper"
 )
 
 type test struct {

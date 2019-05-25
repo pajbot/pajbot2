@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type badCharacterFilter struct {

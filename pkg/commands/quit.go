@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commandlist"
 )
 
 func init() {

@@ -17,11 +17,11 @@ import (
 	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/go-sql-driver/mysql"
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/channels"
-	"github.com/pajlada/pajbot2/pkg/common"
-	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/channels"
+	"github.com/pajbot/pajbot2/pkg/common"
+	"github.com/pajbot/pajbot2/pkg/users"
+	"github.com/pajbot/pajbot2/pkg/utils"
 	"golang.org/x/oauth2"
 )
 

@@ -8,8 +8,8 @@ import (
 
 	"github.com/pajlada/gobttv"
 	"github.com/pajlada/goffz"
-	"github.com/pajlada/pajbot2/pkg/apirequest"
-	"github.com/pajlada/pajbot2/pkg/common"
+	"github.com/pajbot/pajbot2/pkg/apirequest"
+	"github.com/pajbot/pajbot2/pkg/common"
 )
 
 // GlobalEmotes contains BTTV & FFZ Emotes

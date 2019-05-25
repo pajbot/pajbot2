@@ -3,10 +3,10 @@ package banphrases
 import (
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/pkg/web/state"
-	"github.com/pajlada/pajbot2/pkg/webutils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg/webutils"
 )
 
 type banphrase struct {

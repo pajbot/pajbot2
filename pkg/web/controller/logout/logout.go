@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg/web/router"
-	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/state"
 )
 
 func Load() {

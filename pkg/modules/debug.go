@@ -3,8 +3,8 @@ package modules
 import (
 	"strings"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/utils"
 )
 
 type pb2Say struct {

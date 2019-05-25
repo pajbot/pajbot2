@@ -1,8 +1,8 @@
 package modules
 
 import (
-	"github.com/pajlada/pajbot2/pkg"
-	"mvdan.cc/xurls"
+	"github.com/pajbot/pajbot2/pkg"
+	xurls "mvdan.cc/xurls/v2"
 )
 
 var (

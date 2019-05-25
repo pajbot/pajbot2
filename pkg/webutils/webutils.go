@@ -3,10 +3,10 @@ package webutils
 import (
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/users"
-	"github.com/pajlada/pajbot2/pkg/utils"
-	"github.com/pajlada/pajbot2/pkg/web/state"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/users"
+	"github.com/pajbot/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg/web/state"
 )
 
 func RequirePermission(w http.ResponseWriter, c state.State, channel pkg.Channel, permission pkg.Permission) bool {

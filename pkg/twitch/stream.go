@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dankeroni/gotwitch"
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 var _ pkg.Stream = &Stream{}

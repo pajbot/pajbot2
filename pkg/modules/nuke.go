@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 const garbageCollectionInterval = 1 * time.Minute

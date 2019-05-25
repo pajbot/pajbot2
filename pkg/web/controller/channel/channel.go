@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/common/config"
-	"github.com/pajlada/pajbot2/pkg/web/router"
-	"github.com/pajlada/pajbot2/pkg/web/views"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/common/config"
+	"github.com/pajbot/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/views"
 )
 
 func Load(a pkg.Application, cfg *config.Config) {

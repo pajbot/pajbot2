@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pajlada/pajbot2/pkg/web/router"
-	"github.com/pajlada/pajbot2/pkg/web/views"
+	"github.com/pajbot/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/views"
 )
 
 func Load() {

@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type giveaway struct {

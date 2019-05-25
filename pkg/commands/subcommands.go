@@ -1,6 +1,6 @@
 package commands
 
-import "github.com/pajlada/pajbot2/pkg"
+import "github.com/pajbot/pajbot2/pkg"
 
 type subCommands struct {
 	m map[string]*subCommand

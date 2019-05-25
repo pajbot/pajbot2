@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/pajlada/pajbot2/pkg/web/router"
+	"github.com/pajbot/pajbot2/pkg/web/router"
 )
 
 func root(w http.ResponseWriter, r *http.Request) {

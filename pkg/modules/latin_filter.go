@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/modules/datastructures"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules/datastructures"
 	"github.com/pkg/errors"
 )
 

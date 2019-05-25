@@ -34,7 +34,7 @@ info:
   description: API for pajbot2
   license:
     name: MIT
-    url: https://github.com/pajlada/pajbot2/blob/master/LICENSE
+    url: https://github.com/pajbot/pajbot2/blob/master/LICENSE
   title: pajbot2 API
   version: "1.0"
 paths:

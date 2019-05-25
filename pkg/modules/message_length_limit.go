@@ -1,6 +1,6 @@
 package modules
 
-import "github.com/pajlada/pajbot2/pkg"
+import "github.com/pajbot/pajbot2/pkg"
 
 var _ pkg.Module = &MessageLengthLimit{}
 

@@ -8,10 +8,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/eventemitter"
-	"github.com/pajlada/pajbot2/pkg/modules"
-	"github.com/pajlada/pajbot2/pkg/utils"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/eventemitter"
+	"github.com/pajbot/pajbot2/pkg/modules"
+	"github.com/pajbot/pajbot2/pkg/utils"
 )
 
 var _ pkg.BotChannel = &BotChannel{}

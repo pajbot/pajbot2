@@ -4,8 +4,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/pajlada/pajbot2/pkg"
-	"github.com/pajlada/pajbot2/pkg/commands"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commands"
 )
 
 type Pajbot1Commands struct {

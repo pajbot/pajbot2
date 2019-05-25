@@ -34,9 +34,9 @@ jobs:
     # this image is based on Debian stretch
     - image: circleci/golang:1.11.4
     # clone into the goroot directory
-    # note that this has to be /pajlada/pajbot2, even if this project
+    # note that this has to be /pajbot/pajbot2, even if this project
     # is a fork (due to the way go imports work)
-    working_directory: /go/src/github.com/pajlada/pajbot2
+    working_directory: /go/src/github.com/pajbot/pajbot2
     steps:
     - checkout
     - run: git submodule update --init --recursive
@@ -72,9 +72,9 @@ jobs:
     # this image is based on Debian stretch
     - image: circleci/golang:1.11.4
     # clone into the goroot directory
-    # note that this has to be /pajlada/pajbot2, even if this project
+    # note that this has to be /pajbot/pajbot2, even if this project
     # is a fork (due to the way go imports work)
-    working_directory: /go/src/github.com/pajlada/pajbot2
+    working_directory: /go/src/github.com/pajbot/pajbot2
     steps:
     - checkout
     # checkout does not update the submodules by default, but we dont need the c# height module

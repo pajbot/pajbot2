@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pajlada/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg"
 )
 
 type followResponse struct {
