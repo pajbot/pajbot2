@@ -3,8 +3,9 @@ go:
     - 1.11.x
     - 1.12.x
 
+env:
+    - GO111MODULE=on
+
 script:
     - pwd
-    - go mod vendor
-    - go build
     - go test -v ./pkg/... ./cmd/...
