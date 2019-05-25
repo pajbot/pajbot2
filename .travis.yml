@@ -4,4 +4,6 @@ go:
     - 1.12.x
 
 script:
+    - pwd
+    - go build
     - go test -v ./pkg/... ./cmd/...
