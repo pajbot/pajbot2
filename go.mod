@@ -39,7 +39,7 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
-	github.com/pajbot/utils v0.0.0-20190525181638-b74ff78f4d25
+	github.com/pajbot/utils v0.0.0-20190525195426-6531d61d5900
 	github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71
 	github.com/pajlada/gobttv v0.0.0-20160914192201-e617d015c333
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
