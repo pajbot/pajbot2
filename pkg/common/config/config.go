@@ -15,6 +15,10 @@ type WebConfig struct {
 	Secure bool
 }
 
+type PostgreSQLConfig struct {
+	DSN string
+}
+
 type SQLConfig struct {
 	DSN string
 }
@@ -71,6 +75,8 @@ type Config struct {
 	Admin AdminConfig
 
 	Web WebConfig
+
+	PostgreSQL PostgreSQLConfig
 
 	SQL SQLConfig
 

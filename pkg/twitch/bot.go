@@ -139,6 +139,10 @@ func (b *Bot) IsApplication() bool {
 	return true
 }
 
+func (b *Bot) Application() pkg.Application {
+	return b.app
+}
+
 func (b *Bot) Connection() pkg.PubSubConnection {
 	return b
 }

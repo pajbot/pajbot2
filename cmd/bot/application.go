@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -16,8 +15,8 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/ChimeraCoder/anaconda"
 	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"golang.org/x/oauth2"
 
 	_ "github.com/go-sql-driver/mysql" // MySQL Driver
@@ -27,7 +26,6 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
-	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/auth"
@@ -35,22 +33,26 @@ import (
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common/config"
 	"github.com/pajbot/pajbot2/pkg/emotes"
+	"github.com/pajbot/pajbot2/pkg/mimo"
 	"github.com/pajbot/pajbot2/pkg/modules"
 	"github.com/pajbot/pajbot2/pkg/pubsub"
 	"github.com/pajbot/pajbot2/pkg/report"
 	pb2twitch "github.com/pajbot/pajbot2/pkg/twitch"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web"
 	"github.com/pajbot/pajbot2/pkg/web/controller"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/pajbot2/pkg/web/views"
+	"github.com/pajbot/utils"
+	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
 )
 
 // Application is the heart of pajbot
 // It keeps the functions to initialize, start, and stop pajbot
 type Application struct {
 	config *config.Config
+
+	mimo pkg.MIMO
 
 	twitchBots   pkg.BotStore
 	sqlClient    *sql.DB
@@ -75,9 +77,15 @@ type Application struct {
 var _ pkg.PubSubSource = &Application{}
 var _ pkg.Application = &Application{}
 
+func (a *Application) MIMO() pkg.MIMO {
+	return a.mimo
+}
+
 // NewApplication creates an instance of Application. Generally this should only be done once
 func newApplication() *Application {
 	a := &Application{
+		mimo: mimo.New(),
+
 		twitchBots: botstore.New(),
 	}
 
@@ -250,6 +258,8 @@ func (a *Application) InitializeModules() (err error) {
 		return
 	}
 
+	a.twitterTest()
+
 	err = a.StartTwitterStream()
 	if err != nil {
 		fmt.Println("Error starting twitter stream:", err)
@@ -261,6 +271,23 @@ func (a *Application) InitializeModules() (err error) {
 	}
 
 	return
+}
+
+func (a *Application) twitterTest() {
+	localConfig := a.config.Auth.Twitter
+
+	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
+	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
+	httpClient := config.Client(oauth1.NoContext, token)
+
+	client := twitter.NewClient(httpClient)
+
+	user, resp, err := client.Users.Show(&twitter.UserShowParams{
+		ScreenName: "pajtest",
+	})
+	fmt.Println(user)
+	fmt.Println(resp)
+	fmt.Println(err)
 }
 
 func (a *Application) StartTwitterStream() error {
@@ -275,29 +302,35 @@ func (a *Application) StartTwitterStream() error {
 		return errors.New("Missing twitter configuration fields")
 	}
 
-	api := anaconda.NewTwitterApiWithCredentials(localConfig.AccessToken, localConfig.AccessSecret, localConfig.ConsumerKey, localConfig.ConsumerSecret)
+	// config := &oauth2.Config{}
+	// token := &oauth2.Token{AccessToken: localConfig.AccessToken}
+	// httpClient := config.Client(oauth2.NoContext, token)
 
-	v := url.Values{}
-	s := api.UserStream(v)
+	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
+	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
+	httpClient := config.Client(oauth1.NoContext, token)
 
-	for t := range s.C {
-		fmt.Printf("%#v\n", t)
-		switch v := t.(type) {
-		case anaconda.Tweet:
-			fmt.Printf("%-15s: %s\n", v.User.ScreenName, v.Text)
-		case anaconda.EventTweet:
-			switch v.Event.Event {
-			case "favorite":
-				sn := v.Source.ScreenName
-				tw := v.TargetObject.Text
-				fmt.Printf("Favorited by %-15s: %s\n", sn, tw)
-			case "unfavorite":
-				sn := v.Source.ScreenName
-				tw := v.TargetObject.Text
-				fmt.Printf("UnFavorited by %-15s: %s\n", sn, tw)
-			}
-		}
+	client := twitter.NewClient(httpClient)
+
+	params := &twitter.StreamFilterParams{
+		Follow:        []string{"81085011"},
+		StallWarnings: twitter.Bool(true),
 	}
+
+	writer := a.mimo.Publisher("twitter")
+	demux := twitter.NewSwitchDemux()
+	demux.Tweet = func(tweet *twitter.Tweet) {
+		fmt.Println("got tweet:", tweet.Text)
+		writer <- tweet.Text
+		fmt.Println("done publishing tweet")
+	}
+	stream, err := client.Streams.Filter(params)
+	if err != nil {
+		fmt.Println("Error getting twitter stream:", err)
+		return err
+	}
+	go demux.HandleChan(stream.Messages)
+	fmt.Println("Stream:", stream)
 
 	/*
 		config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)

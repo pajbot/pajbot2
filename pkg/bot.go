@@ -55,4 +55,6 @@ type Sender interface {
 	OnNewChannelJoined(cb func(channel Channel))
 
 	Quit(message string)
+
+	Application() Application
 }
