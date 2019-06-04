@@ -39,7 +39,7 @@ func (m *bannedNames) Initialize(botChannel pkg.BotChannel, settings []byte) err
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^pudele\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^ninjal0ver\d+`))
 	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^trihard_account_\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^hierotitan.++`))
+	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^hierotitan.+`))
 
 	return nil
 }
