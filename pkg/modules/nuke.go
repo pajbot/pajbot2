@@ -180,8 +180,8 @@ func (m *nukeModule) garbageCollect() {
 }
 
 func (m *nukeModule) nuke(source pkg.User, bot pkg.BotChannel, phrase string, scrollbackLength, timeoutDuration time.Duration) {
-	if timeoutDuration > 24*time.Hour {
-		timeoutDuration = 24 * time.Hour
+	if timeoutDuration > 72*time.Hour {
+		timeoutDuration = 72 * time.Hour
 	}
 
 	lowercasePhrase := strings.ToLower(phrase)
