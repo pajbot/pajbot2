@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -114,8 +115,13 @@ WHERE
 
 // We assume that modulesMutex is locked already
 func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
-	module := spec.Maker()()
-	err := module.Initialize(c, settings)
+	// This will call the modules maker
+	module := spec.Create(c)
+
+	log.Println("Load module", spec.Name())
+
+	// Load the modules setting (generally handled by the modules base)
+	err := module.LoadSettings(settings)
 	if err != nil {
 		return fmt.Errorf("error loading module '%s': %s", spec.ID(), err.Error())
 	}
@@ -144,9 +150,10 @@ ON DUPLICATE KEY UPDATE enabled=?`
 
 // We assume that modulesMutex is locked already
 func (c *BotChannel) EnableModule(moduleID string) error {
+	log.Println("Enable module!!!!!!!", moduleID)
 	moduleID = strings.ToLower(moduleID)
 
-	spec, ok := modules.GetModule(moduleID)
+	spec, ok := modules.GetModuleSpec(moduleID)
 	if !ok {
 		return errors.New("invalid module id")
 	}
@@ -175,11 +182,6 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 // We assume that modulesMutex is locked already
 func (c *BotChannel) DisableModule(moduleID string) error {
 	moduleID = strings.ToLower(moduleID)
-
-	_, ok := modules.GetModule(moduleID)
-	if !ok {
-		return errors.New("invalid module id")
-	}
 
 	for i, m := range c.modules {
 		if m.Spec().ID() == moduleID {
@@ -257,17 +259,27 @@ func (c *BotChannel) loadAllModuleConfigs() ([]*moduleConfig, error) {
 }
 
 func (c *BotChannel) loadModules() {
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
+	log.Println("LOAD MODULES")
 	moduleConfigs, err := c.loadAllModuleConfigs()
 	if err != nil {
 		panic(err)
 	}
 
 	availableModules := modules.Modules()
+	log.Println("Available modules:", availableModules)
 
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
 	for _, spec := range availableModules {
+		log.Println("Available module:", spec)
 		enabled := spec.EnabledByDefault()
 		var settings []byte
 
@@ -314,6 +326,8 @@ func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message, action pk
 
 func (c *BotChannel) handleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
 	c.eventEmitter.Emit("on_msg", nil)
+
+	log.Println("Got message:", message.GetText())
 
 	return c.OnModules(func(module pkg.Module) error {
 		return module.OnMessage(c, user, message, action)

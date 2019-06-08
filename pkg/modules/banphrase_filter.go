@@ -9,28 +9,34 @@ import (
 	"github.com/pajbot/utils"
 )
 
-type pajbot1BanphraseFilter struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("pajbot1_banphrase", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:   "pajbot1_banphrase",
+			name: "pajbot1 banphrase",
+			maker: func(b base) pkg.Module {
+				m := newPajbot1BanphraseFilter(b)
+				m.Initialize()
+				return m
+			},
 
-	server *server
+			moduleType: pkg.ModuleTypeFilter,
+
+			enabledByDefault: true,
+		}
+	})
+}
+
+type pajbot1BanphraseFilter struct {
+	base
 
 	banphrases []pkg.Banphrase
 }
 
-func newPajbot1BanphraseFilter() pkg.Module {
+func newPajbot1BanphraseFilter(b base) *pajbot1BanphraseFilter {
 	return &pajbot1BanphraseFilter{
-		server: &_server,
+		base: b,
 	}
-}
-
-var pajbot1BanphraseSpec = moduleSpec{
-	id:    "pajbot1_banphrase",
-	name:  "pajbot1 banphrase",
-	maker: newPajbot1BanphraseFilter,
-
-	moduleType: pkg.ModuleTypeFilter,
-
-	enabledByDefault: true,
 }
 
 func (m *pajbot1BanphraseFilter) addCustomBanphrase(phrase string) {
@@ -75,9 +81,7 @@ func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 	return nil
 }
 
-func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
+func (m *pajbot1BanphraseFilter) Initialize() {
 	// hard-coded banphrases
 	m.addCustomBanphrase("n!66ger")
 
@@ -264,20 +268,6 @@ func (m *pajbot1BanphraseFilter) Initialize(botChannel pkg.BotChannel, settings 
 	if err != nil {
 		// return err
 	}
-
-	return nil
-}
-
-func (m *pajbot1BanphraseFilter) Disable() error {
-	return nil
-}
-
-func (m *pajbot1BanphraseFilter) Spec() pkg.ModuleSpec {
-	return &pajbot1BanphraseSpec
-}
-
-func (m *pajbot1BanphraseFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
 }
 
 type TimeoutData struct {
@@ -286,10 +276,6 @@ type TimeoutData struct {
 	Username    string
 	Channel     string
 	Timestamp   time.Time
-}
-
-func (m *pajbot1BanphraseFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
 }
 
 func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action pkg.Action) error {

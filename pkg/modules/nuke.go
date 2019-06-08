@@ -11,13 +11,24 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
+func init() {
+	Register("nuke", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "nuke",
+			name:  "Nuke",
+			maker: newNuke,
+
+			enabledByDefault: true,
+		}
+	})
+}
+
 const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
 type nukeModule struct {
-	botChannel pkg.BotChannel
+	base
 
-	server        *server
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
 
@@ -30,9 +41,10 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-func newNuke() pkg.Module {
+func newNuke(b base) pkg.Module {
 	m := &nukeModule{
-		server:   &_server,
+		base: b,
+
 		messages: make(map[string][]nukeMessage),
 	}
 
@@ -48,32 +60,6 @@ func newNuke() pkg.Module {
 	}()
 
 	return m
-}
-
-var nukeSpec = moduleSpec{
-	id:    "nuke",
-	name:  "Nuke",
-	maker: newNuke,
-
-	enabledByDefault: true,
-}
-
-func (m *nukeModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *nukeModule) Disable() error {
-	return nil
-}
-
-func (m *nukeModule) Spec() pkg.ModuleSpec {
-	return &nukeSpec
-}
-
-func (m *nukeModule) BotChannel() pkg.BotChannel {
-	return m.botChannel
 }
 
 func (m *nukeModule) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {

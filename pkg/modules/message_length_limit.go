@@ -2,46 +2,26 @@ package modules
 
 import "github.com/pajbot/pajbot2/pkg"
 
+func init() {
+	Register("message_length_limit", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "message_length_limit",
+			name:  "Message length limit",
+			maker: newMessageLengthLimit,
+		}
+	})
+}
+
 var _ pkg.Module = &MessageLengthLimit{}
 
 type MessageLengthLimit struct {
-	botChannel pkg.BotChannel
-
-	server *server
+	base
 }
 
-func newMessageLengthLimit() pkg.Module {
+func newMessageLengthLimit(b base) pkg.Module {
 	return &MessageLengthLimit{
-		server: &_server,
+		base: b,
 	}
-}
-
-var messageLengthLimitSpec = moduleSpec{
-	id:    "message_length_limit",
-	name:  "Message length limit",
-	maker: newMessageLengthLimit,
-}
-
-func (m *MessageLengthLimit) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *MessageLengthLimit) Disable() error {
-	return nil
-}
-
-func (m *MessageLengthLimit) Spec() pkg.ModuleSpec {
-	return &messageLengthLimitSpec
-}
-
-func (m *MessageLengthLimit) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m MessageLengthLimit) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
 }
 
 func (m MessageLengthLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {

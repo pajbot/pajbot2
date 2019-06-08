@@ -4,44 +4,28 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
+func init() {
+	Register("bad_character_filter", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "bad_character_filter",
+			name:  "Bad character filter",
+			maker: newBadCharacterFilter,
+		}
+	})
+}
+
 type badCharacterFilter struct {
-	botChannel pkg.BotChannel
+	base
 
 	badCharacters []rune
 }
 
-func newBadCharacterFilter() pkg.Module {
-	return &badCharacterFilter{}
-}
+func newBadCharacterFilter(b base) pkg.Module {
+	return &badCharacterFilter{
+		base: b,
 
-var badCharacterSpec = moduleSpec{
-	id:    "bad_character_filter",
-	name:  "Bad character filter",
-	maker: newBadCharacterFilter,
-}
-
-func (m *badCharacterFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	m.badCharacters = append(m.badCharacters, '\x01')
-
-	return nil
-}
-
-func (m *badCharacterFilter) Disable() error {
-	return nil
-}
-
-func (m *badCharacterFilter) Spec() pkg.ModuleSpec {
-	return &badCharacterSpec
-}
-
-func (m *badCharacterFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *badCharacterFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
+		badCharacters: []rune{'\x01'},
+	}
 }
 
 func (m *badCharacterFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {

@@ -126,3 +126,65 @@ func (a TwitchAction) NotifyModerator() User {
 func (a *TwitchAction) SetNotifyModerator(user User) {
 	a.notifyModerator = user
 }
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+type A interface {
+	// timeouts
+	// Timeout(username, duration)
+
+	// messages
+	// Say(message)
+
+	// DoOnSuccess(func())
+
+	// Do(func())
+}

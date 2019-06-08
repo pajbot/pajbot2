@@ -10,24 +10,32 @@ import (
 	"github.com/pajbot/utils"
 )
 
+func init() {
+	Register("report", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "report",
+			name:  "Report",
+			maker: newReport,
+		}
+	})
+}
+
 type Report struct {
-	botChannel pkg.BotChannel
+	base
 
 	reportHolder *report.Holder
 }
 
 var _ pkg.Module = &Report{}
 
-func newReport() pkg.Module {
-	return &Report{
+func newReport(b base) pkg.Module {
+	m := &Report{
+		base: b,
+
 		reportHolder: _server.reportHolder,
 	}
-}
 
-var reportSpec = moduleSpec{
-	id:    "report",
-	name:  "Report",
-	maker: newReport,
+	return m
 }
 
 func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string) error {
@@ -61,24 +69,6 @@ func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string
 	m.report(bot.Bot(), user, bot.Channel(), reportedUsername, reason, duration)
 
 	return nil
-}
-
-func (m *Report) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *Report) Disable() error {
-	return nil
-}
-
-func (m *Report) Spec() pkg.ModuleSpec {
-	return &reportSpec
-}
-
-func (m *Report) BotChannel() pkg.BotChannel {
-	return m.botChannel
 }
 
 func (m *Report) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {

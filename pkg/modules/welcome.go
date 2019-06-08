@@ -1,66 +1,47 @@
 package modules
 
 import (
+	"log"
+
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/eventemitter"
 )
 
+func init() {
+	Register("welcome", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "welcome",
+			name:  "Welcome",
+			maker: newWelcome,
+
+			enabledByDefault: false,
+		}
+	})
+}
+
 type welcome struct {
-	botChannel pkg.BotChannel
-
-	server      *server
-	connections []*eventemitter.Listener
+	base
 }
 
-func newWelcome() pkg.Module {
-	return &welcome{
-		server: &_server,
+func newWelcome(b base) pkg.Module {
+	m := &welcome{
+		base: b,
 	}
+
+	// FIXME
+	m.Initialize()
+
+	return m
 }
 
-var welcomeSpec = &moduleSpec{
-	id:    "welcome",
-	name:  "Welcome",
-	maker: newWelcome,
-
-	enabledByDefault: false,
-}
-
-func (m *welcome) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	conn, err := m.botChannel.Events().Listen("on_join", func() error {
-		go m.botChannel.Say("pb2 joined")
+func (m *welcome) Initialize() {
+	conn, err := m.bot.Events().Listen("on_join", func() error {
+		go m.bot.Say("pb2 joined")
 		return nil
 	}, 100)
 	if err != nil {
-		return err
+		// FIXME
+		log.Println("ERROR LISTENING TO ON JOIN XD")
 	}
 
 	m.connections = append(m.connections, conn)
-
-	return nil
-}
-
-func (m *welcome) Disable() error {
-	for _, c := range m.connections {
-		c.Disconnected = true
-	}
-	return nil
-}
-
-func (m *welcome) Spec() pkg.ModuleSpec {
-	return welcomeSpec
-}
-
-func (m *welcome) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m welcome) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m welcome) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	return nil
 }

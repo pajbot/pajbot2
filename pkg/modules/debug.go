@@ -7,6 +7,17 @@ import (
 	"github.com/pajbot/utils"
 )
 
+func init() {
+	Register("debug", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:               "debug",
+			name:             "Debug",
+			maker:            newDebugModule,
+			enabledByDefault: true,
+		}
+	})
+}
+
 type pb2Say struct {
 }
 
@@ -43,31 +54,23 @@ func (c pb2Whisper) Trigger(botChannel pkg.BotChannel, parts []string, channel p
 	botChannel.Bot().Whisper(botChannel.Bot().MakeUser(username), strings.Join(parts[2:], " "))
 }
 
-func init() {
-	Register(debugModuleSpec)
-}
-
 type debugModule struct {
-	botChannel pkg.BotChannel
-
-	server *server
+	base
 
 	commands map[string]pkg.CustomCommand
 }
 
-var debugModuleSpec = &moduleSpec{
-	id:               "debug",
-	name:             "Debug",
-	maker:            newDebugModule,
-	enabledByDefault: true,
-}
-
-func newDebugModule() pkg.Module {
-	return &debugModule{
-		server: &_server,
+func newDebugModule(b base) pkg.Module {
+	m := &debugModule{
+		base: b,
 
 		commands: make(map[string]pkg.CustomCommand),
 	}
+
+	// FIXME
+	m.Initialize()
+
+	return m
 }
 
 func (m *debugModule) registerCommand(aliases []string, command pkg.CustomCommand) {
@@ -76,25 +79,9 @@ func (m *debugModule) registerCommand(aliases []string, command pkg.CustomComman
 	}
 }
 
-func (m *debugModule) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
+func (m *debugModule) Initialize() {
 	m.registerCommand([]string{"!pb2say"}, &pb2Say{})
 	m.registerCommand([]string{"!pb2whisper"}, &pb2Whisper{})
-
-	return nil
-}
-
-func (m *debugModule) Disable() error {
-	return nil
-}
-
-func (m *debugModule) Spec() pkg.ModuleSpec {
-	return debugModuleSpec
-}
-
-func (m *debugModule) BotChannel() pkg.BotChannel {
-	return m.botChannel
 }
 
 func (m *debugModule) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
@@ -104,7 +91,7 @@ func (m *debugModule) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.M
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, nil)
+		command.Trigger(m.bot, parts, bot.Channel(), user, message, nil)
 	}
 
 	return nil
@@ -117,7 +104,7 @@ func (m *debugModule) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.M
 	}
 
 	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, action)
+		command.Trigger(m.bot, parts, bot.Channel(), user, message, action)
 	}
 
 	return nil

@@ -7,66 +7,41 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
-type giveaway struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("giveaway", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "giveaway",
+			name:  "Giveaway",
+			maker: newGiveaway,
+		}
+	})
+}
 
-	server *server
+type giveaway struct {
+	base
 
 	state string
 
 	entrants []string
 }
 
-func newGiveaway() pkg.Module {
+func newGiveaway(b base) pkg.Module {
 	return &giveaway{
-		server: &_server,
-		state:  "inactive",
+		base: b,
+
+		state: "inactive",
 	}
 }
 
-var giveawaySpec = moduleSpec{
-	id:    "giveaway",
-	name:  "Giveaway",
-	maker: newGiveaway,
-}
-
-func (m *giveaway) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *giveaway) Disable() error {
-	return nil
-}
-
-func (m *giveaway) Spec() pkg.ModuleSpec {
-	return &giveawaySpec
-}
-
-func (m *giveaway) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-const forsen25ID = "300235048"
-const pajlada25ID = "908917"
-const pajaWID = "80481"
-
-func (m giveaway) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
+const forsen25ID = "300378550"
 
 func (m *giveaway) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	// if channel.GetName() != "forsen" {
-	// 	return nil
-	// }
-
 	const giveawayEmote = forsen25ID
 
 	text := message.GetText()
 
 	// Commands
-	if user.IsModerator() || user.GetName() == "forsen" || user.GetName() == "pajlada" {
+	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) {
 		if strings.HasPrefix(text, "!25start") {
 			if m.state == "inactive" {
 				m.state = "started"
@@ -74,10 +49,10 @@ func (m *giveaway) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Mess
 				bot.Say("Started giveaway")
 
 				return nil
-			} else {
-				bot.Say("Giveaway already started")
-				return nil
 			}
+
+			bot.Say("Giveaway already started")
+			return nil
 		}
 
 		if strings.HasPrefix(text, "!25stop") {

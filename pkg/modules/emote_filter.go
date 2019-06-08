@@ -7,6 +7,16 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
+func init() {
+	Register("emote_filter", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "emote_limit",
+			name:  "Emote limit",
+			maker: newEmoteFilter,
+		}
+	})
+}
+
 type limitConsequence struct {
 	limit int
 
@@ -16,31 +26,28 @@ type limitConsequence struct {
 }
 
 type emoteFilter struct {
-	botChannel pkg.BotChannel
-
-	server *server
+	base
 
 	emoteLimits    map[string]limitConsequence
 	combinedLimits int
 }
 
-func newEmoteFilter() pkg.Module {
-	return &emoteFilter{
-		server: &_server,
+func newEmoteFilter(b base) pkg.Module {
+	m := &emoteFilter{
+		base: b,
 
 		emoteLimits: make(map[string]limitConsequence),
+
+		combinedLimits: 4,
 	}
+
+	// FIXME
+	m.Initialize()
+
+	return m
 }
 
-var emoteLimitSpec = moduleSpec{
-	id:    "emote_limit",
-	name:  "Emote limit",
-	maker: newEmoteFilter,
-}
-
-func (m *emoteFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
+func (m *emoteFilter) Initialize() {
 	m.emoteLimits["NaM"] = limitConsequence{
 		limit:         2,
 		baseDuration:  300,
@@ -71,24 +78,6 @@ func (m *emoteFilter) Initialize(botChannel pkg.BotChannel, settings []byte) err
 		baseDuration:  300,
 		extraDuration: 50,
 	}
-	m.combinedLimits = 4
-	return nil
-}
-
-func (m *emoteFilter) Disable() error {
-	return nil
-}
-
-func (m *emoteFilter) Spec() pkg.ModuleSpec {
-	return &emoteLimitSpec
-}
-
-func (m *emoteFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *emoteFilter) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
 }
 
 func (m *emoteFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {

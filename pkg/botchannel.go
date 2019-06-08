@@ -2,7 +2,18 @@ package pkg
 
 import "github.com/pajbot/pajbot2/pkg/eventemitter"
 
+type MessageSender interface {
+	Say(string)
+	Mention(User, string)
+
+	// Moderation
+	Timeout(User, int, string)
+	SingleTimeout(User, int, string)
+}
+
 type BotChannel interface {
+	MessageSender
+
 	DatabaseID() int64
 	Channel() Channel
 	ChannelID() string
@@ -17,13 +28,6 @@ type BotChannel interface {
 
 	HandleMessage(user User, message Message, action Action) error
 	OnModules(cb func(module Module) error) error
-
-	Say(string)
-	Mention(User, string)
-
-	// Moderation
-	Timeout(User, int, string)
-	SingleTimeout(User, int, string)
 
 	Bot() Sender
 }

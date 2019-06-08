@@ -4,50 +4,29 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
-type ActionPerformer struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("action_performer", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:               "action_performer",
+			name:             "Action performer",
+			enabledByDefault: true,
+			priority:         500000,
 
-	server *server
+			maker: newActionPerformer,
+		}
+	})
 }
 
-var actionPerformerModuleSpec = &moduleSpec{
-	id:   "action_performer",
-	name: "Action performer",
-
-	maker: NewActionPerformer,
-
-	enabledByDefault: true,
-
-	priority: 500000,
+type actionPerformer struct {
+	base
 }
 
-func NewActionPerformer() pkg.Module {
-	return &ActionPerformer{
-		server: &_server,
+func newActionPerformer(b base) pkg.Module {
+	return &actionPerformer{
+		base: b,
 	}
 }
 
-func (m *ActionPerformer) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-	return nil
-}
-
-func (m *ActionPerformer) Disable() error {
-	return nil
-}
-
-func (m *ActionPerformer) Spec() pkg.ModuleSpec {
-	return actionPerformerModuleSpec
-}
-
-func (m *ActionPerformer) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m ActionPerformer) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m ActionPerformer) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m actionPerformer) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	return action.Do()
 }

@@ -1,5 +1,7 @@
 package pkg
 
+type ModuleFactory func() ModuleSpec
+
 // A module is local to a bots channel
 // i.e. bot "pajbot" joins channels "pajlada" and "forsen"
 // Module list looks like this:
@@ -11,7 +13,7 @@ package pkg
 //		- "MyTestModule"
 type Module interface {
 	// After the module struct is created, it must be initialized with the channel
-	Initialize(BotChannel, []byte) error
+	LoadSettings([]byte) error
 
 	// Called when the module is disabled. The module can do any cleanup it needs to do here
 	Disable() error
@@ -33,15 +35,13 @@ const (
 	ModuleTypeFilter   = 1
 )
 
-type ModuleMaker func() Module
-
 type ModuleSpec interface {
 	ID() string
 	Name() string
 	Type() ModuleType
 	EnabledByDefault() bool
 
-	Maker() ModuleMaker
+	Create(bot BotChannel) Module
 
 	Priority() int
 }
