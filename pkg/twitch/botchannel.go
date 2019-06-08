@@ -117,7 +117,7 @@ func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
 	module := spec.Maker()()
 	err := module.Initialize(c, settings)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Error loading module '%s': %s\n", spec.ID(), err.Error()))
+		return fmt.Errorf("error loading module '%s': %s", spec.ID(), err.Error())
 	}
 
 	c.modules = append(c.modules, module)
