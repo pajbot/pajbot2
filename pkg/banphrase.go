@@ -1,5 +1,7 @@
 package pkg
 
+import "time"
+
 type Banphrase interface {
 	Triggers(text string) bool
 	IsCaseSensitive() bool
@@ -9,5 +11,5 @@ type Banphrase interface {
 
 	GetName() string
 	GetID() int
-	GetLength() int
+	GetDuration() time.Duration
 }

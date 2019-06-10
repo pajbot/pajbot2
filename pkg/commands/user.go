@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/pajbot2/pkg/users"
 	"github.com/pajbot/utils"
 )
@@ -14,19 +16,29 @@ func init() {
 	commandlist.Register(pkg.CommandInfo{
 		Name:        "user",
 		Description: "do user things",
-		Maker:       NewUser,
+		// FIXME
+		// Maker:       NewUser,
 	})
 }
 
-type userTarget struct {
-	id   string
-	name string
+func parseUser(bot pkg.BotChannel, content string) pkg.User {
+	targetName := utils.FilterUsername(content)
+	if targetName == "" {
+		return nil
+	}
+
+	targetUserID := bot.Bot().GetUserStore().GetID(targetName)
+	if targetUserID == "" {
+		return nil
+	}
+
+	return users.NewSimpleTwitchUser(targetUserID, targetName)
 }
 
-func updatePermissions(action, channelID string, target userTarget, parts []string) string {
-	oldPermissions, err := users.GetUserPermissions(target.id, channelID)
+func updatePermissions(action, channelID string, user pkg.User, parts []string, event pkg.MessageEvent) pkg.Actions {
+	oldPermissions, err := users.GetUserPermissions(user.GetID(), channelID)
 	if err != nil {
-		return "error getting old permissions"
+		return twitchactions.Mention(event.User, "error getting old permissions")
 	}
 
 	channelName := channelID
@@ -47,137 +59,158 @@ func updatePermissions(action, channelID string, target userTarget, parts []stri
 		newPermissions = oldPermissions &^ permissions
 	}
 
-	err = users.SetUserPermissions(target.id, channelID, newPermissions)
+	err = users.SetUserPermissions(user.GetID(), channelID, newPermissions)
 	if err != nil {
-		return err.Error()
+		return twitchactions.Mention(event.User, err.Error())
 	}
 
-	return fmt.Sprintf("%s %s permissions changed from %b to %b (%s)", target.name, channelName, oldPermissions, newPermissions, action)
+	return twitchactions.Mention(event.User, fmt.Sprintf("%s %s permissions changed from %b to %b (%s)", user.GetName(), channelName, oldPermissions, newPermissions, action))
 }
 
 type User struct {
-	Base
+	base.Command
 
 	subCommands       *subCommands
 	defaultSubCommand string
 }
 
-func NewUser() pkg.CustomCommand2 {
+func NewUser(bot pkg.BotChannel) pkg.CustomCommand2 {
 	u := &User{
-		Base:              NewBase(),
+		Command:           base.New(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "print",
 	}
 
-	u.Base.UserCooldown = 0
-	u.Base.GlobalCooldown = 0
+	u.UserCooldown = 0
+	u.GlobalCooldown = 0
+
+	// FIXME
+	channel := bot.Channel()
 
 	u.subCommands.add("print", &subCommand{
 		permission: pkg.PermissionNone,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
-			channelPermissions, err := users.GetUserChannelPermissions(target.id, channel.GetID())
-			if err != nil {
-				return "error getting channel permission: " + err.Error()
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
 			}
-			globalPermissions, err := users.GetUserGlobalPermissions(target.id)
+
+			channelPermissions, err := users.GetUserChannelPermissions(target.GetID(), channel.GetID())
 			if err != nil {
-				return "error getting global permission: " + err.Error()
+				return twitchactions.Mention(event.User, "error getting channel permission: "+err.Error())
+			}
+			globalPermissions, err := users.GetUserGlobalPermissions(target.GetID())
+			if err != nil {
+				return twitchactions.Mention(event.User, "error getting global permission: "+err.Error())
 			}
 			permissions := channelPermissions | globalPermissions
 
-			return fmt.Sprintf("%s permissions: %b (global: %b, channel: %b)", target.name, permissions, globalPermissions, channelPermissions)
+			return twitchactions.Mention(event.User, fmt.Sprintf("%s permissions: %b (global: %b, channel: %b)", target.GetName(), permissions, globalPermissions, channelPermissions))
 		},
 	})
 
 	u.subCommands.addSC("set_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME set_global_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME set_global_permissions permission1 permission2")
 			}
 
-			return updatePermissions("set", "global", target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("set", "global", target, parts[3:], event)
 		},
 	})
 
 	u.subCommands.addSC("set_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME set_channel_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME set_channel_permissions permission1 permission2")
 			}
 
-			return updatePermissions("set", channel.GetID(), target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("set", channel.GetID(), target, parts[3:], event)
 		},
 	})
 
 	u.subCommands.addSC("add_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME add_global_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME add_global_permissions permission1 permission2")
 			}
 
-			return updatePermissions("add", "global", target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("add", "global", target, parts[3:], event)
 		},
 	})
 
 	u.subCommands.addSC("add_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME add_channel_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME add_channel_permissions permission1 permission2")
 			}
 
-			return updatePermissions("add", channel.GetID(), target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("add", channel.GetID(), target, parts[3:], event)
 		},
 	})
 
 	u.subCommands.addSC("remove_global_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME remove_global_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME remove_global_permissions permission1 permission2")
 			}
 
-			return updatePermissions("remove", "global", target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("remove", "global", target, parts[3:], event)
 		},
 	})
 
 	u.subCommands.addSC("remove_channel_permission", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 4 {
-				return "usage: !user USERNAME remove_channel_permissions permission1 permission2"
+				return twitchactions.Mention(event.User, "usage: !user USERNAME remove_channel_permissions permission1 permission2")
 			}
 
-			return updatePermissions("remove", channel.GetID(), target, parts[3:])
+			target := parseUser(bot, parts[1])
+			if target == nil {
+				return twitchactions.Mention(event.User, "no valid user found")
+			}
+
+			return updatePermissions("remove", channel.GetID(), target, parts[3:], event)
 		},
 	})
 
 	return u
 }
 
-func (c *User) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *User) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if len(parts) < 2 {
-		return
-	}
-
-	targetName := utils.FilterUsername(parts[1])
-	if targetName == "" {
-		botChannel.Mention(user, "invalid username")
-		return
-	}
-
-	targetUserID := botChannel.Bot().GetUserStore().GetID(targetName)
-	if targetUserID == "" {
-		botChannel.Mention(user, "no user with this ID")
-		return
-	}
-
-	target := userTarget{
-		id:   targetUserID,
-		name: targetName,
+		return nil
 	}
 
 	subCommandName := c.defaultSubCommand
@@ -186,9 +219,8 @@ func (c *User) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User,
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(botChannel, target, botChannel.Channel(), user, parts)
-		if response != "" {
-			botChannel.Mention(user, response)
-		}
+		return subCommand.run(parts, event)
 	}
+
+	return nil
 }

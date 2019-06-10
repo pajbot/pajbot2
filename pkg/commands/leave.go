@@ -4,56 +4,60 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
 	commandlist.Register(pkg.CommandInfo{
 		Name:        "Leave",
 		Description: "xd leave lol",
-		Maker:       NewLeave,
+		// Maker:       NewLeave,
 	})
 }
 
 type Leave struct {
-	Base
+	base.Command
+
+	bot pkg.BotChannel
 }
 
-func NewLeave() pkg.CustomCommand2 {
+func NewLeave(bot pkg.BotChannel) pkg.CustomCommand2 {
 	return &Leave{
-		Base: NewBase(),
+		Command: base.New(),
+
+		bot: bot,
 	}
 }
 
-func (c Leave) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Leave) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+
 	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
-		return
+		return twitchactions.Mention(user, "you do not have permission to use this command. Admin permission is required")
 	}
 
 	if len(parts) < 2 {
-		return
+		return nil
 	}
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
-		botChannel.Mention(user, "I cannot leave my own channel")
-		return
+	if strings.EqualFold(channelName, c.bot.Bot().TwitchAccount().Name()) {
+		return twitchactions.Mention(user, "I cannot leave my own channel")
 	}
 
-	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
+	channelID := c.bot.Bot().GetUserStore().GetID(channelName)
 	if channelID == "" {
-		botChannel.Mention(user, "no channel with that name exists")
-		return
+		return twitchactions.Mention(user, "no channel with that name exists")
 	}
 
-	err := botChannel.Bot().LeaveChannel(channelID)
+	err := c.bot.Bot().LeaveChannel(channelID)
 	if err != nil {
-		botChannel.Mention(user, "Error leaving channel: "+err.Error())
-		return
+		return twitchactions.Mention(user, "Error leaving channel: "+err.Error())
 	}
 
-	botChannel.Mention(user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
+	return twitchactions.Mention(user, fmt.Sprintf("left channel %s(%s)", channelName, channelID))
 }

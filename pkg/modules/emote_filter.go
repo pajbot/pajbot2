@@ -3,8 +3,10 @@ package modules
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
@@ -80,7 +82,8 @@ func (m *emoteFilter) Initialize() {
 	}
 }
 
-func (m *emoteFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *emoteFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
 	// BTTV Emotes
 	reader := message.GetBTTVReader()
 	timeoutDuration := 0
@@ -100,10 +103,12 @@ func (m *emoteFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.M
 		}
 	}
 
+	actions := &twitchactions.Actions{}
+
 	if timeoutDuration > 0 {
-		action.Set(pkg.Timeout{timeoutDuration, "Don't overuse " + strings.Join(overusedEmotes, ", ")})
+		actions.Timeout(event.User, time.Duration(timeoutDuration)*time.Second).SetReason("Don't overuse " + strings.Join(overusedEmotes, ", "))
 	} else if combinedLimits > m.combinedLimits {
-		action.Set(pkg.Timeout{combinedLimits * 120, "Don't overuse big emotes"})
+		actions.Timeout(event.User, time.Duration(combinedLimits*120)*time.Second).SetReason("Don't overuse big emotes")
 	}
 
 	return nil

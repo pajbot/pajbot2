@@ -6,6 +6,13 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 )
 
+func NewUser(id, name string) *User {
+	return &User{
+		id:   id,
+		name: name,
+	}
+}
+
 type User struct {
 	id   string
 	name string

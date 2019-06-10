@@ -129,16 +129,15 @@ func (u TwitchUser) GetID() string {
 
 func (u TwitchUser) IsModerator() bool {
 	_, ok := u.Badges["moderator"]
+	if !ok {
+		ok = u.IsBroadcaster()
+	}
 	return ok
 }
 
-func (u TwitchUser) IsBroadcaster(channel pkg.Channel) bool {
-	if channel == nil {
-		return false
-	}
-
-	// TODO: tolower?
-	return u.GetName() == channel.GetName()
+func (u TwitchUser) IsBroadcaster() bool {
+	_, ok := u.Badges["broadcaster"]
+	return ok
 }
 
 func (u TwitchUser) GetBadges() map[string]int {

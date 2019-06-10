@@ -1,7 +1,10 @@
 package modules
 
 import (
+	"time"
+
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
@@ -28,14 +31,15 @@ func newBadCharacterFilter(b base) pkg.Module {
 	}
 }
 
-func (m *badCharacterFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *badCharacterFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
+
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {
-				action.Set(pkg.Timeout{
-					Duration: 300, Reason: "Your message contains a banned character",
-				})
-				return nil
+				actions := &twitchactions.Actions{}
+				actions.Timeout(event.User, 300*time.Second).SetReason("Your message contains a banned character")
+				return actions
 			}
 		}
 	}

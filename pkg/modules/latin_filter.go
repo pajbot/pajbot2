@@ -105,7 +105,10 @@ func (m *latinFilter) Initialize() {
 	m.addToWhitelist(0x3010, 0x3011) // 【 and 】
 }
 
-func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *latinFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
+
 	if !user.IsModerator() || true {
 		text := message.GetText()
 
@@ -119,7 +122,7 @@ func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.M
 		}{
 			FullMessage: text,
 			Username:    user.GetName(),
-			Channel:     bot.Channel().GetName(),
+			Channel:     m.bot.Channel().GetName(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(text)

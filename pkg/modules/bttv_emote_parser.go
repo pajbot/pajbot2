@@ -38,7 +38,9 @@ func newbttvEmoteParser(b base) pkg.Module {
 	}
 }
 
-func (m *bttvEmoteParser) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *bttvEmoteParser) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
+
 	parts := strings.FieldsFunc(message.GetText(), func(r rune) bool {
 		// TODO(pajlada): This needs better testing
 		return r > 0xFF || unicode.IsSpace(r) || r == '!' || r == '.' || r == '$' || r == '^' || r == '#' || r == '*' || r == '@' || r == ')' || r == '%' || r == '&' || r > 0x7a || r < 0x30 || (r > 0x39 && r < 0x41) || (r > 0x5a && r < 0x61)

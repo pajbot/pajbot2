@@ -17,17 +17,23 @@ func NewCommands() *Commands {
 	return c
 }
 
-func (c *Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (c *Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
+	user := event.User
+
 	match, parts := c.Match(message.GetText())
 	if match != nil {
-		command := match.(pkg.CustomCommand2)
-		if command.HasCooldown(user) {
-			return nil
+		switch command := match.(type) {
+		case pkg.SimpleCommand:
+			return command.Trigger(parts, event)
+
+		case pkg.CustomCommand2:
+			if command.HasCooldown(user) {
+				return nil
+			}
+			command.AddCooldown(user)
+			return command.Trigger(parts, event)
 		}
-
-		command.Trigger(bot, parts, user, message, action)
-
-		command.AddCooldown(user)
 	}
 
 	return nil

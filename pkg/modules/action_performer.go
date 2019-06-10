@@ -27,6 +27,8 @@ func newActionPerformer(b base) pkg.Module {
 	}
 }
 
-func (m actionPerformer) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	return action.Do()
+func (m actionPerformer) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	// FIXME
+	// return action.Do()
+	return nil
 }

@@ -1,6 +1,9 @@
 package commands
 
-import "github.com/pajbot/pajbot2/pkg"
+import (
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
+)
 
 type subCommands struct {
 	m map[string]*subCommand
@@ -26,20 +29,20 @@ func (c *subCommands) addSC(name string, sc *subCommand) {
 	c.add(name+"s", sc)
 }
 
-type subCommandFunc func(pkg.BotChannel, userTarget, pkg.Channel, pkg.User, []string) string
+type subCommandFunc func(parts []string, event pkg.MessageEvent) pkg.Actions
 
 type subCommand struct {
 	permission pkg.Permission
 	cb         subCommandFunc
 }
 
-func (c *subCommand) run(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+func (c *subCommand) run(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if c.permission != pkg.PermissionNone {
-		if !user.HasPermission(channel, c.permission) {
-			return "you do not have permission to use this command"
+		if !event.User.HasPermission(event.Channel, c.permission) {
+			return twitchactions.Mention(event.User, "you do not have permission to use this command")
 		}
 
 	}
 
-	return c.cb(botChannel, target, channel, user, parts)
+	return c.cb(parts, event)
 }

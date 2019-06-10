@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
@@ -44,12 +45,15 @@ func newBannedNames(b base, badUsernames []*regexp.Regexp) pkg.Module {
 	}
 }
 
-func (m bannedNames) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m bannedNames) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+
 	usernameBytes := []byte(user.GetName())
 	for _, badUsername := range m.badUsernames {
 		if badUsername.Match(usernameBytes) {
-			action.Set(pkg.Ban{"Ban evasion"})
-			return nil
+			actions := &twitchactions.Actions{}
+			actions.Ban(user).SetReason("Ban evasion")
+			return actions
 		}
 	}
 

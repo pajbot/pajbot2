@@ -7,6 +7,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/report"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
 
@@ -38,7 +39,7 @@ func newReport(b base) pkg.Module {
 	return m
 }
 
-func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string) error {
+func (m *Report) ProcessReport(user pkg.User, parts []string) pkg.Actions {
 	duration := 600
 
 	if parts[0] == "!report" {
@@ -48,9 +49,8 @@ func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string
 		return nil
 	}
 
-	if !user.HasPermission(bot.Channel(), pkg.PermissionReport) {
-		bot.Bot().Whisper(user, "you don't have permissions to use the !report command")
-		return nil
+	if !user.HasPermission(m.bot.Channel(), pkg.PermissionReport) {
+		return twitchactions.DoWhisper(user, "you don't have permissions to use the !report command")
 	}
 
 	var reportedUsername string
@@ -59,31 +59,17 @@ func (m *Report) ProcessReport(bot pkg.BotChannel, user pkg.User, parts []string
 	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
 
 	if reportedUsername == user.GetName() {
-		return nil
+		return twitchactions.DoWhisper(user, "you can't report yourself")
 	}
 
 	if len(parts) >= 3 {
 		reason = strings.Join(parts[2:], " ")
 	}
 
-	m.report(bot.Bot(), user, bot.Channel(), reportedUsername, reason, duration)
-
-	return nil
+	return m.report(m.bot.Bot(), user, m.bot.Channel(), reportedUsername, reason, duration)
 }
 
-func (m *Report) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
-
-	parts := strings.Split(message.GetText(), " ")
-	if len(parts) < 2 {
-		return nil
-	}
-
-	m.ProcessReport(bot, source, parts)
-	return nil
-}
-
-func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) {
+func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) pkg.Actions {
 	// s := fmt.Sprintf("%s reported %s in #%s (%s) - https://api.gempir.com/channel/forsen/user/%s", reporter.GetName(), targetUsername, targetChannel.GetName(), reason, targetUsername)
 
 	r := report.Report{
@@ -105,7 +91,6 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 	}
 	r.Logs = bot.GetUserContext().GetContext(r.Channel.ID, r.Target.ID)
 
-	reporterUser := bot.MakeUser(reporter.GetName()) // Fixme: Should be already done in bot.go
 	oldReport, inserted, _ := m.reportHolder.Register(r)
 
 	if !inserted {
@@ -114,8 +99,7 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		if time.Now().Sub(oldReport.Time) < time.Minute*10 {
 			// User was reported less than 10 minutes ago, don't let this user be timed out again
 			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", time.Now().Sub(oldReport.Time))
-			bot.Whisper(reporterUser, "User successfully reported, but the last report was less than ten minutes ago so the timeout is skipped")
-			return
+			return twitchactions.DoWhisper(reporter, "User successfully reported, but the last report was less than ten minutes ago so the timeout is skipped")
 		}
 
 		fmt.Println("Update report")
@@ -123,16 +107,36 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 		m.reportHolder.Update(r)
 	}
 
-	bot.Whisper(reporterUser, fmt.Sprintf("Successfully reported user %s", targetUsername))
-	bot.Timeout(targetChannel, bot.MakeUser(targetUsername), duration, "")
+	actions := &twitchactions.Actions{}
+
+	actions.Whisper(reporter, fmt.Sprintf("Successfully reported user %s", targetUsername))
+	actions.Timeout(bot.MakeUser(targetUsername), time.Duration(duration)*time.Second)
+
+	return actions
 }
 
-func (m *Report) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *Report) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+	const usageString = `Usage: #channel !report username (reason) i.e. #forsen !report Karl_Kons spamming stuff`
+
+	user := event.User
+	message := event.Message
+
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) < 2 {
 		return nil
 	}
 
-	m.ProcessReport(bot, user, parts)
-	return nil
+	return m.ProcessReport(user, parts)
+}
+
+func (m *Report) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
+
+	parts := strings.Split(message.GetText(), " ")
+	if len(parts) < 2 {
+		return nil
+	}
+
+	return m.ProcessReport(user, parts)
 }

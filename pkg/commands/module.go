@@ -4,82 +4,83 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 type moduleCommand struct {
-	Base
+	base.Command
 
 	subCommands       *subCommands
 	defaultSubCommand string
 }
 
-func NewModule() pkg.CustomCommand2 {
+func NewModule(bot pkg.BotChannel) pkg.CustomCommand2 {
 	u := &moduleCommand{
-		Base:              NewBase(),
+		Command:           base.New(),
 		subCommands:       newSubCommands(),
 		defaultSubCommand: "list",
 	}
 
-	u.Base.UserCooldown = 0
-	u.Base.GlobalCooldown = 0
+	u.UserCooldown = 0
+	u.GlobalCooldown = 0
 
 	u.subCommands.add("list", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
-			return "list modules"
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
+			return twitchactions.Mention(event.User, "TODO: list modules")
 		},
 	})
 
 	u.subCommands.add("enable", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 3 {
-				return "usage: !module enable MODULE_ID"
+				return twitchactions.Mention(event.User, "usage: !module enable MODULE_ID")
 			}
 
 			moduleID := parts[2]
 
-			err := botChannel.EnableModule(moduleID)
+			err := bot.EnableModule(moduleID)
 			if err != nil {
-				return err.Error()
+				return twitchactions.Mention(event.User, err.Error())
 			}
 
-			return fmt.Sprintf("Enabled module %s", moduleID)
+			return twitchactions.Mention(event.User, fmt.Sprintf("Enabled module %s", moduleID))
 		},
 	})
 
 	u.subCommands.addSC("disable", &subCommand{
 		permission: pkg.PermissionAdmin,
-		cb: func(botChannel pkg.BotChannel, target userTarget, channel pkg.Channel, user pkg.User, parts []string) string {
+		cb: func(parts []string, event pkg.MessageEvent) pkg.Actions {
 			if len(parts) < 3 {
-				return "usage: !module disable MODULE_ID"
+				return twitchactions.Mention(event.User, "usage: !module disable MODULE_ID")
 			}
 
 			moduleID := parts[2]
 
-			err := botChannel.DisableModule(moduleID)
+			err := bot.DisableModule(moduleID)
 			if err != nil {
-				return err.Error()
+				return twitchactions.Mention(event.User, err.Error())
 			}
 
-			return fmt.Sprintf("Disabled module %s", moduleID)
+			return twitchactions.Mention(event.User, fmt.Sprintf("Disabled module %s", moduleID))
 		},
 	})
 
 	return u
 }
 
-func (c *moduleCommand) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c *moduleCommand) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	subCommandName := c.defaultSubCommand
 	if len(parts) >= 2 {
 		subCommandName = strings.ToLower(parts[1])
 	}
 
 	if subCommand, ok := c.subCommands.find(subCommandName); ok {
-		response := subCommand.run(botChannel, userTarget{}, botChannel.Channel(), user, parts)
-		if response != "" {
-			botChannel.Mention(user, response)
-		}
+		return subCommand.run(parts, event)
 	}
+
+	return nil
 }

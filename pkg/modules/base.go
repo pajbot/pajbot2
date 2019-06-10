@@ -46,10 +46,10 @@ func (b *base) Disable() error {
 	return nil
 }
 
-func (b base) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
+func (b base) OnWhisper(event pkg.MessageEvent) pkg.Actions {
 	return nil
 }
 
-func (b base) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (b base) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return nil
 }

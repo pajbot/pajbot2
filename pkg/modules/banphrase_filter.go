@@ -6,6 +6,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/filters"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
 
@@ -278,7 +279,7 @@ type TimeoutData struct {
 	Timestamp   time.Time
 }
 
-func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action pkg.Action) error {
+func (m *pajbot1BanphraseFilter) check(event pkg.MessageEvent, text string, actions pkg.Actions) error {
 	originalVariations, lowercaseVariations, err := utils.MakeVariations(text, true)
 	if err != nil {
 		fmt.Println("Error making variations:", err)
@@ -315,12 +316,8 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action p
 
 				if bp.GetID() == -1 {
 					reason := fmt.Sprintf("Matched banphrase with name '%s' and id '%d'", bp.GetName(), bp.GetID())
-					action.Set(pkg.Timeout{
-						Duration: bp.GetLength(),
-						Reason:   reason,
-					})
-					action.SetReason(reason)
-					action.SetNotifyModerator(bot.Bot().MakeUser("pajlada"))
+					// FIXME
+					actions.Timeout(event.User, bp.GetDuration()).SetReason(reason)
 					// fmt.Printf("Banphrase triggered: %#v for user %s", bp, user.GetName())
 					return nil
 				}
@@ -338,8 +335,11 @@ func (m *pajbot1BanphraseFilter) check(bot pkg.BotChannel, text string, action p
 	return nil
 }
 
-func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) {
+func (m *pajbot1BanphraseFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
+
+	if user.IsModerator() {
 		return nil
 	}
 
@@ -347,8 +347,10 @@ func (m *pajbot1BanphraseFilter) OnMessage(bot pkg.BotChannel, user pkg.User, me
 		return nil
 	}
 
-	m.check(bot, message.GetText(), action)
-	m.check(bot, user.GetName(), action)
+	actions := &twitchactions.Actions{}
 
-	return nil
+	m.check(event, message.GetText(), actions)
+	m.check(event, user.GetName(), actions)
+
+	return actions
 }

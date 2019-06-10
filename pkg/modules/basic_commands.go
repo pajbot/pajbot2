@@ -37,14 +37,14 @@ func newBasicCommandsModule(b base) pkg.Module {
 
 func (m *basicCommandsModule) Initialize() {
 	m.commands.Register([]string{"!pb2ping"}, commands.NewPing())
-	m.commands.Register([]string{"!pb2join"}, commands.NewJoin())
-	m.commands.Register([]string{"!pb2leave"}, commands.NewLeave())
-	m.commands.Register([]string{"!pb2module"}, commands.NewModule())
-	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit())
+	m.commands.Register([]string{"!pb2join"}, commands.NewJoin(m.bot))
+	m.commands.Register([]string{"!pb2leave"}, commands.NewLeave(m.bot))
+	m.commands.Register([]string{"!pb2module"}, commands.NewModule(m.bot))
+	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit(m.bot))
 
-	m.commands.Register([]string{"!user"}, commands.NewUser())
+	m.commands.Register([]string{"!user"}, commands.NewUser(m.bot))
 }
 
-func (m *basicCommandsModule) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	return m.commands.OnMessage(bot, user, message, action)
+func (m *basicCommandsModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	return m.commands.OnMessage(event)
 }

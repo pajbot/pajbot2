@@ -1,9 +1,5 @@
 package pkg
 
-type CustomCommand interface {
-	Trigger(BotChannel, []string, Channel, User, Message, Action)
-}
-
 type CommandInfo struct {
 	Name        string
 	Description string
@@ -11,8 +7,13 @@ type CommandInfo struct {
 	Maker func() CustomCommand2 `json:"-"`
 }
 
+type SimpleCommand interface {
+	Trigger([]string, MessageEvent) Actions
+}
+
 type CustomCommand2 interface {
-	Trigger(BotChannel, []string, User, Message, Action)
+	SimpleCommand
+
 	HasCooldown(User) bool
 	AddCooldown(User)
 }
@@ -25,5 +26,5 @@ type CommandMatcher interface {
 
 type CommandsManager interface {
 	CommandMatcher
-	OnMessage(bot BotChannel, user User, message Message, action Action) error
+	OnMessage(event MessageEvent) Actions
 }

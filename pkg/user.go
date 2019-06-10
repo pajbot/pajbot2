@@ -14,6 +14,6 @@ type User interface {
 	GetDisplayName() string
 	GetID() string
 	IsModerator() bool
-	IsBroadcaster(Channel) bool
+	IsBroadcaster() bool
 	GetBadges() map[string]int
 }

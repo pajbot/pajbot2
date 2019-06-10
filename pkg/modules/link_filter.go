@@ -2,8 +2,10 @@ package modules
 
 import (
 	"regexp"
+	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	xurls "mvdan.cc/xurls/v2"
 )
 
@@ -38,14 +40,16 @@ func newLinkFilter(b base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Modul
 	}
 }
 
-func (m LinkFilter) OnMessage(bot pkg.BotChannel, source pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.IsModerator() || source.IsBroadcaster(bot.Channel()) {
+func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	if event.User.IsModerator() {
 		return nil
 	}
 
-	links := m.relaxedRegexp.FindAllString(message.GetText(), -1)
+	links := m.relaxedRegexp.FindAllString(event.Message.GetText(), -1)
 	if len(links) > 0 {
-		action.Set(pkg.Timeout{180, "No links allowed"})
+		actions := &twitchactions.Actions{}
+		actions.Timeout(event.User, 180*time.Second).SetReason("No links allowed")
+		return actions
 	}
 
 	return nil

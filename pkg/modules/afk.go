@@ -9,6 +9,7 @@ import (
 	"github.com/pajbot/botsync/pkg/client"
 	"github.com/pajbot/botsync/pkg/protocol"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commands"
 	"github.com/pajbot/utils"
 )
 
@@ -30,7 +31,7 @@ func init() {
 type afk struct {
 	base
 
-	commands map[string]pkg.CustomCommand
+	commands pkg.CommandsManager
 
 	botsync *client.Client
 
@@ -43,7 +44,7 @@ func newAFK(b base, afkDatabase map[string]bool) pkg.Module {
 
 		afkDatabase: afkDatabase,
 
-		commands: make(map[string]pkg.CustomCommand),
+		commands: commands.NewCommands(),
 
 		botsync: client.NewClient("ws://localhost:8080/ws/pubsub"),
 	}
@@ -66,28 +67,27 @@ type afkCmd struct {
 	m *afk
 }
 
-func (c *afkCmd) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if user.IsModerator() || user.IsBroadcaster(channel) {
-		c.m.botsync.Send(protocol.NewAFKMessage(&protocol.AFKParameters{
-			UserID:   user.GetID(),
-			UserName: user.GetName(),
-
-			Reason: strings.Join(parts[1:], " "),
-
-			ChannelID:   botChannel.ChannelID(),
-			ChannelName: botChannel.ChannelName(),
-		}))
+func (c *afkCmd) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	// Temporarily limit afk commands to moderators, since it can be used to say stupid things
+	if !event.User.IsModerator() {
+		return nil
 	}
-}
 
-func (m *afk) registerCommand(aliases []string, command pkg.CustomCommand) {
-	for _, alias := range aliases {
-		m.commands[alias] = command
-	}
+	c.m.botsync.Send(protocol.NewAFKMessage(&protocol.AFKParameters{
+		UserID:   event.User.GetID(),
+		UserName: event.User.GetName(),
+
+		Reason: strings.Join(parts[1:], " "),
+
+		ChannelID:   event.Channel.GetID(),
+		ChannelName: event.Channel.GetName(),
+	}))
+
+	return nil
 }
 
 func (m *afk) Initialize() {
-	m.registerCommand([]string{"!afk", "!gn"}, &afkCmd{m})
+	m.commands.Register([]string{"!afk", "!gn"}, &afkCmd{m})
 
 	m.botsync.SetAuthentication(protocol.Authentication{
 		TwitchUserID:        m.bot.Bot().TwitchAccount().ID(),
@@ -144,26 +144,19 @@ func (m *afk) Disable() error {
 	return m.base.Disable()
 }
 
-func (m *afk) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *afk) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+
 	if _, ok := m.afkDatabase[user.GetID()]; ok {
 		m.botsync.Send(protocol.NewBackMessage(&protocol.BackParameters{
 			UserID:   user.GetID(),
 			UserName: user.GetName(),
 
-			ChannelID:   bot.ChannelID(),
-			ChannelName: bot.ChannelName(),
+			ChannelID:   m.bot.ChannelID(),
+			ChannelName: m.bot.ChannelName(),
 		}))
 		return nil
 	}
 
-	parts := strings.Split(message.GetText(), " ")
-	if len(parts) == 0 {
-		return nil
-	}
-
-	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.bot, parts, bot.Channel(), user, message, action)
-	}
-
-	return nil
+	return m.commands.OnMessage(event)
 }

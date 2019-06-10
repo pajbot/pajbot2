@@ -67,7 +67,10 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 	return nil
 }
 
-func (m Pajbot1Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m Pajbot1Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
+
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) == 0 {
 		return nil
@@ -75,9 +78,9 @@ func (m Pajbot1Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pk
 
 	for _, command := range m.commands {
 		if command.IsTriggered(parts) {
-			err := command.Trigger(bot, user, parts)
+			err := command.Trigger(m.bot, user, parts)
 			if err != nil {
-				return err
+				return nil
 			}
 			log.Println("Triggered command!")
 			log.Println(command.Action)

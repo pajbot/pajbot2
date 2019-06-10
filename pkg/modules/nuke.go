@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -9,6 +8,8 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commands"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
@@ -32,6 +33,8 @@ type nukeModule struct {
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
 
+	commands pkg.CommandsManager
+
 	ticker *time.Ticker
 }
 
@@ -46,7 +49,11 @@ func newNuke(b base) pkg.Module {
 		base: b,
 
 		messages: make(map[string][]nukeMessage),
+
+		commands: commands.NewCommands(),
 	}
+
+	m.commands.Register([]string{"!nuke"}, m)
 
 	m.ticker = time.NewTicker(garbageCollectionInterval)
 
@@ -62,90 +69,47 @@ func newNuke(b base) pkg.Module {
 	return m
 }
 
-func (m *nukeModule) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	const usageString = `Usage: #channel !nuke phrase phrase phrase time`
-
-	parts := strings.Split(message.GetText(), " ")
-	// Minimum required parts: 4
-	// !nuke PHRASE SCROLLBACK_LENGTH TIMEOUT_DURATION
-	if len(parts) >= 4 {
-		if parts[0] != "!nuke" {
-			return nil
-		}
-
-		// TODO: Add another specific global/channel permission to check
-		if !user.IsModerator() && !user.IsBroadcaster(bot.Channel()) && !user.HasChannelPermission(bot.Channel(), pkg.PermissionModeration) && !user.HasGlobalPermission(pkg.PermissionModeration) {
-			return nil
-		}
-
-		phrase := strings.Join(parts[1:len(parts)-2], " ")
-		scrollbackLength, err := time.ParseDuration(parts[len(parts)-2])
-		if err != nil {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return err
-		}
-		if scrollbackLength < 0 {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return errors.New("scrollback length must be positive")
-		}
-		timeoutDuration, err := time.ParseDuration(parts[len(parts)-1])
-		if err != nil {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return err
-		}
-		if timeoutDuration < 0 {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return errors.New("timeout duration must be positive")
-		}
-
-		m.nuke(user, bot, phrase, scrollbackLength, timeoutDuration)
+func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	// Permission checking
+	if !event.User.IsModerator() {
+		return nil
 	}
+
+	if !event.User.HasChannelPermission(m.bot.Channel(), pkg.PermissionModeration) {
+		return nil
+	}
+
+	phrase := strings.Join(parts[1:len(parts)-2], " ")
+	scrollbackLength, err := time.ParseDuration(parts[len(parts)-2])
+	if err != nil {
+		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
+	}
+	if scrollbackLength < 0 {
+		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
+	}
+	timeoutDuration, err := time.ParseDuration(parts[len(parts)-1])
+	if err != nil {
+		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
+	}
+	if timeoutDuration < 0 {
+		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
+	}
+
+	m.nuke(event.User, m.bot, phrase, scrollbackLength, timeoutDuration)
 
 	return nil
 }
 
-func (m *nukeModule) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *nukeModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+	return m.commands.OnMessage(event)
+}
+
+func (m *nukeModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	defer func() {
-		m.addMessage(bot.Channel(), user, message)
+		m.addMessage(m.bot.Channel(), event.User, event.Message)
 	}()
 
-	parts := strings.Split(message.GetText(), " ")
-	// Minimum required parts: 4
-	// !nuke PHRASE SCROLLBACK_LENGTH TIMEOUT_DURATION
-	if len(parts) >= 4 {
-		if parts[0] != "!nuke" {
-			return nil
-		}
-
-		// TODO: Add another specific global/channel permission to check
-		if !user.IsModerator() && !user.IsBroadcaster(bot.Channel()) && !user.HasChannelPermission(bot.Channel(), pkg.PermissionModeration) && !user.HasGlobalPermission(pkg.PermissionModeration) {
-			return nil
-		}
-
-		phrase := strings.Join(parts[1:len(parts)-2], " ")
-		scrollbackLength, err := time.ParseDuration(parts[len(parts)-2])
-		if err != nil {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return err
-		}
-		if scrollbackLength < 0 {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return errors.New("scrollback length must be positive")
-		}
-		timeoutDuration, err := time.ParseDuration(parts[len(parts)-1])
-		if err != nil {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return err
-		}
-		if timeoutDuration < 0 {
-			bot.Mention(user, "usage: !nuke bad phrase 1m 10m")
-			return errors.New("timeout duration must be positive")
-		}
-
-		m.nuke(user, bot, phrase, scrollbackLength, timeoutDuration)
-	}
-
-	return nil
+	return m.commands.OnMessage(event)
 }
 
 func (m *nukeModule) garbageCollect() {

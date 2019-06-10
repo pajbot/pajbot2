@@ -26,8 +26,8 @@ type BotChannel interface {
 
 	Events() *eventemitter.EventEmitter
 
-	HandleMessage(user User, message Message, action Action) error
-	OnModules(cb func(module Module) error) error
+	HandleMessage(user User, message Message) error
+	OnModules(cb func(module Module) Actions) []Actions
 
 	Bot() Sender
 }

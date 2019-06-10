@@ -4,57 +4,63 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
 	commandlist.Register(pkg.CommandInfo{
 		Name:        "Join",
 		Description: "xd join lol",
-		Maker:       NewJoin,
+		// FIXME
+		// Maker:       NewJoin,
 	})
 }
 
 type Join struct {
-	Base
+	base.Command
+
+	bot pkg.BotChannel
 }
 
-func NewJoin() pkg.CustomCommand2 {
+func NewJoin(bot pkg.BotChannel) pkg.CustomCommand2 {
 	return &Join{
-		Base: NewBase(),
+		Command: base.New(),
+
+		bot: bot,
 	}
 }
 
-func (c Join) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
+func (c Join) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	user := event.User
 	if !user.HasGlobalPermission(pkg.PermissionAdmin) {
-		botChannel.Mention(user, "you do not have permission to use this command. Admin permission is required")
-		return
+		const errorMessage = "you do not have permission to use this command. Admin permission is required"
+		return twitchactions.Mention(user, errorMessage)
 	}
 
 	if len(parts) < 2 {
-		return
+		return nil
 	}
 
 	channelName := parts[1]
 
-	if strings.EqualFold(channelName, botChannel.Bot().TwitchAccount().Name()) {
-		botChannel.Mention(user, "I cannot join my own channel")
-		return
+	if strings.EqualFold(channelName, c.bot.Bot().TwitchAccount().Name()) {
+		const errorMessage = "I cannot join my own channel"
+		return twitchactions.Mention(user, errorMessage)
 	}
 
-	channelID := botChannel.Bot().GetUserStore().GetID(channelName)
+	channelID := c.bot.Bot().GetUserStore().GetID(channelName)
 	if channelID == "" {
-		botChannel.Mention(user, "no channel with that name exists")
-		return
+		const errorMessage = "no channel with that name exists"
+		return twitchactions.Mention(user, errorMessage)
 	}
 
-	err := botChannel.Bot().JoinChannel(channelID)
+	err := c.bot.Bot().JoinChannel(channelID)
 	if err != nil {
-		botChannel.Mention(user, err.Error())
-		return
+		return twitchactions.Mention(user, err.Error())
 	}
 
-	botChannel.Mention(user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
-
+	return twitchactions.Mention(user, fmt.Sprintf("joined channel %s(%s)", channelName, channelID))
 }

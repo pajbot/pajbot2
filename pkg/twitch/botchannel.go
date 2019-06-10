@@ -58,6 +58,10 @@ func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
 	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
+func (c *BotChannel) Ban(user pkg.User, reason string) {
+	c.bot.Ban(&c.channel, user, reason)
+}
+
 func (c *BotChannel) SingleTimeout(user pkg.User, duration int, reason string) {
 	c.bot.SingleTimeout(&c.channel, user, duration, reason)
 }
@@ -307,35 +311,83 @@ func (c *BotChannel) loadModules() {
 	}
 }
 
-func (c *BotChannel) OnModules(cb func(module pkg.Module) error) (err error) {
+func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions) (actions []pkg.Actions) {
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
 	for _, module := range c.modules {
-		if err = cb(module); err != nil {
-			return
+		// TODO: This could potentially be run in steps now. maybe all modules with same priority are run together?
+		if moduleActions := cb(module); moduleActions != nil {
+			actions = append(actions, moduleActions)
 		}
 	}
 
 	return
 }
 
-func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
-	return c.handleMessage(user, message, action)
+func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
+	// TODO: Resolve actions smarter
+	for _, action := range actions {
+		for _, mute := range action.Mutes() {
+			switch mute.Type() {
+			case pkg.MuteTypeTemporary:
+				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
+			case pkg.MuteTypePermanent:
+				c.Ban(mute.User(), mute.Reason())
+			}
+		}
+
+		for _, message := range action.Messages() {
+			c.Say(message.Evaluate())
+		}
+
+		for _, whisper := range action.Whispers() {
+			c.bot.Whisper(whisper.User(), whisper.Content())
+		}
+
+	}
+
+	fmt.Println("Got actions:", actions)
+
+	return nil
 }
 
-func (c *BotChannel) handleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
+func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 	c.eventEmitter.Emit("on_msg", nil)
 
 	log.Println("Got message:", message.GetText())
 
-	return c.OnModules(func(module pkg.Module) error {
-		return module.OnMessage(c, user, message, action)
+	event := pkg.MessageEvent{
+		BaseEvent: pkg.BaseEvent{
+			UserStore: c.bot.GetUserStore(),
+		},
+		User:    user,
+		Message: message,
+		Channel: c.Channel(),
+	}
+
+	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
+		return module.OnMessage(event)
 	})
+
+	// TODO: Resolve actions smarter
+	return c.resolveActions(actions)
 }
 
 func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error {
-	return c.OnModules(func(module pkg.Module) error {
-		return module.OnWhisper(c, user, message)
+	event := pkg.MessageEvent{
+		BaseEvent: pkg.BaseEvent{
+			UserStore: c.bot.GetUserStore(),
+		},
+		User:    user,
+		Message: message,
+		Channel: c.Channel(),
+	}
+
+	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
+		return module.OnWhisper(event)
 	})
+
+	// TODO: Resolve actions smarter
+	return c.resolveActions(actions)
 }
