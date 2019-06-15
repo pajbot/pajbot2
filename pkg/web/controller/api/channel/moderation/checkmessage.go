@@ -115,7 +115,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 		// run message through modules on all bot channels until we detect an issue
 		fmt.Println("Check message:", botChannel.ChannelName())
 		actions := botChannel.OnModules(func(module pkg.Module) pkg.Actions {
-			if module.Spec().Type() != pkg.ModuleTypeFilter {
+			if module.Type() != pkg.ModuleTypeFilter {
 				return nil
 			}
 

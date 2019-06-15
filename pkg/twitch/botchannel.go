@@ -89,7 +89,7 @@ func (c *BotChannel) Stream() pkg.Stream {
 // We assume that modulesMutex is locked already
 func (c *BotChannel) sortModules() {
 	sort.Slice(c.modules, func(i, j int) bool {
-		return c.modules[i].Spec().Priority() < c.modules[j].Spec().Priority()
+		return c.modules[i].Priority() < c.modules[j].Priority()
 	})
 }
 
@@ -165,7 +165,7 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 	// Check if module is enabled already
 
 	for _, m := range c.modules {
-		if m.Spec().ID() == moduleID {
+		if m.ID() == moduleID {
 			return errors.New("module already enabled")
 		}
 	}
@@ -188,7 +188,7 @@ func (c *BotChannel) DisableModule(moduleID string) error {
 	moduleID = strings.ToLower(moduleID)
 
 	for i, m := range c.modules {
-		if m.Spec().ID() == moduleID {
+		if m.ID() == moduleID {
 			m.Disable()
 			c.modules = append(c.modules[:i], c.modules[i+1:]...)
 

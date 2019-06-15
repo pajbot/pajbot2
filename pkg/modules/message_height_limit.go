@@ -12,78 +12,74 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
 
+func init() {
+	Register("message_height_limit", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "message_height_limit",
+			name:  "Message height limit",
+			maker: NewMessageHeightLimit,
+
+			moduleType: pkg.ModuleTypeFilter,
+
+			enabledByDefault: false,
+
+			parameters: map[string]pkg.ModuleParameterSpec{
+				"HeightLimit": func() pkg.ModuleParameter {
+					return newFloatParameter(parameterSpec{
+						Description:  "Max height of a message before it's timed out",
+						DefaultValue: 95.0,
+					})
+				},
+				"AsciiArtOnly": func() pkg.ModuleParameter {
+					return newBoolParameter(parameterSpec{
+						Description:  "Only attempt to catch ascii art",
+						DefaultValue: false,
+					})
+				},
+			},
+		}
+	})
+}
+
 var _ pkg.Module = &MessageHeightLimit{}
 
-func floatPtr(v float32) *float32 {
-	return &v
-}
-
-func boolPtr(v bool) *bool {
-	return &v
-}
-
-var messageHeightLimitSpec *moduleSpec
-
-func init() {
-	messageHeightLimitSpec = &moduleSpec{
-		id:    "message_height_limit",
-		name:  "Message height limit",
-		maker: NewMessageHeightLimit,
-
-		moduleType: pkg.ModuleTypeFilter,
-
-		enabledByDefault: false,
-
-		parameters: map[string]*moduleParameterSpec{
-			"HeightLimit": {
-				description:  "Max height of a message before it's timed out",
-				defaultValue: floatPtr(95),
-			},
-			"AsciiArtOnly": {
-				description:  "Only attempt to catch ascii art",
-				defaultValue: boolPtr(false),
-			},
-		},
-	}
-
-	Register(messageHeightLimitSpec)
-}
-
 type MessageHeightLimit struct {
-	botChannel pkg.BotChannel
+	base
 
-	server *server
+	HeightLimit *floatParameter `json:",omitempty"`
 
-	HeightLimit floatParameter `json:",omitempty"`
-
-	AsciiArtOnly boolParameter `json:",omitempty"`
+	AsciiArtOnly *boolParameter `json:",omitempty"`
 
 	userViolationCount map[string]int
 }
 
-func NewMessageHeightLimit() pkg.Module {
-	return &MessageHeightLimit{
-		server: &_server,
+func NewMessageHeightLimit(b base) pkg.Module {
+	m := &MessageHeightLimit{
+		base: b,
 
-		HeightLimit: floatParameter{
-			defaultValue: messageHeightLimitSpec.parameters["HeightLimit"].defaultValue.(*float32),
-		},
-		AsciiArtOnly: boolParameter{
-			defaultValue: messageHeightLimitSpec.parameters["AsciiArtOnly"].defaultValue.(*bool),
-		},
+		HeightLimit:        b.parameters["HeightLimit"].(*floatParameter),
+		AsciiArtOnly:       b.parameters["AsciiArtOnly"].(*boolParameter),
 		userViolationCount: make(map[string]int),
 	}
+
+	// FIXME
+	m.Initialize()
+
+	return m
 }
 
 var clrInitialized = false
@@ -169,9 +165,13 @@ func initMessageHeightLimitLibrary() error {
 	return nil
 }
 
-func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []byte) (err error) {
+func (m *MessageHeightLimit) LoadSettings(settingsBytes []byte) error {
+	return loadModule(settingsBytes, m)
+}
+
+func (m *MessageHeightLimit) Initialize() {
+	var err error
 	fmt.Println("Initializing message height limit")
-	m.botChannel = botChannel
 
 	if !clrInitialized {
 		fmt.Println("init clr..")
@@ -186,34 +186,11 @@ func (m *MessageHeightLimit) Initialize(botChannel pkg.BotChannel, settings []by
 	}
 
 	fmt.Println("init channel")
-	if err := initChannel(botChannel.ChannelName()); err != nil {
-		return err
+	if err := initChannel(m.bot.ChannelName()); err != nil {
+		log.Println("Error initializing channel:", err)
+		return
 	}
 	fmt.Println("done")
-
-	if err := loadModule(settings, m); err != nil {
-		fmt.Println("Error loading module:", err)
-	}
-
-	fmt.Println("Done")
-
-	return
-}
-
-func (m *MessageHeightLimit) Disable() error {
-	return nil
-}
-
-func (m *MessageHeightLimit) Spec() pkg.ModuleSpec {
-	return messageHeightLimitSpec
-}
-
-func (m *MessageHeightLimit) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *MessageHeightLimit) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
 }
 
 func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, message pkg.Message) float32 {
@@ -268,10 +245,13 @@ func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, messa
 	return float32(height)
 }
 
-func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	if !messageHeightLimitLibraryInitialized {
 		return nil
 	}
+
+	user := event.User
+	message := event.Message
 
 	if user.GetName() == "gazatu2" {
 		return nil
@@ -289,45 +269,41 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 		return nil
 	}
 
-	if user.IsModerator() || user.IsBroadcaster(bot.Channel()) || user.HasPermission(bot.Channel(), pkg.PermissionModeration) {
+	if user.IsModerator() || user.HasPermission(m.bot.Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
 			if parts[0] == "!heightlimit" {
 				if len(parts) >= 2 {
 					if err := m.HeightLimit.Parse(parts[1]); err != nil {
-						bot.Mention(user, err.Error())
-						return nil
+						return twitchactions.Mention(user, err.Error())
 					}
 
-					bot.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
-					saveModule(m)
-				} else {
-					bot.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
+					err := saveModule(m)
+					if err != nil {
+						fmt.Println("ERROR SAVING:", err)
+					}
+					return twitchactions.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
 				}
 
-				return nil
+				return twitchactions.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
 			}
 
 			if parts[0] == "!heighttest" {
-				height := m.getHeight(bot.Channel(), user, message)
-				bot.Mention(user, fmt.Sprintf("your message height is %.2f", height))
-				return nil
+				height := m.getHeight(m.bot.Channel(), user, message)
+				return twitchactions.Mention(user, fmt.Sprintf("your message height is %.2f", height))
 			}
 
 			if parts[0] == "!heightlimitonasciionly" {
 				if len(parts) >= 2 {
 					if err := m.AsciiArtOnly.Parse(parts[1]); err != nil {
-						bot.Mention(user, err.Error())
-						return nil
+						return twitchactions.Mention(user, err.Error())
 					}
 
-					bot.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
 					saveModule(m)
-				} else {
-					bot.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+					return twitchactions.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
 				}
 
-				return nil
+				return twitchactions.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
 			}
 		}
 	}
@@ -335,55 +311,57 @@ func (m *MessageHeightLimit) OnMessage(bot pkg.BotChannel, user pkg.User, messag
 	const minTimeoutLength = 10
 	const maxTimeoutLength = 1800
 
-	height := m.getHeight(bot.Channel(), user, message)
+	height := m.getHeight(m.bot.Channel(), user, message)
 	// bot.Mention(user, fmt.Sprintf("Message height: %f\n", height))
 
-	if height > m.HeightLimit.Get() {
-		// Message height is too tall
-		messageLength := len([]rune(message.GetText()))
-		var fitsIn7Bit int
-		var doesntFitIn7Bit int
-		for _, r := range message.GetText() {
-			if r > 0x7a || r < 0x20 {
-				doesntFitIn7Bit++
-			} else {
-				fitsIn7Bit++
-			}
-		}
-
-		fmt.Printf("Message length: %d. Fits: %d. Don't fit: %d\n", messageLength, doesntFitIn7Bit, fitsIn7Bit)
-		var ratio float32
-		ratio = float32(doesntFitIn7Bit) / float32(messageLength)
-		var reason string
-		userViolations := 0
-		timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
-		if ratio > 0.5 {
-			timeoutDuration = timeoutDuration + 90
-		} else {
-			if m.AsciiArtOnly.Get() {
-				// Do not deal with tall non-ascii-art messages
-				return nil
-			}
-		}
-
-		timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
-
-		const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
-
-		if ratio > 0.5 && height > 140.0 {
-			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
-			userViolations = m.userViolationCount[user.GetID()]
-			timeoutDuration = timeoutDuration * userViolations
-			timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
-			bot.Bot().Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
-		}
-
-		reason = fmt.Sprintf(reasonFmt, height, ratio, userViolations)
-		action.Set(pkg.Timeout{
-			Duration: timeoutDuration,
-			Reason:   reason,
-		})
+	if height <= m.HeightLimit.Get() {
+		return nil
 	}
 
-	return nil
+	actions := &twitchactions.Actions{}
+
+	// Message height is too tall
+	messageLength := len([]rune(message.GetText()))
+	var fitsIn7Bit int
+	var doesntFitIn7Bit int
+	for _, r := range message.GetText() {
+		if r > 0x7a || r < 0x20 {
+			doesntFitIn7Bit++
+		} else {
+			fitsIn7Bit++
+		}
+	}
+
+	fmt.Printf("Message length: %d. Fits: %d. Don't fit: %d\n", messageLength, doesntFitIn7Bit, fitsIn7Bit)
+	var ratio float32
+	ratio = float32(doesntFitIn7Bit) / float32(messageLength)
+	var reason string
+	userViolations := 0
+	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
+	if ratio > 0.5 {
+		timeoutDuration = timeoutDuration + 90
+	} else {
+		if m.AsciiArtOnly.Get() {
+			// Do not deal with tall non-ascii-art messages
+			return nil
+		}
+	}
+
+	timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
+
+	const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
+
+	if ratio > 0.5 && height > 140.0 {
+		m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
+		userViolations = m.userViolationCount[user.GetID()]
+		timeoutDuration = timeoutDuration * userViolations
+		timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
+		actions.Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
+	}
+
+	reason = fmt.Sprintf(reasonFmt, height, ratio, userViolations)
+	fmt.Println("REASON:", reason)
+	actions.Timeout(user, time.Duration(timeoutDuration)*time.Second).SetReason(reason)
+
+	return actions
 }

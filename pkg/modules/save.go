@@ -14,7 +14,7 @@ func saveModule(module pkg.Module) error {
 
 	botChannel := module.BotChannel()
 	if botChannel == nil {
-		return errors.New("saveModule: No bot channel specified for module " + module.Spec().ID())
+		return errors.New("saveModule: No bot channel specified for module " + module.ID())
 	}
 
 	b, err := json.Marshal(module)
@@ -29,7 +29,7 @@ INSERT INTO
 	VALUES (?, ?, ?)
 ON DUPLICATE KEY UPDATE settings=?`
 
-	_, err = _server.sql.Exec(queryF, botChannel.DatabaseID(), module.Spec().ID(), b, b)
+	_, err = _server.sql.Exec(queryF, botChannel.DatabaseID(), module.ID(), b, b)
 	if err != nil {
 		return err
 	}
@@ -40,6 +40,10 @@ ON DUPLICATE KEY UPDATE settings=?`
 func loadModule(settings []byte, module pkg.Module) error {
 	if module == nil {
 		return errors.New("loadModule: module may not be nil")
+	}
+
+	if len(settings) == 0 {
+		return nil
 	}
 
 	return json.Unmarshal(settings, module)

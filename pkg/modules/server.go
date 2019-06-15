@@ -54,7 +54,7 @@ type moduleSpec struct {
 
 	priority int
 
-	parameters map[string]*moduleParameterSpec
+	parameters map[string]pkg.ModuleParameterSpec
 
 	maker moduleMaker
 }
@@ -84,6 +84,10 @@ func (s *moduleSpec) Create(bot pkg.BotChannel) pkg.Module {
 
 func (s *moduleSpec) Priority() int {
 	return s.priority
+}
+
+func (s *moduleSpec) Parameters() map[string]pkg.ModuleParameterSpec {
+	return s.parameters
 }
 
 var _ pkg.ModuleSpec = &moduleSpec{}

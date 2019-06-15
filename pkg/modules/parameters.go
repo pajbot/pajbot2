@@ -3,13 +3,65 @@ package modules
 import (
 	"encoding/json"
 	"strconv"
+
+	"github.com/pajbot/pajbot2/pkg"
 )
+
+func boolPtr(v bool) *bool {
+	return &v
+}
 
 var nullBuffer = []byte("null")
 
+var _ pkg.ModuleParameter = &floatParameter{}
+var _ pkg.ModuleParameter = &boolParameter{}
+
+type baseParameter struct {
+	description string
+}
+
+func (b baseParameter) Description() string {
+	return b.description
+}
+
 type floatParameter struct {
+	baseParameter
+
 	defaultValue *float32
 	value        *float32
+}
+
+type parameterSpec struct {
+	Description  string
+	DefaultValue interface{}
+}
+
+func floatPtr(v float32) *float32 {
+	return &v
+}
+
+func newFloatParameter(spec parameterSpec) *floatParameter {
+	p := &floatParameter{}
+	if spec.DefaultValue == nil {
+		p.defaultValue = floatPtr(0.0)
+	} else {
+		var defaultValue float32
+		var ok bool
+		defaultValue, ok = spec.DefaultValue.(float32)
+		if !ok {
+			p.defaultValue = floatPtr(0.0)
+		} else {
+			p.defaultValue = &defaultValue
+		}
+	}
+
+	p.description = spec.Description
+
+	return p
+}
+
+func (p *floatParameter) DefaultValue() interface{} {
+	return p.defaultValue
 }
 
 func (p *floatParameter) Get() float32 {
@@ -68,8 +120,31 @@ func (p *floatParameter) UnmarshalJSON(b []byte) error {
 }
 
 type boolParameter struct {
+	baseParameter
+
 	defaultValue *bool
 	value        *bool
+}
+
+func newBoolParameter(spec parameterSpec) *boolParameter {
+	p := &boolParameter{}
+
+	if spec.DefaultValue == nil {
+		p.defaultValue = boolPtr(false)
+	} else {
+		var defaultValue bool
+		var ok bool
+		defaultValue, ok = spec.DefaultValue.(bool)
+		if !ok {
+			p.defaultValue = boolPtr(false)
+		} else {
+			p.defaultValue = &defaultValue
+		}
+	}
+
+	p.description = spec.Description
+
+	return p
 }
 
 func (p *boolParameter) Get() bool {
@@ -125,4 +200,8 @@ func (p *boolParameter) UnmarshalJSON(b []byte) error {
 	p.value = &v
 
 	return nil
+}
+
+func (p *boolParameter) DefaultValue() interface{} {
+	return p.defaultValue
 }
