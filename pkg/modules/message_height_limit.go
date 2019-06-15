@@ -275,10 +275,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 						return twitchactions.Mention(user, err.Error())
 					}
 
-					err := saveModule(m)
-					if err != nil {
-						fmt.Println("ERROR SAVING:", err)
-					}
+					m.Save()
 					return twitchactions.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit))
 				}
 
@@ -296,7 +293,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 						return twitchactions.Mention(user, err.Error())
 					}
 
-					saveModule(m)
+					m.Save()
 					return twitchactions.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly))
 				}
 
@@ -309,7 +306,6 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	const maxTimeoutLength = 1800
 
 	height := m.getHeight(m.bot.Channel(), user, message)
-	// bot.Mention(user, fmt.Sprintf("Message height: %f\n", height))
 
 	if height <= m.HeightLimit {
 		return nil
@@ -357,7 +353,6 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	}
 
 	reason = fmt.Sprintf(reasonFmt, height, ratio, userViolations)
-	fmt.Println("REASON:", reason)
 	actions.Timeout(user, time.Duration(timeoutDuration)*time.Second).SetReason(reason)
 
 	return actions

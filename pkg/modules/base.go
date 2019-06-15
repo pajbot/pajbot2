@@ -1,7 +1,9 @@
 package modules
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
@@ -56,7 +58,8 @@ func (b *base) LoadSettings(settingsBytes []byte) error {
 		return nil
 	}
 
-	values, err := loadParameters(settingsBytes)
+	values := map[string]interface{}{}
+	err := json.Unmarshal(settingsBytes, &values)
 	if err != nil {
 		return err
 	}
@@ -114,6 +117,50 @@ func (b *base) setParameter(key string, value string) error {
 	}
 
 	// 3. If the parameter was updated, update any linked values
+
+	return nil
+}
+
+func (b *base) save() error {
+	parameters := map[string]interface{}{}
+	for key, param := range b.Parameters() {
+		if !param.HasValue() {
+			continue
+		}
+
+		if !param.HasBeenSet() {
+			continue
+		}
+
+		parameters[key] = param.Get()
+	}
+
+	bytes, err := json.Marshal(parameters)
+	if err != nil {
+		return err
+	}
+
+	const queryF = `
+INSERT INTO
+	BotChannelModule
+	(bot_channel_id, module_id, settings)
+	VALUES (?, ?, ?)
+ON DUPLICATE KEY UPDATE settings=?`
+
+	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes, bytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *base) Save() error {
+	err := b.save()
+	if err != nil {
+		log.Printf("Error saving module %s: %s\n", b.ID(), err.Error())
+		return err
+	}
 
 	return nil
 }

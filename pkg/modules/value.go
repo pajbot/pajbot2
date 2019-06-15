@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pajbot/pajbot2/pkg"
@@ -55,43 +54,43 @@ func newValue(b base) pkg.Module {
 }
 
 func (m *value) OnMessage(event pkg.MessageEvent) pkg.Actions {
-	fmt.Println("VALUE MODULE ON MESSAGE")
 	user := event.User
 	message := event.Message
 
-	if strings.HasPrefix(message.GetText(), "!") {
-		parts := strings.Split(message.GetText(), " ")
-		if parts[0] == "!value-a" {
-			if len(parts) >= 2 {
-				if err := m.setParameter("A", parts[1]); err != nil {
-					return twitchactions.Mention(user, err.Error())
-				}
-
-				err := saveModule(m)
-				if err != nil {
-					fmt.Println("ERROR SAVING:", err)
-				}
-				return twitchactions.Mention(user, "A set to "+utils.Float32ToString(m.A))
+	if !strings.HasPrefix(message.GetText(), "!") {
+		return nil
+	}
+	parts := strings.Split(message.GetText(), " ")
+	if parts[0] == "!value-a" {
+		if len(parts) >= 2 {
+			if err := m.setParameter("A", parts[1]); err != nil {
+				return twitchactions.Mention(user, err.Error())
 			}
 
-			return twitchactions.Mention(user, "A is "+utils.Float32ToString(m.A))
+			err := m.Save()
+			if err != nil {
+				return nil
+			}
+			return twitchactions.Mention(user, "A set to "+utils.Float32ToString(m.A))
 		}
 
-		if parts[0] == "!value-b" {
-			if len(parts) >= 2 {
-				if err := m.setParameter("B", parts[1]); err != nil {
-					return twitchactions.Mention(user, err.Error())
-				}
+		return twitchactions.Mention(user, "A is "+utils.Float32ToString(m.A))
+	}
 
-				err := saveModule(m)
-				if err != nil {
-					fmt.Println("ERROR SAVING:", err)
-				}
-				return twitchactions.Mention(user, "B set to "+utils.Float32ToString(m.B))
+	if parts[0] == "!value-b" {
+		if len(parts) >= 2 {
+			if err := m.setParameter("B", parts[1]); err != nil {
+				return twitchactions.Mention(user, err.Error())
 			}
 
-			return twitchactions.Mention(user, "B is "+utils.Float32ToString(m.B))
+			err := m.Save()
+			if err != nil {
+				return nil
+			}
+			return twitchactions.Mention(user, "B set to "+utils.Float32ToString(m.B))
 		}
+
+		return twitchactions.Mention(user, "B is "+utils.Float32ToString(m.B))
 	}
 
 	return nil
