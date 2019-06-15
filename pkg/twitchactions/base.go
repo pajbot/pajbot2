@@ -19,6 +19,12 @@ type baseActions struct {
 	whispers      []pkg.WhisperAction
 }
 
+func (a *baseActions) StopPropagation() bool {
+	a.mutesMutex.Lock()
+	defer a.mutesMutex.Unlock()
+	return len(a.mutes) > 0
+}
+
 func (a *baseActions) Timeout(user pkg.User, duration time.Duration) pkg.MuteAction {
 	action := &Timeout{
 		mute: mute{

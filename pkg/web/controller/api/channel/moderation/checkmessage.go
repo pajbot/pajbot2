@@ -120,7 +120,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 			}
 
 			return module.OnMessage(event)
-		})
+		}, false)
 
 		for _, action := range actions {
 			if action == nil {

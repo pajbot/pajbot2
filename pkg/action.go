@@ -52,6 +52,8 @@ type Actions interface {
 	Messages() []MessageAction
 	Whispers() []WhisperAction
 
+	StopPropagation() bool
+
 	// DoOnSuccess(func())
 
 	// Do(func())

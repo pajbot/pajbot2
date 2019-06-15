@@ -89,7 +89,14 @@ func (c *BotChannel) Stream() pkg.Stream {
 // We assume that modulesMutex is locked already
 func (c *BotChannel) sortModules() {
 	sort.Slice(c.modules, func(i, j int) bool {
-		return c.modules[i].Priority() < c.modules[j].Priority()
+		a := c.modules[i]
+		b := c.modules[j]
+
+		if a.Priority() == b.Priority() {
+			return a.Type() > b.Type()
+		}
+
+		return a.Priority() < b.Priority()
 	})
 }
 
@@ -299,7 +306,7 @@ func (c *BotChannel) loadModules() {
 	}
 }
 
-func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions) (actions []pkg.Actions) {
+func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions, stop bool) (actions []pkg.Actions) {
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
@@ -307,6 +314,9 @@ func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions) (actions 
 		// TODO: This could potentially be run in steps now. maybe all modules with same priority are run together?
 		if moduleActions := cb(module); moduleActions != nil {
 			actions = append(actions, moduleActions)
+			if stop && moduleActions.StopPropagation() {
+				return
+			}
 		}
 	}
 
@@ -335,8 +345,6 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 
 	}
 
-	fmt.Println("Got actions:", actions)
-
 	return nil
 }
 
@@ -356,9 +364,8 @@ func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
 		return module.OnMessage(event)
-	})
+	}, true)
 
-	// TODO: Resolve actions smarter
 	return c.resolveActions(actions)
 }
 
@@ -374,8 +381,7 @@ func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error 
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
 		return module.OnWhisper(event)
-	})
+	}, true)
 
-	// TODO: Resolve actions smarter
 	return c.resolveActions(actions)
 }

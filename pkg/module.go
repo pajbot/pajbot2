@@ -35,8 +35,9 @@ type Module interface {
 type ModuleType uint
 
 const (
-	ModuleTypeUnsorted = 0
-	ModuleTypeFilter   = 1
+	// The order of these types matter. Higher value means higher priority in the "OnModules" function
+	ModuleTypeUnsorted ModuleType = iota
+	ModuleTypeFilter
 )
 
 type ModuleSpec interface {

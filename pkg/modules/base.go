@@ -34,8 +34,6 @@ func newBase(spec pkg.ModuleSpec, bot pkg.BotChannel) base {
 		b.parameters[key] = value()
 	}
 
-	fmt.Println("Loaded parameters:", b.parameters)
-
 	return b
 }
 
