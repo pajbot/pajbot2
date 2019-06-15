@@ -41,7 +41,7 @@ func init() {
 				"HeightLimit": func() pkg.ModuleParameter {
 					return newFloatParameter(parameterSpec{
 						Description:  "Max height of a message before it's timed out",
-						DefaultValue: 95.0,
+						DefaultValue: float32(95.0),
 					})
 				},
 				"AsciiArtOnly": func() pkg.ModuleParameter {
@@ -60,9 +60,9 @@ var _ pkg.Module = &MessageHeightLimit{}
 type MessageHeightLimit struct {
 	base
 
-	HeightLimit *floatParameter `json:",omitempty"`
+	HeightLimit float32
 
-	AsciiArtOnly *boolParameter `json:",omitempty"`
+	AsciiArtOnly bool
 
 	userViolationCount map[string]int
 }
@@ -71,10 +71,11 @@ func NewMessageHeightLimit(b base) pkg.Module {
 	m := &MessageHeightLimit{
 		base: b,
 
-		HeightLimit:        b.parameters["HeightLimit"].(*floatParameter),
-		AsciiArtOnly:       b.parameters["AsciiArtOnly"].(*boolParameter),
 		userViolationCount: make(map[string]int),
 	}
+
+	m.parameters["HeightLimit"].Link(&m.HeightLimit)
+	m.parameters["AsciiArtOnly"].Link(&m.AsciiArtOnly)
 
 	// FIXME
 	m.Initialize()
@@ -163,10 +164,6 @@ func initMessageHeightLimitLibrary() error {
 	messageHeightLimitLibraryInitialized = true
 
 	return nil
-}
-
-func (m *MessageHeightLimit) LoadSettings(settingsBytes []byte) error {
-	return loadModule(settingsBytes, m)
 }
 
 func (m *MessageHeightLimit) Initialize() {
@@ -274,7 +271,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 			parts := strings.Split(message.GetText(), " ")
 			if parts[0] == "!heightlimit" {
 				if len(parts) >= 2 {
-					if err := m.HeightLimit.Parse(parts[1]); err != nil {
+					if err := m.setParameter("HeightLimit", parts[1]); err != nil {
 						return twitchactions.Mention(user, err.Error())
 					}
 
@@ -282,10 +279,10 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 					if err != nil {
 						fmt.Println("ERROR SAVING:", err)
 					}
-					return twitchactions.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit.Get()))
+					return twitchactions.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit))
 				}
 
-				return twitchactions.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit.Get()))
+				return twitchactions.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit))
 			}
 
 			if parts[0] == "!heighttest" {
@@ -295,15 +292,15 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 
 			if parts[0] == "!heightlimitonasciionly" {
 				if len(parts) >= 2 {
-					if err := m.AsciiArtOnly.Parse(parts[1]); err != nil {
+					if err := m.setParameter("AsciiArtOnly", parts[1]); err != nil {
 						return twitchactions.Mention(user, err.Error())
 					}
 
 					saveModule(m)
-					return twitchactions.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+					return twitchactions.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly))
 				}
 
-				return twitchactions.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly.Get()))
+				return twitchactions.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly))
 			}
 		}
 	}
@@ -314,7 +311,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	height := m.getHeight(m.bot.Channel(), user, message)
 	// bot.Mention(user, fmt.Sprintf("Message height: %f\n", height))
 
-	if height <= m.HeightLimit.Get() {
+	if height <= m.HeightLimit {
 		return nil
 	}
 
@@ -337,11 +334,11 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	ratio = float32(doesntFitIn7Bit) / float32(messageLength)
 	var reason string
 	userViolations := 0
-	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit.Get()), 1.2), maxTimeoutLength))
+	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), 1.2), maxTimeoutLength))
 	if ratio > 0.5 {
 		timeoutDuration = timeoutDuration + 90
 	} else {
-		if m.AsciiArtOnly.Get() {
+		if m.AsciiArtOnly {
 			// Do not deal with tall non-ascii-art messages
 			return nil
 		}

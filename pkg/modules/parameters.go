@@ -2,6 +2,8 @@ package modules
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/pajbot/pajbot2/pkg"
@@ -18,6 +20,12 @@ var _ pkg.ModuleParameter = &boolParameter{}
 
 type baseParameter struct {
 	description string
+
+	hasBeenSet bool
+}
+
+func (b baseParameter) HasBeenSet() bool {
+	return b.hasBeenSet
 }
 
 func (b baseParameter) Description() string {
@@ -28,7 +36,24 @@ type floatParameter struct {
 	baseParameter
 
 	defaultValue *float32
-	value        *float32
+
+	value *float32
+}
+
+func (p *boolParameter) Get() interface{} {
+	return p.value
+}
+
+func (p *floatParameter) Get() interface{} {
+	return p.value
+}
+
+func (p *boolParameter) HasValue() bool {
+	return p.value != nil
+}
+
+func (p *floatParameter) HasValue() bool {
+	return p.value != nil
 }
 
 type parameterSpec struct {
@@ -49,6 +74,7 @@ func newFloatParameter(spec parameterSpec) *floatParameter {
 		var ok bool
 		defaultValue, ok = spec.DefaultValue.(float32)
 		if !ok {
+			log.Println("INVALID TYPE FOR THE DEFAULT VALUE", spec.DefaultValue)
 			p.defaultValue = floatPtr(0.0)
 		} else {
 			p.defaultValue = &defaultValue
@@ -64,24 +90,80 @@ func (p *floatParameter) DefaultValue() interface{} {
 	return p.defaultValue
 }
 
-func (p *floatParameter) Get() float32 {
-	if p.value != nil {
-		return *p.value
+func (p *boolParameter) Link(v interface{}) {
+	linkedValue, ok := v.(*bool)
+	if !ok {
+		log.Println("Wrong value type!")
+		return
 	}
+
+	p.value = linkedValue
 
 	if p.defaultValue != nil {
-		return *p.defaultValue
+		*p.value = *p.defaultValue
+	}
+}
+
+func (p *floatParameter) Link(v interface{}) {
+	linkedValue, ok := v.(*float32)
+	if !ok {
+		log.Println("Wrong value type!")
+		return
 	}
 
-	return 0
+	p.value = linkedValue
+
+	if p.defaultValue != nil {
+		*p.value = *p.defaultValue
+	}
 }
 
 func (p *floatParameter) Set(v float32) {
-	p.value = &v
+	if p.value == nil {
+		log.Println("Set called on a float parameter without a value link")
+		return
+	}
+
+	p.hasBeenSet = true
+
+	*p.value = v
 }
 
 func (p *floatParameter) Reset() {
-	p.value = nil
+	var v float32
+	if p.defaultValue != nil {
+		v = *p.defaultValue
+	}
+
+	*p.value = v
+	p.hasBeenSet = false
+}
+
+func (p *boolParameter) SetInterface(i interface{}) {
+	// TODO: make some better type checks, maybe allow to set int?
+	switch v := i.(type) {
+	case bool:
+		p.Set(v)
+	case int:
+		p.Set(v != 0)
+	}
+}
+
+func (p *floatParameter) SetInterface(i interface{}) {
+	// TODO: make some better type checks, maybe allow to set int?
+	switch v := i.(type) {
+	case float32:
+		p.Set(v)
+		return
+	case float64:
+		p.Set(float32(v))
+		return
+	case int:
+		p.Set(float32(v))
+		return
+	}
+
+	log.Printf("Unable to set value: %s (Type %T)", i, i)
 }
 
 func (p *floatParameter) Parse(s string) error {
@@ -100,7 +182,7 @@ func (p *floatParameter) Parse(s string) error {
 	return nil
 }
 
-func (p floatParameter) MarshalJSON() ([]byte, error) {
+func (p *floatParameter) MarshalJSON() ([]byte, error) {
 	if p.value != nil {
 		return json.Marshal(p.value)
 	}
@@ -109,6 +191,7 @@ func (p floatParameter) MarshalJSON() ([]byte, error) {
 }
 
 func (p *floatParameter) UnmarshalJSON(b []byte) error {
+	fmt.Println("UNMARSHAL JSON:", string(b))
 	var v float32
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
@@ -147,24 +230,25 @@ func newBoolParameter(spec parameterSpec) *boolParameter {
 	return p
 }
 
-func (p *boolParameter) Get() bool {
-	if p.value != nil {
-		return *p.value
-	}
-
-	if p.defaultValue != nil {
-		return *p.defaultValue
-	}
-
-	return false
-}
-
 func (p *boolParameter) Set(v bool) {
-	p.value = &v
+	if p.value == nil {
+		log.Println("Set called on a parameter without a value link")
+		return
+	}
+
+	p.hasBeenSet = true
+
+	*p.value = v
 }
 
 func (p *boolParameter) Reset() {
-	p.value = nil
+	var v bool
+	if p.defaultValue != nil {
+		v = *p.defaultValue
+	}
+
+	*p.value = v
+	p.hasBeenSet = false
 }
 
 func (p *boolParameter) Parse(s string) error {

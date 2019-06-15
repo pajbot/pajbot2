@@ -11,9 +11,16 @@ type ModuleFactory func() ModuleSpec
 //		- "MyTestModule2"
 //  - "forsen":
 //		- "MyTestModule"
-type Module interface {
-	// After the module struct is created, it must be initialized with the channel
+type BaseModule interface {
 	LoadSettings([]byte) error
+	Parameters() map[string]ModuleParameter
+	ID() string
+	Type() ModuleType
+	Priority() int
+}
+
+type Module interface {
+	BaseModule
 
 	// Called when the module is disabled. The module can do any cleanup it needs to do here
 	Disable() error
@@ -23,11 +30,6 @@ type Module interface {
 
 	OnWhisper(event MessageEvent) Actions
 	OnMessage(event MessageEvent) Actions
-
-	// Implemented in base module
-	ID() string
-	Type() ModuleType
-	Priority() int
 }
 
 type ModuleType uint
@@ -54,4 +56,10 @@ type ModuleParameterSpec func() ModuleParameter
 type ModuleParameter interface {
 	Description() string
 	DefaultValue() interface{}
+	Parse(string) error
+	SetInterface(interface{})
+	Get() interface{}
+	Link(interface{})
+	HasValue() bool
+	HasBeenSet() bool
 }

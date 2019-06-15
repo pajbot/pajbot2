@@ -122,8 +122,6 @@ func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
 	// This will call the modules maker
 	module := spec.Create(c)
 
-	log.Println("Load module", spec.Name())
-
 	// Load the modules setting (generally handled by the modules base)
 	err := module.LoadSettings(settings)
 	if err != nil {
@@ -263,27 +261,17 @@ func (c *BotChannel) loadAllModuleConfigs() ([]*moduleConfig, error) {
 }
 
 func (c *BotChannel) loadModules() {
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
-	log.Println("LOAD MODULES")
 	moduleConfigs, err := c.loadAllModuleConfigs()
 	if err != nil {
 		panic(err)
 	}
 
 	availableModules := modules.Modules()
-	log.Println("Available modules:", availableModules)
 
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
 	for _, spec := range availableModules {
-		log.Println("Available module:", spec)
 		enabled := spec.EnabledByDefault()
 		var settings []byte
 

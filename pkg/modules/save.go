@@ -3,6 +3,7 @@ package modules
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/pajbot/pajbot2/pkg"
 )
@@ -17,7 +18,20 @@ func saveModule(module pkg.Module) error {
 		return errors.New("saveModule: No bot channel specified for module " + module.ID())
 	}
 
-	b, err := json.Marshal(module)
+	parameters := map[string]interface{}{}
+	for key, param := range module.Parameters() {
+		if !param.HasValue() {
+			continue
+		}
+
+		if !param.HasBeenSet() {
+			continue
+		}
+
+		parameters[key] = param.Get()
+	}
+
+	b, err := json.Marshal(parameters)
 	if err != nil {
 		return err
 	}
@@ -37,7 +51,26 @@ ON DUPLICATE KEY UPDATE settings=?`
 	return nil
 }
 
-func loadModule(settings []byte, module pkg.Module) error {
+func loadParameters(settings []byte) (map[string]interface{}, error) {
+	parameters := map[string]interface{}{}
+	err := json.Unmarshal(settings, &parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	return parameters, nil
+}
+
+func loadFloat(p map[string]interface{}, key string, value interface{}) {
+	pValue, ok := p[key]
+	if !ok {
+		return
+	}
+
+	fmt.Println("Attempt to load", pValue, "into", key)
+}
+
+func loadModule(settings []byte, module interface{}) error {
 	if module == nil {
 		return errors.New("loadModule: module may not be nil")
 	}
@@ -45,6 +78,8 @@ func loadModule(settings []byte, module pkg.Module) error {
 	if len(settings) == 0 {
 		return nil
 	}
+
+	fmt.Println("Loading", string(settings))
 
 	return json.Unmarshal(settings, module)
 }
