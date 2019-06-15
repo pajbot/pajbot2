@@ -17,7 +17,7 @@ require (
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
-	github.com/gempir/go-twitch-irc/v2 v2.1.0
+	github.com/gempir/go-twitch-irc/v2 v2.1.1
 	github.com/go-openapi/jsonpointer v0.19.0 // indirect
 	github.com/go-openapi/jsonreference v0.19.0 // indirect
 	github.com/go-openapi/spec v0.19.0 // indirect
@@ -40,7 +40,6 @@ require (
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
 	github.com/pajlada/jsonapi v0.0.0-20181126225824-ff9660de882a // indirect
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
-	github.com/pkg/errors v0.8.1
 	github.com/swaggo/echo-swagger v0.0.0-20190329130007-1219b460a043
 	github.com/swaggo/swag v1.5.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
