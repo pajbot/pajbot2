@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 	"sync"
@@ -57,6 +58,10 @@ func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
 	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
+func (c *BotChannel) Ban(user pkg.User, reason string) {
+	c.bot.Ban(&c.channel, user, reason)
+}
+
 func (c *BotChannel) SingleTimeout(user pkg.User, duration int, reason string) {
 	c.bot.SingleTimeout(&c.channel, user, duration, reason)
 }
@@ -84,7 +89,14 @@ func (c *BotChannel) Stream() pkg.Stream {
 // We assume that modulesMutex is locked already
 func (c *BotChannel) sortModules() {
 	sort.Slice(c.modules, func(i, j int) bool {
-		return c.modules[i].Spec().Priority() < c.modules[j].Spec().Priority()
+		a := c.modules[i]
+		b := c.modules[j]
+
+		if a.Priority() == b.Priority() {
+			return a.Type() > b.Type()
+		}
+
+		return a.Priority() < b.Priority()
 	})
 }
 
@@ -114,8 +126,11 @@ WHERE
 
 // We assume that modulesMutex is locked already
 func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
-	module := spec.Maker()()
-	err := module.Initialize(c, settings)
+	// This will call the modules maker
+	module := spec.Create(c)
+
+	// Load the modules setting (generally handled by the modules base)
+	err := module.LoadSettings(settings)
 	if err != nil {
 		return fmt.Errorf("error loading module '%s': %s", spec.ID(), err.Error())
 	}
@@ -144,9 +159,10 @@ ON DUPLICATE KEY UPDATE enabled=?`
 
 // We assume that modulesMutex is locked already
 func (c *BotChannel) EnableModule(moduleID string) error {
+	log.Println("Enable module!!!!!!!", moduleID)
 	moduleID = strings.ToLower(moduleID)
 
-	spec, ok := modules.GetModule(moduleID)
+	spec, ok := modules.GetModuleSpec(moduleID)
 	if !ok {
 		return errors.New("invalid module id")
 	}
@@ -154,7 +170,7 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 	// Check if module is enabled already
 
 	for _, m := range c.modules {
-		if m.Spec().ID() == moduleID {
+		if m.ID() == moduleID {
 			return errors.New("module already enabled")
 		}
 	}
@@ -176,13 +192,8 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 func (c *BotChannel) DisableModule(moduleID string) error {
 	moduleID = strings.ToLower(moduleID)
 
-	_, ok := modules.GetModule(moduleID)
-	if !ok {
-		return errors.New("invalid module id")
-	}
-
 	for i, m := range c.modules {
-		if m.Spec().ID() == moduleID {
+		if m.ID() == moduleID {
 			m.Disable()
 			c.modules = append(c.modules[:i], c.modules[i+1:]...)
 
@@ -295,33 +306,82 @@ func (c *BotChannel) loadModules() {
 	}
 }
 
-func (c *BotChannel) OnModules(cb func(module pkg.Module) error) (err error) {
+func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions, stop bool) (actions []pkg.Actions) {
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()
 
 	for _, module := range c.modules {
-		if err = cb(module); err != nil {
-			return
+		// TODO: This could potentially be run in steps now. maybe all modules with same priority are run together?
+		if moduleActions := cb(module); moduleActions != nil {
+			actions = append(actions, moduleActions)
+			if stop && moduleActions.StopPropagation() {
+				return
+			}
 		}
 	}
 
 	return
 }
 
-func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
-	return c.handleMessage(user, message, action)
+func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
+	// TODO: Resolve actions smarter
+	for _, action := range actions {
+		for _, mute := range action.Mutes() {
+			switch mute.Type() {
+			case pkg.MuteTypeTemporary:
+				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
+			case pkg.MuteTypePermanent:
+				c.Ban(mute.User(), mute.Reason())
+			}
+		}
+
+		for _, message := range action.Messages() {
+			c.Say(message.Evaluate())
+		}
+
+		for _, whisper := range action.Whispers() {
+			c.bot.Whisper(whisper.User(), whisper.Content())
+		}
+
+	}
+
+	return nil
 }
 
-func (c *BotChannel) handleMessage(user pkg.User, message pkg.Message, action pkg.Action) error {
+func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 	c.eventEmitter.Emit("on_msg", nil)
 
-	return c.OnModules(func(module pkg.Module) error {
-		return module.OnMessage(c, user, message, action)
-	})
+	log.Println("Got message:", message.GetText())
+
+	event := pkg.MessageEvent{
+		BaseEvent: pkg.BaseEvent{
+			UserStore: c.bot.GetUserStore(),
+		},
+		User:    user,
+		Message: message,
+		Channel: c.Channel(),
+	}
+
+	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
+		return module.OnMessage(event)
+	}, true)
+
+	return c.resolveActions(actions)
 }
 
 func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error {
-	return c.OnModules(func(module pkg.Module) error {
-		return module.OnWhisper(c, user, message)
-	})
+	event := pkg.MessageEvent{
+		BaseEvent: pkg.BaseEvent{
+			UserStore: c.bot.GetUserStore(),
+		},
+		User:    user,
+		Message: message,
+		Channel: c.Channel(),
+	}
+
+	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
+		return module.OnWhisper(event)
+	}, true)
+
+	return c.resolveActions(actions)
 }

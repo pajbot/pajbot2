@@ -8,24 +8,30 @@ import (
 	"github.com/pajbot/pajbot2/pkg/commands"
 )
 
-type Pajbot1Commands struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("pajbot1_commands", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "pajbot1_commands",
+			name:  "pajbot1 commands",
+			maker: newPajbot1Commands,
+		}
+	})
+}
 
-	server *server
+type Pajbot1Commands struct {
+	base
 
 	commands []*commands.Pajbot1Command
 }
 
-func newPajbot1Commands() pkg.Module {
-	return &Pajbot1Commands{
-		server: &_server,
+func newPajbot1Commands(b base) pkg.Module {
+	m := &Pajbot1Commands{
+		base: b,
 	}
-}
 
-var pajbot1CommandsSpec = moduleSpec{
-	id:    "pajbot1_commands",
-	name:  "pajbot1 commands",
-	maker: newPajbot1Commands,
+	m.loadPajbot1Commands()
+
+	return m
 }
 
 func (m *Pajbot1Commands) loadPajbot1Commands() error {
@@ -61,34 +67,10 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 	return nil
 }
 
-func (m *Pajbot1Commands) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
+func (m Pajbot1Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
 
-	err := m.loadPajbot1Commands()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m Pajbot1Commands) Disable() error {
-	return nil
-}
-
-func (m *Pajbot1Commands) Spec() pkg.ModuleSpec {
-	return &pajbot1CommandsSpec
-}
-
-func (m *Pajbot1Commands) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m Pajbot1Commands) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m Pajbot1Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.Split(message.GetText(), " ")
 	if len(parts) == 0 {
 		return nil
@@ -96,9 +78,9 @@ func (m Pajbot1Commands) OnMessage(bot pkg.BotChannel, user pkg.User, message pk
 
 	for _, command := range m.commands {
 		if command.IsTriggered(parts) {
-			err := command.Trigger(bot, user, parts)
+			err := command.Trigger(m.bot, user, parts)
 			if err != nil {
-				return err
+				return nil
 			}
 			log.Println("Triggered command!")
 			log.Println(command.Action)

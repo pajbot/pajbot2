@@ -2,7 +2,6 @@ package modules
 
 import (
 	"database/sql"
-	"strings"
 	"sync"
 
 	"github.com/pajbot/pajbot2/pkg"
@@ -39,9 +38,9 @@ type moduleParameterSpec struct {
 	defaultValue  interface{}
 }
 
-type moduleSpec struct {
-	maker pkg.ModuleMaker
+type moduleMaker func(b base) pkg.Module
 
+type moduleSpec struct {
 	// i.e. "report". This is used in external calls enabling or disabling the module
 	// the ID is also what's used when storing settings in the database
 	id string
@@ -55,7 +54,9 @@ type moduleSpec struct {
 
 	priority int
 
-	parameters map[string]*moduleParameterSpec
+	parameters map[string]pkg.ModuleParameterSpec
+
+	maker moduleMaker
 }
 
 func (s *moduleSpec) ID() string {
@@ -74,86 +75,108 @@ func (s *moduleSpec) EnabledByDefault() bool {
 	return s.enabledByDefault
 }
 
-func (s *moduleSpec) Maker() pkg.ModuleMaker {
-	return s.maker
+func (s *moduleSpec) Create(bot pkg.BotChannel) pkg.Module {
+	b := newBase(s, bot)
+	m := s.maker(b)
+
+	return m
 }
 
 func (s *moduleSpec) Priority() int {
 	return s.priority
 }
 
+func (s *moduleSpec) Parameters() map[string]pkg.ModuleParameterSpec {
+	return s.parameters
+}
+
 var _ pkg.ModuleSpec = &moduleSpec{}
 
-var _modulesMutex sync.Mutex
-var _modules []*moduleSpec
+var moduleSpecsMutex sync.Mutex
+var moduleSpecs []pkg.ModuleSpec
+var moduleSpecsMap map[string]pkg.ModuleSpec
 
-var _validModulesMutex sync.Mutex
-var _validModules map[string]*moduleSpec
+var moduleFactoriesMutex sync.Mutex
+var moduleFactories map[string]pkg.ModuleFactory
 
-func Register(spec *moduleSpec) {
-	if spec == nil {
-		panic("Trying to register a nil module spec")
+func Register(moduleID string, factory pkg.ModuleFactory) {
+	if factory == nil {
+		panic("Trying to register a nil factory")
 	}
 
-	if spec.ID() == "" {
-		panic("Missing ID in module spec")
+	moduleFactoriesMutex.Lock()
+	if moduleFactories == nil {
+		moduleFactories = make(map[string]pkg.ModuleFactory)
 	}
 
-	if spec.Name() == "" {
-		panic("Missing Name in module spec")
+	if _, ok := moduleFactories[moduleID]; ok {
+		panic("A module factory with the id '" + moduleID + "' was already registered")
 	}
 
-	if spec.Maker() == nil {
-		panic("Missing Maker in module spec")
-	}
-
-	_modulesMutex.Lock()
-	_modules = append(_modules, spec)
-	_modulesMutex.Unlock()
-
-	_validModulesMutex.Lock()
-	if _validModules == nil {
-		_validModules = make(map[string]*moduleSpec)
-	}
-	_validModules[strings.ToLower(spec.ID())] = spec
-	_validModulesMutex.Unlock()
+	moduleFactories[moduleID] = factory
+	moduleFactoriesMutex.Unlock()
 }
 
-func Modules() []*moduleSpec {
-	_modulesMutex.Lock()
-	defer _modulesMutex.Unlock()
+func generateSpecs() (specs []pkg.ModuleSpec) {
+	for _, moduleFactory := range moduleFactories {
+		spec := moduleFactory()
+		specs = append(specs, spec)
+	}
 
-	return _modules
+	return
 }
 
-func GetModule(moduleID string) (pkg.ModuleSpec, bool) {
-	_validModulesMutex.Lock()
-	defer _validModulesMutex.Unlock()
+func initModuleMap(specs []pkg.ModuleSpec) {
+	moduleSpecsMap = make(map[string]pkg.ModuleSpec)
 
-	spec, ok := _validModules[strings.ToLower(moduleID)]
-	return spec, ok
+	for _, spec := range specs {
+		moduleSpecsMap[spec.ID()] = spec
+	}
 }
 
-func init() {
-	// TODO: Remove action performer
-	Register(bttvEmoteParserSpec)
+func Modules() []pkg.ModuleSpec {
+	moduleSpecsMutex.Lock()
+	defer moduleSpecsMutex.Unlock()
 
-	Register(&badCharacterSpec)
-	Register(&bannedNamesSpec)
-	Register(&pajbot1BanphraseSpec)
-	// TODO: Remove bttv emote parser. This should be done automatically, always
-	// custom commands
-	Register(&emoteLimitSpec)
-	Register(&giveawaySpec)
-	Register(&latinFilterSpec)
-	Register(&linkFilterSpec)
-	Register(&messageLengthLimitSpec)
-	Register(&nukeSpec)
-	Register(&pajbot1CommandsSpec)
-	Register(&reportSpec)
-	Register(basicCommandsModuleSpec)
-	Register(otherCommandsModuleSpec)
-	Register(actionPerformerModuleSpec)
-	Register(welcomeSpec)
-	Register(goodbyeSpec)
+	if moduleSpecs == nil {
+		moduleSpecs = generateSpecs()
+		initModuleMap(moduleSpecs)
+	}
+
+	return moduleSpecs
+}
+
+func ModulesMap() map[string]pkg.ModuleSpec {
+	moduleSpecsMutex.Lock()
+	defer moduleSpecsMutex.Unlock()
+
+	if moduleSpecs == nil {
+		moduleSpecs = generateSpecs()
+		initModuleMap(moduleSpecs)
+	}
+
+	return moduleSpecsMap
+}
+
+func GetModuleSpec(moduleID string) (spec pkg.ModuleSpec, ok bool) {
+	moduleSpecsMutex.Lock()
+	defer moduleSpecsMutex.Unlock()
+
+	if moduleSpecs == nil {
+		moduleSpecs = generateSpecs()
+		initModuleMap(moduleSpecs)
+	}
+
+	spec, ok = moduleSpecsMap[moduleID]
+	return
+}
+
+// GetModuleFactory returns the module factory with the given ID.
+// This is useful for tests where the module spec should not be shared
+func GetModuleFactory(moduleID string) (factory pkg.ModuleFactory, ok bool) {
+	moduleFactoriesMutex.Lock()
+	defer moduleFactoriesMutex.Unlock()
+
+	factory, ok = moduleFactories[moduleID]
+	return
 }

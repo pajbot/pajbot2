@@ -1,57 +1,45 @@
 package modules
 
 import (
+	"time"
+
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
+func init() {
+	Register("bad_character_filter", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "bad_character_filter",
+			name:  "Bad character filter",
+			maker: newBadCharacterFilter,
+		}
+	})
+}
+
 type badCharacterFilter struct {
-	botChannel pkg.BotChannel
+	base
 
 	badCharacters []rune
 }
 
-func newBadCharacterFilter() pkg.Module {
-	return &badCharacterFilter{}
+func newBadCharacterFilter(b base) pkg.Module {
+	return &badCharacterFilter{
+		base: b,
+
+		badCharacters: []rune{'\x01'},
+	}
 }
 
-var badCharacterSpec = moduleSpec{
-	id:    "bad_character_filter",
-	name:  "Bad character filter",
-	maker: newBadCharacterFilter,
-}
+func (m *badCharacterFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
 
-func (m *badCharacterFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	m.badCharacters = append(m.badCharacters, '\x01')
-
-	return nil
-}
-
-func (m *badCharacterFilter) Disable() error {
-	return nil
-}
-
-func (m *badCharacterFilter) Spec() pkg.ModuleSpec {
-	return &badCharacterSpec
-}
-
-func (m *badCharacterFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *badCharacterFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m *badCharacterFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	for _, r := range message.GetText() {
 		for _, badCharacter := range m.badCharacters {
 			if r == badCharacter {
-				action.Set(pkg.Timeout{
-					Duration: 300, Reason: "Your message contains a banned character",
-				})
-				return nil
+				actions := &twitchactions.Actions{}
+				actions.Timeout(event.User, 300*time.Second).SetReason("Your message contains a banned character")
+				return actions
 			}
 		}
 	}

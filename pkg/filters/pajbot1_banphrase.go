@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // BanphraseOperator is a banphrase operator
@@ -99,8 +100,8 @@ func (f *Pajbot1Banphrase) IsAdvanced() bool {
 	return f.RemoveAccents
 }
 
-func (f *Pajbot1Banphrase) GetLength() int {
-	return f.Length
+func (f *Pajbot1Banphrase) GetDuration() time.Duration {
+	return time.Duration(f.Length) * time.Second
 }
 
 func (f *Pajbot1Banphrase) GetName() string {

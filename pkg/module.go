@@ -1,5 +1,7 @@
 package pkg
 
+type ModuleFactory func() ModuleSpec
+
 // A module is local to a bots channel
 // i.e. bot "pajbot" joins channels "pajlada" and "forsen"
 // Module list looks like this:
@@ -9,39 +11,56 @@ package pkg
 //		- "MyTestModule2"
 //  - "forsen":
 //		- "MyTestModule"
+type BaseModule interface {
+	LoadSettings([]byte) error
+	Parameters() map[string]ModuleParameter
+	ID() string
+	Type() ModuleType
+	Priority() int
+}
+
 type Module interface {
-	// After the module struct is created, it must be initialized with the channel
-	Initialize(BotChannel, []byte) error
+	BaseModule
 
 	// Called when the module is disabled. The module can do any cleanup it needs to do here
 	Disable() error
 
-	// Returns the spec for the module
-	Spec() ModuleSpec
-
 	// Returns the bot channel that the module has saved
 	BotChannel() BotChannel
 
-	OnWhisper(bot BotChannel, user User, message Message) error
-	OnMessage(bot BotChannel, user User, message Message, action Action) error
+	OnWhisper(event MessageEvent) Actions
+	OnMessage(event MessageEvent) Actions
 }
 
 type ModuleType uint
 
 const (
-	ModuleTypeUnsorted = 0
-	ModuleTypeFilter   = 1
+	// The order of these types matter. Higher value means higher priority in the "OnModules" function
+	ModuleTypeUnsorted ModuleType = iota
+	ModuleTypeFilter
 )
-
-type ModuleMaker func() Module
 
 type ModuleSpec interface {
 	ID() string
 	Name() string
 	Type() ModuleType
 	EnabledByDefault() bool
+	Parameters() map[string]ModuleParameterSpec
 
-	Maker() ModuleMaker
+	Create(bot BotChannel) Module
 
 	Priority() int
+}
+
+type ModuleParameterSpec func() ModuleParameter
+
+type ModuleParameter interface {
+	Description() string
+	DefaultValue() interface{}
+	Parse(string) error
+	SetInterface(interface{})
+	Get() interface{}
+	Link(interface{})
+	HasValue() bool
+	HasBeenSet() bool
 }

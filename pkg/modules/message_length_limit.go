@@ -1,50 +1,37 @@
 package modules
 
-import "github.com/pajbot/pajbot2/pkg"
+import (
+	"time"
+
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
+)
+
+func init() {
+	Register("message_length_limit", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "message_length_limit",
+			name:  "Message length limit",
+			maker: newMessageLengthLimit,
+		}
+	})
+}
 
 var _ pkg.Module = &MessageLengthLimit{}
 
 type MessageLengthLimit struct {
-	botChannel pkg.BotChannel
-
-	server *server
+	base
 }
 
-func newMessageLengthLimit() pkg.Module {
+func newMessageLengthLimit(b base) pkg.Module {
 	return &MessageLengthLimit{
-		server: &_server,
+		base: b,
 	}
 }
 
-var messageLengthLimitSpec = moduleSpec{
-	id:    "message_length_limit",
-	name:  "Message length limit",
-	maker: newMessageLengthLimit,
-}
-
-func (m *MessageLengthLimit) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *MessageLengthLimit) Disable() error {
-	return nil
-}
-
-func (m *MessageLengthLimit) Spec() pkg.ModuleSpec {
-	return &messageLengthLimitSpec
-}
-
-func (m *MessageLengthLimit) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m MessageLengthLimit) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m MessageLengthLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
+func (m MessageLengthLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
 	return nil
 
 	if user.GetName() == "gazatu2" {
@@ -58,12 +45,10 @@ func (m MessageLengthLimit) OnMessage(bot pkg.BotChannel, user pkg.User, message
 	messageLength := len(message.GetText())
 	if messageLength > 140 {
 		if messageLength > 420 {
-			action.Set(pkg.Timeout{600, "Your message is way too long"})
-			return nil
+			return twitchactions.DoTimeout(event.User, 600*time.Second, "Your message is way too long")
 		}
 
-		action.Set(pkg.Timeout{300, "Your message is too long, shorten it"})
-		return nil
+		return twitchactions.DoTimeout(event.User, 300*time.Second, "Your message is too long, shorten it")
 	}
 
 	return nil

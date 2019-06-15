@@ -2,59 +2,26 @@ package modules
 
 import (
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/eventemitter"
 )
 
 func init() {
-	Register(testSpec)
+	Register("test", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:               "test",
+			name:             "Test",
+			enabledByDefault: false,
+
+			maker: newTest,
+		}
+	})
 }
 
 type test struct {
-	botChannel pkg.BotChannel
-
-	server      *server
-	connections []*eventemitter.Listener
+	base
 }
 
-func newTest() pkg.Module {
+func newTest(b base) pkg.Module {
 	return &test{
-		server: &_server,
+		base: b,
 	}
-}
-
-var testSpec = &moduleSpec{
-	id:    "test",
-	name:  "Test",
-	maker: newTest,
-
-	enabledByDefault: false,
-}
-
-func (m *test) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-	return nil
-}
-
-func (m *test) Disable() error {
-	for _, c := range m.connections {
-		c.Disconnected = true
-	}
-	return nil
-}
-
-func (m *test) Spec() pkg.ModuleSpec {
-	return testSpec
-}
-
-func (m *test) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m test) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m test) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	bot.Mention(user, "test module xd")
-	return nil
 }

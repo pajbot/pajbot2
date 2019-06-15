@@ -9,39 +9,42 @@ import (
 	"github.com/pajbot/botsync/pkg/client"
 	"github.com/pajbot/botsync/pkg/protocol"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commands"
 	"github.com/pajbot/utils"
 )
 
 func init() {
-	Register(afkSpec)
-}
+	Register("afk", func() pkg.ModuleSpec {
+		afkDatabase := map[string]bool{}
 
-var (
-	afkDatabase = map[string]bool{}
-)
+		return &moduleSpec{
+			id:               "afk",
+			name:             "AFK",
+			enabledByDefault: false,
+			maker: func(b base) pkg.Module {
+				return newAFK(b, afkDatabase)
+			},
+		}
+	})
+}
 
 type afk struct {
-	botChannel pkg.BotChannel
+	base
 
-	server *server
-
-	commands map[string]pkg.CustomCommand
+	commands pkg.CommandsManager
 
 	botsync *client.Client
+
+	afkDatabase map[string]bool
 }
 
-var afkSpec = &moduleSpec{
-	id:               "afk",
-	name:             "AFK",
-	maker:            newAFK,
-	enabledByDefault: false,
-}
-
-func newAFK() pkg.Module {
+func newAFK(b base, afkDatabase map[string]bool) pkg.Module {
 	m := &afk{
-		server: &_server,
+		base: b,
 
-		commands: make(map[string]pkg.CustomCommand),
+		afkDatabase: afkDatabase,
+
+		commands: commands.NewCommands(),
 
 		botsync: client.NewClient("ws://localhost:8080/ws/pubsub"),
 	}
@@ -50,9 +53,12 @@ func newAFK() pkg.Module {
 
 	m.botsync.OnConnect(func() {
 		fmt.Println("Connected to botsync")
-		m.botsync.Send(protocol.NewAFKSubscribeMessage(m.botChannel.ChannelID()))
-		m.botsync.Send(protocol.NewBackSubscribeMessage(m.botChannel.ChannelID()))
+		m.botsync.Send(protocol.NewAFKSubscribeMessage(m.bot.ChannelID()))
+		m.botsync.Send(protocol.NewBackSubscribeMessage(m.bot.ChannelID()))
 	})
+
+	// FIXME
+	m.Initialize()
 
 	return m
 }
@@ -61,33 +67,30 @@ type afkCmd struct {
 	m *afk
 }
 
-func (c *afkCmd) Trigger(botChannel pkg.BotChannel, parts []string, channel pkg.Channel, user pkg.User, message pkg.Message, action pkg.Action) {
-	if user.IsModerator() || user.IsBroadcaster(channel) {
-		c.m.botsync.Send(protocol.NewAFKMessage(&protocol.AFKParameters{
-			UserID:   user.GetID(),
-			UserName: user.GetName(),
-
-			Reason: strings.Join(parts[1:], " "),
-
-			ChannelID:   botChannel.ChannelID(),
-			ChannelName: botChannel.ChannelName(),
-		}))
+func (c *afkCmd) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	// Temporarily limit afk commands to moderators, since it can be used to say stupid things
+	if !event.User.IsModerator() {
+		return nil
 	}
+
+	c.m.botsync.Send(protocol.NewAFKMessage(&protocol.AFKParameters{
+		UserID:   event.User.GetID(),
+		UserName: event.User.GetName(),
+
+		Reason: strings.Join(parts[1:], " "),
+
+		ChannelID:   event.Channel.GetID(),
+		ChannelName: event.Channel.GetName(),
+	}))
+
+	return nil
 }
 
-func (m *afk) registerCommand(aliases []string, command pkg.CustomCommand) {
-	for _, alias := range aliases {
-		m.commands[alias] = command
-	}
-}
-
-func (m *afk) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	m.registerCommand([]string{"!afk", "!gn"}, &afkCmd{m})
+func (m *afk) Initialize() {
+	m.commands.Register([]string{"!afk", "!gn"}, &afkCmd{m})
 
 	m.botsync.SetAuthentication(protocol.Authentication{
-		TwitchUserID:        botChannel.Bot().TwitchAccount().ID(),
+		TwitchUserID:        m.bot.Bot().TwitchAccount().ID(),
 		AuthenticationToken: "penis",
 	})
 
@@ -104,8 +107,6 @@ func (m *afk) Initialize(botChannel pkg.BotChannel, settings []byte) error {
 			<-time.After(time.Second)
 		}
 	}()
-
-	return nil
 }
 
 func (m *afk) onMessage(message *protocol.Message) {
@@ -118,9 +119,9 @@ func (m *afk) onMessage(message *protocol.Message) {
 			return
 		}
 		if !message.Historic {
-			m.botChannel.Say(parameters.UserName + " just went afk: " + parameters.Reason)
+			m.bot.Say(parameters.UserName + " just went afk: " + parameters.Reason)
 		}
-		afkDatabase[parameters.UserID] = true
+		m.afkDatabase[parameters.UserID] = true
 
 	case "back":
 		parameters := protocol.BackParameters{}
@@ -132,48 +133,30 @@ func (m *afk) onMessage(message *protocol.Message) {
 		afkDuration := time.Millisecond * time.Duration(parameters.Duration)
 		response := fmt.Sprintf("%s just came back after %s: %s",
 			parameters.UserName, utils.DurationString(afkDuration), parameters.Reason)
-		m.botChannel.Say(response)
-		delete(afkDatabase, parameters.UserID)
+		m.bot.Say(response)
+		delete(m.afkDatabase, parameters.UserID)
 	}
 }
 
 func (m *afk) Disable() error {
 	m.botsync.Disconnect()
-	return nil
+
+	return m.base.Disable()
 }
 
-func (m *afk) Spec() pkg.ModuleSpec {
-	return afkSpec
-}
+func (m *afk) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
 
-func (m *afk) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *afk) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m *afk) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	if _, ok := afkDatabase[user.GetID()]; ok {
+	if _, ok := m.afkDatabase[user.GetID()]; ok {
 		m.botsync.Send(protocol.NewBackMessage(&protocol.BackParameters{
 			UserID:   user.GetID(),
 			UserName: user.GetName(),
 
-			ChannelID:   bot.ChannelID(),
-			ChannelName: bot.ChannelName(),
+			ChannelID:   m.bot.ChannelID(),
+			ChannelName: m.bot.ChannelName(),
 		}))
 		return nil
 	}
 
-	parts := strings.Split(message.GetText(), " ")
-	if len(parts) == 0 {
-		return nil
-	}
-
-	if command, ok := m.commands[strings.ToLower(parts[0])]; ok {
-		command.Trigger(m.botChannel, parts, bot.Channel(), user, message, action)
-	}
-
-	return nil
+	return m.commands.OnMessage(event)
 }

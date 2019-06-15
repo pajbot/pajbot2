@@ -3,8 +3,10 @@ package commands
 import (
 	"fmt"
 
+	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
 
@@ -17,15 +19,15 @@ func init() {
 }
 
 type Ping struct {
-	Base
+	base.Command
 }
 
 func NewPing() pkg.CustomCommand2 {
 	return &Ping{
-		Base: NewBase(),
+		Command: base.New(),
 	}
 }
 
-func (c Ping) Trigger(botChannel pkg.BotChannel, parts []string, user pkg.User, message pkg.Message, action pkg.Action) {
-	botChannel.Mention(user, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
+func (c Ping) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+	return twitchactions.Mention(event.User, fmt.Sprintf("pb2 has been running for %s", utils.TimeSince(startTime)))
 }

@@ -1,63 +1,55 @@
 package modules
 
 import (
+	"regexp"
+	"time"
+
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	xurls "mvdan.cc/xurls/v2"
 )
 
-var (
-	relaxedRegexp = xurls.Relaxed()
-	strictRegexp  = xurls.Strict()
-)
+func init() {
+	Register("link_filter", func() pkg.ModuleSpec {
+		relaxedRegexp := xurls.Relaxed()
+		strictRegexp := xurls.Strict()
+
+		return &moduleSpec{
+			id:   "link_filter",
+			name: "Link filter",
+			maker: func(b base) pkg.Module {
+				return newLinkFilter(b, relaxedRegexp, strictRegexp)
+			},
+		}
+	})
+}
 
 type LinkFilter struct {
-	botChannel pkg.BotChannel
+	base
+
+	relaxedRegexp *regexp.Regexp
+	strictRegexp  *regexp.Regexp
 }
 
-func newLinkFilter() pkg.Module {
-	return &LinkFilter{}
+func newLinkFilter(b base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
+	return &LinkFilter{
+		base: b,
+
+		relaxedRegexp: relaxedRegexp,
+		strictRegexp:  strictRegexp,
+	}
 }
 
-var linkFilterSpec = moduleSpec{
-	id:    "link_filter",
-	name:  "Link filter",
-	maker: newLinkFilter,
-}
-
-func (m *LinkFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *LinkFilter) Disable() error {
-	return nil
-}
-
-func (m *LinkFilter) Spec() pkg.ModuleSpec {
-	return &linkFilterSpec
-}
-
-func (m *LinkFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m LinkFilter) Name() string {
-	return "LinkFilter"
-}
-
-func (m LinkFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m LinkFilter) OnMessage(bot pkg.BotChannel, source pkg.User, message pkg.Message, action pkg.Action) error {
-	if source.IsModerator() || source.IsBroadcaster(bot.Channel()) {
+func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	if event.User.IsModerator() {
 		return nil
 	}
 
-	links := relaxedRegexp.FindAllString(message.GetText(), -1)
+	links := m.relaxedRegexp.FindAllString(event.Message.GetText(), -1)
 	if len(links) > 0 {
-		action.Set(pkg.Timeout{180, "No links allowed"})
+		actions := &twitchactions.Actions{}
+		actions.Timeout(event.User, 180*time.Second).SetReason("No links allowed")
+		return actions
 	}
 
 	return nil

@@ -4,68 +4,56 @@ import (
 	"regexp"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
-type bannedNames struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("banned_names", func() pkg.ModuleSpec {
+		badUsernames := []*regexp.Regexp{
+			regexp.MustCompile(`tos_is_trash\d+`),
+			regexp.MustCompile(`trash_is_the_tos\d+`),
+			regexp.MustCompile(`terms_of_service_uncool\d+`),
+			regexp.MustCompile(`tos_i_love_mods_no_toxic\d+`),
+			regexp.MustCompile(`^kemper.+`),
+			regexp.MustCompile(`^pudele\d+`),
+			regexp.MustCompile(`^ninjal0ver\d+`),
+			regexp.MustCompile(`^trihard_account_\d+`),
+			regexp.MustCompile(`^h[il1]erot[il1]tan.+`),
+		}
 
-	server *server
+		return &moduleSpec{
+			id:   "banned_names",
+			name: "Banned names",
+			maker: func(b base) pkg.Module {
+				return newBannedNames(b, badUsernames)
+			},
+
+			enabledByDefault: false,
+		}
+	})
+}
+
+type bannedNames struct {
+	base
 
 	badUsernames []*regexp.Regexp
 }
 
-func newBannedNames() pkg.Module {
+func newBannedNames(b base, badUsernames []*regexp.Regexp) pkg.Module {
 	return &bannedNames{
-		server: &_server,
+		base: b,
 	}
 }
 
-var bannedNamesSpec = moduleSpec{
-	id:    "banned_names",
-	name:  "Banned names",
-	maker: newBannedNames,
+func (m bannedNames) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
 
-	enabledByDefault: false,
-}
-
-func (m *bannedNames) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`tos_is_trash\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`trash_is_the_tos\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`terms_of_service_uncool\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`tos_i_love_mods_no_toxic\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^kemper.+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^pudele\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^ninjal0ver\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^trihard_account_\d+`))
-	m.badUsernames = append(m.badUsernames, regexp.MustCompile(`^h[il1]erot[il1]tan.+`))
-
-	return nil
-}
-
-func (m *bannedNames) Disable() error {
-	return nil
-}
-
-func (m *bannedNames) Spec() pkg.ModuleSpec {
-	return &bannedNamesSpec
-}
-
-func (m *bannedNames) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m bannedNames) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m bannedNames) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	usernameBytes := []byte(user.GetName())
 	for _, badUsername := range m.badUsernames {
 		if badUsername.Match(usernameBytes) {
-			action.Set(pkg.Ban{"Ban evasion"})
-			return nil
+			actions := &twitchactions.Actions{}
+			actions.Ban(user).SetReason("Ban evasion")
+			return actions
 		}
 	}
 

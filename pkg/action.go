@@ -1,128 +1,60 @@
 package pkg
 
-import "fmt"
-
-type ActionType int
-
-const (
-	ActionTypeTimeout ActionType = iota
-	ActionTypeBan
+import (
+	"time"
 )
 
-type ActionPerformer interface {
-	Do(Sender, Channel, User) error
-	Priority() int
-	Type() ActionType
-}
+type MuteType uint
 
-type Action interface {
-	Do() error
-	Set(ActionPerformer)
-	Get() ActionPerformer
+const (
+	MuteTypeTemporary MuteType = iota
+	MuteTypePermanent
+)
 
-	SetReason(string)
+// MuteAction defines an action that will mute/timeout/ban or otherwise stop a user from participating in chat, either temporarily or permanently
+type MuteAction interface {
+	User() User
+	SetReason(reason string)
 	Reason() string
 
-	NotifyModerator() User
-	SetNotifyModerator(User)
+	Type() MuteType
+
+	Duration() time.Duration
 }
 
-var _ Action = &TwitchAction{}
-
-type TwitchAction struct {
-	Sender Sender
-
-	Channel Channel
-
-	User User
-
-	Soft bool
-
-	action ActionPerformer
-
-	reason string
-
-	notifyModerator User
+// MessageAction defines a message that will be publicly displayed
+type MessageAction interface {
+	// TODO: Add reply message action
+	SetAction(v bool)
+	Evaluate() string
 }
 
-type Timeout struct {
-	Duration int
-	Reason   string
+// WhisperAction defines a message that will be privately sent to a user
+type WhisperAction interface {
+	User() User
+	Content() string
 }
 
-func (a Timeout) Do(sender Sender, channel Channel, user User) error {
-	sender.Timeout(channel, user, a.Duration, a.Reason)
+// Actions is a list of actions that wants to be run
+// An implementation of this can decide to filter out all mutes except for the "most grave one"
+type Actions interface {
+	Timeout(user User, duration time.Duration) MuteAction
 
-	return nil
-}
+	Ban(user User) MuteAction
 
-func (a Timeout) Priority() int {
-	return 100 + a.Duration
-}
+	Say(content string) MessageAction
 
-func (a Timeout) Type() ActionType {
-	return ActionTypeTimeout
-}
+	Mention(user User, content string) MessageAction
 
-type Ban struct {
-	Reason string
-}
+	Whisper(user User, content string) WhisperAction
 
-func (a Ban) Do(sender Sender, channel Channel, user User) error {
-	sender.Ban(channel, user, a.Reason)
+	Mutes() []MuteAction
+	Messages() []MessageAction
+	Whispers() []WhisperAction
 
-	return nil
-}
+	StopPropagation() bool
 
-func (a Ban) Priority() int {
-	return 0
-}
+	// DoOnSuccess(func())
 
-func (a Ban) Type() ActionType {
-	return ActionTypeBan
-}
-
-func (a TwitchAction) Do() error {
-	if a.Soft {
-		return nil
-	}
-
-	if a.action != nil {
-		if a.NotifyModerator() != nil {
-			a.Sender.Whisper(a.NotifyModerator(), fmt.Sprintf("%s triggered bad banphrase in %s", a.User.GetName(), a.Channel.GetName()))
-		}
-		return a.action.Do(a.Sender, a.Channel, a.User)
-	}
-
-	return nil
-}
-
-func (a *TwitchAction) Set(action ActionPerformer) {
-	if a.action == nil {
-		a.action = action
-	} else {
-		if action.Priority() > a.action.Priority() {
-			a.action = action
-		}
-	}
-}
-
-func (a *TwitchAction) Get() ActionPerformer {
-	return a.action
-}
-
-func (a *TwitchAction) SetReason(reason string) {
-	a.reason = reason
-}
-
-func (a *TwitchAction) Reason() string {
-	return a.reason
-}
-
-func (a TwitchAction) NotifyModerator() User {
-	return a.notifyModerator
-}
-
-func (a *TwitchAction) SetNotifyModerator(user User) {
-	a.notifyModerator = user
+	// Do(func())
 }

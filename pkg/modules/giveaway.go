@@ -5,103 +5,75 @@ import (
 	"strings"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
-type giveaway struct {
-	botChannel pkg.BotChannel
+func init() {
+	Register("giveaway", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "giveaway",
+			name:  "Giveaway",
+			maker: newGiveaway,
+		}
+	})
+}
 
-	server *server
+type giveaway struct {
+	base
 
 	state string
 
 	entrants []string
 }
 
-func newGiveaway() pkg.Module {
+func newGiveaway(b base) pkg.Module {
 	return &giveaway{
-		server: &_server,
-		state:  "inactive",
+		base: b,
+
+		state: "inactive",
 	}
 }
 
-var giveawaySpec = moduleSpec{
-	id:    "giveaway",
-	name:  "Giveaway",
-	maker: newGiveaway,
-}
+const forsen25ID = "300378550"
 
-func (m *giveaway) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
-	return nil
-}
-
-func (m *giveaway) Disable() error {
-	return nil
-}
-
-func (m *giveaway) Spec() pkg.ModuleSpec {
-	return &giveawaySpec
-}
-
-func (m *giveaway) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-const forsen25ID = "300235048"
-const pajlada25ID = "908917"
-const pajaWID = "80481"
-
-func (m giveaway) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m *giveaway) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
-	// if channel.GetName() != "forsen" {
-	// 	return nil
-	// }
-
+func (m *giveaway) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	const giveawayEmote = forsen25ID
+
+	message := event.Message
+	user := event.User
 
 	text := message.GetText()
 
 	// Commands
-	if user.IsModerator() || user.GetName() == "forsen" || user.GetName() == "pajlada" {
+	if user.IsModerator() {
 		if strings.HasPrefix(text, "!25start") {
 			if m.state == "inactive" {
 				m.state = "started"
 				m.entrants = []string{}
-				bot.Say("Started giveaway")
-
-				return nil
-			} else {
-				bot.Say("Giveaway already started")
-				return nil
+				return twitchactions.Say("Started giveaway")
 			}
+
+			return twitchactions.Say("Giveaway already started")
 		}
 
 		if strings.HasPrefix(text, "!25stop") {
 			if m.state == "started" {
 				m.state = "inactive"
-				bot.Say("Stopped accepting people into the giveaway")
-
-				return nil
+				return twitchactions.Say("Stopped accepting people into the giveaway")
 			}
 		}
 
 		if strings.HasPrefix(text, "!25draw") {
 			if len(m.entrants) == 0 {
-				bot.Say("No one has joined the giveaway")
-				return nil
+				return twitchactions.Say("No one has joined the giveaway")
 			}
 
 			winnerIndex := rand.Intn(len(m.entrants))
 			winnerUsername := m.entrants[winnerIndex]
-			bot.Say(winnerUsername + " just won the sub emote giveaway PogChamp")
 
 			m.entrants = append(m.entrants[:winnerIndex], m.entrants[winnerIndex+1:]...)
 
-			return nil
+			return twitchactions.Say(winnerUsername + " just won the sub emote giveaway PogChamp")
 		}
 	}
 
@@ -129,8 +101,7 @@ func (m *giveaway) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Mess
 			}
 			m.entrants = append(m.entrants, user.GetName())
 
-			bot.Mention(user, "you have been entered into the sub emote giveaway")
-			return nil
+			return twitchactions.Mention(event.User, "you have been entered into the sub emote giveaway")
 		}
 	}
 

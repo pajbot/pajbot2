@@ -397,6 +397,15 @@ func (m TwitchMessage) GetText() string {
 	return ""
 }
 
+func (m *TwitchMessage) SetText(newText string) {
+	switch msg := m.baseMessage.(type) {
+	case *twitch.PrivateMessage:
+		msg.Message = newText
+	case *twitch.WhisperMessage:
+		msg.Message = newText
+	}
+}
+
 func (m TwitchMessage) GetTwitchReader() pkg.EmoteReader {
 	return m.twitchEmoteReader
 }
@@ -516,12 +525,6 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *tw
 		ID:      rawMessage.Tags["room-id"],
 	}
 
-	action := &pkg.TwitchAction{
-		Sender:  b,
-		Channel: channel,
-		User:    twitchUser,
-	}
-
 	for _, emote := range rawMessage.Emotes {
 		parsedEmote := &common.Emote{
 			Name:  emote.Name,
@@ -538,7 +541,7 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *tw
 		return
 	}
 
-	err := botChannel.handleMessage(twitchUser, message, action)
+	err := botChannel.HandleMessage(twitchUser, message)
 	if err != nil {
 		fmt.Println("Error occurred while forwarding message to bot channel:", err)
 	}
@@ -843,10 +846,6 @@ func (b *Bot) PointRank(channel pkg.Channel, userID string) uint64 {
 	rank := binary.BigEndian.Uint64(response)
 
 	return rank
-}
-
-func FinalMiddleware(bot *Bot, channel pkg.Channel, user pkg.User, message *TwitchMessage, action pkg.Action) {
-	// fmt.Printf("Found %d BTTV emotes! %#v", len(message.BTTVEmotes), message.BTTVEmotes)
 }
 
 func (b *Bot) MakeUser(username string) pkg.User {

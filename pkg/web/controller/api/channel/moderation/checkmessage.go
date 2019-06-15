@@ -2,6 +2,7 @@ package moderation
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
@@ -9,8 +10,8 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	pb2twitch "github.com/pajbot/pajbot2/pkg/twitch"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/utils"
 	_ "github.com/swaggo/echo-swagger" // echo-swagger middleware
 )
 
@@ -19,8 +20,8 @@ func apiCheckMessageMissingVariables(w http.ResponseWriter, r *http.Request) {
 }
 
 type filterData struct {
-	ActionType pkg.ActionType `json:"action_type"`
-	Reason     string         `json:"reason"`
+	MuteType pkg.MuteType `json:"mute_type"`
+	Reason   string       `json:"reason"`
 }
 
 type CheckMessageSuccessResponse struct {
@@ -102,30 +103,39 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, botChannel := range botChannels {
+		event := pkg.MessageEvent{
+			BaseEvent: pkg.BaseEvent{
+				UserStore: botChannel.Bot().GetUserStore(),
+			},
+			User:    users.NewTwitchUser(privMsg.User, privMsg.Tags["user-id"]),
+			Message: pb2twitch.NewTwitchMessage(privMsg),
+			Channel: botChannel.Channel(),
+		}
+
 		// run message through modules on all bot channels until we detect an issue
 		fmt.Println("Check message:", botChannel.ChannelName())
-		lolMessage := pb2twitch.NewTwitchMessage(privMsg)
-		botChannel.OnModules(func(module pkg.Module) error {
-			if module.Spec().Type() != pkg.ModuleTypeFilter {
+		actions := botChannel.OnModules(func(module pkg.Module) pkg.Actions {
+			if module.Type() != pkg.ModuleTypeFilter {
 				return nil
 			}
-			action := &pkg.TwitchAction{
-				Sender:  botChannel.Bot(),
-				Channel: botChannel.Channel(),
-				User:    users.NewTwitchUser(privMsg.User, privMsg.Tags["user-id"]),
-				Soft:    true,
+
+			return module.OnMessage(event)
+		}, false)
+
+		for _, action := range actions {
+			if action == nil {
+				log.Println("ACTION SHOULD NOT BE NIL HERE!!!!!!!!!!!!!!")
+				continue
 			}
-			module.OnMessage(botChannel, action.User, lolMessage, action)
-			if action.Get() != nil {
+
+			for _, mute := range action.Mutes() {
 				response.Banned = true
 				response.FilterData = append(response.FilterData, filterData{
-					ActionType: action.Get().Type(),
-					Reason:     action.Reason(),
+					MuteType: mute.Type(),
+					Reason:   mute.Reason(),
 				})
-				// return errors.New("stop here xd")
 			}
-			return nil
-		})
+		}
 	}
 
 	utils.WebWrite(w, response)

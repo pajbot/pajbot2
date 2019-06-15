@@ -2,12 +2,22 @@ package modules
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/modules/datastructures"
-	"github.com/pkg/errors"
 )
+
+func init() {
+	Register("latin_filter", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:    "latin_filter",
+			name:  "Latin filter",
+			maker: newLatinFilter,
+		}
+	})
+}
 
 func maxpenis(a, b int) int {
 	if a > b {
@@ -23,35 +33,30 @@ type UnicodeRange struct {
 }
 
 type latinFilter struct {
-	botChannel pkg.BotChannel
-
-	server *server
+	base
 
 	transparentList  *datastructures.TransparentList
 	unicodeWhitelist []UnicodeRange
 }
 
-func newLatinFilter() pkg.Module {
-	return &latinFilter{
-		server: &_server,
+func newLatinFilter(b base) pkg.Module {
+	m := &latinFilter{
+		base: b,
 
 		transparentList: datastructures.NewTransparentList(),
 	}
-}
 
-var latinFilterSpec = moduleSpec{
-	id:    "latin_filter",
-	name:  "Latin filter",
-	maker: newLatinFilter,
+	// FIXME
+	m.Initialize()
+
+	return m
 }
 
 func (m *latinFilter) addToWhitelist(start, end rune) {
 	m.unicodeWhitelist = append(m.unicodeWhitelist, UnicodeRange{start, end})
 }
 
-func (m *latinFilter) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-
+func (m *latinFilter) Initialize() {
 	m.transparentList.Add("(/ﾟДﾟ)/")
 	m.transparentList.Add("(╯°□°）╯︵ ┻━┻")
 	m.transparentList.Add("(╯°Д°）╯︵/(.□ . )")
@@ -67,7 +72,9 @@ func (m *latinFilter) Initialize(botChannel pkg.BotChannel, settings []byte) err
 
 	err := m.transparentList.Build()
 	if err != nil {
-		return errors.Wrap(err, "Failed to build transparent list")
+		// FIXME
+		log.Println("FAILED TO BUILD TRANSPARENT LIST", err)
+		return
 	}
 
 	m.addToWhitelist(0x20, 0x7e)       // Basic latin
@@ -96,27 +103,12 @@ func (m *latinFilter) Initialize(botChannel pkg.BotChannel, settings []byte) err
 	m.addToWhitelist(0xfe00, 0xfe0f) // Emoji variation selector 1 to 16
 	m.addToWhitelist(0x2012, 0x2015) // Various dashes
 	m.addToWhitelist(0x3010, 0x3011) // 【 and 】
-
-	return nil
 }
 
-func (m *latinFilter) Disable() error {
-	return nil
-}
+func (m *latinFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+	message := event.Message
 
-func (m *latinFilter) Spec() pkg.ModuleSpec {
-	return &latinFilterSpec
-}
-
-func (m *latinFilter) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *latinFilter) OnWhisper(bot pkg.BotChannel, source pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	if !user.IsModerator() || true {
 		text := message.GetText()
 
@@ -130,7 +122,7 @@ func (m *latinFilter) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.M
 		}{
 			FullMessage: text,
 			Username:    user.GetName(),
-			Channel:     bot.Channel().GetName(),
+			Channel:     m.bot.Channel().GetName(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(text)

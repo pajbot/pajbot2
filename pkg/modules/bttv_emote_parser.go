@@ -9,51 +9,38 @@ import (
 	"github.com/pajbot/pajbot2/pkg/emotes"
 )
 
+func init() {
+	Register("bttv_emote_parser", func() pkg.ModuleSpec {
+		return &moduleSpec{
+			id:   "bttv_emote_parser",
+			name: "BTTV emote parser",
+
+			enabledByDefault: true,
+
+			priority: -50000,
+
+			maker: newbttvEmoteParser,
+		}
+	})
+}
+
 type bttvEmoteParser struct {
-	botChannel pkg.BotChannel
+	base
 
 	globalEmotes *map[string]common.Emote
 }
 
-var bttvEmoteParserSpec = &moduleSpec{
-	id:   "bttv_emote_parser",
-	name: "BTTV emote parser",
-
-	maker: newbttvEmoteParser,
-
-	enabledByDefault: true,
-
-	priority: -50000,
-}
-
-func newbttvEmoteParser() pkg.Module {
+func newbttvEmoteParser(b base) pkg.Module {
 	return &bttvEmoteParser{
+		base: b,
+
 		globalEmotes: &emotes.GlobalEmotes.Bttv,
 	}
 }
 
-func (m *bttvEmoteParser) Initialize(botChannel pkg.BotChannel, settings []byte) error {
-	m.botChannel = botChannel
-	return nil
-}
+func (m *bttvEmoteParser) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
 
-func (m *bttvEmoteParser) Disable() error {
-	return nil
-}
-
-func (m *bttvEmoteParser) Spec() pkg.ModuleSpec {
-	return bttvEmoteParserSpec
-}
-
-func (m *bttvEmoteParser) BotChannel() pkg.BotChannel {
-	return m.botChannel
-}
-
-func (m *bttvEmoteParser) OnWhisper(bot pkg.BotChannel, user pkg.User, message pkg.Message) error {
-	return nil
-}
-
-func (m *bttvEmoteParser) OnMessage(bot pkg.BotChannel, user pkg.User, message pkg.Message, action pkg.Action) error {
 	parts := strings.FieldsFunc(message.GetText(), func(r rune) bool {
 		// TODO(pajlada): This needs better testing
 		return r > 0xFF || unicode.IsSpace(r) || r == '!' || r == '.' || r == '$' || r == '^' || r == '#' || r == '*' || r == '@' || r == ')' || r == '%' || r == '&' || r > 0x7a || r < 0x30 || (r > 0x39 && r < 0x41) || (r > 0x5a && r < 0x61)
