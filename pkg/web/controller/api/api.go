@@ -15,14 +15,14 @@ import (
 
 func apiRoot(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "XD API ROOT")
+	fmt.Fprintf(w, "\nTODO: Link to api docs")
 }
 
 func Load(a pkg.Application, cfg *config.Config) {
 	m := router.Subrouter("/api")
 
-	router.RGet(m, "", apiRoot)
-	// m.HandleFunc("", apiRoot)
-	// router.Get("/api", apiRoot)
+	router.RGet(m, "/", apiRoot)
+	m.HandleFunc("", apiRoot)
 
 	auth.Load(m, a, cfg)
 
