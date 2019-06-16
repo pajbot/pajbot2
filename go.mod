@@ -29,7 +29,7 @@ require (
 	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/labstack/echo v3.3.10+incompatible
-	github.com/labstack/echo/v4 v4.1.5 // indirect
+	github.com/labstack/echo/v4 v4.1.5
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
