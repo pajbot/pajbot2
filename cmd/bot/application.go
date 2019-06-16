@@ -270,6 +270,13 @@ func (a *Application) InitializeModules() (err error) {
 		return
 	}
 
+	moduleList := []string{}
+	for _, module := range modules.Modules() {
+		moduleList = append(moduleList, module.ID())
+	}
+
+	fmt.Println("Available modules:", moduleList)
+
 	return
 }
 
