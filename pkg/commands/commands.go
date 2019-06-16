@@ -1,8 +1,8 @@
 package commands
 
 import (
+	"github.com/pajbot/commandmatcher"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/commandmatcher"
 )
 
 type Commands struct {
@@ -11,7 +11,7 @@ type Commands struct {
 
 func NewCommands() *Commands {
 	c := &Commands{
-		CommandMatcher: commandmatcher.NewMatcher(),
+		CommandMatcher: commandmatcher.New(),
 	}
 
 	return c

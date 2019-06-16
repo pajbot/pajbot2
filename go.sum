@@ -82,8 +82,6 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/labstack/echo v3.3.10+incompatible h1:pGRcYk231ExFAyoAjAfD85kQzRJCRI8bbnE7CX5OEgg=
-github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
 github.com/labstack/echo/v4 v4.0.0 h1:q1GH+caIXPP7H2StPIdzy/ez9CO0EepqYeUg6vi9SWM=
 github.com/labstack/echo/v4 v4.0.0/go.mod h1:tZv7nai5buKSg5h/8E6zz4LsD/Dqh9/91Mvs7Z5Zyno=
 github.com/labstack/echo/v4 v4.1.5 h1:RztCXCvfMljychg0G/IzW5T7hL6ADqqwREwcX279Q1g=
@@ -114,6 +112,10 @@ github.com/opencontainers/go-digest v1.0.0-rc1 h1:WzifXhOVOEOuFYOJAW6aQqW0TooG2i
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3 h1:T1hbPcgOM6f4ftqjzaN/rXwVUaAiHqLvlUV1IM/WE7c=
 github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3/go.mod h1:MegJ5xp7F5CGUd1MQGzeDuD1kQin8Z0MrJ28iViROT8=
+github.com/pajbot/commandmatcher v1.0.0 h1:ThhFXRHx1X3gKcCkHGOVtxi+iRgE7Os+/dk9CapIWFE=
+github.com/pajbot/commandmatcher v1.0.0/go.mod h1:kZzeHeGqmDvWxQP3pB6KrvaPbMEVIyeJycMoQpkpOZ0=
+github.com/pajbot/testhelper v1.0.0 h1:C6OxLN1O5u70voShcra5hPOAgtykHNmtoNmu1T+yDRI=
+github.com/pajbot/testhelper v1.0.0/go.mod h1:Fdyg8LEqetKOAWe1QF8nXRiyxz/ijoPnOEJ4oc0IRSw=
 github.com/pajbot/utils v0.0.0-20190525181638-b74ff78f4d25 h1:NCHGDiwzzuMVhdQ+Kej6ybSFqEuIAJ3HClUcdPAD7tA=
 github.com/pajbot/utils v0.0.0-20190525181638-b74ff78f4d25/go.mod h1:BPjDS7xufUB7MJmT7w7QodV3VO9Xesh2xNvpucRmXuI=
 github.com/pajbot/utils v0.0.0-20190525195426-6531d61d5900 h1:iYhXvki+7JEidHQEoVLbNJYVy86qVdkPYfvRvHIWm0w=

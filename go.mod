@@ -28,12 +28,12 @@ require (
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/websocket v1.4.0
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.1.5
 	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
+	github.com/pajbot/commandmatcher v1.0.0
 	github.com/pajbot/utils v0.0.0-20190525195426-6531d61d5900
 	github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71
 	github.com/pajlada/gobttv v0.0.0-20160914192201-e617d015c333
