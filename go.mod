@@ -18,19 +18,14 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gempir/go-twitch-irc/v2 v2.1.1
-	github.com/go-openapi/jsonpointer v0.19.0 // indirect
-	github.com/go-openapi/jsonreference v0.19.0 // indirect
-	github.com/go-openapi/spec v0.19.0 // indirect
-	github.com/go-openapi/swag v0.19.0 // indirect
+	github.com/go-openapi/spec v0.19.2 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gorilla/handlers v1.4.0
 	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/websocket v1.4.0
-	github.com/labstack/echo/v4 v4.1.5
-	github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983 // indirect
-	github.com/mattn/go-colorable v0.1.2 // indirect
+	github.com/labstack/echo/v4 v4.1.6
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
 	github.com/pajbot/commandmatcher v1.0.0
@@ -41,14 +36,11 @@ require (
 	github.com/pajlada/jsonapi v0.0.0-20181126225824-ff9660de882a // indirect
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
 	github.com/swaggo/echo-swagger v0.0.0-20190329130007-1219b460a043
-	github.com/swaggo/swag v1.5.0
+	github.com/swaggo/gin-swagger v1.1.0 // indirect
+	github.com/swaggo/swag v1.5.1
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20190204094219-2f379953d125
-	golang.org/x/crypto v0.0.0-20190513172903-22d7a77e9e5f // indirect
-	golang.org/x/net v0.0.0-20190522155817-f3200d17e092 // indirect
-	golang.org/x/oauth2 v0.0.0-20190523182746-aaccbc9213b0
-	golang.org/x/sys v0.0.0-20190524152521-dbbf3f1254d4 // indirect
-	golang.org/x/tools v0.0.0-20190525145741-7be61e1b0e51 // indirect
-	google.golang.org/appengine v1.6.0 // indirect
+	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	google.golang.org/appengine v1.6.1 // indirect
 	mvdan.cc/xurls/v2 v2.0.0
 )
