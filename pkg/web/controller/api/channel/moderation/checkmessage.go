@@ -2,7 +2,6 @@ package moderation
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
@@ -123,11 +122,6 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 		}, false)
 
 		for _, action := range actions {
-			if action == nil {
-				log.Println("ACTION SHOULD NOT BE NIL HERE!!!!!!!!!!!!!!")
-				continue
-			}
-
 			for _, mute := range action.Mutes() {
 				response.Banned = true
 				response.FilterData = append(response.FilterData, filterData{
