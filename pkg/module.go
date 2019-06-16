@@ -34,8 +34,8 @@ type Module interface {
 
 type ModuleType uint
 
+// The order of these values matter. Higher value means higher priority in the "OnModules" function
 const (
-	// The order of these types matter. Higher value means higher priority in the "OnModules" function
 	ModuleTypeUnsorted ModuleType = iota
 	ModuleTypeFilter
 )
