@@ -13,6 +13,8 @@ var moduleSpecsMap map[string]pkg.ModuleSpec
 var moduleFactoriesMutex sync.Mutex
 var moduleFactories map[string]pkg.ModuleFactory
 
+// Register registers a module by taking its ID and factory (instructions how to create the module)
+// Can be called both from within this package, or by an external package. Generally done in any files init function
 func Register(moduleID string, factory pkg.ModuleFactory) {
 	if factory == nil {
 		panic("Trying to register a nil factory")
