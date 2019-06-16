@@ -31,8 +31,8 @@ func Register(moduleID string, factory pkg.ModuleFactory) {
 	moduleFactoriesMutex.Unlock()
 }
 
-// Modules returns a list of module specs
-func Modules() []pkg.ModuleSpec {
+// List returns a list of module specs
+func List() []pkg.ModuleSpec {
 	moduleSpecsMutex.Lock()
 	defer moduleSpecsMutex.Unlock()
 
@@ -44,8 +44,8 @@ func Modules() []pkg.ModuleSpec {
 	return moduleSpecs
 }
 
-// ModulesMap returns a map of module specs, keyed with the modules ID
-func ModulesMap() map[string]pkg.ModuleSpec {
+// Map returns a map of module specs, keyed with the modules ID
+func Map() map[string]pkg.ModuleSpec {
 	moduleSpecsMutex.Lock()
 	defer moduleSpecsMutex.Unlock()
 

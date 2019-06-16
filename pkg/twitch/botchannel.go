@@ -273,7 +273,7 @@ func (c *BotChannel) loadModules() {
 		panic(err)
 	}
 
-	availableModules := modules.Modules()
+	availableModules := modules.List()
 
 	c.modulesMutex.Lock()
 	defer c.modulesMutex.Unlock()

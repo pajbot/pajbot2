@@ -271,7 +271,7 @@ func (a *Application) InitializeModules() (err error) {
 	}
 
 	moduleList := []string{}
-	for _, module := range modules.Modules() {
+	for _, module := range modules.List() {
 		moduleList = append(moduleList, module.ID())
 	}
 
