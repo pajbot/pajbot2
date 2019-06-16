@@ -79,7 +79,7 @@
         "moderation.filterData": {
             "type": "object",
             "properties": {
-                "action_type": {
+                "mute_type": {
                     "type": "integer"
                 },
                 "reason": {

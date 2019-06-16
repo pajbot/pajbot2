@@ -13,7 +13,7 @@ definitions:
     type: object
   moderation.filterData:
     properties:
-      action_type:
+      mute_type:
         type: integer
       reason:
         type: string
