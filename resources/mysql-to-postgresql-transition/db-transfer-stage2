@@ -1,0 +1,17 @@
+LOAD DATABASE
+    FROM mysql://pajbot:password@localhost/pajbot2_test
+    INTO postgresql:///test
+    including only table names matching ~/permission/
+    CAST type bit to bigint drop default drop typemod
+
+    WITH include drop, create tables, create indexes, schema only
+
+    AFTER LOAD
+      DO $$ ALTER DATABASE test SET search_path TO public,pajbot2; $$,
+         $$ DROP SCHEMA IF EXISTS pajbot2_test CASCADE; $$
+
+    ALTER TABLE NAMES MATCHING ~/.*/ SET SCHEMA 'pajbot2'
+
+    ALTER TABLE NAMES MATCHING 'TwitchUserChannelPermission' RENAME TO 'twitch_user_channel_permission'
+    ALTER TABLE NAMES MATCHING 'TwitchUserGlobalPermission' RENAME TO 'twitch_user_Global_permission'
+    ;

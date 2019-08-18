@@ -26,6 +26,7 @@ require (
 	github.com/gorilla/mux v1.7.2
 	github.com/gorilla/websocket v1.4.0
 	github.com/labstack/echo/v4 v4.1.6
+	github.com/lib/pq v1.1.1
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
 	github.com/pajbot/commandmatcher v1.0.0
@@ -35,6 +36,7 @@ require (
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
 	github.com/pajlada/jsonapi v0.0.0-20181126225824-ff9660de882a // indirect
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
+	github.com/pkg/errors v0.8.1
 	github.com/swaggo/echo-swagger v0.0.0-20190329130007-1219b460a043
 	github.com/swaggo/gin-swagger v1.1.0 // indirect
 	github.com/swaggo/swag v1.5.1

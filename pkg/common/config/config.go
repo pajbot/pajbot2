@@ -97,6 +97,9 @@ var defaultConfig = Config{
 		Host:   "localhost:2355",
 		Domain: "localhost:2355",
 	},
+	PostgreSQL: PostgreSQLConfig{
+		DSN: "postgres:///test?sslmode=disable",
+	},
 	Auth: authConfig{
 		Twitch: AuthTwitchConfig{
 			Webhook: TwitchWebhookConfig{

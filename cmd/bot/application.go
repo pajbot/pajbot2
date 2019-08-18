@@ -12,14 +12,14 @@ import (
 	"syscall"
 	"time"
 
-	"errors"
 	"strconv"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
-	_ "github.com/go-sql-driver/mysql" // MySQL Driver
+	_ "github.com/lib/pq" // PostgreSQL Driver
 
 	"github.com/golang-migrate/migrate"
 	"github.com/golang-migrate/migrate/database/mysql"
@@ -207,10 +207,13 @@ func (a *Application) ProvideAdminPermissionsToAdmin() (err error) {
 
 	oldPermissions, err := users.GetUserPermissions(cfg.TwitchUserID, "global")
 	if err != nil {
-		return
+		return errors.Wrap(err, "get failed")
 	}
 	newPermissions := oldPermissions | pkg.PermissionAdmin
 	err = users.SetUserPermissions(cfg.TwitchUserID, "global", newPermissions)
+	if err != nil {
+		return errors.Wrap(err, "set failed")
+	}
 
 	return
 }
@@ -234,7 +237,7 @@ func (a *Application) LoadExternalEmotes() error {
 
 func (a *Application) InitializeSQL() error {
 	var err error
-	a.sqlClient, err = sql.Open("mysql", a.config.SQL.DSN)
+	a.sqlClient, err = sql.Open("postgres", a.config.PostgreSQL.DSN)
 	if err != nil {
 		return err
 	}

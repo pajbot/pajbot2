@@ -130,14 +130,14 @@ func runCmd() {
 		log.Fatal("Error starting SQL client:", err)
 	}
 
-	err = application.RunDatabaseMigrations()
-	if err != nil {
-		log.Fatal("An error occurred while running database migrations: ", err)
-	}
+	// err = application.RunDatabaseMigrations()
+	// if err != nil {
+	// 	log.Fatal("An error occurred while running database migrations: ", err)
+	// }
 
 	err = application.ProvideAdminPermissionsToAdmin()
 	if err != nil {
-		log.Fatal("Error providing admin access to admin:", err)
+		log.Fatal("Error providing admin access to admin: ", err)
 	}
 
 	err = application.InitializeModules()

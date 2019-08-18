@@ -1,0 +1,19 @@
+LOAD DATABASE
+    FROM mysql://pajbot:password@localhost/pajbot2_test
+    INTO postgresql:///test
+    excluding table names matching ~/permission/, 'schema_migrations'
+    CAST type datetime to timestamptz drop default drop not null using zero-dates-to-null
+
+    BEFORE LOAD
+      DO $$ create schema if not exists pajbot2; $$
+
+    ALTER TABLE NAMES MATCHING ~/.*/ SET SCHEMA 'pajbot2'
+
+    ALTER TABLE NAMES MATCHING 'BanphraseGroup' RENAME TO 'banphrase_group'
+    ALTER TABLE NAMES MATCHING 'BotChannel' RENAME TO 'bot_channel'
+    ALTER TABLE NAMES MATCHING 'BotChannelModule' RENAME TO 'bot_channel_module'
+    ALTER TABLE NAMES MATCHING 'ModerationAction' RENAME TO 'moderation_action'
+    ALTER TABLE NAMES MATCHING 'ReportHistory' RENAME TO 'report_history'
+    ALTER TABLE NAMES MATCHING 'UserSession' RENAME TO 'user_session'
+    ALTER TABLE NAMES MATCHING 'WarningScale' RENAME TO 'warning_scale'
+    ;
