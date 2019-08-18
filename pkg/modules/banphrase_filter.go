@@ -86,7 +86,7 @@ func (m *pajbot1BanphraseFilter) Initialize() {
 	// hard-coded banphrases
 	m.addCustomBanphrase("n!66ger")
 
-	m.addCustomBanphrase("negro")
+	// m.addCustomBanphrase("negro")
 	m.addCustomBanphrase("negr0")
 	m.addCustomBanphrase("n3gro")
 	m.addCustomBanphrase("n3gr0")
@@ -263,7 +263,7 @@ func (m *pajbot1BanphraseFilter) Initialize() {
 	m.addCustomBanphrase("n36g3r")
 	m.addCustomBanphrase("n3gg3r")
 
-	m.addCustomBanphrase("g63r")
+	// m.addCustomBanphrase("g63r")
 
 	err := m.loadPajbot1Banphrases()
 	if err != nil {
