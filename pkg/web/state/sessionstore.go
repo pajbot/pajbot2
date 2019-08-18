@@ -63,7 +63,7 @@ func ClearSessionCookies(w http.ResponseWriter) {
 }
 
 func (s *SessionStore) Get(db *sql.DB, sessionID string) *Session {
-	const queryF = `SELECT UserSession.user_id, User.twitch_userid, User.twitch_username FROM UserSession INNER JOIN User ON User.id=UserSession.user_id WHERE UserSession.id=?`
+	const queryF = `SELECT user_session.user_id, "user".twitch_userid, "user".twitch_username FROM user_session INNER JOIN "user" ON "user".id=user_session.user_id WHERE user_session.id=$1`
 
 	var userID uint64
 	var twitchUserID string

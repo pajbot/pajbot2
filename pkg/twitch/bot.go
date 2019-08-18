@@ -246,7 +246,7 @@ func (b *Bot) removeBotChannelAtIndex(index int) {
 }
 
 func (b *Bot) LoadChannels(sql *sql.DB) error {
-	const queryF = `SELECT id, twitch_channel_id FROM BotChannel WHERE bot_id=?`
+	const queryF = `SELECT id, twitch_channel_id FROM bot_channel WHERE bot_id=$1`
 
 	rows, err := sql.Query(queryF, b.DatabaseID)
 	if err != nil {
@@ -489,7 +489,7 @@ func (b *Bot) HandleWhisper(message twitch.WhisperMessage) {
 	channelName := strings.ToLower(utils.FilterChannelName(parts[0]))
 	if channelName == "" {
 		// No valid channel name was given as context
-		// TODO: Pass through to some sort of "global modules"?
+		// TODO: Pass through to some sort of "global modules"
 		return
 	}
 
@@ -501,7 +501,7 @@ func (b *Bot) HandleWhisper(message twitch.WhisperMessage) {
 
 	_, botChannel := b.getBotChannel(channelID)
 	if botChannel == nil {
-		// Whisper was not prefixed with a channel for context, possibly send as a "raw whisper" event?
+		// Whisper was not prefixed with a channel for context, possibly send as a "raw whisper" event
 		return
 	}
 
@@ -635,7 +635,7 @@ func (p *PointServer) Write(payload []byte) bool {
 			return true
 		}
 
-		log.Println("Reconnect????????")
+		log.Println("Reconnect question mark repeating of course")
 		p.ReconnectChannel <- true
 	}
 
@@ -691,7 +691,7 @@ func (p *PointServer) tryConnect() net.Conn {
 			continue
 		}
 
-		// TODO: Send any buffered messages?
+		// TODO: Send any buffered messages
 
 		for _, p := range p.bufferedPayloads {
 			conn.Write(p)
@@ -863,11 +863,11 @@ func (b *Bot) MakeChannel(channelName string) pkg.Channel {
 }
 
 func (b *Bot) JoinChannel(channelID string) error {
-	const queryF = `INSERT INTO BotChannel (bot_id, twitch_channel_id) VALUES (?, ?)`
+	const queryF = `INSERT INTO bot_channel (bot_id, twitch_channel_id) VALUES ($1, $2)`
 	res, err := b.sql.Exec(queryF, b.DatabaseID, channelID)
 	if err != nil {
 		if common.IsDuplicateKey(err) {
-			return errors.New("we have already joined this channel!")
+			return errors.New("we have already joined this channel")
 		}
 
 		return err
@@ -904,7 +904,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 }
 
 func (b *Bot) LeaveChannel(channelID string) error {
-	const queryF = `DELETE FROM BotChannel WHERE id=? LIMIT 1;`
+	const queryF = `DELETE FROM bot_channel WHERE id=$1 LIMIT 1;`
 
 	i, botChannel := b.getBotChannel(channelID)
 	if botChannel == nil {

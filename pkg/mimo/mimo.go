@@ -40,7 +40,7 @@ func (m *MIMO) Publisher(channelName string) (in chan interface{}) {
 					select {
 					case subscriber <- msg:
 					default:
-						fmt.Println("ERROR SENDING DATA TO SUBSCRIBE. MARK FOR DELETION?")
+						fmt.Println("ERROR SENDING DATA TO SUBSCRIBE. MARK FOR DELETION")
 					}
 				}
 			}

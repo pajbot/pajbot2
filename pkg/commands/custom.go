@@ -133,7 +133,7 @@ func (c Roulette) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	// 	botChannel.Mention(user, "you lost OMEGALUL")
 	// } else {
 	// 	// win
-	// 	// TODO: Check for integer overflow?
+	// 	// TODO: Check for integer overflow 4head
 	// 	_, newPoints := botChannel.Bot().AddPoints(channel, user.GetID(), pointsToRoulette*2)
 	// 	botChannel.Mention(user, "you won PagChomp you now have "+strconv.FormatUint(newPoints, 10)+" points KKona")
 	// }

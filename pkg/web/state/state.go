@@ -84,9 +84,9 @@ func (s *State) CreateSession(userID int64) (sessionID string, err error) {
 
 	const queryF = `
 INSERT INTO
-	UserSession
+	user_session
 (id, user_id)
-	VALUES (?, ?)`
+	VALUES ($1, $2)`
 
 	// TODO: Make sure the exec didn't error
 	_, err = sqlClient.Exec(queryF, sessionID, userID)

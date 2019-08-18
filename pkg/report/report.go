@@ -103,7 +103,7 @@ func (h *Holder) Connection() pkg.PubSubConnection {
 }
 
 func (h *Holder) Load() error {
-	rows, err := h.db.Query("SELECT `id`, `channel_id`, `channel_name`, `channel_type`, `reporter_id`, `reporter_name`, `target_id`, `target_name`, `reason`, `logs`, `time` FROM `Report`")
+	rows, err := h.db.Query("SELECT id, channel_id, channel_name, channel_type, reporter_id, reporter_name, target_id, target_name, reason, logs, time FROM report")
 	if err != nil {
 		return err
 	}
@@ -138,11 +138,11 @@ type handleReportMessage struct {
 
 func (h *Holder) Register(report Report) (*Report, bool, error) {
 	const queryF = `
-	INSERT INTO Report
+	INSERT INTO report
 		(channel_id, channel_name, channel_type,
 		reporter_id, reporter_name, target_id, target_name, reason, logs, time)
 	VALUES
-		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	h.reportsMutex.Lock()
@@ -182,7 +182,7 @@ func (h *Holder) Update(report Report) error {
 		return errors.New("Missing report ID in Update")
 	}
 
-	const queryF = `UPDATE Report SET time=?, logs=? WHERE id=?`
+	const queryF = `UPDATE Report SET time=$1, logs=$2 WHERE id=$3`
 	_, err := h.db.Exec(queryF, report.Time, strings.Join(report.Logs, "\n"), report.ID)
 	if err != nil {
 		return err
@@ -206,7 +206,7 @@ type reportHandled struct {
 func (h *Holder) insertHistoricReport(report Report, action handleReportMessage) {
 	const queryF = `
 INSERT INTO
-	ReportHistory
+	report_history
 (
 channel_id, channel_name, channel_type,
 reporter_id, reporter_name,
@@ -219,14 +219,14 @@ time_handled
 )
 
 VALUES (
-?,?,?,
-?,?,
-?,?,
-?,?,
-?,
-?,?,
-?,?,
-?
+$1,$2,$3,
+$4,$5,
+$6,$7,
+$8,$9,
+$10,
+$11,$12,
+$13,$14,
+$15
 )`
 
 	var actionDuration uint32
@@ -340,7 +340,7 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 // dismissReport assumes that reportsMutex has already been locked
 func (h *Holder) dismissReport(reportID uint32) error {
 	// Delete from SQL
-	const queryF = "DELETE FROM Report WHERE `id`=?"
+	const queryF = "DELETE FROM report WHERE id=$1"
 
 	_, err := h.db.Exec(queryF, reportID)
 	if err != nil {

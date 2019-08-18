@@ -95,7 +95,7 @@ func (c *Raffle) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	// 	return
 	// }
 
-	// botChannel.Mention(event.User, "how did you get here?")
+	// botChannel.Mention(event.User, "how did you get here")
 
 	return nil
 }

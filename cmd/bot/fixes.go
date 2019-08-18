@@ -82,7 +82,7 @@ func fix1(app *Application) error {
 			return fmt.Errorf("Unable to get ID for user '%s' - fix and rerun", name)
 		}
 
-		_, err = db.Exec("UPDATE Bot SET twitch_userid=? WHERE id=?", twitchUserID, id)
+		_, err = db.Exec("UPDATE bot SET twitch_userid=$1 WHERE id=$2", twitchUserID, id)
 		if err != nil {
 			fmt.Println("Error updating user ID:", err)
 			return err
@@ -91,7 +91,7 @@ func fix1(app *Application) error {
 		fmt.Println("Updated User ID for", name, "to", twitchUserID)
 	}
 
-	fmt.Println("Attempting to revert the schema migration (maybe use migration .Down? here or something)")
+	fmt.Println("Attempting to revert the schema migration (maybe use migration .Down here or something)")
 
 	_, err = db.Exec("UPDATE schema_migrations SET version=20190118000448, dirty=0")
 	if err != nil {

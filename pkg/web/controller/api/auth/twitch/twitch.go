@@ -11,9 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -123,14 +123,13 @@ func Load(parent *mux.Router, a pkg.Application) error {
 
 func onBotAuthenticated(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
 	const queryF = `
-INSERT INTO Bot
+INSERT INTO bot
 	(twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry)
-	VALUES (?, ?, ?, ?, ?)
-	ON DUPLICATE KEY UPDATE twitch_username=?, twitch_access_token=?, twitch_refresh_token=?, twitch_access_token_expiry=?
+	VALUES ($1, $2, $3, $4, $5)
+	ON CONFLICT (twitch_userid) DO UPDATE SET twitch_username=$2, twitch_access_token=$3, twitch_refresh_token=$4, twitch_access_token_expiry=$5
 	`
 	c := state.Context(w, r)
-	_, err := c.SQL.Exec(queryF, self.UserID, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry,
-		self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry)
+	_, err := c.SQL.Exec(queryF, self.UserID, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry)
 	if err != nil {
 		w.Write([]byte("Unable to insert bot :rage:"))
 		return
@@ -151,18 +150,16 @@ func onUserAuthenticated(w http.ResponseWriter, r *http.Request, self gotwitch.V
 	}
 
 	const queryF = `
-INSERT INTO User
+INSERT INTO "user"
 	(twitch_username, twitch_userid)
-VALUES (?, ?)
-	ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), twitch_username=?
+VALUES ($1, $2)
+	ON CONFLICT (twitch_userid) DO UPDATE SET twitch_username=$1
+	RETURNING id
 	`
 
-	res, err := c.SQL.Exec(queryF, twitchUserName, twitchUserID, twitchUserName)
-	if err != nil {
-		panic(err)
-	}
-
-	lastInsertID, err := res.LastInsertId()
+	var lastInsertID int64
+	row := c.SQL.QueryRow(queryF, twitchUserName, twitchUserID)
+	err := row.Scan(&lastInsertID)
 	if err != nil {
 		panic(err)
 	}

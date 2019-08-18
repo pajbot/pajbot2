@@ -6,9 +6,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/pajbot2/pkg/webutils"
+	"github.com/pajbot/utils"
 )
 
 type userResponse struct {
@@ -23,7 +23,7 @@ func apiUserMissingVariables(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUser(w http.ResponseWriter, r *http.Request) {
-	const queryF = "SELECT `UserID`, `Action`, `Duration`, `TargetID`, `Reason`, `Timestamp`, `Context` FROM `ModerationAction` WHERE `ChannelID`=? AND `TargetID`=? ORDER BY `Timestamp` DESC LIMIT 20;"
+	const queryF = "SELECT UserID, Action, Duration, TargetID, Reason, Timestamp, Context FROM moderation_action WHERE ChannelID=$1 AND TargetID=$2 ORDER BY Timestamp DESC LIMIT 20;"
 
 	c := state.Context(w, r)
 	vars := mux.Vars(r)

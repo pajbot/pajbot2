@@ -21,10 +21,6 @@ import (
 
 	_ "github.com/lib/pq" // PostgreSQL Driver
 
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/mysql"
-	_ "github.com/golang-migrate/migrate/source/file"
-
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
@@ -45,6 +41,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg/web/views"
 	"github.com/pajbot/utils"
 	twitchpubsub "github.com/pajlada/go-twitch-pubsub"
+	"github.com/pajlada/stupidmigration"
 )
 
 // Application is the heart of pajbot
@@ -175,24 +172,11 @@ func (a *Application) InitializeOAuth2Configs() (err error) {
 
 // RunDatabaseMigrations runs database migrations on the database specified in the config file
 func (a *Application) RunDatabaseMigrations() error {
-	driver, err := mysql.WithInstance(a.sqlClient, &mysql.Config{})
+	err := stupidmigration.Migrate("../../migrations/psql", a.sqlClient)
 	if err != nil {
+		fmt.Println("Unable to run SQL migrations", err)
 		return err
-	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://../../migrations", "mysql", driver)
-	if err != nil {
-		return err
-	}
-
-	err = m.Up()
-
-	if err != nil {
-		if err == migrate.ErrNoChange {
-			return nil
-		}
-
-		return err
 	}
 
 	return nil
@@ -258,7 +242,7 @@ func (a *Application) InitializeModules() (err error) {
 	// TODO: move this to init
 	a.ReportHolder, err = report.New(a)
 	if err != nil {
-		return
+		return errors.Wrap(err, "initializing report holder")
 	}
 
 	a.twitterTest()
@@ -270,7 +254,7 @@ func (a *Application) InitializeModules() (err error) {
 
 	err = modules.InitServer(a, &a.config.Pajbot1, a.ReportHolder)
 	if err != nil {
-		return
+		return errors.Wrap(err, "initializing modules server")
 	}
 
 	moduleList := []string{}
@@ -416,7 +400,7 @@ func (a *Application) StartWebServer() error {
 
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
-	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM Bot`
+	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM bot`
 	rows, err := a.sqlClient.Query(queryF)
 	if err != nil {
 		return err
@@ -574,7 +558,7 @@ func (a *Application) StartBots() error {
 			// Ensure that the bot has joined its own chat
 			bot.JoinChannel(bot.TwitchAccount().ID())
 
-			// TODO: Join some "central control center" like skynetcentral?
+			// TODO: Join some "central control center" like skynetcentral
 
 			// Join all "external" channels
 			bot.JoinChannels()
@@ -622,7 +606,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 		action := 0
 		reason := ""
-		const queryF = "INSERT INTO `ModerationAction` (ChannelID, UserID, Action, Duration, TargetID, Reason, Context) VALUES (?, ?, ?, ?, ?, ?, ?);"
+		const queryF = "INSERT INTO moderation_action (ChannelID, UserID, Action, Duration, TargetID, Reason, Context) VALUES ($1, $2, $3, $4, $5, $6, $7);"
 		switch event.ModerationAction {
 		case "timeout":
 			action = ActionTimeout

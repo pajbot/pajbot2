@@ -9,9 +9,9 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/report"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/utils"
 )
 
 func Load(parent *mux.Router) {
@@ -34,7 +34,7 @@ action, action_duration,
 time_handled
 
 FROM
-	ReportHistory
+	report_history
 ORDER BY time_handled DESC
 LIMIT 50;
 	`
