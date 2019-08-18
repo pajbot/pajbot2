@@ -1,6 +1,7 @@
 package twitchactions
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
@@ -18,6 +19,12 @@ type Actions struct {
 func Mention(user pkg.User, content string) *Actions {
 	actions := &Actions{}
 	actions.Mention(user, content)
+	return actions
+}
+
+func Mentionf(user pkg.User, format string, a ...interface{}) *Actions {
+	actions := &Actions{}
+	actions.Mention(user, fmt.Sprintf(format, a...))
 	return actions
 }
 

@@ -16,7 +16,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 	"unsafe"
@@ -276,15 +275,15 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 					}
 
 					m.Save()
-					return twitchactions.Mention(user, "Height limit set to "+utils.Float32ToString(m.HeightLimit))
+					return twitchactions.Mentionf(user, "Height limit set to %.0f", m.HeightLimit)
 				}
 
-				return twitchactions.Mention(user, "Height limit is "+utils.Float32ToString(m.HeightLimit))
+				return twitchactions.Mentionf(user, "Height limit is %.0f", m.HeightLimit)
 			}
 
 			if parts[0] == "!heighttest" {
 				height := m.getHeight(m.bot.Channel(), user, message)
-				return twitchactions.Mention(user, fmt.Sprintf("your message height is %.2f", height))
+				return twitchactions.Mentionf(user, "your message height is %.2f", height)
 			}
 
 			if parts[0] == "!heightlimitonasciionly" {
@@ -294,10 +293,10 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 					}
 
 					m.Save()
-					return twitchactions.Mention(user, "Height limit module set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly))
+					return twitchactions.Mentionf(user, "Height limit module set to act on ascii art only: %v", m.AsciiArtOnly)
 				}
 
-				return twitchactions.Mention(user, "Height limit module is set to act on ascii art only: "+strconv.FormatBool(m.AsciiArtOnly))
+				return twitchactions.Mentionf(user, "Height limit module is set to act on ascii art only: %v", m.AsciiArtOnly)
 			}
 		}
 	}
