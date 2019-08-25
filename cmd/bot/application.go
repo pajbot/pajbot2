@@ -401,7 +401,7 @@ func (a *Application) StartWebServer() error {
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() error {
 	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM bot`
-	rows, err := a.sqlClient.Query(queryF)
+	rows, err := a.sqlClient.Query(queryF) // GOOD
 	if err != nil {
 		return err
 	}
@@ -606,7 +606,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 		action := 0
 		reason := ""
-		const queryF = "INSERT INTO moderation_action (ChannelID, UserID, Action, Duration, TargetID, Reason, Context) VALUES ($1, $2, $3, $4, $5, $6, $7);"
+		const queryF = "INSERT INTO moderation_action (channel_id, user_id, action, duration, target_id, reason, context) VALUES ($1, $2, $3, $4, $5, $6, $7);"
 		switch event.ModerationAction {
 		case "timeout":
 			action = ActionTimeout
@@ -661,7 +661,7 @@ func (a *Application) StartPubSubClient() error {
 		}
 
 		if action != 0 {
-			_, err := a.sqlClient.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext)
+			_, err := a.sqlClient.Exec(queryF, channelID, event.CreatedByUserID, action, duration, event.TargetUserID, reason, actionContext) // GOOD
 			if err != nil {
 				fmt.Println("Error in moderation action callback:", err)
 				return

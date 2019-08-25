@@ -248,7 +248,7 @@ func (b *Bot) removeBotChannelAtIndex(index int) {
 func (b *Bot) LoadChannels(sql *sql.DB) error {
 	const queryF = `SELECT id, twitch_channel_id FROM bot_channel WHERE bot_id=$1`
 
-	rows, err := sql.Query(queryF, b.DatabaseID)
+	rows, err := sql.Query(queryF, b.DatabaseID) // GOOD
 	if err != nil {
 		return err
 	}
@@ -863,18 +863,15 @@ func (b *Bot) MakeChannel(channelName string) pkg.Channel {
 }
 
 func (b *Bot) JoinChannel(channelID string) error {
-	const queryF = `INSERT INTO bot_channel (bot_id, twitch_channel_id) VALUES ($1, $2)`
-	res, err := b.sql.Exec(queryF, b.DatabaseID, channelID)
+	const queryF = `INSERT INTO bot_channel (bot_id, twitch_channel_id) VALUES ($1, $2) RETURNING id`
+	row := b.sql.QueryRow(queryF, b.DatabaseID, channelID) // GOOD
+	var id int64
+	err := row.Scan(&id)
 	if err != nil {
 		if common.IsDuplicateKey(err) {
 			return errors.New("we have already joined this channel")
 		}
 
-		return err
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
 		return err
 	}
 
@@ -916,7 +913,7 @@ func (b *Bot) LeaveChannel(channelID string) error {
 
 	b.Depart(botChannel.Channel().GetName())
 
-	res, err := b.sql.Exec(queryF, botChannel.DatabaseID())
+	res, err := b.sql.Exec(queryF, botChannel.DatabaseID()) // GOOD
 	if err != nil {
 		return err
 	}

@@ -109,7 +109,7 @@ FROM
 WHERE
 	bot_channel_id=$1 AND module_id=$2`
 
-	row := c.sql.QueryRow(queryF, c.DatabaseID(), moduleID)
+	row := c.sql.QueryRow(queryF, c.DatabaseID(), moduleID) // GOOD
 
 	var s sql.NullString
 	err := row.Scan(&s)
@@ -150,7 +150,7 @@ INSERT INTO
 	VALUES ($1, $2, $3)
 ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET enabled=$3`
 
-	_, err := c.sql.Exec(queryF, c.DatabaseID(), moduleID, state)
+	_, err := c.sql.Exec(queryF, c.DatabaseID(), moduleID, state) // GOOD
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -241,7 +241,7 @@ type moduleConfig struct {
 func (c *BotChannel) loadAllModuleConfigs() ([]*moduleConfig, error) {
 	const queryF = `SELECT id, module_id, enabled, settings FROM bot_channel_module WHERE bot_channel_id=$1`
 
-	rows, err := c.sql.Query(queryF, c.DatabaseID())
+	rows, err := c.sql.Query(queryF, c.DatabaseID()) // GOOD
 	if err != nil {
 		return nil, err
 	}

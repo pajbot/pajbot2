@@ -170,7 +170,7 @@ func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
 
 	const queryF = "SELECT permissions FROM twitch_user_global_permission WHERE twitch_user_id=$1;"
 
-	err := _server.sql.QueryRow(queryF, userID).Scan(&permissions)
+	err := _server.sql.QueryRow(queryF, userID).Scan(&permissions) // GOOD
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return permissions, nil
@@ -191,7 +191,7 @@ func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error)
 
 	const queryF = "SELECT permissions FROM twitch_user_channel_permission WHERE twitch_user_id=$1 AND channel_id=$2;"
 
-	rows, err := _server.sql.Query(queryF, userID, channelID)
+	rows, err := _server.sql.Query(queryF, userID, channelID) // GOOD
 	if err != nil {
 		return permissions, err
 	}
@@ -214,12 +214,7 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 
 	const queryF = "INSERT INTO twitch_user_channel_permission (twitch_user_id, channel_id, permissions) VALUES ($1, $2, $3) ON CONFLICT (twitch_user_id, channel_id) DO UPDATE SET permissions=$3;"
 
-	rows, err := _server.sql.Query(queryF, userID, channelID, permission)
-	if err != nil {
-		return err
-	}
-
-	err = rows.Close()
+	_, err := _server.sql.Exec(queryF, userID, channelID, permission) // GOOD
 	if err != nil {
 		return err
 	}
@@ -239,7 +234,7 @@ INSERT INTO twitch_user_global_permission
 		return errors.New("missing user id or channel id")
 	}
 
-	_, err := _server.sql.Exec(queryF, userID, permission)
+	_, err := _server.sql.Exec(queryF, userID, permission) // GOOD
 	if err != nil {
 		return err
 	}

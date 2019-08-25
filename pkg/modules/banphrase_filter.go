@@ -62,7 +62,7 @@ func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 
 	session := m.server.oldSession
 
-	rows, err := session.Query(queryF)
+	rows, err := session.Query(queryF) // GOOD
 	if err != nil {
 		return err
 	}

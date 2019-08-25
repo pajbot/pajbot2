@@ -129,7 +129,7 @@ INSERT INTO bot
 	ON CONFLICT (twitch_userid) DO UPDATE SET twitch_username=$2, twitch_access_token=$3, twitch_refresh_token=$4, twitch_access_token_expiry=$5
 	`
 	c := state.Context(w, r)
-	_, err := c.SQL.Exec(queryF, self.UserID, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry)
+	_, err := c.SQL.Exec(queryF, self.UserID, self.Login, oauth2Token.AccessToken, oauth2Token.RefreshToken, oauth2Token.Expiry) // GOOD
 	if err != nil {
 		w.Write([]byte("Unable to insert bot :rage:"))
 		return
@@ -158,7 +158,7 @@ VALUES ($1, $2)
 	`
 
 	var lastInsertID int64
-	row := c.SQL.QueryRow(queryF, twitchUserName, twitchUserID)
+	row := c.SQL.QueryRow(queryF, twitchUserName, twitchUserID) // GOOD
 	err := row.Scan(&lastInsertID)
 	if err != nil {
 		panic(err)

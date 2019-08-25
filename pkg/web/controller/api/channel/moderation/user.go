@@ -23,7 +23,7 @@ func apiUserMissingVariables(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiUser(w http.ResponseWriter, r *http.Request) {
-	const queryF = "SELECT UserID, Action, Duration, TargetID, Reason, Timestamp, Context FROM moderation_action WHERE ChannelID=$1 AND TargetID=$2 ORDER BY Timestamp DESC LIMIT 20;"
+	const queryF = "SELECT user_id, action, duration, target_id, reason, timestamp, context FROM moderation_action WHERE channel_id=$1 AND target_id=$2 ORDER BY timestamp DESC LIMIT 20;"
 
 	c := state.Context(w, r)
 	vars := mux.Vars(r)
@@ -55,7 +55,7 @@ func apiUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := c.SQL.Query(queryF, response.ChannelID, response.TargetID)
+	rows, err := c.SQL.Query(queryF, response.ChannelID, response.TargetID) // GOOD
 	if err != nil {
 		fmt.Println("error in mysql query apiUser:", err)
 		utils.WebWriteError(w, 500, "Internal error")

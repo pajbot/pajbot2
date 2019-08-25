@@ -69,7 +69,7 @@ func (s *SessionStore) Get(db *sql.DB, sessionID string) *Session {
 	var twitchUserID string
 	var twitchUserName string
 
-	err := db.QueryRow(queryF, sessionID).Scan(&userID, &twitchUserID, &twitchUserName)
+	err := db.QueryRow(queryF, sessionID).Scan(&userID, &twitchUserID, &twitchUserName) // GOOD
 	switch {
 	case err == sql.ErrNoRows:
 		// invalid session ID

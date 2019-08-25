@@ -32,7 +32,6 @@ time,
 handler_id, handler_name,
 action, action_duration,
 time_handled
-
 FROM
 	report_history
 ORDER BY time_handled DESC
@@ -57,7 +56,7 @@ LIMIT 50;
 		return
 	}
 
-	rows, err := c.SQL.Query(queryF)
+	rows, err := c.SQL.Query(queryF) // GOOD
 	if err != nil {
 		fmt.Println("error in mysql query apiUser:", err)
 		utils.WebWriteError(w, 500, "Internal error")

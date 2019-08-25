@@ -89,7 +89,7 @@ INSERT INTO
 	VALUES ($1, $2)`
 
 	// TODO: Make sure the exec didn't error
-	_, err = sqlClient.Exec(queryF, sessionID, userID)
+	_, err = sqlClient.Exec(queryF, sessionID, userID) // GOOD
 	if err != nil {
 		return
 	}

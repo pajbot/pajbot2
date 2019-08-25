@@ -145,7 +145,7 @@ INSERT INTO
 	VALUES ($1, $2, $3)
 ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET settings=$3`
 
-	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes)
+	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes) // GOOD
 	if err != nil {
 		return err
 	}

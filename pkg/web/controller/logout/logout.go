@@ -21,7 +21,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 			// Remove session from database
 			const queryF = `DELETE FROM user_session WHERE id=$1`
 
-			_, err := c.SQL.Exec(queryF, sessionID)
+			_, err := c.SQL.Exec(queryF, sessionID) // GOOD
 			if err != nil {
 				fmt.Println("Error deleting session ID")
 			}

@@ -63,9 +63,9 @@ func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("Channel ID:", vars)
 
-	const queryF = "SELECT UserID, Action, Duration, TargetID, Reason, Timestamp, Context FROM moderation_action WHERE channelid=$1 ORDER BY timestamp DESC LIMIT 20;"
+	const queryF = "SELECT user_id, action, duration, target_id, reason, timestamp, context FROM moderation_action WHERE channel_id=$1 ORDER BY timestamp DESC LIMIT 20;"
 
-	rows, err := c.SQL.Query(queryF, response.ChannelID)
+	rows, err := c.SQL.Query(queryF, response.ChannelID) // GOOD
 	if err != nil {
 		panic(err)
 	}

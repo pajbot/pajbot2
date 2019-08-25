@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/pajbot2/pkg/webutils"
+	"github.com/pajbot/utils"
 )
 
 type banphrase struct {
@@ -37,9 +37,9 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 
 	response.ChannelID = c.Channel.GetID()
 
-	const queryF = "SELECT `id`, `enabled`, `description`, `phrase` FROM `Banphrase`"
+	const queryF = "SELECT id, enabled, description, phrase FROM banphrase"
 
-	rows, err := c.SQL.Query(queryF)
+	rows, err := c.SQL.Query(queryF) // GOOD
 	if err != nil {
 		panic(err)
 	}

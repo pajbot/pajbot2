@@ -26,5 +26,12 @@ for ptablename, mtablename in [('twitch_user_global_permission', 'TwitchUserGlob
                 print('Transferring global permission:', result)
                 pcursor.execute('INSERT INTO '+ptablename+' (twitch_user_id, permissions) VALUES(%s, %s)', (result[0], result[1]))
 
+with postgresql_connection.cursor() as pcursor:
+    rename = 'ALTER TABLE moderation_action RENAME COLUMN {} TO {}'
+
+    pcursor.execute(rename.format('channelid', 'channel_id'))
+    pcursor.execute(rename.format('userid', 'user_id'))
+    pcursor.execute(rename.format('targetid', 'target_id'))
+
 postgresql_connection.commit()
 postgresql_connection.close()
