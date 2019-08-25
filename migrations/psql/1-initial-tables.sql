@@ -10,7 +10,6 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
@@ -20,18 +19,14 @@ SET row_security = off;
 -- Name: pajbot2; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA pajbot2;
-
-
-SET default_tablespace = '';
-
 SET default_with_oids = false;
+SET default_tablespace = '';
 
 --
 -- Name: banphrase; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.banphrase (
+CREATE TABLE banphrase (
     id bigint NOT NULL,
     group_id bigint,
     enabled boolean DEFAULT true,
@@ -50,77 +45,77 @@ CREATE TABLE pajbot2.banphrase (
 -- Name: TABLE banphrase; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON TABLE pajbot2.banphrase IS 'Store banned phrases';
+COMMENT ON TABLE banphrase IS 'Store banned phrases';
 
 
 --
 -- Name: COLUMN banphrase.enabled; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.enabled IS 'NULL = Inherit from group';
+COMMENT ON COLUMN banphrase.enabled IS 'NULL = Inherit from group';
 
 
 --
 -- Name: COLUMN banphrase.description; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.description IS 'Optional description of the banphrase, i.e. racism or banned emote';
+COMMENT ON COLUMN banphrase.description IS 'Optional description of the banphrase, i.e. racism or banned emote';
 
 
 --
 -- Name: COLUMN banphrase.phrase; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.phrase IS 'The banned phrase itself. This can be a regular expression, it all depends on the "operator" of the banphrase';
+COMMENT ON COLUMN banphrase.phrase IS 'The banned phrase itself. This can be a regular expression, it all depends on the "operator" of the banphrase';
 
 
 --
 -- Name: COLUMN banphrase.length; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.length IS 'NULL = Inherit from group, 0 = permaban, >0 = timeout for X seconds';
+COMMENT ON COLUMN banphrase.length IS 'NULL = Inherit from group, 0 = permaban, >0 = timeout for X seconds';
 
 
 --
 -- Name: COLUMN banphrase.warning_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.warning_id IS 'NULL = Inherit from group, anything else is an ID to a warning "scale"';
+COMMENT ON COLUMN banphrase.warning_id IS 'NULL = Inherit from group, anything else is an ID to a warning "scale"';
 
 
 --
 -- Name: COLUMN banphrase.case_sensitive; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.case_sensitive IS 'NULL = Inherit from group';
+COMMENT ON COLUMN banphrase.case_sensitive IS 'NULL = Inherit from group';
 
 
 --
 -- Name: COLUMN banphrase.type; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.type IS 'NULL = Inherit from group, 0 = contains, more IDs can be found in the go code lol xd';
+COMMENT ON COLUMN banphrase.type IS 'NULL = Inherit from group, 0 = contains, more IDs can be found in the go code lol xd';
 
 
 --
 -- Name: COLUMN banphrase.sub_immunity; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.sub_immunity IS 'NULL = Inherit from group';
+COMMENT ON COLUMN banphrase.sub_immunity IS 'NULL = Inherit from group';
 
 
 --
 -- Name: COLUMN banphrase.remove_accents; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase.remove_accents IS 'NULL = Inherit from group';
+COMMENT ON COLUMN banphrase.remove_accents IS 'NULL = Inherit from group';
 
 
 --
 -- Name: banphrase_group; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.banphrase_group (
+CREATE TABLE banphrase_group (
     id bigint NOT NULL,
     enabled boolean DEFAULT true NOT NULL,
     name character varying(64) NOT NULL,
@@ -138,42 +133,42 @@ CREATE TABLE pajbot2.banphrase_group (
 -- Name: TABLE banphrase_group; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON TABLE pajbot2.banphrase_group IS 'Store banphrase groups. this will make it easier to manage multiple banphrases at the same time';
+COMMENT ON TABLE banphrase_group IS 'Store banphrase groups. this will make it easier to manage multiple banphrases at the same time';
 
 
 --
 -- Name: COLUMN banphrase_group.description; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase_group.description IS 'Optional description of the banphrase group, i.e. racism or banned emote';
+COMMENT ON COLUMN banphrase_group.description IS 'Optional description of the banphrase group, i.e. racism or banned emote';
 
 
 --
 -- Name: COLUMN banphrase_group.length; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase_group.length IS '0 = permaban, >0 = timeout for X seconds';
+COMMENT ON COLUMN banphrase_group.length IS '0 = permaban, >0 = timeout for X seconds';
 
 
 --
 -- Name: COLUMN banphrase_group.warning_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase_group.warning_id IS 'ID to a warning "scale"';
+COMMENT ON COLUMN banphrase_group.warning_id IS 'ID to a warning "scale"';
 
 
 --
 -- Name: COLUMN banphrase_group.type; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.banphrase_group.type IS '0 = contains, more IDs can be found in the go code lol xd';
+COMMENT ON COLUMN banphrase_group.type IS '0 = contains, more IDs can be found in the go code lol xd';
 
 
 --
 -- Name: banphrase_group_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.banphrase_group_id_seq
+CREATE SEQUENCE banphrase_group_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -185,14 +180,14 @@ CREATE SEQUENCE pajbot2.banphrase_group_id_seq
 -- Name: banphrase_group_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.banphrase_group_id_seq OWNED BY pajbot2.banphrase_group.id;
+ALTER SEQUENCE banphrase_group_id_seq OWNED BY banphrase_group.id;
 
 
 --
 -- Name: banphrase_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.banphrase_id_seq
+CREATE SEQUENCE banphrase_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -204,14 +199,14 @@ CREATE SEQUENCE pajbot2.banphrase_id_seq
 -- Name: banphrase_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.banphrase_id_seq OWNED BY pajbot2.banphrase.id;
+ALTER SEQUENCE banphrase_id_seq OWNED BY banphrase.id;
 
 
 --
 -- Name: bot; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.bot (
+CREATE TABLE bot (
     id bigint NOT NULL,
     twitch_userid character varying(64) NOT NULL,
     twitch_username character varying(64) NOT NULL,
@@ -225,28 +220,28 @@ CREATE TABLE pajbot2.bot (
 -- Name: TABLE bot; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON TABLE pajbot2.bot IS 'Store available bot accounts, requires an access token with chat_login scope';
+COMMENT ON TABLE bot IS 'Store available bot accounts, requires an access token with chat_login scope';
 
 
 --
 -- Name: COLUMN bot.twitch_access_token; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot.twitch_access_token IS 'Bot level access-token';
+COMMENT ON COLUMN bot.twitch_access_token IS 'Bot level access-token';
 
 
 --
 -- Name: COLUMN bot.twitch_refresh_token; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot.twitch_refresh_token IS 'Bot level refresh-token';
+COMMENT ON COLUMN bot.twitch_refresh_token IS 'Bot level refresh-token';
 
 
 --
 -- Name: bot_channel; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.bot_channel (
+CREATE TABLE bot_channel (
     id bigint NOT NULL,
     bot_id bigint NOT NULL,
     twitch_channel_id character varying(64) NOT NULL
@@ -257,14 +252,14 @@ CREATE TABLE pajbot2.bot_channel (
 -- Name: COLUMN bot_channel.twitch_channel_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot_channel.twitch_channel_id IS 'i.e. 11148817';
+COMMENT ON COLUMN bot_channel.twitch_channel_id IS 'i.e. 11148817';
 
 
 --
 -- Name: bot_channel_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.bot_channel_id_seq
+CREATE SEQUENCE bot_channel_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -276,14 +271,14 @@ CREATE SEQUENCE pajbot2.bot_channel_id_seq
 -- Name: bot_channel_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.bot_channel_id_seq OWNED BY pajbot2.bot_channel.id;
+ALTER SEQUENCE bot_channel_id_seq OWNED BY bot_channel.id;
 
 
 --
 -- Name: bot_channel_module; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.bot_channel_module (
+CREATE TABLE bot_channel_module (
     id bigint NOT NULL,
     bot_channel_id bigint NOT NULL,
     module_id character varying(128) NOT NULL,
@@ -296,28 +291,28 @@ CREATE TABLE pajbot2.bot_channel_module (
 -- Name: COLUMN bot_channel_module.module_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot_channel_module.module_id IS 'i.e. nuke';
+COMMENT ON COLUMN bot_channel_module.module_id IS 'i.e. nuke';
 
 
 --
 -- Name: COLUMN bot_channel_module.enabled; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot_channel_module.enabled IS 'if null, it uses the modules default enabled value';
+COMMENT ON COLUMN bot_channel_module.enabled IS 'if null, it uses the modules default enabled value';
 
 
 --
 -- Name: COLUMN bot_channel_module.settings; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.bot_channel_module.settings IS 'json blob with settings';
+COMMENT ON COLUMN bot_channel_module.settings IS 'json blob with settings';
 
 
 --
 -- Name: bot_channel_module_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.bot_channel_module_id_seq
+CREATE SEQUENCE bot_channel_module_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -329,14 +324,14 @@ CREATE SEQUENCE pajbot2.bot_channel_module_id_seq
 -- Name: bot_channel_module_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.bot_channel_module_id_seq OWNED BY pajbot2.bot_channel_module.id;
+ALTER SEQUENCE bot_channel_module_id_seq OWNED BY bot_channel_module.id;
 
 
 --
 -- Name: bot_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.bot_id_seq
+CREATE SEQUENCE bot_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -348,7 +343,7 @@ CREATE SEQUENCE pajbot2.bot_id_seq
 -- Name: bot_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.bot_id_seq OWNED BY pajbot2.bot.id;
+ALTER SEQUENCE bot_id_seq OWNED BY bot.id;
 
 
 
@@ -356,7 +351,7 @@ ALTER SEQUENCE pajbot2.bot_id_seq OWNED BY pajbot2.bot.id;
 -- Name: moderation_action; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.moderation_action (
+CREATE TABLE moderation_action (
     id bigint NOT NULL,
     channel_id character varying(64) NOT NULL,
     user_id character varying(64) NOT NULL,
@@ -373,56 +368,56 @@ CREATE TABLE pajbot2.moderation_action (
 -- Name: COLUMN moderation_action.channel_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.channel_id IS 'Twitch Channel owners user ID';
+COMMENT ON COLUMN moderation_action.channel_id IS 'Twitch Channel owners user ID';
 
 
 --
 -- Name: COLUMN moderation_action.user_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.user_id IS 'Source user ID';
+COMMENT ON COLUMN moderation_action.user_id IS 'Source user ID';
 
 
 --
 -- Name: COLUMN moderation_action.target_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.target_id IS 'Target user ID (the user who has banned/unbanned/timed out)';
+COMMENT ON COLUMN moderation_action.target_id IS 'Target user ID (the user who has banned/unbanned/timed out)';
 
 
 --
 -- Name: COLUMN moderation_action.action; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.action IS 'Action in int format, enums declared outside of SQL';
+COMMENT ON COLUMN moderation_action.action IS 'Action in int format, enums declared outside of SQL';
 
 
 --
 -- Name: COLUMN moderation_action.duration; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.duration IS 'Duration of action (only used for timeouts atm)';
+COMMENT ON COLUMN moderation_action.duration IS 'Duration of action (only used for timeouts atm)';
 
 
 --
 -- Name: COLUMN moderation_action.reason; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action.reason IS 'Reason for ban. Auto filled in from twich chat, but can be modified in web gui';
+COMMENT ON COLUMN moderation_action.reason IS 'Reason for ban. Auto filled in from twich chat, but can be modified in web gui';
 
 
 --
 -- Name: COLUMN moderation_action."timestamp"; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.moderation_action."timestamp" IS 'Timestamp of when the timeout occured';
+COMMENT ON COLUMN moderation_action."timestamp" IS 'Timestamp of when the timeout occured';
 
 
 --
 -- Name: moderation_action_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.moderation_action_id_seq
+CREATE SEQUENCE moderation_action_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -434,14 +429,14 @@ CREATE SEQUENCE pajbot2.moderation_action_id_seq
 -- Name: moderation_action_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.moderation_action_id_seq OWNED BY pajbot2.moderation_action.id;
+ALTER SEQUENCE moderation_action_id_seq OWNED BY moderation_action.id;
 
 
 --
 -- Name: report; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.report (
+CREATE TABLE report (
     id bigint NOT NULL,
     channel_id character varying(64) NOT NULL,
     channel_name character varying(64) NOT NULL,
@@ -460,7 +455,7 @@ CREATE TABLE pajbot2.report (
 -- Name: report_history; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.report_history (
+CREATE TABLE report_history (
     id bigint NOT NULL,
     channel_id character varying(64) NOT NULL,
     channel_name character varying(64) NOT NULL,
@@ -484,84 +479,84 @@ CREATE TABLE pajbot2.report_history (
 -- Name: COLUMN report_history.channel_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.channel_id IS 'twitch ID of channel user was reported in';
+COMMENT ON COLUMN report_history.channel_id IS 'twitch ID of channel user was reported in';
 
 
 --
 -- Name: COLUMN report_history.channel_name; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.channel_name IS 'twitch username of channel the user was reported in';
+COMMENT ON COLUMN report_history.channel_name IS 'twitch username of channel the user was reported in';
 
 
 --
 -- Name: COLUMN report_history.reporter_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.reporter_id IS 'twitch user ID of reporter';
+COMMENT ON COLUMN report_history.reporter_id IS 'twitch user ID of reporter';
 
 
 --
 -- Name: COLUMN report_history.reporter_name; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.reporter_name IS 'twitch user name of reporter';
+COMMENT ON COLUMN report_history.reporter_name IS 'twitch user name of reporter';
 
 
 --
 -- Name: COLUMN report_history.target_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.target_id IS 'twitch user ID of person being reported';
+COMMENT ON COLUMN report_history.target_id IS 'twitch user ID of person being reported';
 
 
 --
 -- Name: COLUMN report_history.target_name; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.target_name IS 'twitch user name of person being reported';
+COMMENT ON COLUMN report_history.target_name IS 'twitch user name of person being reported';
 
 
 --
 -- Name: COLUMN report_history."time"; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history."time" IS 'time report was added';
+COMMENT ON COLUMN report_history."time" IS 'time report was added';
 
 
 --
 -- Name: COLUMN report_history.handler_id; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.handler_id IS 'twitch user ID of person who handled the report';
+COMMENT ON COLUMN report_history.handler_id IS 'twitch user ID of person who handled the report';
 
 
 --
 -- Name: COLUMN report_history.handler_name; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.handler_name IS 'twitch user name of person who handled the report';
+COMMENT ON COLUMN report_history.handler_name IS 'twitch user name of person who handled the report';
 
 
 --
 -- Name: COLUMN report_history.action; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.action IS 'number constant for what action was taken for the report. 1 = ban, 2 = timeout, 3 = dismiss';
+COMMENT ON COLUMN report_history.action IS 'number constant for what action was taken for the report. 1 = ban, 2 = timeout, 3 = dismiss';
 
 
 --
 -- Name: COLUMN report_history.action_duration; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON COLUMN pajbot2.report_history.action_duration IS 'number of seconds for the action. only relevant for timeouts';
+COMMENT ON COLUMN report_history.action_duration IS 'number of seconds for the action. only relevant for timeouts';
 
 
 --
 -- Name: report_history_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.report_history_id_seq
+CREATE SEQUENCE report_history_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -573,14 +568,14 @@ CREATE SEQUENCE pajbot2.report_history_id_seq
 -- Name: report_history_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.report_history_id_seq OWNED BY pajbot2.report_history.id;
+ALTER SEQUENCE report_history_id_seq OWNED BY report_history.id;
 
 
 --
 -- Name: report_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.report_id_seq
+CREATE SEQUENCE report_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -592,14 +587,14 @@ CREATE SEQUENCE pajbot2.report_id_seq
 -- Name: report_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.report_id_seq OWNED BY pajbot2.report.id;
+ALTER SEQUENCE report_id_seq OWNED BY report.id;
 
 
 --
 -- Name: twitch_user_channel_permission; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.twitch_user_channel_permission (
+CREATE TABLE twitch_user_channel_permission (
     twitch_user_id character varying(64) NOT NULL,
     channel_id character varying(64) NOT NULL,
     permissions bigint NOT NULL
@@ -610,7 +605,7 @@ CREATE TABLE pajbot2.twitch_user_channel_permission (
 -- Name: twitch_user_global_permission; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.twitch_user_global_permission (
+CREATE TABLE twitch_user_global_permission (
     twitch_user_id character varying(64) NOT NULL,
     permissions bigint NOT NULL
 );
@@ -620,7 +615,7 @@ CREATE TABLE pajbot2.twitch_user_global_permission (
 -- Name: user; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2."user" (
+CREATE TABLE "user" (
     id bigint NOT NULL,
     twitch_username character varying(64) NOT NULL,
     twitch_userid character varying(64) NOT NULL
@@ -631,7 +626,7 @@ CREATE TABLE pajbot2."user" (
 -- Name: user_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.user_id_seq
+CREATE SEQUENCE user_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -643,14 +638,14 @@ CREATE SEQUENCE pajbot2.user_id_seq
 -- Name: user_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.user_id_seq OWNED BY pajbot2."user".id;
+ALTER SEQUENCE user_id_seq OWNED BY "user".id;
 
 
 --
 -- Name: user_session; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.user_session (
+CREATE TABLE user_session (
     id character varying(64) NOT NULL,
     user_id bigint NOT NULL,
     expiry_date timestamp with time zone
@@ -661,7 +656,7 @@ CREATE TABLE pajbot2.user_session (
 -- Name: warning_scale; Type: TABLE; Schema: pajbot2; Owner: -
 --
 
-CREATE TABLE pajbot2.warning_scale (
+CREATE TABLE warning_scale (
     id bigint NOT NULL
 );
 
@@ -670,14 +665,14 @@ CREATE TABLE pajbot2.warning_scale (
 -- Name: TABLE warning_scale; Type: COMMENT; Schema: pajbot2; Owner: -
 --
 
-COMMENT ON TABLE pajbot2.warning_scale IS 'Store data about warning scales';
+COMMENT ON TABLE warning_scale IS 'Store data about warning scales';
 
 
 --
 -- Name: warning_scale_id_seq; Type: SEQUENCE; Schema: pajbot2; Owner: -
 --
 
-CREATE SEQUENCE pajbot2.warning_scale_id_seq
+CREATE SEQUENCE warning_scale_id_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -689,7 +684,7 @@ CREATE SEQUENCE pajbot2.warning_scale_id_seq
 -- Name: warning_scale_id_seq; Type: SEQUENCE OWNED BY; Schema: pajbot2; Owner: -
 --
 
-ALTER SEQUENCE pajbot2.warning_scale_id_seq OWNED BY pajbot2.warning_scale.id;
+ALTER SEQUENCE warning_scale_id_seq OWNED BY warning_scale.id;
 
 
 
@@ -697,77 +692,77 @@ ALTER SEQUENCE pajbot2.warning_scale_id_seq OWNED BY pajbot2.warning_scale.id;
 -- Name: banphrase id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase ALTER COLUMN id SET DEFAULT nextval('pajbot2.banphrase_id_seq'::regclass);
+ALTER TABLE ONLY banphrase ALTER COLUMN id SET DEFAULT nextval('banphrase_id_seq'::regclass);
 
 
 --
 -- Name: banphrase_group id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase_group ALTER COLUMN id SET DEFAULT nextval('pajbot2.banphrase_group_id_seq'::regclass);
+ALTER TABLE ONLY banphrase_group ALTER COLUMN id SET DEFAULT nextval('banphrase_group_id_seq'::regclass);
 
 
 --
 -- Name: bot id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot ALTER COLUMN id SET DEFAULT nextval('pajbot2.bot_id_seq'::regclass);
+ALTER TABLE ONLY bot ALTER COLUMN id SET DEFAULT nextval('bot_id_seq'::regclass);
 
 
 --
 -- Name: bot_channel id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel ALTER COLUMN id SET DEFAULT nextval('pajbot2.bot_channel_id_seq'::regclass);
+ALTER TABLE ONLY bot_channel ALTER COLUMN id SET DEFAULT nextval('bot_channel_id_seq'::regclass);
 
 
 --
 -- Name: bot_channel_module id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel_module ALTER COLUMN id SET DEFAULT nextval('pajbot2.bot_channel_module_id_seq'::regclass);
+ALTER TABLE ONLY bot_channel_module ALTER COLUMN id SET DEFAULT nextval('bot_channel_module_id_seq'::regclass);
 
 
 --
 -- Name: moderation_action id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.moderation_action ALTER COLUMN id SET DEFAULT nextval('pajbot2.moderation_action_id_seq'::regclass);
+ALTER TABLE ONLY moderation_action ALTER COLUMN id SET DEFAULT nextval('moderation_action_id_seq'::regclass);
 
 
 --
 -- Name: report id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.report ALTER COLUMN id SET DEFAULT nextval('pajbot2.report_id_seq'::regclass);
+ALTER TABLE ONLY report ALTER COLUMN id SET DEFAULT nextval('report_id_seq'::regclass);
 
 
 --
 -- Name: report_history id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.report_history ALTER COLUMN id SET DEFAULT nextval('pajbot2.report_history_id_seq'::regclass);
+ALTER TABLE ONLY report_history ALTER COLUMN id SET DEFAULT nextval('report_history_id_seq'::regclass);
 
 
 --
 -- Name: user id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2."user" ALTER COLUMN id SET DEFAULT nextval('pajbot2.user_id_seq'::regclass);
+ALTER TABLE ONLY "user" ALTER COLUMN id SET DEFAULT nextval('user_id_seq'::regclass);
 
 
 --
 -- Name: warning_scale id; Type: DEFAULT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.warning_scale ALTER COLUMN id SET DEFAULT nextval('pajbot2.warning_scale_id_seq'::regclass);
+ALTER TABLE ONLY warning_scale ALTER COLUMN id SET DEFAULT nextval('warning_scale_id_seq'::regclass);
 
 
 --
 -- Name: banphrase idx_16414_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase
+ALTER TABLE ONLY banphrase
     ADD CONSTRAINT idx_16414_primary PRIMARY KEY (id);
 
 
@@ -775,7 +770,7 @@ ALTER TABLE ONLY pajbot2.banphrase
 -- Name: banphrase_group idx_16428_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase_group
+ALTER TABLE ONLY banphrase_group
     ADD CONSTRAINT idx_16428_primary PRIMARY KEY (id);
 
 
@@ -783,7 +778,7 @@ ALTER TABLE ONLY pajbot2.banphrase_group
 -- Name: bot idx_16443_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot
+ALTER TABLE ONLY bot
     ADD CONSTRAINT idx_16443_primary PRIMARY KEY (id);
 
 
@@ -791,7 +786,7 @@ ALTER TABLE ONLY pajbot2.bot
 -- Name: bot_channel idx_16449_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel
+ALTER TABLE ONLY bot_channel
     ADD CONSTRAINT idx_16449_primary PRIMARY KEY (id);
 
 
@@ -799,7 +794,7 @@ ALTER TABLE ONLY pajbot2.bot_channel
 -- Name: bot_channel_module idx_16455_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel_module
+ALTER TABLE ONLY bot_channel_module
     ADD CONSTRAINT idx_16455_primary PRIMARY KEY (id);
 
 
@@ -807,7 +802,7 @@ ALTER TABLE ONLY pajbot2.bot_channel_module
 -- Name: moderation_action idx_16464_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.moderation_action
+ALTER TABLE ONLY moderation_action
     ADD CONSTRAINT idx_16464_primary PRIMARY KEY (id);
 
 
@@ -815,7 +810,7 @@ ALTER TABLE ONLY pajbot2.moderation_action
 -- Name: report idx_16474_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.report
+ALTER TABLE ONLY report
     ADD CONSTRAINT idx_16474_primary PRIMARY KEY (id);
 
 
@@ -823,7 +818,7 @@ ALTER TABLE ONLY pajbot2.report
 -- Name: report_history idx_16484_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.report_history
+ALTER TABLE ONLY report_history
     ADD CONSTRAINT idx_16484_primary PRIMARY KEY (id);
 
 
@@ -831,7 +826,7 @@ ALTER TABLE ONLY pajbot2.report_history
 -- Name: user idx_16494_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2."user"
+ALTER TABLE ONLY "user"
     ADD CONSTRAINT idx_16494_primary PRIMARY KEY (id);
 
 
@@ -839,7 +834,7 @@ ALTER TABLE ONLY pajbot2."user"
 -- Name: user_session idx_16498_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.user_session
+ALTER TABLE ONLY user_session
     ADD CONSTRAINT idx_16498_primary PRIMARY KEY (id);
 
 
@@ -847,7 +842,7 @@ ALTER TABLE ONLY pajbot2.user_session
 -- Name: warning_scale idx_16503_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.warning_scale
+ALTER TABLE ONLY warning_scale
     ADD CONSTRAINT idx_16503_primary PRIMARY KEY (id);
 
 
@@ -855,7 +850,7 @@ ALTER TABLE ONLY pajbot2.warning_scale
 -- Name: twitch_user_global_permission idx_16653_primary; Type: CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.twitch_user_global_permission
+ALTER TABLE ONLY twitch_user_global_permission
     ADD CONSTRAINT idx_16653_primary PRIMARY KEY (twitch_user_id);
 
 
@@ -863,139 +858,139 @@ ALTER TABLE ONLY pajbot2.twitch_user_global_permission
 -- Name: idx_16414_group_id; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16414_group_id ON pajbot2.banphrase USING btree (group_id);
+CREATE INDEX idx_16414_group_id ON banphrase USING btree (group_id);
 
 
 --
 -- Name: idx_16414_warning_id; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16414_warning_id ON pajbot2.banphrase USING btree (warning_id);
+CREATE INDEX idx_16414_warning_id ON banphrase USING btree (warning_id);
 
 
 --
 -- Name: idx_16428_group_name; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16428_group_name ON pajbot2.banphrase_group USING btree (name);
+CREATE UNIQUE INDEX idx_16428_group_name ON banphrase_group USING btree (name);
 
 
 --
 -- Name: idx_16428_warning_id; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16428_warning_id ON pajbot2.banphrase_group USING btree (warning_id);
+CREATE INDEX idx_16428_warning_id ON banphrase_group USING btree (warning_id);
 
 
 --
 -- Name: idx_16443_itwitchuid; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16443_itwitchuid ON pajbot2.bot USING btree (twitch_userid);
+CREATE UNIQUE INDEX idx_16443_itwitchuid ON bot USING btree (twitch_userid);
 
 
 --
 -- Name: idx_16449_bot_channel; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16449_bot_channel ON pajbot2.bot_channel USING btree (bot_id, twitch_channel_id);
+CREATE UNIQUE INDEX idx_16449_bot_channel ON bot_channel USING btree (bot_id, twitch_channel_id);
 
 
 --
 -- Name: idx_16455_bot_channel_module; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16455_bot_channel_module ON pajbot2.bot_channel_module USING btree (bot_channel_id, module_id);
+CREATE UNIQUE INDEX idx_16455_bot_channel_module ON bot_channel_module USING btree (bot_channel_id, module_id);
 
 
 --
 -- Name: idx_16464_channeltargetaction_index; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16464_channeltargetaction_index ON pajbot2.moderation_action USING btree (channel_id, target_id, action);
+CREATE INDEX idx_16464_channeltargetaction_index ON moderation_action USING btree (channel_id, target_id, action);
 
 
 --
 -- Name: idx_16464_channelusertarget_index; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16464_channelusertarget_index ON pajbot2.moderation_action USING btree (channel_id, user_id, target_id);
+CREATE INDEX idx_16464_channelusertarget_index ON moderation_action USING btree (channel_id, user_id, target_id);
 
 
 --
 -- Name: idx_16494_ui_twitch_userid; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16494_ui_twitch_userid ON pajbot2."user" USING btree (twitch_userid);
+CREATE UNIQUE INDEX idx_16494_ui_twitch_userid ON "user" USING btree (twitch_userid);
 
 
 --
 -- Name: idx_16498_user_id; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE INDEX idx_16498_user_id ON pajbot2.user_session USING btree (user_id);
+CREATE INDEX idx_16498_user_id ON user_session USING btree (user_id);
 
 
 --
 -- Name: idx_16650_user_channel_permission; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16650_user_channel_permission ON pajbot2.twitch_user_channel_permission USING btree (twitch_user_id, channel_id);
+CREATE UNIQUE INDEX idx_16650_user_channel_permission ON twitch_user_channel_permission USING btree (twitch_user_id, channel_id);
 
 
 --
 -- Name: idx_16653_user_permission; Type: INDEX; Schema: pajbot2; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_16653_user_permission ON pajbot2.twitch_user_global_permission USING btree (twitch_user_id, permissions);
+CREATE UNIQUE INDEX idx_16653_user_permission ON twitch_user_global_permission USING btree (twitch_user_id, permissions);
 
 
 --
 -- Name: banphrase banphrase_ibfk_1; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase
-    ADD CONSTRAINT banphrase_ibfk_1 FOREIGN KEY (warning_id) REFERENCES pajbot2.warning_scale(id) ON UPDATE RESTRICT ON DELETE SET NULL;
+ALTER TABLE ONLY banphrase
+    ADD CONSTRAINT banphrase_ibfk_1 FOREIGN KEY (warning_id) REFERENCES warning_scale(id) ON UPDATE RESTRICT ON DELETE SET NULL;
 
 
 --
 -- Name: banphrase banphrase_ibfk_2; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase
-    ADD CONSTRAINT banphrase_ibfk_2 FOREIGN KEY (group_id) REFERENCES pajbot2.banphrase_group(id) ON UPDATE RESTRICT ON DELETE SET NULL;
+ALTER TABLE ONLY banphrase
+    ADD CONSTRAINT banphrase_ibfk_2 FOREIGN KEY (group_id) REFERENCES banphrase_group(id) ON UPDATE RESTRICT ON DELETE SET NULL;
 
 
 --
 -- Name: banphrase_group banphrasegroup_ibfk_1; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.banphrase_group
-    ADD CONSTRAINT banphrasegroup_ibfk_1 FOREIGN KEY (warning_id) REFERENCES pajbot2.warning_scale(id) ON UPDATE RESTRICT ON DELETE SET NULL;
+ALTER TABLE ONLY banphrase_group
+    ADD CONSTRAINT banphrasegroup_ibfk_1 FOREIGN KEY (warning_id) REFERENCES warning_scale(id) ON UPDATE RESTRICT ON DELETE SET NULL;
 
 
 --
 -- Name: bot_channel botchannel_ibfk_1; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel
-    ADD CONSTRAINT botchannel_ibfk_1 FOREIGN KEY (bot_id) REFERENCES pajbot2.bot(id) ON UPDATE RESTRICT ON DELETE CASCADE;
+ALTER TABLE ONLY bot_channel
+    ADD CONSTRAINT botchannel_ibfk_1 FOREIGN KEY (bot_id) REFERENCES bot(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
 -- Name: bot_channel_module botchannelmodule_ibfk_1; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.bot_channel_module
-    ADD CONSTRAINT botchannelmodule_ibfk_1 FOREIGN KEY (bot_channel_id) REFERENCES pajbot2.bot_channel(id) ON UPDATE RESTRICT ON DELETE CASCADE;
+ALTER TABLE ONLY bot_channel_module
+    ADD CONSTRAINT botchannelmodule_ibfk_1 FOREIGN KEY (bot_channel_id) REFERENCES bot_channel(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --
 -- Name: user_session usersession_ibfk_1; Type: FK CONSTRAINT; Schema: pajbot2; Owner: -
 --
 
-ALTER TABLE ONLY pajbot2.user_session
-    ADD CONSTRAINT usersession_ibfk_1 FOREIGN KEY (user_id) REFERENCES pajbot2."user"(id) ON UPDATE RESTRICT ON DELETE CASCADE;
+ALTER TABLE ONLY user_session
+    ADD CONSTRAINT usersession_ibfk_1 FOREIGN KEY (user_id) REFERENCES "user"(id) ON UPDATE RESTRICT ON DELETE CASCADE;
 
 
 --

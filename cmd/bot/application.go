@@ -172,7 +172,11 @@ func (a *Application) InitializeOAuth2Configs() (err error) {
 
 // RunDatabaseMigrations runs database migrations on the database specified in the config file
 func (a *Application) RunDatabaseMigrations() error {
-	err := stupidmigration.Migrate("../../migrations/psql", a.sqlClient)
+	sqlClient, err := sql.Open("postgres", a.config.PostgreSQL.DSN)
+	if err != nil {
+		return err
+	}
+	err = stupidmigration.Migrate("../../migrations/psql", sqlClient)
 	if err != nil {
 		fmt.Println("Unable to run SQL migrations", err)
 		return err
