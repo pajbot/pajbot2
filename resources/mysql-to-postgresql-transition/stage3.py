@@ -4,7 +4,7 @@ import pymysql.cursors
 import psycopg2
 
 mysql_connection=pymysql.connect(user='root', password='penis', database='pajbot2_test')
-postgresql_connection=psycopg2.connect(user='postgres', database='test')
+postgresql_connection=psycopg2.connect(user='pajbot', database='pajbot2')
 
 for ptablename, mtablename in [('twitch_user_channel_permission', 'TwitchUserChannelPermission')]:
     with postgresql_connection.cursor() as pcursor:
@@ -32,6 +32,13 @@ with postgresql_connection.cursor() as pcursor:
     pcursor.execute(rename.format('channelid', 'channel_id'))
     pcursor.execute(rename.format('userid', 'user_id'))
     pcursor.execute(rename.format('targetid', 'target_id'))
+
+with postgresql_connection.cursor() as pcursor:
+    rename = 'ALTER TABLE moderation_action RENAME COLUMN {} TO {}'
+
+    pcursor.execute('CREATE TABLE IF NOT EXISTS public.migrations (version text)')
+    pcursor.execute("TRUNCATE TABLE public.migrations")
+    pcursor.execute("INSERT INTO public.migrations (version) VALUES ('1')")
 
 postgresql_connection.commit()
 postgresql_connection.close()

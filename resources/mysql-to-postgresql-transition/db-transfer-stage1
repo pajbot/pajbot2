@@ -1,6 +1,6 @@
 LOAD DATABASE
-    FROM mysql://pajbot:password@localhost/pajbot2_test
-    INTO postgresql:///test
+    FROM mysql://root:penis@localhost/pajbot2_test
+    INTO postgresql://pajbot@localhost:5432/pajbot2
     excluding table names matching ~/permission/, 'schema_migrations'
     CAST type datetime to timestamptz drop default drop not null using zero-dates-to-null
 
