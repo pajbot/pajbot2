@@ -140,7 +140,7 @@ func (p *floatParameter) Reset() {
 }
 
 func (p *boolParameter) SetInterface(i interface{}) {
-	// TODO: make some better type checks, maybe allow to set int?
+	// TODO: make some better type checks, maybe allow to set int
 	switch v := i.(type) {
 	case bool:
 		p.Set(v)
@@ -150,7 +150,7 @@ func (p *boolParameter) SetInterface(i interface{}) {
 }
 
 func (p *floatParameter) SetInterface(i interface{}) {
-	// TODO: make some better type checks, maybe allow to set int?
+	// TODO: make some better type checks, maybe allow to set int
 	switch v := i.(type) {
 	case float32:
 		p.Set(v)

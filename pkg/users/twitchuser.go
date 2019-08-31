@@ -7,7 +7,6 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/utils"
 )
 
 type TwitchUser struct {
@@ -169,10 +168,9 @@ func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
 		return permissions, errors.New("missing user id or channel id")
 	}
 
-	const queryF = "SELECT permissions FROM `TwitchUserGlobalPermission` WHERE `twitch_user_id`=?;"
+	const queryF = "SELECT permissions FROM twitch_user_global_permission WHERE twitch_user_id=$1;"
 
-	var permissionsBytes []uint8
-	err := _server.sql.QueryRow(queryF, userID).Scan(&permissionsBytes)
+	err := _server.sql.QueryRow(queryF, userID).Scan(&permissions) // GOOD
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return permissions, nil
@@ -180,8 +178,6 @@ func GetUserGlobalPermissions(userID string) (pkg.Permission, error) {
 
 		return permissions, err
 	}
-
-	permissions = pkg.Permission(utils.BytesToUint64(permissionsBytes))
 
 	return permissions, nil
 }
@@ -193,22 +189,19 @@ func GetUserChannelPermissions(userID, channelID string) (pkg.Permission, error)
 		return permissions, errors.New("missing user id or channel id")
 	}
 
-	const queryF = "SELECT permissions FROM `TwitchUserChannelPermission` WHERE `twitch_user_id`=? AND `channel_id`=?;"
+	const queryF = "SELECT permissions FROM twitch_user_channel_permission WHERE twitch_user_id=$1 AND channel_id=$2;"
 
-	rows, err := _server.sql.Query(queryF, userID, channelID)
+	rows, err := _server.sql.Query(queryF, userID, channelID) // GOOD
 	if err != nil {
 		return permissions, err
 	}
 	defer rows.Close()
 
 	if rows.Next() {
-		var permissionsBytes []uint8
-		err := rows.Scan(&permissionsBytes)
+		err := rows.Scan(&permissions)
 		if err != nil {
 			return permissions, err
 		}
-
-		permissions = pkg.Permission(utils.BytesToUint64(permissionsBytes))
 	}
 
 	return permissions, nil
@@ -219,16 +212,9 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 		return errors.New("missing user id or channel id")
 	}
 
-	const queryF = "INSERT INTO TwitchUserChannelPermission (twitch_user_id, channel_id, permissions) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE permissions=?;"
+	const queryF = "INSERT INTO twitch_user_channel_permission (twitch_user_id, channel_id, permissions) VALUES ($1, $2, $3) ON CONFLICT (twitch_user_id, channel_id) DO UPDATE SET permissions=$3;"
 
-	permissionBytes := utils.Uint64ToBytes(uint64(permission))
-
-	rows, err := _server.sql.Query(queryF, userID, channelID, permissionBytes, permissionBytes)
-	if err != nil {
-		return err
-	}
-
-	err = rows.Close()
+	_, err := _server.sql.Exec(queryF, userID, channelID, permission) // GOOD
 	if err != nil {
 		return err
 	}
@@ -238,19 +224,17 @@ func SetUserChannelPermissions(userID, channelID string, permission pkg.Permissi
 
 func SetUserGlobalPermissions(userID string, permission pkg.Permission) error {
 	const queryF = `
-INSERT INTO TwitchUserGlobalPermission
+INSERT INTO twitch_user_global_permission
 	(twitch_user_id, permissions)
-	VALUES (?, ?)
-	ON DUPLICATE KEY UPDATE permissions=?;
+	VALUES ($1, $2)
+	ON CONFLICT (twitch_user_id) DO UPDATE SET permissions=$2;
 	`
 
 	if userID == "" {
 		return errors.New("missing user id or channel id")
 	}
 
-	permissionBytes := utils.Uint64ToBytes(uint64(permission))
-
-	_, err := _server.sql.Exec(queryF, userID, permissionBytes, permissionBytes)
+	_, err := _server.sql.Exec(queryF, userID, permission) // GOOD
 	if err != nil {
 		return err
 	}

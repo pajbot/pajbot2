@@ -105,11 +105,11 @@ func (c *BotChannel) getSettingsForModule(moduleID string) ([]byte, error) {
 SELECT
 	settings
 FROM
-	BotChannelModule
+	bot_channel_module
 WHERE
-	bot_channel_id=? AND module_id=?`
+	bot_channel_id=$1 AND module_id=$2`
 
-	row := c.sql.QueryRow(queryF, c.DatabaseID(), moduleID)
+	row := c.sql.QueryRow(queryF, c.DatabaseID(), moduleID) // GOOD
 
 	var s sql.NullString
 	err := row.Scan(&s)
@@ -145,12 +145,12 @@ func (c *BotChannel) enableModule(spec pkg.ModuleSpec, settings []byte) error {
 func (c *BotChannel) setModuleEnabledState(moduleID string, state *bool) error {
 	const queryF = `
 INSERT INTO
-	BotChannelModule
+	bot_channel_module
 	(bot_channel_id, module_id, enabled)
-	VALUES (?, ?, ?)
-ON DUPLICATE KEY UPDATE enabled=?`
+	VALUES ($1, $2, $3)
+ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET enabled=$3`
 
-	_, err := c.sql.Exec(queryF, c.DatabaseID(), moduleID, state, state)
+	_, err := c.sql.Exec(queryF, c.DatabaseID(), moduleID, state) // GOOD
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -239,9 +239,9 @@ type moduleConfig struct {
 }
 
 func (c *BotChannel) loadAllModuleConfigs() ([]*moduleConfig, error) {
-	const queryF = `SELECT id, module_id, enabled, settings FROM BotChannelModule WHERE bot_channel_id=?`
+	const queryF = `SELECT id, module_id, enabled, settings FROM bot_channel_module WHERE bot_channel_id=$1`
 
-	rows, err := c.sql.Query(queryF, c.DatabaseID())
+	rows, err := c.sql.Query(queryF, c.DatabaseID()) // GOOD
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +311,7 @@ func (c *BotChannel) OnModules(cb func(module pkg.Module) pkg.Actions, stop bool
 	defer c.modulesMutex.Unlock()
 
 	for _, module := range c.modules {
-		// TODO: This could potentially be run in steps now. maybe all modules with same priority are run together?
+		// TODO: This could potentially be run in steps now. maybe all modules with same priority are run together
 		if moduleActions := cb(module); moduleActions != nil {
 			actions = append(actions, moduleActions)
 			if stop && moduleActions.StopPropagation() {

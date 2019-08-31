@@ -103,7 +103,16 @@ func (h *Holder) Connection() pkg.PubSubConnection {
 }
 
 func (h *Holder) Load() error {
-	rows, err := h.db.Query("SELECT `id`, `channel_id`, `channel_name`, `channel_type`, `reporter_id`, `reporter_name`, `target_id`, `target_name`, `reason`, `logs`, `time` FROM `Report`")
+	const queryF = `
+SELECT
+	id, channel_id, channel_name,
+	channel_type, reporter_id, reporter_name,
+	target_id, target_name,
+	reason, logs, time
+FROM
+	report`
+
+	rows, err := h.db.Query(queryF) // GOOD
 	if err != nil {
 		return err
 	}
@@ -138,11 +147,12 @@ type handleReportMessage struct {
 
 func (h *Holder) Register(report Report) (*Report, bool, error) {
 	const queryF = `
-	INSERT INTO Report
+	INSERT INTO report
 		(channel_id, channel_name, channel_type,
 		reporter_id, reporter_name, target_id, target_name, reason, logs, time)
 	VALUES
-		(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	RETURNING id
 	`
 
 	h.reportsMutex.Lock()
@@ -156,15 +166,11 @@ func (h *Holder) Register(report Report) (*Report, bool, error) {
 		}
 	}
 
-	res, err := h.db.Exec(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), report.Time)
+	row := h.db.QueryRow(queryF, report.Channel.ID, report.Channel.Name, report.Channel.Type, report.Reporter.ID, report.Reporter.Name, report.Target.ID, report.Target.Name, report.Reason, strings.Join(report.Logs, "\n"), report.Time) // GOOD
+	var id int64
+	err := row.Scan(&id)
 	if err != nil {
 		fmt.Printf("Error inserting report %v into SQL: %s\n", report, err)
-		return nil, false, err
-	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		fmt.Printf("Error getting last insert id: %s\n", err)
 		return nil, false, err
 	}
 
@@ -182,8 +188,8 @@ func (h *Holder) Update(report Report) error {
 		return errors.New("Missing report ID in Update")
 	}
 
-	const queryF = `UPDATE Report SET time=?, logs=? WHERE id=?`
-	_, err := h.db.Exec(queryF, report.Time, strings.Join(report.Logs, "\n"), report.ID)
+	const queryF = `UPDATE report SET time=$1, logs=$2 WHERE id=$3`
+	_, err := h.db.Exec(queryF, report.Time, strings.Join(report.Logs, "\n"), report.ID) // GOOD
 	if err != nil {
 		return err
 	}
@@ -206,7 +212,7 @@ type reportHandled struct {
 func (h *Holder) insertHistoricReport(report Report, action handleReportMessage) {
 	const queryF = `
 INSERT INTO
-	ReportHistory
+	report_history
 (
 channel_id, channel_name, channel_type,
 reporter_id, reporter_name,
@@ -219,21 +225,21 @@ time_handled
 )
 
 VALUES (
-?,?,?,
-?,?,
-?,?,
-?,?,
-?,
-?,?,
-?,?,
-?
+$1,$2,$3,
+$4,$5,
+$6,$7,
+$8,$9,
+$10,
+$11,$12,
+$13,$14,
+$15
 )`
 
 	var actionDuration uint32
 	if action.Duration != nil {
 		actionDuration = *action.Duration
 	}
-	_, err := h.db.Exec(queryF,
+	_, err := h.db.Exec(queryF, // GOOD
 		report.Channel.ID, report.Channel.Name, report.Channel.Type,
 		report.Reporter.ID, report.Reporter.Name,
 		report.Target.ID, report.Target.Name,
@@ -340,9 +346,9 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 // dismissReport assumes that reportsMutex has already been locked
 func (h *Holder) dismissReport(reportID uint32) error {
 	// Delete from SQL
-	const queryF = "DELETE FROM Report WHERE `id`=?"
+	const queryF = "DELETE FROM report WHERE id=$1"
 
-	_, err := h.db.Exec(queryF, reportID)
+	_, err := h.db.Exec(queryF, reportID) // GOOD
 	if err != nil {
 		return err
 	}

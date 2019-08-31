@@ -4,6 +4,9 @@ pajbot2
 *.exe~
 /bot
 
+# Ignore vendor folder
+/vendor/
+
 # Ignore config files
 config.json
 

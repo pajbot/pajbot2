@@ -39,7 +39,7 @@ func (m *Pajbot1Commands) loadPajbot1Commands() error {
 
 	session := m.server.oldSession
 
-	rows, err := session.Query(queryF)
+	rows, err := session.Query(queryF) // GOOD
 	if err != nil {
 		return err
 	}

@@ -140,12 +140,12 @@ func (b *base) save() error {
 
 	const queryF = `
 INSERT INTO
-	BotChannelModule
+	bot_channel_module
 	(bot_channel_id, module_id, settings)
-	VALUES (?, ?, ?)
-ON DUPLICATE KEY UPDATE settings=?`
+	VALUES ($1, $2, $3)
+ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET settings=$3`
 
-	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes, bytes)
+	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes) // GOOD
 	if err != nil {
 		return err
 	}

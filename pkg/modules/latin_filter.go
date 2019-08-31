@@ -80,9 +80,9 @@ func (m *latinFilter) Initialize() {
 	m.addToWhitelist(0x20, 0x7e)       // Basic latin
 	m.addToWhitelist(0x1f600, 0x1f64f) // Emojis
 	m.addToWhitelist(0x1f300, 0x1f5ff) // "Miscellaneous symbols and pictographs". Includes some emojis like 100
-	m.addToWhitelist(0x1f44c, 0x1f44c) // Chatterino?
-	m.addToWhitelist(0x206d, 0x206d)   // Chatterino?
-	m.addToWhitelist(0x2660, 0x2765)   // Chatterino?
+	m.addToWhitelist(0x1f44c, 0x1f44c) // Chatterino
+	m.addToWhitelist(0x206d, 0x206d)   // Chatterino
+	m.addToWhitelist(0x2660, 0x2765)   // Chatterino
 
 	m.addToWhitelist(0x1f171, 0x1f171) // B emoji
 	m.addToWhitelist(0x1f900, 0x1f9ff) // More emojis

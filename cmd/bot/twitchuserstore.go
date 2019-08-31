@@ -51,12 +51,12 @@ func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 	batches, _ := utils.ChunkStringSlice(remaining, 100)
 	for _, batch := range batches {
 		wg.Add(1)
-		go func() {
+		go func(batch []string) {
 			defer wg.Done()
 			data, err := apirequest.TwitchWrapper.GetUsersByLogin(batch)
 
 			if err != nil {
-				fmt.Println("API ERROR. maybe retry?")
+				fmt.Println("API ERROR. maybe retry")
 				return
 			}
 
@@ -69,7 +69,7 @@ func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 				ids[user.Login] = user.ID
 				s.save(user.ID, user.Login)
 			}
-		}()
+		}(batch)
 	}
 
 	wg.Wait()
@@ -160,11 +160,11 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 	batches, _ := utils.ChunkStringSlice(remaining, 100)
 	for _, batch := range batches {
 		wg.Add(1)
-		go func() {
+		go func(batch []string) {
 			defer wg.Done()
 			data, err := apirequest.TwitchWrapper.GetUsersByID(batch)
 			if err != nil {
-				fmt.Println("API ERROR. maybe retry?")
+				fmt.Println("API ERROR. maybe retry")
 				return
 			}
 
@@ -177,7 +177,7 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 				names[user.ID] = user.Login
 				s.save(user.ID, user.Login)
 			}
-		}()
+		}(batch)
 	}
 
 	wg.Wait()

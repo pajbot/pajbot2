@@ -82,7 +82,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(botChannels) == 0 {
-		utils.WebWriteError(w, 404, "no bots in this channel?")
+		utils.WebWriteError(w, 404, "no bots in this channel question mark")
 		return
 	}
 

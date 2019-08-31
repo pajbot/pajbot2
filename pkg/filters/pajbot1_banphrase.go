@@ -62,7 +62,7 @@ func handleRegex(phrase, text string) bool {
 }
 
 func (f *Pajbot1Banphrase) Triggers(text string) bool {
-	// log.Println("Do we", f.Phrase, "trigger", text, "? forsenThink")
+	// log.Println("Do we", f.Phrase, "trigger", text, " forsenThink")
 	switch f.Operator {
 	case OperatorContains:
 		if handleContains(f.Phrase, text) {
