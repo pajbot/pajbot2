@@ -11,7 +11,7 @@ import (
 
 func init() {
 	Register("pajbot1_commands", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "pajbot1_commands",
 			name:  "pajbot1 commands",
 			maker: newPajbot1Commands,

@@ -28,7 +28,7 @@ import (
 
 func init() {
 	Register("message_height_limit", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "message_height_limit",
 			name:  "Message height limit",
 			maker: NewMessageHeightLimit,

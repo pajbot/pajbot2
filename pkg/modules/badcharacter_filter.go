@@ -10,7 +10,7 @@ import (
 
 func init() {
 	Register("bad_character_filter", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "bad_character_filter",
 			name:  "Bad character filter",
 			maker: newBadCharacterFilter,

@@ -18,7 +18,7 @@ func init() {
 	Register("afk", func() pkg.ModuleSpec {
 		afkDatabase := map[string]bool{}
 
-		return &moduleSpec{
+		return &Spec{
 			id:               "afk",
 			name:             "AFK",
 			enabledByDefault: false,

@@ -13,7 +13,7 @@ type moduleParameterSpec struct {
 
 type moduleMaker func(b mbase.Base) pkg.Module
 
-type moduleSpec struct {
+type Spec struct {
 	// i.e. "report". This is used in external calls enabling or disabling the module
 	// the ID is also what's used when storing settings in the database
 	id string
@@ -32,35 +32,44 @@ type moduleSpec struct {
 	maker moduleMaker
 }
 
-func (s *moduleSpec) ID() string {
+func NewSpec(id, name string, enabledByDefault bool, maker moduleMaker) *Spec {
+	return &Spec{
+		id:               id,
+		name:             name,
+		enabledByDefault: enabledByDefault,
+		maker:            maker,
+	}
+}
+
+func (s *Spec) ID() string {
 	return s.id
 }
 
-func (s *moduleSpec) Name() string {
+func (s *Spec) Name() string {
 	return s.name
 }
 
-func (s *moduleSpec) Type() pkg.ModuleType {
+func (s *Spec) Type() pkg.ModuleType {
 	return s.moduleType
 }
 
-func (s *moduleSpec) EnabledByDefault() bool {
+func (s *Spec) EnabledByDefault() bool {
 	return s.enabledByDefault
 }
 
-func (s *moduleSpec) Create(bot pkg.BotChannel) pkg.Module {
+func (s *Spec) Create(bot pkg.BotChannel) pkg.Module {
 	b := mbase.New(s, bot, _server.sql, _server.oldSession, _server.pubSub, _server.reportHolder)
 	m := s.maker(b)
 
 	return m
 }
 
-func (s *moduleSpec) Priority() int {
+func (s *Spec) Priority() int {
 	return s.priority
 }
 
-func (s *moduleSpec) Parameters() map[string]pkg.ModuleParameterSpec {
+func (s *Spec) Parameters() map[string]pkg.ModuleParameterSpec {
 	return s.parameters
 }
 
-var _ pkg.ModuleSpec = &moduleSpec{}
+var _ pkg.ModuleSpec = &Spec{}

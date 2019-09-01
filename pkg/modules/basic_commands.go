@@ -8,7 +8,7 @@ import (
 
 func init() {
 	Register("basic_commands", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:               "basic_commands",
 			name:             "Basic commands",
 			maker:            newBasicCommandsModule,

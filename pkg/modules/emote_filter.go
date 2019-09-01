@@ -12,7 +12,7 @@ import (
 
 func init() {
 	Register("emote_filter", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "emote_limit",
 			name:  "Emote limit",
 			maker: newEmoteFilter,

@@ -9,7 +9,7 @@ import (
 
 func init() {
 	Register("goodbye", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "goodbye",
 			name:  "Goodbye",
 			maker: newGoodbye,

@@ -7,7 +7,7 @@ import (
 
 func init() {
 	Register("twitter", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "twitter",
 			name:  "Twitter",
 			maker: newTwitter,

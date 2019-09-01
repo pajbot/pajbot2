@@ -12,7 +12,7 @@ import (
 
 func init() {
 	Register("bttv_emote_parser", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:   "bttv_emote_parser",
 			name: "BTTV emote parser",
 

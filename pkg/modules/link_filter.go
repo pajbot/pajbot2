@@ -15,7 +15,7 @@ func init() {
 		relaxedRegexp := xurls.Relaxed()
 		strictRegexp := xurls.Strict()
 
-		return &moduleSpec{
+		return &Spec{
 			id:   "link_filter",
 			name: "Link filter",
 			maker: func(b mbase.Base) pkg.Module {

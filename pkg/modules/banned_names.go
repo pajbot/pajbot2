@@ -22,7 +22,7 @@ func init() {
 			regexp.MustCompile(`^h[il1]erot[il1]tan.+`),
 		}
 
-		return &moduleSpec{
+		return &Spec{
 			id:   "banned_names",
 			name: "Banned names",
 			maker: func(b mbase.Base) pkg.Module {

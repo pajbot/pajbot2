@@ -15,7 +15,7 @@ import (
 
 func init() {
 	Register("nuke", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "nuke",
 			name:  "Nuke",
 			maker: newNuke,

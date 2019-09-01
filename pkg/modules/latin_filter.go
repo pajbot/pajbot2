@@ -12,7 +12,7 @@ import (
 
 func init() {
 	Register("latin_filter", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:    "latin_filter",
 			name:  "Latin filter",
 			maker: newLatinFilter,

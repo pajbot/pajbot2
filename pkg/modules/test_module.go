@@ -7,7 +7,7 @@ import (
 
 func init() {
 	Register("test", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:               "test",
 			name:             "Test",
 			enabledByDefault: false,

@@ -13,7 +13,7 @@ import (
 
 func init() {
 	Register("pajbot1_banphrase", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:   "pajbot1_banphrase",
 			name: "pajbot1 banphrase",
 			maker: func(b mbase.Base) pkg.Module {

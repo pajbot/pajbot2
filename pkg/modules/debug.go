@@ -13,7 +13,7 @@ import (
 
 func init() {
 	Register("debug", func() pkg.ModuleSpec {
-		return &moduleSpec{
+		return &Spec{
 			id:               "debug",
 			name:             "Debug",
 			maker:            newDebugModule,
