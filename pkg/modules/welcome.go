@@ -35,7 +35,7 @@ func newWelcome(b mbase.Base) pkg.Module {
 }
 
 func (m *welcome) Initialize() {
-	conn, err := m.BotChannel().Events().Listen("on_join", func() error {
+	err := m.Listen("on_join", func() error {
 		go m.BotChannel().Say("pb2 joined")
 		return nil
 	}, 100)
@@ -43,6 +43,4 @@ func (m *welcome) Initialize() {
 		// FIXME
 		log.Println("ERROR LISTENING TO ON JOIN XD")
 	}
-
-	m.Connections = append(m.Connections, conn)
 }

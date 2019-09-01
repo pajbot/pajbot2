@@ -15,7 +15,7 @@ type Base struct {
 	spec pkg.ModuleSpec
 	bot  pkg.BotChannel
 
-	Connections []*eventemitter.Listener
+	connections []*eventemitter.Listener
 
 	parameters map[string]pkg.ModuleParameter
 
@@ -88,7 +88,7 @@ func (b *Base) Handle(name string, cb func()) {
 }
 
 func (b *Base) Disable() error {
-	for _, c := range b.Connections {
+	for _, c := range b.connections {
 		c.Disconnected = true
 	}
 	return nil
@@ -171,6 +171,17 @@ func (b *Base) Save() error {
 		log.Printf("Error saving module %s: %s\n", b.ID(), err.Error())
 		return err
 	}
+
+	return nil
+}
+
+func (b *Base) Listen(event string, cb func() error, prio int) error {
+	conn, err := b.bot.Events().Listen(event, cb, prio)
+	if err != nil {
+		return err
+	}
+
+	b.connections = append(b.connections, conn)
 
 	return nil
 }

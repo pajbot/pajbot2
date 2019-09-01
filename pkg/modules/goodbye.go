@@ -28,7 +28,7 @@ func newGoodbye(b mbase.Base) pkg.Module {
 		Base: b,
 	}
 
-	conn, err := m.BotChannel().Events().Listen("on_quit", func() error {
+	err := m.Listen("on_quit", func() error {
 		go m.BotChannel().Say("cya lol")
 		return nil
 	}, 100)
@@ -37,8 +37,6 @@ func newGoodbye(b mbase.Base) pkg.Module {
 		// FIXME
 		// return err
 	}
-
-	m.Connections = append(m.Connections, conn)
 
 	return m
 }
