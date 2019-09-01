@@ -7,6 +7,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/emotes"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -25,14 +26,14 @@ func init() {
 }
 
 type bttvEmoteParser struct {
-	base
+	mbase.Base
 
 	globalEmotes *map[string]common.Emote
 }
 
-func newbttvEmoteParser(b base) pkg.Module {
+func newbttvEmoteParser(b mbase.Base) pkg.Module {
 	return &bttvEmoteParser{
-		base: b,
+		Base: b,
 
 		globalEmotes: &emotes.GlobalEmotes.Bttv,
 	}

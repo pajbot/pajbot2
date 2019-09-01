@@ -1,6 +1,9 @@
 package modules
 
-import "github.com/pajbot/pajbot2/pkg"
+import (
+	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
+)
 
 type moduleParameterSpec struct {
 	description   string
@@ -8,7 +11,7 @@ type moduleParameterSpec struct {
 	defaultValue  interface{}
 }
 
-type moduleMaker func(b base) pkg.Module
+type moduleMaker func(b mbase.Base) pkg.Module
 
 type moduleSpec struct {
 	// i.e. "report". This is used in external calls enabling or disabling the module
@@ -46,7 +49,7 @@ func (s *moduleSpec) EnabledByDefault() bool {
 }
 
 func (s *moduleSpec) Create(bot pkg.BotChannel) pkg.Module {
-	b := newBase(s, bot)
+	b := mbase.New(s, bot, _server.sql, _server.oldSession, _server.pubSub, _server.reportHolder)
 	m := s.maker(b)
 
 	return m

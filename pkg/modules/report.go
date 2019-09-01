@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/report"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
@@ -22,16 +23,16 @@ func init() {
 }
 
 type Report struct {
-	base
+	mbase.Base
 
 	reportHolder *report.Holder
 }
 
 var _ pkg.Module = &Report{}
 
-func newReport(b base) pkg.Module {
+func newReport(b mbase.Base) pkg.Module {
 	m := &Report{
-		base: b,
+		Base: b,
 
 		reportHolder: _server.reportHolder,
 	}
@@ -49,7 +50,7 @@ func (m *Report) ProcessReport(user pkg.User, parts []string) pkg.Actions {
 		return nil
 	}
 
-	if !user.HasPermission(m.bot.Channel(), pkg.PermissionReport) {
+	if !user.HasPermission(m.BotChannel().Channel(), pkg.PermissionReport) {
 		return twitchactions.DoWhisper(user, "you don't have permissions to use the !report command")
 	}
 
@@ -66,7 +67,7 @@ func (m *Report) ProcessReport(user pkg.User, parts []string) pkg.Actions {
 		reason = strings.Join(parts[2:], " ")
 	}
 
-	return m.report(m.bot.Bot(), user, m.bot.Channel(), reportedUsername, reason, duration)
+	return m.report(m.BotChannel().Bot(), user, m.BotChannel().Channel(), reportedUsername, reason, duration)
 }
 
 func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Channel, targetUsername string, reason string, duration int) pkg.Actions {

@@ -1,33 +1,41 @@
-package modules
+package mbase
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
+	"github.com/pajbot/pajbot2/pkg/report"
 )
 
-type base struct {
+type Base struct {
 	spec pkg.ModuleSpec
 	bot  pkg.BotChannel
 
-	server *server
-
-	connections []*eventemitter.Listener
+	Connections []*eventemitter.Listener
 
 	parameters map[string]pkg.ModuleParameter
+
+	SQL          *sql.DB
+	OldSession   *sql.DB
+	PubSub       pkg.PubSub
+	ReportHolder *report.Holder
 }
 
-func newBase(spec pkg.ModuleSpec, bot pkg.BotChannel) base {
-	b := base{
+func New(spec pkg.ModuleSpec, bot pkg.BotChannel, sql, oldSession *sql.DB, pubSub pkg.PubSub, reportHolder *report.Holder) Base {
+	b := Base{
 		spec: spec,
 		bot:  bot,
 
-		server: &_server,
-
 		parameters: make(map[string]pkg.ModuleParameter),
+
+		SQL:          sql,
+		OldSession:   oldSession,
+		PubSub:       pubSub,
+		ReportHolder: reportHolder,
 	}
 
 	for key, value := range spec.Parameters() {
@@ -37,22 +45,26 @@ func newBase(spec pkg.ModuleSpec, bot pkg.BotChannel) base {
 	return b
 }
 
-func (b base) BotChannel() pkg.BotChannel {
+func (b *Base) BotChannel() pkg.BotChannel {
 	return b.bot
 }
 
-func (b *base) MarshalJSON() ([]byte, error) {
+func (b *Base) MarshalJSON() ([]byte, error) {
 	fmt.Println("BASE MARSHAL JSON")
 
-	return nullBuffer, nil
+	return nil, nil
 }
 
-func (b *base) Parameters() map[string]pkg.ModuleParameter {
+func (b *Base) Parameters() map[string]pkg.ModuleParameter {
 	return b.parameters
 }
 
-func (b *base) LoadSettings(settingsBytes []byte) error {
+func (b *Base) LoadSettings(settingsBytes []byte) error {
 	if len(b.parameters) == 0 {
+		return nil
+	}
+
+	if len(settingsBytes) == 0 {
 		return nil
 	}
 
@@ -71,38 +83,38 @@ func (b *base) LoadSettings(settingsBytes []byte) error {
 	return nil
 }
 
-func (b *base) Handle(name string, cb func()) {
+func (b *Base) Handle(name string, cb func()) {
 
 }
 
-func (b *base) Disable() error {
-	for _, c := range b.connections {
+func (b *Base) Disable() error {
+	for _, c := range b.Connections {
 		c.Disconnected = true
 	}
 	return nil
 }
 
-func (b base) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+func (b Base) OnWhisper(event pkg.MessageEvent) pkg.Actions {
 	return nil
 }
 
-func (b base) OnMessage(event pkg.MessageEvent) pkg.Actions {
+func (b Base) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return nil
 }
 
-func (b base) ID() string {
+func (b Base) ID() string {
 	return b.spec.ID()
 }
 
-func (b base) Type() pkg.ModuleType {
+func (b Base) Type() pkg.ModuleType {
 	return b.spec.Type()
 }
 
-func (b base) Priority() int {
+func (b Base) Priority() int {
 	return b.spec.Priority()
 }
 
-func (b *base) setParameter(key string, value string) error {
+func (b *Base) SetParameter(key string, value string) error {
 	// 1. Find parameter spec (This includes type of the parameter)
 	param, ok := b.parameters[key]
 	if !ok {
@@ -119,7 +131,7 @@ func (b *base) setParameter(key string, value string) error {
 	return nil
 }
 
-func (b *base) save() error {
+func (b *Base) save() error {
 	parameters := map[string]interface{}{}
 	for key, param := range b.Parameters() {
 		if !param.HasValue() {
@@ -145,7 +157,7 @@ INSERT INTO
 	VALUES ($1, $2, $3)
 ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET settings=$3`
 
-	_, err = _server.sql.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes) // GOOD
+	_, err = b.SQL.Exec(queryF, b.bot.DatabaseID(), b.ID(), bytes) // GOOD
 	if err != nil {
 		return err
 	}
@@ -153,7 +165,7 @@ ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET settings=$3`
 	return nil
 }
 
-func (b *base) Save() error {
+func (b *Base) Save() error {
 	err := b.save()
 	if err != nil {
 		log.Printf("Error saving module %s: %s\n", b.ID(), err.Error())

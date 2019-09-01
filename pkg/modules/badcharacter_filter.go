@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -18,14 +19,14 @@ func init() {
 }
 
 type badCharacterFilter struct {
-	base
+	mbase.Base
 
 	badCharacters []rune
 }
 
-func newBadCharacterFilter(b base) pkg.Module {
+func newBadCharacterFilter(b mbase.Base) pkg.Module {
 	return &badCharacterFilter{
-		base: b,
+		Base: b,
 
 		badCharacters: []rune{'\x01'},
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	xurls "mvdan.cc/xurls/v2"
 )
@@ -17,7 +18,7 @@ func init() {
 		return &moduleSpec{
 			id:   "link_filter",
 			name: "Link filter",
-			maker: func(b base) pkg.Module {
+			maker: func(b mbase.Base) pkg.Module {
 				return newLinkFilter(b, relaxedRegexp, strictRegexp)
 			},
 		}
@@ -25,15 +26,15 @@ func init() {
 }
 
 type LinkFilter struct {
-	base
+	mbase.Base
 
 	relaxedRegexp *regexp.Regexp
 	strictRegexp  *regexp.Regexp
 }
 
-func newLinkFilter(b base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
+func newLinkFilter(b mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
 	return &LinkFilter{
-		base: b,
+		Base: b,
 
 		relaxedRegexp: relaxedRegexp,
 		strictRegexp:  strictRegexp,

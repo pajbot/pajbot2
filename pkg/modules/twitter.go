@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -17,12 +18,12 @@ func init() {
 }
 
 type twitter struct {
-	base
+	mbase.Base
 }
 
-func newTwitter(b base) pkg.Module {
+func newTwitter(b mbase.Base) pkg.Module {
 	m := &twitter{
-		base: b,
+		Base: b,
 	}
 
 	// FIXME
@@ -32,11 +33,11 @@ func newTwitter(b base) pkg.Module {
 }
 
 func (m *twitter) Initialize() {
-	recv := m.bot.Bot().Application().MIMO().Subscriber("twitter")
+	recv := m.BotChannel().Bot().Application().MIMO().Subscriber("twitter")
 	go func() {
 		for raw := range recv {
 			message := raw.(string)
-			m.bot.Say("got tweet: " + message)
+			m.BotChannel().Say("got tweet: " + message)
 		}
 	}()
 

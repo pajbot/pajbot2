@@ -10,6 +10,7 @@ import (
 	"github.com/pajbot/botsync/pkg/protocol"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/utils"
 )
 
@@ -21,7 +22,7 @@ func init() {
 			id:               "afk",
 			name:             "AFK",
 			enabledByDefault: false,
-			maker: func(b base) pkg.Module {
+			maker: func(b mbase.Base) pkg.Module {
 				return newAFK(b, afkDatabase)
 			},
 		}
@@ -29,7 +30,7 @@ func init() {
 }
 
 type afk struct {
-	base
+	mbase.Base
 
 	commands pkg.CommandsManager
 
@@ -38,9 +39,9 @@ type afk struct {
 	afkDatabase map[string]bool
 }
 
-func newAFK(b base, afkDatabase map[string]bool) pkg.Module {
+func newAFK(b mbase.Base, afkDatabase map[string]bool) pkg.Module {
 	m := &afk{
-		base: b,
+		Base: b,
 
 		afkDatabase: afkDatabase,
 
@@ -53,8 +54,8 @@ func newAFK(b base, afkDatabase map[string]bool) pkg.Module {
 
 	m.botsync.OnConnect(func() {
 		fmt.Println("Connected to botsync")
-		m.botsync.Send(protocol.NewAFKSubscribeMessage(m.bot.ChannelID()))
-		m.botsync.Send(protocol.NewBackSubscribeMessage(m.bot.ChannelID()))
+		m.botsync.Send(protocol.NewAFKSubscribeMessage(m.BotChannel().ChannelID()))
+		m.botsync.Send(protocol.NewBackSubscribeMessage(m.BotChannel().ChannelID()))
 	})
 
 	// FIXME
@@ -90,7 +91,7 @@ func (m *afk) Initialize() {
 	m.commands.Register([]string{"!afk", "!gn"}, &afkCmd{m})
 
 	m.botsync.SetAuthentication(protocol.Authentication{
-		TwitchUserID:        m.bot.Bot().TwitchAccount().ID(),
+		TwitchUserID:        m.BotChannel().Bot().TwitchAccount().ID(),
 		AuthenticationToken: "penis",
 	})
 
@@ -119,7 +120,7 @@ func (m *afk) onMessage(message *protocol.Message) {
 			return
 		}
 		if !message.Historic {
-			m.bot.Say(parameters.UserName + " just went afk: " + parameters.Reason)
+			m.BotChannel().Say(parameters.UserName + " just went afk: " + parameters.Reason)
 		}
 		m.afkDatabase[parameters.UserID] = true
 
@@ -133,7 +134,7 @@ func (m *afk) onMessage(message *protocol.Message) {
 		afkDuration := time.Millisecond * time.Duration(parameters.Duration)
 		response := fmt.Sprintf("%s just came back after %s: %s",
 			parameters.UserName, utils.DurationString(afkDuration), parameters.Reason)
-		m.bot.Say(response)
+		m.BotChannel().Say(response)
 		delete(m.afkDatabase, parameters.UserID)
 	}
 }
@@ -141,7 +142,7 @@ func (m *afk) onMessage(message *protocol.Message) {
 func (m *afk) Disable() error {
 	m.botsync.Disconnect()
 
-	return m.base.Disable()
+	return m.Base.Disable()
 }
 
 func (m *afk) OnMessage(event pkg.MessageEvent) pkg.Actions {
@@ -152,8 +153,8 @@ func (m *afk) OnMessage(event pkg.MessageEvent) pkg.Actions {
 			UserID:   user.GetID(),
 			UserName: user.GetName(),
 
-			ChannelID:   m.bot.ChannelID(),
-			ChannelName: m.bot.ChannelName(),
+			ChannelID:   m.BotChannel().ChannelID(),
+			ChannelName: m.BotChannel().ChannelName(),
 		}))
 		return nil
 	}

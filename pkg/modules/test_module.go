@@ -2,6 +2,7 @@ package modules
 
 import (
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -17,11 +18,11 @@ func init() {
 }
 
 type test struct {
-	base
+	mbase.Base
 }
 
-func newTest(b base) pkg.Module {
+func newTest(b mbase.Base) pkg.Module {
 	return &test{
-		base: b,
+		Base: b,
 	}
 }

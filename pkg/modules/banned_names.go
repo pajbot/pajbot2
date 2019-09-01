@@ -4,6 +4,7 @@ import (
 	"regexp"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -24,7 +25,7 @@ func init() {
 		return &moduleSpec{
 			id:   "banned_names",
 			name: "Banned names",
-			maker: func(b base) pkg.Module {
+			maker: func(b mbase.Base) pkg.Module {
 				return newBannedNames(b, badUsernames)
 			},
 
@@ -34,14 +35,14 @@ func init() {
 }
 
 type bannedNames struct {
-	base
+	mbase.Base
 
 	badUsernames []*regexp.Regexp
 }
 
-func newBannedNames(b base, badUsernames []*regexp.Regexp) pkg.Module {
+func newBannedNames(b mbase.Base, badUsernames []*regexp.Regexp) pkg.Module {
 	return &bannedNames{
-		base: b,
+		Base: b,
 	}
 }
 

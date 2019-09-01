@@ -4,6 +4,7 @@ import (
 	"github.com/pajbot/pajbot2/internal/commands/getuserid"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -18,14 +19,14 @@ func init() {
 }
 
 type otherCommandsModule struct {
-	base
+	mbase.Base
 
 	commands pkg.CommandsManager
 }
 
-func newOtherCommandsModule(b base) pkg.Module {
+func newOtherCommandsModule(b mbase.Base) pkg.Module {
 	m := &otherCommandsModule{
-		base: b,
+		Base: b,
 
 		commands: commands.NewCommands(),
 	}

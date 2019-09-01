@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -17,14 +18,14 @@ func init() {
 }
 
 type basicCommandsModule struct {
-	base
+	mbase.Base
 
 	commands pkg.CommandsManager
 }
 
-func newBasicCommandsModule(b base) pkg.Module {
+func newBasicCommandsModule(b mbase.Base) pkg.Module {
 	m := &basicCommandsModule{
-		base: b,
+		Base: b,
 
 		commands: commands.NewCommands(),
 	}
@@ -37,12 +38,12 @@ func newBasicCommandsModule(b base) pkg.Module {
 
 func (m *basicCommandsModule) Initialize() {
 	m.commands.Register([]string{"!pb2ping"}, commands.NewPing())
-	m.commands.Register([]string{"!pb2join"}, commands.NewJoin(m.bot))
-	m.commands.Register([]string{"!pb2leave"}, commands.NewLeave(m.bot))
-	m.commands.Register([]string{"!pb2module"}, commands.NewModule(m.bot))
-	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit(m.bot))
+	m.commands.Register([]string{"!pb2join"}, commands.NewJoin(m.BotChannel()))
+	m.commands.Register([]string{"!pb2leave"}, commands.NewLeave(m.BotChannel()))
+	m.commands.Register([]string{"!pb2module"}, commands.NewModule(m.BotChannel()))
+	m.commands.Register([]string{"!pb2quit"}, commands.NewQuit(m.BotChannel()))
 
-	m.commands.Register([]string{"!user"}, commands.NewUser(m.bot))
+	m.commands.Register([]string{"!user"}, commands.NewUser(m.BotChannel()))
 }
 
 func (m *basicCommandsModule) OnMessage(event pkg.MessageEvent) pkg.Actions {

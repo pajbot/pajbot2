@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -20,12 +21,12 @@ func init() {
 var _ pkg.Module = &MessageLengthLimit{}
 
 type MessageLengthLimit struct {
-	base
+	mbase.Base
 }
 
-func newMessageLengthLimit(b base) pkg.Module {
+func newMessageLengthLimit(b mbase.Base) pkg.Module {
 	return &MessageLengthLimit{
-		base: b,
+		Base: b,
 	}
 }
 

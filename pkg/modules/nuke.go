@@ -9,6 +9,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -28,7 +29,7 @@ const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
 type nukeModule struct {
-	base
+	mbase.Base
 
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
@@ -44,9 +45,9 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-func newNuke(b base) pkg.Module {
+func newNuke(b mbase.Base) pkg.Module {
 	m := &nukeModule{
-		base: b,
+		Base: b,
 
 		messages: make(map[string][]nukeMessage),
 
@@ -75,7 +76,7 @@ func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions
 		return nil
 	}
 
-	if !event.User.HasChannelPermission(m.bot.Channel(), pkg.PermissionModeration) {
+	if !event.User.HasChannelPermission(m.BotChannel().Channel(), pkg.PermissionModeration) {
 		return nil
 	}
 
@@ -95,7 +96,7 @@ func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions
 		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
 	}
 
-	m.nuke(event.User, m.bot, phrase, scrollbackLength, timeoutDuration)
+	m.nuke(event.User, m.BotChannel(), phrase, scrollbackLength, timeoutDuration)
 
 	return nil
 }
@@ -106,7 +107,7 @@ func (m *nukeModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
 
 func (m *nukeModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	defer func() {
-		m.addMessage(m.bot.Channel(), event.User, event.Message)
+		m.addMessage(m.BotChannel().Channel(), event.User, event.Message)
 	}()
 
 	return m.commands.OnMessage(event)

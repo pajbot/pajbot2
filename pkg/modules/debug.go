@@ -5,6 +5,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/pajbot2/pkg/users"
 	"github.com/pajbot/utils"
@@ -60,14 +61,14 @@ func (c pb2Whisper) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions 
 }
 
 type debugModule struct {
-	base
+	mbase.Base
 
 	commands pkg.CommandsManager
 }
 
-func newDebugModule(b base) pkg.Module {
+func newDebugModule(b mbase.Base) pkg.Module {
 	m := &debugModule{
-		base: b,
+		Base: b,
 
 		commands: commands.NewCommands(),
 	}

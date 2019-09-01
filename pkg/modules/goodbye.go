@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -19,16 +20,16 @@ func init() {
 }
 
 type goodbye struct {
-	base
+	mbase.Base
 }
 
-func newGoodbye(b base) pkg.Module {
+func newGoodbye(b mbase.Base) pkg.Module {
 	m := &goodbye{
-		base: b,
+		Base: b,
 	}
 
-	conn, err := m.bot.Events().Listen("on_quit", func() error {
-		go m.bot.Say("cya lol")
+	conn, err := m.BotChannel().Events().Listen("on_quit", func() error {
+		go m.BotChannel().Say("cya lol")
 		return nil
 	}, 100)
 	if err != nil {
@@ -37,7 +38,7 @@ func newGoodbye(b base) pkg.Module {
 		// return err
 	}
 
-	m.connections = append(m.connections, conn)
+	m.Connections = append(m.Connections, conn)
 
 	return m
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/modules/datastructures"
 )
 
@@ -33,15 +34,15 @@ type UnicodeRange struct {
 }
 
 type latinFilter struct {
-	base
+	mbase.Base
 
 	transparentList  *datastructures.TransparentList
 	unicodeWhitelist []UnicodeRange
 }
 
-func newLatinFilter(b base) pkg.Module {
+func newLatinFilter(b mbase.Base) pkg.Module {
 	m := &latinFilter{
-		base: b,
+		Base: b,
 
 		transparentList: datastructures.NewTransparentList(),
 	}
@@ -122,7 +123,7 @@ func (m *latinFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		}{
 			FullMessage: text,
 			Username:    user.GetName(),
-			Channel:     m.bot.Channel().GetName(),
+			Channel:     m.BotChannel().Channel().GetName(),
 			Timestamp:   time.Now().UTC(),
 		}
 		messageRunes := []rune(text)

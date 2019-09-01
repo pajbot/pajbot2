@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
@@ -35,7 +36,7 @@ func init() {
 }
 
 type value struct {
-	base
+	mbase.Base
 
 	commands pkg.CommandsManager
 
@@ -50,7 +51,7 @@ type valueCmd struct {
 }
 
 func (c *valueCmd) set(parts []string, event pkg.MessageEvent) pkg.Actions {
-	if err := c.m.setParameter(c.key, parts[1]); err != nil {
+	if err := c.m.SetParameter(c.key, parts[1]); err != nil {
 		return twitchactions.Mention(event.User, err.Error())
 	}
 
@@ -73,15 +74,15 @@ func (c *valueCmd) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	return c.get(parts, event)
 }
 
-func newValue(b base) pkg.Module {
+func newValue(b mbase.Base) pkg.Module {
 	m := &value{
-		base: b,
+		Base: b,
 
 		commands: commands.NewCommands(),
 	}
 
-	m.parameters["A"].Link(&m.A)
-	m.parameters["B"].Link(&m.B)
+	m.Parameters()["A"].Link(&m.A)
+	m.Parameters()["B"].Link(&m.B)
 
 	m.commands.Register([]string{"!value-a"}, &valueCmd{m, "A", &m.A})
 	m.commands.Register([]string{"!value-b"}, &valueCmd{m, "B", &m.B})

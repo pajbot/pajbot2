@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
@@ -19,12 +20,12 @@ func init() {
 }
 
 type welcome struct {
-	base
+	mbase.Base
 }
 
-func newWelcome(b base) pkg.Module {
+func newWelcome(b mbase.Base) pkg.Module {
 	m := &welcome{
-		base: b,
+		Base: b,
 	}
 
 	// FIXME
@@ -34,8 +35,8 @@ func newWelcome(b base) pkg.Module {
 }
 
 func (m *welcome) Initialize() {
-	conn, err := m.bot.Events().Listen("on_join", func() error {
-		go m.bot.Say("pb2 joined")
+	conn, err := m.BotChannel().Events().Listen("on_join", func() error {
+		go m.BotChannel().Say("pb2 joined")
 		return nil
 	}, 100)
 	if err != nil {
@@ -43,5 +44,5 @@ func (m *welcome) Initialize() {
 		log.Println("ERROR LISTENING TO ON JOIN XD")
 	}
 
-	m.connections = append(m.connections, conn)
+	m.Connections = append(m.Connections, conn)
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -19,16 +20,16 @@ func init() {
 }
 
 type giveaway struct {
-	base
+	mbase.Base
 
 	state string
 
 	entrants []string
 }
 
-func newGiveaway(b base) pkg.Module {
+func newGiveaway(b mbase.Base) pkg.Module {
 	return &giveaway{
-		base: b,
+		Base: b,
 
 		state: "inactive",
 	}

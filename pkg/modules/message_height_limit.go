@@ -21,6 +21,7 @@ import (
 	"unsafe"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
@@ -57,7 +58,7 @@ func init() {
 var _ pkg.Module = &MessageHeightLimit{}
 
 type MessageHeightLimit struct {
-	base
+	mbase.Base
 
 	HeightLimit float32
 
@@ -66,15 +67,15 @@ type MessageHeightLimit struct {
 	userViolationCount map[string]int
 }
 
-func NewMessageHeightLimit(b base) pkg.Module {
+func NewMessageHeightLimit(b mbase.Base) pkg.Module {
 	m := &MessageHeightLimit{
-		base: b,
+		Base: b,
 
 		userViolationCount: make(map[string]int),
 	}
 
-	m.parameters["HeightLimit"].Link(&m.HeightLimit)
-	m.parameters["AsciiArtOnly"].Link(&m.AsciiArtOnly)
+	m.Parameters()["HeightLimit"].Link(&m.HeightLimit)
+	m.Parameters()["AsciiArtOnly"].Link(&m.AsciiArtOnly)
 
 	// FIXME
 	m.Initialize()
@@ -182,7 +183,7 @@ func (m *MessageHeightLimit) Initialize() {
 	}
 
 	fmt.Println("init channel")
-	if err := initChannel(m.bot.ChannelName()); err != nil {
+	if err := initChannel(m.BotChannel().ChannelName()); err != nil {
 		log.Println("Error initializing channel:", err)
 		return
 	}
@@ -265,12 +266,12 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
-	if user.IsModerator() || user.HasPermission(m.bot.Channel(), pkg.PermissionModeration) {
+	if user.IsModerator() || user.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
 			if parts[0] == "!heightlimit" {
 				if len(parts) >= 2 {
-					if err := m.setParameter("HeightLimit", parts[1]); err != nil {
+					if err := m.SetParameter("HeightLimit", parts[1]); err != nil {
 						return twitchactions.Mention(user, err.Error())
 					}
 
@@ -282,13 +283,13 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 			}
 
 			if parts[0] == "!heighttest" {
-				height := m.getHeight(m.bot.Channel(), user, message)
+				height := m.getHeight(m.BotChannel().Channel(), user, message)
 				return twitchactions.Mentionf(user, "your message height is %.2f", height)
 			}
 
 			if parts[0] == "!heightlimitonasciionly" {
 				if len(parts) >= 2 {
-					if err := m.setParameter("AsciiArtOnly", parts[1]); err != nil {
+					if err := m.SetParameter("AsciiArtOnly", parts[1]); err != nil {
 						return twitchactions.Mention(user, err.Error())
 					}
 
@@ -304,7 +305,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	const minTimeoutLength = 10
 	const maxTimeoutLength = 1800
 
-	height := m.getHeight(m.bot.Channel(), user, message)
+	height := m.getHeight(m.BotChannel().Channel(), user, message)
 
 	if height <= m.HeightLimit {
 		return nil

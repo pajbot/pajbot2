@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
@@ -28,15 +29,15 @@ type limitConsequence struct {
 }
 
 type emoteFilter struct {
-	base
+	mbase.Base
 
 	emoteLimits    map[string]limitConsequence
 	combinedLimits int
 }
 
-func newEmoteFilter(b base) pkg.Module {
+func newEmoteFilter(b mbase.Base) pkg.Module {
 	m := &emoteFilter{
-		base: b,
+		Base: b,
 
 		emoteLimits: make(map[string]limitConsequence),
 

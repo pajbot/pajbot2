@@ -6,6 +6,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/filters"
+	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
@@ -15,7 +16,7 @@ func init() {
 		return &moduleSpec{
 			id:   "pajbot1_banphrase",
 			name: "pajbot1 banphrase",
-			maker: func(b base) pkg.Module {
+			maker: func(b mbase.Base) pkg.Module {
 				m := newPajbot1BanphraseFilter(b)
 				m.Initialize()
 				return m
@@ -29,14 +30,14 @@ func init() {
 }
 
 type pajbot1BanphraseFilter struct {
-	base
+	mbase.Base
 
 	banphrases []pkg.Banphrase
 }
 
-func newPajbot1BanphraseFilter(b base) *pajbot1BanphraseFilter {
+func newPajbot1BanphraseFilter(b mbase.Base) *pajbot1BanphraseFilter {
 	return &pajbot1BanphraseFilter{
-		base: b,
+		Base: b,
 	}
 }
 
@@ -60,7 +61,7 @@ func (m *pajbot1BanphraseFilter) addCustomBanphrase(phrase string) {
 func (m *pajbot1BanphraseFilter) loadPajbot1Banphrases() error {
 	const queryF = `SELECT * FROM tb_banphrase`
 
-	session := m.server.oldSession
+	session := m.OldSession
 
 	rows, err := session.Query(queryF) // GOOD
 	if err != nil {
