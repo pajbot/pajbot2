@@ -7,14 +7,27 @@ import (
 
 type Commands struct {
 	*commandmatcher.CommandMatcher
+
+	internalCommands map[int64]interface{}
 }
 
 func NewCommands() *Commands {
 	c := &Commands{
 		CommandMatcher: commandmatcher.New(),
+
+		internalCommands: map[int64]interface{}{},
 	}
 
 	return c
+}
+
+func (c *Commands) Register2(id int64, triggers []string, cmd interface{}) {
+	c.CommandMatcher.Register(triggers, cmd)
+	c.internalCommands[id] = cmd
+}
+
+func (c *Commands) FindByCommandID(id int64) interface{} {
+	return c.internalCommands[id]
 }
 
 func (c *Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
