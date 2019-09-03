@@ -14,14 +14,13 @@ RUN cd /src/web && npm i && npm run build
 RUN cd /src/cmd/bot && go build -v -tags csharp
 
 FROM mcr.microsoft.com/dotnet/core/runtime:2.2-bionic
-WORKDIR /app
+WORKDIR /app/cmd/bot
 ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/2.2.6
-ENV PAJBOT2_WEB_PATH /app/web/
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
-COPY --from=build /src/cmd/bot/bot /app/
 COPY --from=build /src/migrations /app/migrations/
-COPY --from=build /src/cmd/bot/*.dll /app/
-COPY --from=build /src/cmd/bot/charmap.bin.gz /app/
-RUN chmod 777 /app/charmap.bin.gz
+COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot
+COPY --from=build /src/cmd/bot/*.dll /app/cmd/bot/
+COPY --from=build /src/cmd/bot/charmap.bin.gz /app/cmd/bot/
+RUN chmod 777 /app/cmd/bot/charmap.bin.gz
 CMD ["./bot"]
