@@ -3,12 +3,13 @@ package views
 import (
 	"html/template"
 	"net/http"
+	"path/filepath"
 
+	"github.com/pajbot/pajbot2/internal/config"
 	"github.com/pajbot/utils"
 )
 
 const (
-	templatePrefix = "../../web/views/"
 	templateSuffix = ".html"
 	defaultTheme   = "default"
 )
@@ -36,7 +37,7 @@ func Configure(c Config) {
 }
 
 func templatePath(templateName string) string {
-	return templatePrefix + templateName + templateSuffix
+	return filepath.Join(config.WebStaticPath, "views", templateName+templateSuffix)
 }
 
 var validThemes = []string{"default", "dark"}
