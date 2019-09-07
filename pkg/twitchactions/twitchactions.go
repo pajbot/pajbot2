@@ -34,9 +34,21 @@ func Say(content string) *Actions {
 	return actions
 }
 
+func Sayf(format string, a ...interface{}) *Actions {
+	actions := &Actions{}
+	actions.Say(fmt.Sprintf(format, a...))
+	return actions
+}
+
 func DoWhisper(user pkg.User, content string) *Actions {
 	actions := &Actions{}
 	actions.Whisper(user, content)
+	return actions
+}
+
+func DoWhisperf(user pkg.User, format string, a ...interface{}) *Actions {
+	actions := &Actions{}
+	actions.Whisper(user, fmt.Sprintf(format, a...))
 	return actions
 }
 
