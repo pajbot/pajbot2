@@ -71,12 +71,7 @@ func newNuke(b mbase.Base) pkg.Module {
 }
 
 func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
-	// Permission checking
-	if !event.User.IsModerator() {
-		return nil
-	}
-
-	if !event.User.HasChannelPermission(m.BotChannel().Channel(), pkg.PermissionModeration) {
+	if !(event.User.IsModerator() || event.User.HasChannelPermission(m.BotChannel().Channel(), pkg.PermissionModeration)) {
 		return nil
 	}
 
