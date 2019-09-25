@@ -446,6 +446,9 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 		fmt.Println("Send reports to new connection")
 
 		for _, report := range h.reports {
+			if report.Channel.GetID() != channel.GetID() {
+				continue
+			}
 			bytes, err := json.Marshal(report)
 			if err != nil {
 				fmt.Println(err)
