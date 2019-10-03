@@ -46,6 +46,10 @@ func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
+	if event.User.IsVIP() {
+		return nil
+	}
+
 	links := m.relaxedRegexp.FindAllString(event.Message.GetText(), -1)
 	if len(links) > 0 {
 		actions := &twitchactions.Actions{}
