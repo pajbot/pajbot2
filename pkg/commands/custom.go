@@ -235,6 +235,13 @@ func (c TimeMeOut) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	return twitchactions.DoTimeout(event.User, timeoutDuration, reason)
 }
 
+type UserBadges struct {
+}
+
+func (c UserBadges) Trigger(parts []string, event pkg.MessageEvent) (actions pkg.Actions) {
+	return twitchactions.Mentionf(event.User, "%#v", event.User.GetBadges())
+}
+
 type Test struct {
 }
 
