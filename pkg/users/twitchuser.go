@@ -139,6 +139,11 @@ func (u TwitchUser) IsBroadcaster() bool {
 	return ok
 }
 
+func (u TwitchUser) IsVIP() bool {
+	_, ok := u.Badges["vip"]
+	return ok
+}
+
 func (u TwitchUser) GetBadges() map[string]int {
 	return u.Badges
 }
