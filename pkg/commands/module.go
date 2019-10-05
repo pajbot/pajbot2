@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pajbot/pajbot2/internal/commands/base"
@@ -47,7 +46,7 @@ func NewModule(bot pkg.BotChannel) pkg.CustomCommand2 {
 				return twitchactions.Mention(event.User, err.Error())
 			}
 
-			return twitchactions.Mention(event.User, fmt.Sprintf("Enabled module %s", moduleID))
+			return twitchactions.Mentionf(event.User, "Enabled module %s", moduleID)
 		},
 	})
 
@@ -65,7 +64,7 @@ func NewModule(bot pkg.BotChannel) pkg.CustomCommand2 {
 				return twitchactions.Mention(event.User, err.Error())
 			}
 
-			return twitchactions.Mention(event.User, fmt.Sprintf("Disabled module %s", moduleID))
+			return twitchactions.Mentionf(event.User, "Disabled module %s", moduleID)
 		},
 	})
 

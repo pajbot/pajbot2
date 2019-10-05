@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pajbot/pajbot2/internal/commands/base"
@@ -64,7 +63,7 @@ func updatePermissions(action, channelID string, user pkg.User, parts []string, 
 		return twitchactions.Mention(event.User, err.Error())
 	}
 
-	return twitchactions.Mention(event.User, fmt.Sprintf("%s %s permissions changed from %b to %b (%s)", user.GetName(), channelName, oldPermissions, newPermissions, action))
+	return twitchactions.Mentionf(event.User, "%s %s permissions changed from %b to %b (%s)", user.GetName(), channelName, oldPermissions, newPermissions, action)
 }
 
 type User struct {
@@ -105,7 +104,7 @@ func NewUser(bot pkg.BotChannel) pkg.CustomCommand2 {
 			}
 			permissions := channelPermissions | globalPermissions
 
-			return twitchactions.Mention(event.User, fmt.Sprintf("%s permissions: %b (global: %b, channel: %b)", target.GetName(), permissions, globalPermissions, channelPermissions))
+			return twitchactions.Mentionf(event.User, "%s permissions: %b (global: %b, channel: %b)", target.GetName(), permissions, globalPermissions, channelPermissions)
 		},
 	})
 
