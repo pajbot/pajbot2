@@ -2,8 +2,9 @@
     "Redis": {
         "Host":"localhost:6379"
     },
-    "SQL": {
-        "DSN": "root:penis123@tcp(localhost:3306)/pajbot2_test"
+    "PostgreSQL": {
+        "__dsn_comment": "Refer to https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters for valid options",
+        "DSN": "host=/var/run/postgresql dbname=pajbot2 sslmode=disable"
     },
     "Auth": {
         "Twitch": {
