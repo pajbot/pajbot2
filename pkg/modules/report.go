@@ -51,7 +51,7 @@ func (m *Report) ProcessReport(user pkg.User, parts []string) pkg.Actions {
 	}
 
 	if !user.HasPermission(m.BotChannel().Channel(), pkg.PermissionReport) {
-		return twitchactions.DoWhisper(user, "you don't have permissions to use the !report command")
+		return twitchactions.DoWhisper(user, "You don't have permissions to use the !report command")
 	}
 
 	var reportedUsername string
@@ -60,7 +60,7 @@ func (m *Report) ProcessReport(user pkg.User, parts []string) pkg.Actions {
 	reportedUsername = strings.ToLower(utils.FilterUsername(parts[1]))
 
 	if reportedUsername == user.GetName() {
-		return twitchactions.DoWhisper(user, "you can't report yourself")
+		return twitchactions.DoWhisper(user, "You can't report yourself")
 	}
 
 	if len(parts) >= 3 {
