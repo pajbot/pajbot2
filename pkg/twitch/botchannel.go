@@ -18,7 +18,7 @@ import (
 var _ pkg.BotChannel = &BotChannel{}
 
 type BotChannel struct {
-	streamStore pkg.StreamStore
+	stream pkg.Stream
 
 	ID int64
 
@@ -83,7 +83,7 @@ func (c *BotChannel) ChannelName() string {
 }
 
 func (c *BotChannel) Stream() pkg.Stream {
-	return c.streamStore.GetStream(&c.channel)
+	return c.stream
 }
 
 // We assume that modulesMutex is locked already
@@ -216,7 +216,6 @@ func (c *BotChannel) Initialize(b *Bot) error {
 
 	c.bot = b
 	c.sql = b.sql
-	c.streamStore = b.streamStore
 
 	c.initialized = true
 

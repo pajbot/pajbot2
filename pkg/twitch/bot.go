@@ -875,12 +875,16 @@ func (b *Bot) JoinChannel(channelID string) error {
 		return err
 	}
 
+	botChannelUser := User{
+		id: channelID,
+	}
+
 	botChannel := &BotChannel{
 		ID: id,
 
-		channel: User{
-			id: channelID,
-		},
+		stream: b.streamStore.GetStream(&botChannelUser),
+
+		channel: botChannelUser,
 	}
 	err = botChannel.channel.fillIn(b.userStore)
 	if err != nil {
