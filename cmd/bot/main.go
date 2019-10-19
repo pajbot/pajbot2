@@ -38,7 +38,7 @@ func main() {
 	command := flag.Arg(0)
 
 	if *version {
-		fmt.Println(*version)
+		fmt.Println(Version)
 		os.Exit(0)
 	}
 
