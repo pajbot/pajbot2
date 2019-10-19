@@ -20,6 +20,14 @@ func (s *StreamStatus) Update(streamData *gotwitch.Stream) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
+	if s.Stream == nil && streamData != nil {
+		// Fire event emitter STREAM ONLINE
+		// Stream just went online
+	} else if s.Stream != nil && streamData == nil {
+		// Fire event emitter STREAM OFFLINE
+		// Stream just went offline
+	}
+
 	s.Stream = streamData
 }
 

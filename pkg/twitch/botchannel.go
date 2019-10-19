@@ -17,6 +17,7 @@ import (
 
 var _ pkg.BotChannel = &BotChannel{}
 
+// BotChannel describes a bot account that's connected to a channel
 type BotChannel struct {
 	stream pkg.Stream
 
@@ -33,6 +34,7 @@ type BotChannel struct {
 
 	sql *sql.DB
 
+	// The eventEmitter is a bot-channel specific event emitter where things related to the channel, e.g. the "stream store" can push data that modules can read
 	eventEmitter *eventemitter.EventEmitter
 
 	bot *Bot
