@@ -250,19 +250,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	user := event.User
 	message := event.Message
 
-	if user.GetName() == "gazatu2" {
-		return nil
-	}
-
-	if user.GetName() == "supibot" {
-		return nil
-	}
-
-	if user.GetName() == "titlechange_bot" {
-		return nil
-	}
-
-	if user.GetName() == "botfactory" {
+	if user.HasPermission(m.BotChannel().Channel(), pkg.PermissionImmuneToMessageLimits) {
 		return nil
 	}
 
