@@ -1,12 +1,6 @@
 # pajbot 2 [![CircleCI](https://circleci.com/gh/pajbot/pajbot2.svg?style=svg)](https://circleci.com/gh/pajbot/pajbot2)
 
-A rewrite/restructuring of [pajbot 1](https://github.com/pajbot/pajbot) in Golang.
-
-## Authors
-
-- [nuuls](https://github.com/nuuls)
-- [pajlada](https://github.com/pajlada)
-- [gempir](https://github.com/gempir)
+A rewrite/restructuring of [pajbot 1](https://github.com/pajbot/pajbot) in Go. As with pajbot1, this is a way for me to familiarize myself with the language.
 
 ## Web guide
 
