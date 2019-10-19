@@ -62,10 +62,10 @@ func newGiveaway(b mbase.Base) pkg.Module {
 	m.Parameters()["EmoteID"].Link(&m.emoteID)
 	m.Parameters()["EmoteName"].Link(&m.emoteName)
 
-	m.commands.Register([]string{"!25start"}, giveawayCmdStop{m: m})
-	m.commands.Register([]string{"!25stop"}, giveawayCmdStop{m: m})
-	m.commands.Register([]string{"!25draw"}, giveawayCmdDraw{m: m})
-	m.commands.Register([]string{"!25config"}, giveawayCmdConfig{m: m})
+	m.commands.Register([]string{"!25start"}, &giveawayCmdStart{m: m})
+	m.commands.Register([]string{"!25stop"}, &giveawayCmdStop{m: m})
+	m.commands.Register([]string{"!25draw"}, &giveawayCmdDraw{m: m})
+	m.commands.Register([]string{"!25config"}, &giveawayCmdConfig{m: m})
 
 	return m
 }

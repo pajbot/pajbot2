@@ -20,7 +20,6 @@ var (
 
 func (c *giveawayCmdConfig) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if !event.User.IsModerator() {
-		// User does not have permission to stop a giveaway
 		return nil
 	}
 
@@ -28,22 +27,22 @@ func (c *giveawayCmdConfig) Trigger(parts []string, event pkg.MessageEvent) pkg.
 		return nil
 	}
 
-	key := strings.ToLower(parts[0])
+	key := strings.ToLower(parts[1])
 	var ok bool
 	key, ok = giveawayValidKeys[key]
 	if !ok {
-		return nil
+		return twitchactions.Mentionf(event.User, "%s is not a valid giveaway parameter key", key)
 	}
 
-	if len(parts) >= 2 {
-		value := parts[1]
+	if len(parts) >= 3 {
+		value := parts[2]
 		return c.m.SetParameterResponse(key, value, event)
 	}
 
 	switch key {
-	case "emoteID":
+	case "EmoteID":
 		return twitchactions.Mentionf(event.User, "emote ID is %s", c.m.emoteID)
-	case "emoteName":
+	case "EmoteName":
 		return twitchactions.Mentionf(event.User, "emote name is %s", c.m.emoteName)
 	}
 
