@@ -70,7 +70,7 @@ func (s *StreamStore) PollStreams() {
 			}
 		}(batch)
 
-		go func() {
+		go func(batch []string) {
 			defer wg.Done()
 			data, err := apirequest.TwitchWrapper.GetStreams(batch, nil)
 			if err != nil {
@@ -84,7 +84,7 @@ func (s *StreamStore) PollStreams() {
 					stream.Update(&activeStream)
 				}
 			}
-		}()
+		}(batch)
 	}
 
 	wg.Wait()
