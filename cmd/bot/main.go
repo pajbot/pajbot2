@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	_ "net/http/pprof"
 	"os"
 
 	"github.com/pajbot/pajbot2/pkg/common"
