@@ -22,12 +22,12 @@ func init() {
 			maker: newGiveaway,
 
 			parameters: map[string]pkg.ModuleParameterSpec{
-				"emoteID": func() pkg.ModuleParameter {
+				"EmoteID": func() pkg.ModuleParameter {
 					return newStringParameter(parameterSpec{
 						Description: "Emote ID that needs to exist in a message for a user to join the giveaway",
 					})
 				},
-				"emoteName": func() pkg.ModuleParameter {
+				"EmoteName": func() pkg.ModuleParameter {
 					return newStringParameter(parameterSpec{
 						Description: "Name of the emote that needs to exist in a message for a user to join the giveaway",
 					})
@@ -59,19 +59,16 @@ func newGiveaway(b mbase.Base) pkg.Module {
 		commands: commands.NewCommands(),
 	}
 
-	m.Parameters()["emoteID"].Link(&m.emoteID)
-	m.Parameters()["emoteName"].Link(&m.emoteName)
+	m.Parameters()["EmoteID"].Link(&m.emoteID)
+	m.Parameters()["EmoteName"].Link(&m.emoteName)
 
-	m.commands.Register([]string{"!25start"}, newGiveawayCmdStart(m))
-	m.commands.Register([]string{"!25stop"}, newGiveawayCmdStop(m))
-	m.commands.Register([]string{"!25draw"}, newGiveawayCmdDraw(m))
-
-	m.commands.Register([]string{"!25config"}, newGiveawayCmdConfig(m))
+	m.commands.Register([]string{"!25start"}, giveawayCmdStop{m: m})
+	m.commands.Register([]string{"!25stop"}, giveawayCmdStop{m: m})
+	m.commands.Register([]string{"!25draw"}, giveawayCmdDraw{m: m})
+	m.commands.Register([]string{"!25config"}, giveawayCmdConfig{m: m})
 
 	return m
 }
-
-const forsen25ID = "300378550"
 
 func (m *giveaway) start() {
 	m.state = giveawayStateStarted

@@ -11,16 +11,10 @@ type giveawayCmdConfig struct {
 	m *giveaway
 }
 
-func newGiveawayCmdConfig(m *giveaway) *giveawayCmdConfig {
-	return &giveawayCmdConfig{
-		m: m,
-	}
-}
-
 var (
 	giveawayValidKeys = map[string]string{
-		"emoteid":   "emoteID",
-		"emotename": "emoteName",
+		"emoteid":   "EmoteID",
+		"emotename": "EmoteName",
 	}
 )
 

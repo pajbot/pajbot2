@@ -9,12 +9,6 @@ type giveawayCmdStop struct {
 	m *giveaway
 }
 
-func newGiveawayCmdStop(m *giveaway) *giveawayCmdStop {
-	return &giveawayCmdStop{
-		m: m,
-	}
-}
-
 func (c *giveawayCmdStop) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if !event.User.IsModerator() {
 		// User does not have permission to stop a giveaway
