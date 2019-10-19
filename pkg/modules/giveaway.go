@@ -1,12 +1,17 @@
 package modules
 
 import (
-	"math/rand"
-	"strings"
-
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/commands"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
+)
+
+type giveawayState int
+
+const (
+	giveawayStateStopped giveawayState = iota
+	giveawayStateStarted
 )
 
 func init() {
@@ -15,6 +20,19 @@ func init() {
 			id:    "giveaway",
 			name:  "Giveaway",
 			maker: newGiveaway,
+
+			parameters: map[string]pkg.ModuleParameterSpec{
+				"emoteID": func() pkg.ModuleParameter {
+					return newStringParameter(parameterSpec{
+						Description: "Emote ID that needs to exist in a message for a user to join the giveaway",
+					})
+				},
+				"emoteName": func() pkg.ModuleParameter {
+					return newStringParameter(parameterSpec{
+						Description: "Name of the emote that needs to exist in a message for a user to join the giveaway",
+					})
+				},
+			},
 		}
 	})
 }
@@ -22,63 +40,66 @@ func init() {
 type giveaway struct {
 	mbase.Base
 
-	state string
+	commands pkg.CommandsManager
+
+	state giveawayState
 
 	entrants []string
+
+	emoteID   string
+	emoteName string
 }
 
 func newGiveaway(b mbase.Base) pkg.Module {
-	return &giveaway{
+	m := &giveaway{
 		Base: b,
 
-		state: "inactive",
+		state: giveawayStateStopped,
+
+		commands: commands.NewCommands(),
 	}
+
+	m.Parameters()["emoteID"].Link(&m.emoteID)
+	m.Parameters()["emoteName"].Link(&m.emoteName)
+
+	m.commands.Register([]string{"!25start"}, newGiveawayCmdStart(m))
+	m.commands.Register([]string{"!25stop"}, newGiveawayCmdStop(m))
+	m.commands.Register([]string{"!25draw"}, newGiveawayCmdDraw(m))
+
+	m.commands.Register([]string{"!25config"}, newGiveawayCmdConfig(m))
+
+	return m
 }
 
 const forsen25ID = "300378550"
 
-func (m *giveaway) OnMessage(event pkg.MessageEvent) pkg.Actions {
-	const giveawayEmote = forsen25ID
+func (m *giveaway) start() {
+	m.state = giveawayStateStarted
+	m.entrants = []string{}
+}
 
+func (m *giveaway) started() bool {
+	return m.state == giveawayStateStarted
+}
+
+func (m *giveaway) stop() {
+	m.state = giveawayStateStopped
+}
+
+func (m *giveaway) stopped() bool {
+	return m.state == giveawayStateStopped
+}
+
+func (m *giveaway) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	if actions := m.commands.OnMessage(event); actions != nil {
+		return actions
+	}
+
+	giveawayEmote := m.emoteID
 	message := event.Message
 	user := event.User
 
-	text := message.GetText()
-
-	// Commands
-	if user.IsModerator() {
-		if strings.HasPrefix(text, "!25start") {
-			if m.state == "inactive" {
-				m.state = "started"
-				m.entrants = []string{}
-				return twitchactions.Say("Started giveaway")
-			}
-
-			return twitchactions.Say("Giveaway already started")
-		}
-
-		if strings.HasPrefix(text, "!25stop") {
-			if m.state == "started" {
-				m.state = "inactive"
-				return twitchactions.Say("Stopped accepting people into the giveaway")
-			}
-		}
-
-		if strings.HasPrefix(text, "!25draw") {
-			if len(m.entrants) == 0 {
-				return twitchactions.Say("No one has joined the giveaway")
-			}
-
-			winnerIndex := rand.Intn(len(m.entrants))
-			winnerUsername := m.entrants[winnerIndex]
-
-			m.entrants = append(m.entrants[:winnerIndex], m.entrants[winnerIndex+1:]...)
-
-			return twitchactions.Say(winnerUsername + " just won the sub emote giveaway PogChamp")
-		}
-	}
-
-	if m.state == "started" {
+	if m.started() {
 		enterGiveaway := false
 
 		reader := message.GetTwitchReader()

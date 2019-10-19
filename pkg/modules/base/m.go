@@ -9,6 +9,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
 	"github.com/pajbot/pajbot2/pkg/report"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 type Base struct {
@@ -129,6 +130,19 @@ func (b *Base) SetParameter(key string, value string) error {
 	// 3. If the parameter was updated, update any linked values
 
 	return nil
+}
+
+// SetParameterResponse is a helper function which calls SetParameter and returns actions in a standardized format
+func (b *Base) SetParameterResponse(key, value string, event pkg.MessageEvent) pkg.Actions {
+	if err := b.SetParameter(key, value); err != nil {
+		return twitchactions.Mention(event.User, err.Error())
+	}
+
+	err := b.Save()
+	if err != nil {
+		return twitchactions.Mentionf(event.User, "an error occured while saving parameters for module %s, key %s: %s", b.ID(), key, err.Error())
+	}
+	return twitchactions.Mentionf(event.User, "%s set to %s", key, value)
 }
 
 func (b *Base) save() error {
