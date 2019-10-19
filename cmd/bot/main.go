@@ -15,23 +15,6 @@ var buildTime string
 var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
 
-var validURLs = []string{
-	"imgur.com",        // Image host
-	"twitter.com",      // Social media
-	"twimg.com",        // Twitter image host
-	"forsen.tv",        // Bot website
-	"pajlada.se",       // Bot creator website
-	"pajlada.com",      // Bot creator website
-	"pajbot.com",       // Bot website
-	"youtube.com",      // Video hosting website
-	"youtu.be",         // Youtube short-url
-	"prntscr.com",      // Image host
-	"prnt.sc",          // prntscr short-url
-	"steampowered.com", // Game shop
-	"gyazo.com",        // Image host
-	"www.com",          // Meme
-}
-
 // @title pajbot2 API
 // @version 1.0
 // @description API for pajbot2
