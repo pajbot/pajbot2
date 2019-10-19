@@ -4,6 +4,8 @@ import (
 	"database/sql"
 )
 
+// Application is an instance of pajbot2
+// It's responsible for initializing all bot accounts (`Bot` class)
 type Application interface {
 	UserStore() UserStore
 	ChannelStore() ChannelStore
@@ -15,9 +17,4 @@ type Application interface {
 	QuitChannel() chan string
 	TwitchAuths() TwitchAuths
 	MIMO() MIMO
-}
-
-type MIMO interface {
-	Subscriber(channelNames ...string) chan interface{}
-	Publisher(channelName string) chan interface{}
 }
