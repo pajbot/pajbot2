@@ -18,6 +18,11 @@
                 "ClientSecret": "jfhs3jks3hfjks3hf",
                 "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/user/callback"
             }
+            "Streamer": {
+                "ClientID": "asidusadkjasdkds",
+                "ClientSecret": "iurwiajdskadna",
+                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/streamer/callback"
+            }
         }
     }
 }
