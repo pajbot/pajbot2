@@ -56,11 +56,6 @@ func (m *emoteFilter) Initialize() {
 		baseDuration:  300,
 		extraDuration: 60,
 	}
-	m.emoteLimits["SexPanda"] = limitConsequence{
-		limit:         2,
-		baseDuration:  300,
-		extraDuration: 60,
-	}
 	m.emoteLimits["TaxiBro"] = limitConsequence{
 		limit:         2,
 		baseDuration:  300,
