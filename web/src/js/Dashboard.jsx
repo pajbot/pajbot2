@@ -108,9 +108,9 @@ export default class Dashboard extends Component {
                     <div key={key}>{value}</div>
                   )}
                   <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionBan)}>Ban</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 86400)}>Timeout 1d</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 604800)}>Timeout 7d</button>
-                  <button className="card-link btn btn-danger" title="Bans the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 1209600)}>Timeout 14d</button>
+                  <button className="card-link btn btn-danger" title="Timeout the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 86400)}>Timeout 1d</button>
+                  <button className="card-link btn btn-danger" title="Timeout the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 604800)}>Timeout 7d</button>
+                  <button className="card-link btn btn-danger" title="Timeout the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionTimeout, 1209600)}>Timeout 14d</button>
                   <button className="card-link btn btn-danger" title="Do nothing, but also don't untimeout the user" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionDismiss)}>Dismiss</button>
                   <button className="card-link btn btn-danger" title="Undos timeout/ban" onClick={() => this.handleReport(report.Channel.ID, report.ID, ReportActionUndo)}>Undo</button>
                   <button className="card-link btn btn-light" title="Hide this from your session" onClick={() => this.removeVisibleReport(report.ID)}>Hide</button>
