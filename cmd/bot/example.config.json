@@ -1,6 +1,11 @@
 {
-    "Redis": {
-        "Host":"localhost:6379"
+    "Admin": {
+        "TwitchUserID": "12345678"
+    },
+    "Web": {
+        "Host": "127.0.0.1:45000",
+        "Domain": "paj.pajbot.com",
+        "Secure": true
     },
     "PostgreSQL": {
         "__dsn_comment": "Refer to https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters for valid options",
@@ -8,19 +13,22 @@
     },
     "Auth": {
         "Twitch": {
+            "Webhook": {
+                "HostPrefix": "https://paj.pajbot.com/api/webhook"
+            },
             "Bot": {
-                "ClientID": "kdjfghkjdfghdfjkg",
-                "ClientSecret": "kdjfhgkjdfghjkdfg",
+                "ClientID": "123",
+                "ClientSecret": "123",
                 "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/bot/callback"
             },
             "User": {
-                "ClientID": "g8h343k4jgh34g",
-                "ClientSecret": "jfhs3jks3hfjks3hf",
+                "ClientID": "123",
+                "ClientSecret": "123",
                 "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/user/callback"
             },
             "Streamer": {
-                "ClientID": "asidusadkjasdkds",
-                "ClientSecret": "iurwiajdskadna",
+                "ClientID": "123",
+                "ClientSecret": "123",
                 "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/streamer/callback"
             }
         }
