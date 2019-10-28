@@ -1,13 +1,8 @@
 FROM golang:buster AS build
-ADD . /src
-RUN apt-get update
-RUN apt-get install apt-transport-https -y
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.asc.gpg
-RUN mv microsoft.asc.gpg /etc/apt/trusted.gpg.d/
-RUN wget -q https://packages.microsoft.com/config/debian/10/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list
+RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && wget -q https://packages.microsoft.com/config/debian/10/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
-RUN apt-get update
-RUN apt-get install dotnet-sdk-2.2 nodejs -y
+RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-2.2 nodejs -y
+ADD . /src
 RUN cd /src && ./utils/install.sh
 RUN cd /src/web && npm i && npm run build
 RUN cd /src/cmd/bot && go build -v -tags csharp
