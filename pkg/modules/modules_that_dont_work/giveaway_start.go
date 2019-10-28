@@ -16,7 +16,7 @@ func (c *giveawayCmdStart) Trigger(parts []string, event pkg.MessageEvent) pkg.A
 	}
 
 	if c.m.emoteID == "" {
-		return twitchactions.Mention(event.User, "No emote ID set. Use '!25config emoteid 98374583' to configure this module")
+		return twitchactions.Mention(event.User, "No emote ID/name set. Use '!25config emoteid 98374583' or '!25config emotename NaM' to configure this module")
 	}
 
 	if c.m.stopped() {
