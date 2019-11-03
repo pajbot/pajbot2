@@ -905,7 +905,7 @@ func (b *Bot) JoinChannel(channelID string) error {
 }
 
 func (b *Bot) LeaveChannel(channelID string) error {
-	const queryF = `DELETE FROM bot_channel WHERE id=$1 LIMIT 1;`
+	const queryF = `DELETE FROM bot_channel WHERE id=$1`
 
 	i, botChannel := b.getBotChannel(channelID)
 	if botChannel == nil {
