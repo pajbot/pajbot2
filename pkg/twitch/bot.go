@@ -365,12 +365,9 @@ func (h *emoteReader) Get() pkg.Emote {
 type TwitchMessage struct {
 	baseMessage twitch.Message
 
-	twitchEmotes      []*common.Emote
-	twitchEmoteReader *emoteReader
+	twitchEmotes []*common.Emote
 
-	bttvEmotes      []*common.Emote
-	bttvEmoteReader *emoteReader
-	// TODO: BTTV Emotes
+	bttvEmotes []*common.Emote
 
 	// TODO: FFZ Emotes
 
@@ -381,8 +378,6 @@ func NewTwitchMessage(message twitch.Message) *TwitchMessage {
 	msg := &TwitchMessage{
 		baseMessage: message,
 	}
-	msg.twitchEmoteReader = newEmoteHolder(&msg.twitchEmotes)
-	msg.bttvEmoteReader = newEmoteHolder(&msg.bttvEmotes)
 
 	return msg
 }
@@ -406,12 +401,12 @@ func (m *TwitchMessage) SetText(newText string) {
 	}
 }
 
-func (m TwitchMessage) GetTwitchReader() pkg.EmoteReader {
-	return m.twitchEmoteReader
+func (m *TwitchMessage) GetTwitchReader() pkg.EmoteReader {
+	return newEmoteHolder(&m.twitchEmotes)
 }
 
-func (m TwitchMessage) GetBTTVReader() pkg.EmoteReader {
-	return m.bttvEmoteReader
+func (m *TwitchMessage) GetBTTVReader() pkg.EmoteReader {
+	return newEmoteHolder(&m.bttvEmotes)
 }
 
 func (m *TwitchMessage) AddBTTVEmote(emote pkg.Emote) {
