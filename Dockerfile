@@ -8,8 +8,14 @@ RUN cd /src/web && npm i && npm run build
 RUN cd /src/cmd/bot && go build -v -tags csharp
 
 FROM mcr.microsoft.com/dotnet/core/runtime:2.2.7-stretch-slim
+ARG COMMIT
+ARG COMMIT_COUNT
+ARG BRANCH
 WORKDIR /app/cmd/bot
 ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/2.2.7
+ENV PB2_COMMIT=${COMMIT}
+ENV PB2_COMMIT_COUNT=${COMMIT_COUNT}
+ENV PB2_BRANCH=${BRANCH}
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
 COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot
