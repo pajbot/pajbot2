@@ -12,7 +12,7 @@ if [ ! -f /opt/pajbot/configs/pajbot2.json ]; then
     exit 1
 fi
 
-docker run \
+echo docker run \
 --name pajbot2 \
 --network host \
 --restart unless-stopped \
