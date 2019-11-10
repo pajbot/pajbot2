@@ -1,3 +1,6 @@
 [submodule "3rdParty/MessageHeightTwitch"]
 	path = 3rdParty/MessageHeightTwitch
 	url = https://github.com/TETYYS/MessageHeightTwitch.git
+[submodule "internal/ConfusableMatcher-go-interop"]
+	path = internal/ConfusableMatcher-go-interop
+	url = https://github.com/TETYYS/ConfusableMatcher-go-interop.git

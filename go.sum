@@ -151,6 +151,8 @@ github.com/swaggo/gin-swagger v1.0.0/go.mod h1:Mt37wE46iUaTAOv+HSnHbJYssKGqbS25X
 github.com/swaggo/swag v1.4.0/go.mod h1:hog2WgeMOrQ/LvQ+o1YGTeT+vWVrbi0SiIslBtxKTyM=
 github.com/swaggo/swag v1.6.2 h1:WQMAtT/FmMBb7g0rAuHDhG3vvdtHKJ3WZ+Ssb0p4Y6E=
 github.com/swaggo/swag v1.6.2/go.mod h1:YyZstMc22WYm6GEDx/CYWxq+faBbjQ5EqwQcrjREDBo=
+github.com/tetyys/confusablematcher-go-interop v0.0.0-20191030144328-7f4e3e33e4a0 h1:hd1k/rprXE/JaL4z40Tu7MPmG5BQXYsxu8Ebh3RmQig=
+github.com/tetyys/confusablematcher-go-interop v0.0.0-20191030144328-7f4e3e33e4a0/go.mod h1:6yYWuVq773VAgGTieMEj/RusABAUcoOOaBl4w/zmUCE=
 github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5 h1:hNna6Fi0eP1f2sMBe/rJicDmaHmoXGe1Ta84FPYHLuE=
 github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5/go.mod h1:f1SCnEOt6sc3fOJfPQDRDzHOtSXuTtnz0ImG9kPRDV0=
 github.com/urakozz/go-emoji v0.0.0-20190204094219-2f379953d125 h1:T4w/UMCFIiMrmrzIxtyhp/LogEAMBCmIQ7oOchZGBZA=

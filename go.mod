@@ -32,9 +32,11 @@ require (
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.8.1
+	github.com/stretchr/testify v1.4.0
 	github.com/swaggo/echo-swagger v0.0.0-20190329130007-1219b460a043
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14 // indirect
 	github.com/swaggo/swag v1.6.2
+	github.com/tetyys/confusablematcher-go-interop v0.0.0-20191030144328-7f4e3e33e4a0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20190204094219-2f379953d125
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
