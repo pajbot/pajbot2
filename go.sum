@@ -147,6 +147,8 @@ github.com/pajbot/utils v0.0.0-20190525181638-b74ff78f4d25 h1:NCHGDiwzzuMVhdQ+Ke
 github.com/pajbot/utils v0.0.0-20190525181638-b74ff78f4d25/go.mod h1:BPjDS7xufUB7MJmT7w7QodV3VO9Xesh2xNvpucRmXuI=
 github.com/pajbot/utils v0.0.0-20190525195426-6531d61d5900 h1:iYhXvki+7JEidHQEoVLbNJYVy86qVdkPYfvRvHIWm0w=
 github.com/pajbot/utils v0.0.0-20190525195426-6531d61d5900/go.mod h1:lLYJXlC7fGL4FYvdZk+IQerV5zgwerjIsKDUJNb7LuE=
+github.com/pajbot/utils v1.0.0 h1:LiVOInr6gY/yA82QsgTnyGJaBcMOB0GaRYKDIC/4rB4=
+github.com/pajbot/utils v1.0.0/go.mod h1:lLYJXlC7fGL4FYvdZk+IQerV5zgwerjIsKDUJNb7LuE=
 github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71 h1:oznyU+DAD2koiTYyytzjFf4WLEynYRxig0HwV6NV8jM=
 github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71/go.mod h1:dGYg2nHDP/eiV699HP0DN0LjAQi1r1i+VwcBM9wvWyI=
 github.com/pajlada/gobttv v0.0.0-20160914192201-e617d015c333 h1:oB4HsgJd33unVAHyGxoucLCBetpsPxMnCJn4VzSAKDI=
