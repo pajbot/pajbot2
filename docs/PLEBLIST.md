@@ -23,10 +23,10 @@
  - *FROM DUBTRACK: Users can request songs from a website*
  - FROM DUBTRACK: Users can have a list of songs to queue up their song has finished playing.
  - FROM SE: Moderators needs to be able to moderate queued songs
- - * FROM SE: Streamer can put the queue into "lockdown mode" where moderators are required to manually approve songs before they are accepted into the queue.
+ - *FROM SE: Streamer can put the queue into "lockdown mode" where moderators are required to manually approve songs before they are accepted into the queue.*
  - FROM SE: Streamer can show the video on stream using an overlay
- - * FROM BOTH: Moderators need to be able to limit who can request songs, depending on account id and on account status (e.g. Twitch subscription)
- - * Users can request YouTube and Soundcloud videos.
+ - *FROM BOTH: Moderators need to be able to limit who can request songs, depending on account id and on account status (e.g. Twitch subscription)*
+ - *Users can request YouTube and Soundcloud videos.*
  - Users can request videos from other embeddable sources.
  - *Moderators can put limitations on source-specific stats (e.g. minimum amount of YouTube views to be requested)*
  - *Moderators can build a strong list of banned videos.*
