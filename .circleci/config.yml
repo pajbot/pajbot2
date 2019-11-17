@@ -70,7 +70,7 @@ jobs:
     docker:
     # specify the version
     # this image is based on Debian stretch
-    - image: circleci/golang:1.11.4
+    - image: circleci/golang:1.13
     # clone into the goroot directory
     # note that this has to be /pajbot/pajbot2, even if this project
     # is a fork (due to the way go imports work)
