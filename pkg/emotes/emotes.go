@@ -3,36 +3,31 @@ package emotes
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/pajlada/gobttv"
-	"github.com/pajlada/goffz"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/common"
+	"github.com/pajlada/gobttv"
+	"github.com/pajlada/goffz"
 )
 
 // GlobalEmotes contains BTTV & FFZ Emotes
 var GlobalEmotes common.ExtensionEmotes
 
-func loadGlobalBttvEmotes() {
-	apirequest.BTTV.GetEmotes(
-		func(emotesResponse gobttv.EmotesResponse) {
-			GlobalEmotes.Bttv = make(map[string]common.Emote)
-			GlobalEmotes.BttvLastUpdate = time.Now()
+func loadGlobalBttvEmotes() error {
+	emotes, err := apirequest.BTTV.GetEmotes()
+	if err != nil {
+		return err
+	}
 
-			for _, emote := range emotesResponse.Emotes {
-				GlobalEmotes.Bttv[emote.Regex] = ParseBTTVGlobalEmote(emote)
-			}
-		},
-		func(statusCode int, statusMessage, errorMessage string) {
-			fmt.Printf("Error fetching Global BTTV Emotes")
-			fmt.Printf("Status code: %d", statusCode)
-			fmt.Printf("Status message: %s", statusMessage)
-			fmt.Printf("Error message: %s", errorMessage)
-		}, func(err error) {
-			fmt.Printf("Internal error: %s", err)
-		})
+	GlobalEmotes.Bttv = make(map[string]common.Emote)
+	GlobalEmotes.BttvLastUpdate = time.Now()
+
+	for _, emote := range emotes {
+		GlobalEmotes.Bttv[emote.Code] = ParseBTTVGlobalEmote(emote)
+	}
+
+	return nil
 }
 
 func loadGlobalFrankerFaceZEmotes() {
@@ -64,24 +59,22 @@ func LoadGlobalEmotes() {
 }
 
 // ParseBTTVGlobalEmote parses a BTTV emote into a common.Emote
-func ParseBTTVGlobalEmote(emote gobttv.GlobalEmoteData) common.Emote {
-	spl := strings.Split(emote.URL, "/emote/")[1]
-	id := spl[:len(spl)-3] // remove /1x
-	isGif := emote.ImageType == "gif"
+func ParseBTTVGlobalEmote(emote gobttv.Emote) common.Emote {
 	return common.Emote{
-		Name:  emote.Regex,
-		ID:    id,
-		Type:  "bttv",
-		SizeX: emote.Width,
-		SizeY: emote.Height,
+		Name: emote.Code,
+		ID:   emote.ID,
+		Type: "bttv",
+		// SizeX: emote.Width,
+		// SizeY: emote.Height,
+		SizeX: 28, // This data is no longer provided by the BTTV api, so this is inaccurate
+		SizeY: 28, // This data is no longer provided by the BTTV api, so this is inaccurate
 		Count: 1,
-		IsGif: isGif,
+		IsGif: emote.ImageType == "gif",
 	}
 }
 
 // ParseBTTVChannelEmote parses a BTTV emote into a common.Emote
-func ParseBTTVChannelEmote(emote gobttv.ChannelEmoteData) common.Emote {
-	isGif := emote.ImageType == "gif"
+func ParseBTTVChannelEmote(emote gobttv.Emote) common.Emote {
 	return common.Emote{
 		Name:  emote.Code,
 		ID:    emote.ID,
@@ -89,7 +82,7 @@ func ParseBTTVChannelEmote(emote gobttv.ChannelEmoteData) common.Emote {
 		SizeX: 28,
 		SizeY: 28,
 		Count: 1,
-		IsGif: isGif,
+		IsGif: emote.ImageType == "gif",
 	}
 }
 
