@@ -40,5 +40,4 @@ func (m *twitter) Initialize() {
 			m.BotChannel().Say("got tweet: " + message)
 		}
 	}()
-
 }

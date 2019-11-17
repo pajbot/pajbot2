@@ -343,7 +343,6 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 		for _, whisper := range action.Whispers() {
 			c.bot.Whisper(whisper.User(), whisper.Content())
 		}
-
 	}
 
 	return nil

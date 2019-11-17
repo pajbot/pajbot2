@@ -116,7 +116,6 @@ func (m *giveaway) OnMessage(event pkg.MessageEvent) pkg.Actions {
 					// User has already joined
 					return nil
 				}
-
 			}
 			m.entrants = append(m.entrants, user.GetName())
 

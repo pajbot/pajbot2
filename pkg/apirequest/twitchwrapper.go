@@ -52,7 +52,6 @@ func (w *TwitchWrapperX) WebhookSubscribe(topic gotwitch.WebhookTopic, userID st
 	for _, subscription := range w.WebhookSubscriptions {
 		if subscription.Topic == url &&
 			subscription.Callback == callbackURL {
-
 			if subscription.ExpiresAt.Add(-TimeToRefresh).Before(time.Now()) {
 				// We are subscribed already, but it's time to refresh our subscription
 				break

@@ -3,7 +3,7 @@ package datastructures
 import (
 	"errors"
 
-	"github.com/anknown/ahocorasick"
+	goahocorasick "github.com/anknown/ahocorasick"
 )
 
 type transparentListRange struct {

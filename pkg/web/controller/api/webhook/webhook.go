@@ -112,7 +112,6 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	if challenge == "" {
 		w.WriteHeader(400)
 		return
-
 	}
 
 	w.WriteHeader(200)

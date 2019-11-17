@@ -41,7 +41,6 @@ func (c *subCommand) run(parts []string, event pkg.MessageEvent) pkg.Actions {
 		if !event.User.HasPermission(event.Channel, c.permission) {
 			return twitchactions.Mention(event.User, "you do not have permission to use this command")
 		}
-
 	}
 
 	return c.cb(parts, event)

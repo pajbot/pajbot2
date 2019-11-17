@@ -166,7 +166,6 @@ func (m *latinFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				if !alreadySet {
 					lol.BadCharacters = append(lol.BadCharacters, r)
 				}
-
 			}
 			i++
 		}

@@ -117,7 +117,6 @@ func (u *TwitchUser) HasChannelPermission(channel pkg.Channel, permission pkg.Pe
 
 func (u TwitchUser) GetName() string {
 	return u.Name
-
 }
 func (u TwitchUser) GetDisplayName() string {
 	return ""

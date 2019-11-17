@@ -707,7 +707,6 @@ func (p *PointServer) connect() {
 		p.conn = nil
 		log.Println("Reconnect...")
 	}
-
 }
 
 func (b *Bot) ConnectToPointServer() (err error) {

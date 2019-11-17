@@ -27,7 +27,6 @@ func (s *Store) RegisterTwitchChannel(channel pkg.Channel) {
 	defer s.dataMutex.Unlock()
 
 	s.data[channel.GetID()] = channel
-
 }
 
 func NewStore() *Store {

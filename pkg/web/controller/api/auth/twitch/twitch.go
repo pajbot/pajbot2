@@ -175,7 +175,6 @@ VALUES ($1, $2)
 	// TODO: Secure the redirect
 	if stateData.redirect != "" {
 		http.Redirect(w, r, stateData.redirect, http.StatusFound)
-
 	}
 }
 

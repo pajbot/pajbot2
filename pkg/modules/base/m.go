@@ -140,7 +140,7 @@ func (b *Base) SetParameterResponse(key, value string, event pkg.MessageEvent) p
 
 	err := b.Save()
 	if err != nil {
-		return twitchactions.Mentionf(event.User, "an error occured while saving parameters for module %s, key %s: %s", b.ID(), key, err.Error())
+		return twitchactions.Mentionf(event.User, "an error occurred while saving parameters for module %s, key %s: %s", b.ID(), key, err.Error())
 	}
 	return twitchactions.Mentionf(event.User, "%s set to %s", key, value)
 }

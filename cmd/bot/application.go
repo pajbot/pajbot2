@@ -180,7 +180,6 @@ func (a *Application) RunDatabaseMigrations() error {
 	if err != nil {
 		fmt.Println("Unable to run SQL migrations", err)
 		return err
-
 	}
 
 	return nil
