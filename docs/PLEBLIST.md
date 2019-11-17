@@ -43,3 +43,4 @@
  - *There is a strong API and WebSocket system for 3rd parties. There is not a built-in chatbot integration.*
  - *Accounts are Twitch-integrated, with the ability to add special permissions to users. (e.g. non-twitch-mod with ability to moderate queue)*
  - *Accounts have an API token that can be used to perform all of their actions.*
+ - *The API should be able to power the "pleblist history" system.*
