@@ -21,6 +21,7 @@ type BotChannel interface {
 
 	EnableModule(string) error
 	DisableModule(string) error
+	GetModule(string) (Module, error)
 
 	Stream() Stream
 

@@ -211,6 +211,19 @@ func (c *BotChannel) DisableModule(moduleID string) error {
 	return errors.New("module isn't enabled")
 }
 
+func (c *BotChannel) GetModule(moduleID string) (pkg.Module, error) {
+	c.modulesMutex.Lock()
+	c.modulesMutex.Unlock()
+
+	for _, m := range c.modules {
+		if m.ID() == moduleID {
+			return m, nil
+		}
+	}
+
+	return nil, errors.New("no module with this ID found")
+}
+
 func (c *BotChannel) Initialize(b *Bot) error {
 	if c.initialized {
 		return errors.New("bot channel is already initialized")
