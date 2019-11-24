@@ -1,6 +1,7 @@
 package webutils
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/pajbot/pajbot2/pkg"
@@ -33,4 +34,8 @@ func RequirePermission(w http.ResponseWriter, c state.State, channel pkg.Channel
 
 	utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
 	return false
+}
+
+func testtestlol() {
+	fmt.Println("XD")
 }
