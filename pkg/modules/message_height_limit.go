@@ -67,9 +67,9 @@ type MessageHeightLimit struct {
 	userViolationCount map[string]int
 }
 
-func NewMessageHeightLimit(b mbase.Base) pkg.Module {
+func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
 	m := &MessageHeightLimit{
-		Base: b,
+		Base: *b,
 
 		userViolationCount: make(map[string]int),
 	}
