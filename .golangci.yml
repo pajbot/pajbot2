@@ -37,7 +37,6 @@ linters:
     - dupl
     - errcheck
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
@@ -58,7 +57,7 @@ linters:
     - typecheck
     - unconvert
     - unparam
-    - unused
+  # - unused
     - varcheck
     - whitespace
     - gocognit
@@ -69,3 +68,4 @@ linters:
   # don't enable:
   # - gochecknoglobals
   # - nakedret
+  # - gochecknoinits
