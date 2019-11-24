@@ -39,3 +39,5 @@ func RequirePermission(w http.ResponseWriter, c state.State, channel pkg.Channel
 func testtestlol() {
 	fmt.Println("XD")
 }
+
+// add commant xd
