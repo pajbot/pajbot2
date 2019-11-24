@@ -55,21 +55,18 @@ func (ps *PubSub) AcceptConnection(conn pkg.PubSubConnection) {
 }
 
 func (ps *PubSub) Run() {
-	for {
-		select {
-		case msg := <-ps.c:
-			switch msg.operation {
-			case operationPublish:
-				ps.publish(msg.source, msg.topic, msg.data)
-			case operationSubscribe:
-				subscriptionParameters, ok := msg.data.(json.RawMessage)
-				if ok {
-					ps.Subscribe(msg.source, msg.topic, subscriptionParameters)
-				}
-
-			default:
-				fmt.Printf("Unhandled operation: %v\n", msg.operation)
+	for msg := range ps.c {
+		switch msg.operation {
+		case operationPublish:
+			ps.publish(msg.source, msg.topic, msg.data)
+		case operationSubscribe:
+			subscriptionParameters, ok := msg.data.(json.RawMessage)
+			if ok {
+				ps.Subscribe(msg.source, msg.topic, subscriptionParameters)
 			}
+
+		default:
+			fmt.Printf("Unhandled operation: %v\n", msg.operation)
 		}
 	}
 }

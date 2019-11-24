@@ -9,4 +9,6 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
       - name: golangci-lint
-        uses: matoous/golangci-lint-action@v1.1.0
+        uses: pajlada/golangci-lint-action@master
+        with:
+            extra_args: --new-from-rev=2baeaf2880ec4f544e8cd484b2cc1b33e9790303~

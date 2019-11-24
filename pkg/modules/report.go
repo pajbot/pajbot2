@@ -97,9 +97,10 @@ func (m *Report) report(bot pkg.Sender, reporter pkg.User, targetChannel pkg.Cha
 	if !inserted {
 		// Report for this user in this channel already exists
 
-		if time.Now().Sub(oldReport.Time) < time.Minute*10 {
+		reportAge := time.Since(oldReport.Time)
+		if reportAge < time.Minute*10 {
 			// User was reported less than 10 minutes ago, don't let this user be timed out again
-			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", time.Now().Sub(oldReport.Time))
+			fmt.Printf("Skipping timeout because user was timed out too shortly ago: %s\n", reportAge)
 			return twitchactions.DoWhisper(reporter, "User successfully reported, but the last report was less than ten minutes ago so the timeout is skipped")
 		}
 

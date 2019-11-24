@@ -91,11 +91,8 @@ func (s *StreamStore) PollStreams() {
 }
 
 func (s *StreamStore) Run() {
-	for {
-		select {
-		case <-time.After(PollInterval):
-			s.PollStreams()
-		}
+	for range time.After(PollInterval) {
+		s.PollStreams()
 	}
 }
 

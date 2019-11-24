@@ -23,7 +23,7 @@ type followResponse struct {
 func apiCallbacksFollow(w http.ResponseWriter, r *http.Request) {
 	challenge := r.URL.Query().Get("hub.challenge")
 	if challenge != "" {
-		fmt.Fprintf(w, challenge)
+		fmt.Fprint(w, challenge)
 		return
 	}
 
@@ -62,7 +62,7 @@ type streamsResponse struct {
 func apiCallbacksStreams(w http.ResponseWriter, r *http.Request) {
 	challenge := r.URL.Query().Get("hub.challenge")
 	if challenge != "" {
-		fmt.Fprintf(w, challenge)
+		fmt.Fprint(w, challenge)
 		fmt.Println("Responding to streams")
 		return
 	}

@@ -584,31 +584,28 @@ func (b *Bot) StartChatterPoller() {
 	// defer close ticker lol
 
 	go func() {
-		for {
-			select {
-			case <-b.ticker.C:
-				chatters, _, err := gotwitch.GetChattersSimple("pajlada")
-				if err != nil {
-					continue
-				}
-
-				var usernames []string
-				usernames = append(usernames, chatters.Moderators...)
-				usernames = append(usernames, chatters.Staff...)
-				usernames = append(usernames, chatters.Admins...)
-				usernames = append(usernames, chatters.GlobalMods...)
-				usernames = append(usernames, chatters.Viewers...)
-				userIDs := b.GetUserStore().GetIDs(usernames)
-
-				userIDsSlice := make([]string, len(userIDs))
-				i := 0
-				for _, userID := range userIDs {
-					userIDsSlice[i] = userID
-					i++
-				}
-
-				b.BulkEdit("pajlada", userIDsSlice, 25)
+		for range b.ticker.C {
+			chatters, _, err := gotwitch.GetChattersSimple("pajlada")
+			if err != nil {
+				continue
 			}
+
+			var usernames []string
+			usernames = append(usernames, chatters.Moderators...)
+			usernames = append(usernames, chatters.Staff...)
+			usernames = append(usernames, chatters.Admins...)
+			usernames = append(usernames, chatters.GlobalMods...)
+			usernames = append(usernames, chatters.Viewers...)
+			userIDs := b.GetUserStore().GetIDs(usernames)
+
+			userIDsSlice := make([]string, len(userIDs))
+			i := 0
+			for _, userID := range userIDs {
+				userIDsSlice[i] = userID
+				i++
+			}
+
+			b.BulkEdit("pajlada", userIDsSlice, 25)
 		}
 	}()
 }
@@ -644,12 +641,10 @@ func (p *PointServer) Send(command uint8, body []byte) bool {
 	binary.BigEndian.PutUint32(bodyLength, uint32(len(body)))
 
 	// Write header (Command + Body length)
-	instant := p.Write(append([]byte{command}, bodyLength...))
+	p.Write(append([]byte{command}, bodyLength...))
 
 	// Write body
-	instant = p.Write(body)
-
-	return instant
+	return p.Write(body)
 }
 
 func (p *PointServer) Read(size int) []byte {

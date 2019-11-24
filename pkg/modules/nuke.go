@@ -59,11 +59,8 @@ func newNuke(b mbase.Base) pkg.Module {
 	m.ticker = time.NewTicker(garbageCollectionInterval)
 
 	go func() {
-		for {
-			select {
-			case <-m.ticker.C:
-				m.garbageCollect()
-			}
+		for range m.ticker.C {
+			m.garbageCollect()
 		}
 	}()
 
