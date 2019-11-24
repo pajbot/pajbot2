@@ -401,6 +401,41 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
+func (a *Application) loadBot(botConfig botConfig) error {
+	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, a)
+	if err != nil {
+		return err
+	}
+
+	botUserID := botConfig.account.ID()
+	bot.OnNewChannelJoined(func(channel pkg.Channel) {
+		var token *oauth2.Token
+		token, err = bot.GetTokenSource().Token()
+		if err != nil {
+			fmt.Println("Error renewing token: ", err)
+			return
+		}
+		a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), token.AccessToken)
+
+		a.twitchChannelStore.RegisterTwitchChannel(channel)
+	})
+
+	err = bot.LoadChannels(a.sqlClient)
+	if err != nil {
+		return err
+	}
+
+	a.twitchBots.Add(bot)
+
+	return nil
+}
+
+type botConfig struct {
+	databaseID  int
+	account     *pb2twitch.TwitchAccount
+	tokenSource oauth2.TokenSource
+}
+
 // LoadBots loads bots from the database
 func (a *Application) LoadBots() (err error) {
 	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM bot`
@@ -416,14 +451,8 @@ func (a *Application) LoadBots() (err error) {
 		}
 	}()
 
-	type bot struct {
-		databaseID  int
-		account     *pb2twitch.TwitchAccount
-		tokenSource oauth2.TokenSource
-	}
-
 	var botsMutex sync.Mutex
-	var bots []bot
+	var bots []botConfig
 
 	var wg sync.WaitGroup
 
@@ -453,7 +482,7 @@ func (a *Application) LoadBots() (err error) {
 
 			botsMutex.Lock()
 			defer botsMutex.Unlock()
-			bots = append(bots, bot{
+			bots = append(bots, botConfig{
 				databaseID:  databaseID,
 				account:     acc,
 				tokenSource: refreshingTokenSource,
@@ -481,31 +510,10 @@ func (a *Application) LoadBots() (err error) {
 	wg.Wait()
 
 	for _, botConfig := range bots {
-		bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, a)
+		err = a.loadBot(botConfig)
 		if err != nil {
 			return err
 		}
-
-		botUserID := botConfig.account.ID()
-		bot.OnNewChannelJoined(func(channel pkg.Channel) {
-			var token *oauth2.Token
-			token, err = bot.GetTokenSource().Token()
-			if err != nil {
-				fmt.Println("Error renewing token: ", err)
-				return
-			}
-			fmt.Println("Listen on", botUserID, " ", channel.GetID())
-			a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), token.AccessToken)
-
-			a.twitchChannelStore.RegisterTwitchChannel(channel)
-		})
-
-		err = bot.LoadChannels(a.sqlClient)
-		if err != nil {
-			return err
-		}
-
-		a.twitchBots.Add(bot)
 	}
 
 	return nil

@@ -444,6 +444,10 @@ func (b *Bot) Whisper(user pkg.User, message string) {
 	b.Client.Whisper(user.GetName(), message)
 }
 
+func (b *Bot) Whisperf(user pkg.User, format string, a ...interface{}) {
+	b.Client.Whisper(user.GetName(), fmt.Sprintf(format, a...))
+}
+
 func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
 	if !user.IsModerator() {
 		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))

@@ -1,8 +1,11 @@
 package modules
 
 import (
+	"time"
+
 	"github.com/pajbot/pajbot2/pkg"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
+	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
@@ -28,29 +31,16 @@ func newMessageLengthLimit(b mbase.Base) pkg.Module {
 }
 
 func (m MessageLengthLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
+
+	messageLength := len(message.GetText())
+	if messageLength > 140 {
+		if messageLength > 420 {
+			return twitchactions.DoTimeout(event.User, 600*time.Second, "Your message is way too long")
+		}
+
+		return twitchactions.DoTimeout(event.User, 300*time.Second, "Your message is too long, shorten it")
+	}
+
 	return nil
-
-	/*
-		user := event.User
-		message := event.Message
-
-		if user.GetName() == "gazatu2" {
-			return nil
-		}
-
-		if user.GetName() == "supibot" {
-			return nil
-		}
-
-		messageLength := len(message.GetText())
-		if messageLength > 140 {
-			if messageLength > 420 {
-				return twitchactions.DoTimeout(event.User, 600*time.Second, "Your message is way too long")
-			}
-
-			return twitchactions.DoTimeout(event.User, 300*time.Second, "Your message is too long, shorten it")
-		}
-
-		return nil
-	*/
 }

@@ -323,7 +323,7 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			Duration: duration,
 			// Reason:   report.Reason,
 		})
-		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been timed out for %d seconds :)", report.Target.Name, duration))
+		bot.Whisperf(reporterInst, "Thanks to your report, user %s has been timed out for %d seconds :)", report.Target.Name, duration)
 
 	case pkg.ReportActionDismiss:
 		bot.Whisper(reporterInst, fmt.Sprintf("Your report of %s has been dismissed with no further action taken :\\", report.Target.Name))
