@@ -2,9 +2,9 @@ package web
 
 import "regexp"
 
-// funny haHAA
 const (
-	ErrInvalidUserName = "https://i.imgur.com/r7FGMh8.png"
+	// ErrInvalidUserName is returned if an invalid username was posted to a router that expected a valid username
+	ErrInvalidUserName = "invalid username"
 )
 
 var (
