@@ -9,14 +9,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func onUserAuthenticated(w http.ResponseWriter, r *http.Request, self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
+func onUserAuthenticated(
+	w http.ResponseWriter, r *http.Request,
+	self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
 	c := state.Context(w, r)
 	twitchUserName := self.Login
 
 	twitchUserID := c.TwitchUserStore.GetID(twitchUserName)
 
 	if twitchUserID == "" {
-		// TODO: Fix proper error handling
+		// TODO: Implement proper error handling
+		fmt.Println("Unable to get user id for user", twitchUserName)
 		return
 	}
 
