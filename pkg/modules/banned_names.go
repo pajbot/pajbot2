@@ -43,6 +43,8 @@ type bannedNames struct {
 func newBannedNames(b *mbase.Base, badUsernames []*regexp.Regexp) pkg.Module {
 	return &bannedNames{
 		Base: *b,
+
+		badUsernames: badUsernames,
 	}
 }
 
