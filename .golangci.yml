@@ -61,7 +61,7 @@ linters:
     - varcheck
     - whitespace
     - gocognit
-    - godox
+  # - godox
     - maligned
     - prealloc
 
