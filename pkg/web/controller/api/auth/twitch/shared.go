@@ -95,6 +95,7 @@ func initializeOauthRoutes(ctx context.Context, m *mux.Router, config *oauth2.Co
 				http.Error(w, "Error validating token: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
+			// defer validateResponse.Body.Close()
 
 			onAuthorized(w, r, *validateResponse, oauth2Token, stateData)
 		})
