@@ -11,4 +11,4 @@ jobs:
       - name: golangci-lint
         uses: pajlada/golangci-lint-action@master
         with:
-            extra_args: --new-from-rev=2baeaf2880~3
+            extra_args: --new-from-rev=2baeaf2880~13
