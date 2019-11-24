@@ -402,7 +402,7 @@ func (a *Application) StartWebServer() error {
 }
 
 // LoadBots loads bots from the database
-func (a *Application) LoadBots() error {
+func (a *Application) LoadBots() (err error) {
 	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM bot`
 	rows, err := a.sqlClient.Query(queryF) // GOOD
 	if err != nil {
@@ -488,7 +488,8 @@ func (a *Application) LoadBots() error {
 
 		botUserID := botConfig.account.ID()
 		bot.OnNewChannelJoined(func(channel pkg.Channel) {
-			token, err := bot.GetTokenSource().Token()
+			var token *oauth2.Token
+			token, err = bot.GetTokenSource().Token()
 			if err != nil {
 				fmt.Println("Error renewing token: ", err)
 				return
