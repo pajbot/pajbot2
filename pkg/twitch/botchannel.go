@@ -213,7 +213,7 @@ func (c *BotChannel) DisableModule(moduleID string) error {
 
 func (c *BotChannel) GetModule(moduleID string) (pkg.Module, error) {
 	c.modulesMutex.Lock()
-	c.modulesMutex.Unlock()
+	defer c.modulesMutex.Unlock()
 
 	for _, m := range c.modules {
 		if m.ID() == moduleID {
