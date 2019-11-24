@@ -31,9 +31,9 @@ type bttvEmoteParser struct {
 	globalEmotes *map[string]common.Emote
 }
 
-func newbttvEmoteParser(b mbase.Base) pkg.Module {
+func newbttvEmoteParser(b *mbase.Base) pkg.Module {
 	return &bttvEmoteParser{
-		Base: b,
+		Base: *b,
 
 		globalEmotes: &emotes.GlobalEmotes.Bttv,
 	}

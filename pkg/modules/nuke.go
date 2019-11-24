@@ -45,9 +45,9 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-func newNuke(b mbase.Base) pkg.Module {
+func newNuke(b *mbase.Base) pkg.Module {
 	m := &nukeModule{
-		Base: b,
+		Base: *b,
 
 		messages: make(map[string][]nukeMessage),
 

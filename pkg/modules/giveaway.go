@@ -50,9 +50,9 @@ type giveaway struct {
 	emoteName string
 }
 
-func newGiveaway(b mbase.Base) pkg.Module {
+func newGiveaway(b *mbase.Base) pkg.Module {
 	m := &giveaway{
-		Base: b,
+		Base: *b,
 
 		state: giveawayStateStopped,
 

@@ -21,8 +21,8 @@ type test struct {
 	mbase.Base
 }
 
-func newTest(b mbase.Base) pkg.Module {
+func newTest(b *mbase.Base) pkg.Module {
 	return &test{
-		Base: b,
+		Base: *b,
 	}
 }

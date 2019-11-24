@@ -18,7 +18,7 @@ func init() {
 		return &Spec{
 			id:   "link_filter",
 			name: "Link filter",
-			maker: func(b mbase.Base) pkg.Module {
+			maker: func(b *mbase.Base) pkg.Module {
 				return newLinkFilter(b, relaxedRegexp, strictRegexp)
 			},
 		}
@@ -32,9 +32,9 @@ type LinkFilter struct {
 	strictRegexp  *regexp.Regexp
 }
 
-func newLinkFilter(b mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
+func newLinkFilter(b *mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
 	return &LinkFilter{
-		Base: b,
+		Base: *b,
 
 		relaxedRegexp: relaxedRegexp,
 		strictRegexp:  strictRegexp,

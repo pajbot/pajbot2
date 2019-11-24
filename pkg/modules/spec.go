@@ -11,7 +11,7 @@ type moduleParameterSpec struct {
 	defaultValue  interface{}
 }
 
-type moduleMaker func(b mbase.Base) pkg.Module
+type moduleMaker func(b *mbase.Base) pkg.Module
 
 type Spec struct {
 	// i.e. "report". This is used in external calls enabling or disabling the module
@@ -59,7 +59,7 @@ func (s *Spec) EnabledByDefault() bool {
 
 func (s *Spec) Create(bot pkg.BotChannel) pkg.Module {
 	b := mbase.New(s, bot, _server.sql, _server.oldSession, _server.pubSub, _server.reportHolder)
-	m := s.maker(b)
+	m := s.maker(&b)
 
 	return m
 }

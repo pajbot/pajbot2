@@ -16,7 +16,7 @@ func init() {
 		return &Spec{
 			id:   "pajbot1_banphrase",
 			name: "pajbot1 banphrase",
-			maker: func(b mbase.Base) pkg.Module {
+			maker: func(b *mbase.Base) pkg.Module {
 				m := newPajbot1BanphraseFilter(b)
 				m.Initialize()
 				return m
@@ -35,9 +35,9 @@ type pajbot1BanphraseFilter struct {
 	banphrases []pkg.Banphrase
 }
 
-func newPajbot1BanphraseFilter(b mbase.Base) *pajbot1BanphraseFilter {
+func newPajbot1BanphraseFilter(b *mbase.Base) *pajbot1BanphraseFilter {
 	return &pajbot1BanphraseFilter{
-		Base: b,
+		Base: *b,
 	}
 }
 

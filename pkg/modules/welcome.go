@@ -23,9 +23,9 @@ type welcome struct {
 	mbase.Base
 }
 
-func newWelcome(b mbase.Base) pkg.Module {
+func newWelcome(b *mbase.Base) pkg.Module {
 	m := &welcome{
-		Base: b,
+		Base: *b,
 	}
 
 	// FIXME

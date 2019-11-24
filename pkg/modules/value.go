@@ -74,9 +74,9 @@ func (c *valueCmd) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	return c.get(parts, event)
 }
 
-func newValue(b mbase.Base) pkg.Module {
+func newValue(b *mbase.Base) pkg.Module {
 	m := &value{
-		Base: b,
+		Base: *b,
 
 		commands: commands.NewCommands(),
 	}

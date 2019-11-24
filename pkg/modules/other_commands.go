@@ -24,9 +24,9 @@ type otherCommandsModule struct {
 	commands pkg.CommandsManager
 }
 
-func newOtherCommandsModule(b mbase.Base) pkg.Module {
+func newOtherCommandsModule(b *mbase.Base) pkg.Module {
 	m := &otherCommandsModule{
-		Base: b,
+		Base: *b,
 
 		commands: commands.NewCommands(),
 	}

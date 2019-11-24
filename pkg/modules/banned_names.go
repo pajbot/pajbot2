@@ -25,7 +25,7 @@ func init() {
 		return &Spec{
 			id:   "banned_names",
 			name: "Banned names",
-			maker: func(b mbase.Base) pkg.Module {
+			maker: func(b *mbase.Base) pkg.Module {
 				return newBannedNames(b, badUsernames)
 			},
 
@@ -40,9 +40,9 @@ type bannedNames struct {
 	badUsernames []*regexp.Regexp
 }
 
-func newBannedNames(b mbase.Base, badUsernames []*regexp.Regexp) pkg.Module {
+func newBannedNames(b *mbase.Base, badUsernames []*regexp.Regexp) pkg.Module {
 	return &bannedNames{
-		Base: b,
+		Base: *b,
 	}
 }
 

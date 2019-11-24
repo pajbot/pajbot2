@@ -24,9 +24,9 @@ type MessageLengthLimit struct {
 	mbase.Base
 }
 
-func newMessageLengthLimit(b mbase.Base) pkg.Module {
+func newMessageLengthLimit(b *mbase.Base) pkg.Module {
 	return &MessageLengthLimit{
-		Base: b,
+		Base: *b,
 	}
 }
 

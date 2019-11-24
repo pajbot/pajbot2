@@ -30,9 +30,9 @@ type Report struct {
 
 var _ pkg.Module = &Report{}
 
-func newReport(b mbase.Base) pkg.Module {
+func newReport(b *mbase.Base) pkg.Module {
 	m := &Report{
-		Base: b,
+		Base: *b,
 
 		reportHolder: _server.reportHolder,
 	}

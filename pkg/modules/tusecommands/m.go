@@ -39,9 +39,9 @@ func (m *module) registerCommand() error {
 	return nil
 }
 
-func newModule(b mbase.Base) pkg.Module {
+func newModule(b *mbase.Base) pkg.Module {
 	m := &module{
-		Base: b,
+		Base: *b,
 	}
 
 	return m
