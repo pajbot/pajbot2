@@ -14,10 +14,7 @@ var (
 )
 
 func isValidUserName(input string) bool {
-	if singleUserName.FindString(input) != input {
-		return false
-	}
-	return true
+	return singleUserName.FindString(input) == input
 }
 
 func isValidURL(url string) bool {
