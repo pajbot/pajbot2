@@ -583,6 +583,21 @@ func (b *Bot) HandleRoomstateMessage(message twitch.RoomStateMessage) {
 	}
 }
 
+func (b *Bot) HandleClearChatMessage(message *twitch.ClearChatMessage) {
+	_, botChannel := b.getBotChannel(message.RoomID)
+	if botChannel == nil {
+		fmt.Println("Received a CLEARCHAT message in room", message.RoomID, "that we haven't joined?")
+		return
+	}
+	_, err := botChannel.Events().Emit("on_clearchat", map[string]interface{}{
+		"message": &message,
+	})
+
+	if err != nil {
+		fmt.Println("Error occurred when emitting the clearchat event:", err)
+	}
+}
+
 func (b *Bot) StartChatterPoller() {
 	b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol

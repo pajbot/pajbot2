@@ -563,6 +563,10 @@ func (a *Application) StartBots() error {
 
 			bot.OnRoomStateMessage(bot.HandleRoomstateMessage)
 
+			bot.OnClearChatMessage(func(message twitch.ClearChatMessage) {
+				bot.HandleClearChatMessage(&message)
+			})
+
 			bot.OnUnsetMessage(func(message twitch.RawMessage) {
 				fmt.Println("Unparsed message:", message.Raw)
 			})
