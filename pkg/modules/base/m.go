@@ -189,7 +189,7 @@ func (b *Base) Save() error {
 	return nil
 }
 
-func (b *Base) Listen(event string, cb func() error, prio int) error {
+func (b *Base) Listen(event string, cb interface{}, prio int) error {
 	conn, err := b.bot.Events().Listen(event, cb, prio)
 	if err != nil {
 		return err
