@@ -590,7 +590,7 @@ func (b *Bot) HandleClearChatMessage(message *twitch.ClearChatMessage) {
 		return
 	}
 	_, err := botChannel.Events().Emit("on_clearchat", map[string]interface{}{
-		"message": &message,
+		"message": message,
 	})
 
 	if err != nil {
