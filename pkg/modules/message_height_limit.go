@@ -132,11 +132,12 @@ func initCLR() error {
 	return nil
 }
 
-func initChannel(channelName string) error {
+func initChannel(channelName, channelID string) error {
 	channel := C.CString(channelName)
+	cChannelID := C.CString(channelID)
 
 	fmt.Println("init channel", channelName)
-	res := C.InitChannel(channel)
+	res := C.InitChannel(channel, cChannelID, 5000)
 	fmt.Println("done")
 
 	if res != 1 {
@@ -183,7 +184,7 @@ func (m *MessageHeightLimit) Initialize() {
 	}
 
 	fmt.Println("init channel")
-	if err := initChannel(m.BotChannel().ChannelName()); err != nil {
+	if err := initChannel(m.BotChannel().ChannelName(), m.BotChannel().ChannelID()); err != nil {
 		log.Println("Error initializing channel:", err)
 		return
 	}
