@@ -102,7 +102,7 @@ export default class Dashboard extends Component {
                 </div>
                 <div className="card-body">
                   {report.Reason ? <span className="reason">{report.Reason}</span> : null}
-                  <a target="_blank" href={`https://api.gempir.com/channel/${report.Channel.Name}/user/${report.Target.Name}`}>&nbsp;logs</a>
+                  <a target="_blank" href={`https://logs.ivr.fi/channel/${report.Channel.Name}/user/${report.Target.Name}`}>&nbsp;logs</a>
                   <div>{report.Time}</div>
                   {report.Logs && report.Logs.map((value, key) =>
                     <div key={key}>{value}</div>
