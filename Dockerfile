@@ -1,18 +1,18 @@
 FROM golang:buster AS build
 RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && wget -q https://packages.microsoft.com/config/debian/10/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
-RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-2.2 nodejs -y
+RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-3.1 nodejs -y
 ADD . /src
 RUN cd /src && ./utils/install.sh
 RUN cd /src/web && npm i && npm run build
 RUN cd /src/cmd/bot && go build -v -tags csharp
 
-FROM mcr.microsoft.com/dotnet/core/runtime:2.2.7-stretch-slim
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim
 ARG COMMIT
 ARG COMMIT_COUNT
 ARG BRANCH
 WORKDIR /app/cmd/bot
-ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/2.2.7
+ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.0
 ENV PB2_COMMIT=${COMMIT}
 ENV PB2_COMMIT_COUNT=${COMMIT_COUNT}
 ENV PB2_BRANCH=${BRANCH}
