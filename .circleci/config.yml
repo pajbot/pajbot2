@@ -53,7 +53,7 @@ jobs:
           sudo chown root:root /etc/apt/trusted.gpg.d/microsoft.asc.gpg
           sudo chown root:root /etc/apt/sources.list.d/microsoft-prod.list
           sudo apt update
-          sudo apt install dotnet-sdk-2.2
+          sudo apt install dotnet-sdk-3.1
           echo 'export DOTNET_CLI_TELEMETRY_OPTOUT="1"' >> "$BASH_ENV"
     - run:
         name: Get go dependencies
