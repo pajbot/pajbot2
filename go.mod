@@ -10,7 +10,7 @@ require (
 	github.com/dankeroni/gotwitch v0.0.0-20190429150511-5924c422419a
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.6.0
-	github.com/gempir/go-twitch-irc/v2 v2.2.1
+	github.com/gempir/go-twitch-irc/v2 v2.2.2
 	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
