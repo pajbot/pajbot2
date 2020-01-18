@@ -346,7 +346,7 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 			case pkg.MuteTypeTemporary:
 				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
 			case pkg.MuteTypePermanent:
-				c.Timeout(mute.User(), 30, "Preban timeout to clear chat")
+				c.Timeout(mute.User(), 30, mute.Reason())
 				go func() {
 					time.Sleep(1000)
 
