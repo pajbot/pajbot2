@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
@@ -345,7 +346,12 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 			case pkg.MuteTypeTemporary:
 				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
 			case pkg.MuteTypePermanent:
-				c.Ban(mute.User(), mute.Reason())
+				c.Timeout(mute.User(), 30, mute.Reason())
+				go func() {
+					time.Sleep(1000)
+
+					c.Ban(mute.User(), mute.Reason())
+				}()
 			}
 		}
 
