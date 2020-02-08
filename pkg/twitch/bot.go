@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/go-sql-driver/mysql"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/users"
@@ -604,7 +604,7 @@ func (b *Bot) StartChatterPoller() {
 
 	go func() {
 		for range b.ticker.C {
-			chatters, _, err := gotwitch.GetChattersSimple("pajlada")
+			chatters, err := apirequest.TwitchWrapper.API().TMI().GetChatters("pajlada")
 			if err != nil {
 				continue
 			}

@@ -90,13 +90,12 @@ func initializeOauthRoutes(ctx context.Context, m *mux.Router, config *oauth2.Co
 				return
 			}
 
-			validateResponse, response, err := apirequest.Twitch.ValidateOAuthTokenSimple(oauth2Token.AccessToken)
+			validateResponse, err := apirequest.Twitch.ID().Authenticate(oauth2Token.AccessToken).Validate()
 			if err != nil {
 				http.Error(w, "Error validating token: "+err.Error(), http.StatusInternalServerError)
 				return
 			}
-			defer response.Body.Close()
 
-			onAuthorized(w, r, *validateResponse, oauth2Token, stateData)
+			onAuthorized(w, r, validateResponse, oauth2Token, stateData)
 		})
 }

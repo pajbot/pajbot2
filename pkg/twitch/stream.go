@@ -11,39 +11,39 @@ import (
 var _ pkg.Stream = &Stream{}
 
 type StreamStatus struct {
-	*gotwitch.Stream
+	*gotwitch.HelixStream
 
 	mutex *sync.RWMutex
 }
 
-func (s *StreamStatus) Update(streamData *gotwitch.Stream) {
+func (s *StreamStatus) Update(streamData *gotwitch.HelixStream) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if s.Stream == nil && streamData != nil {
+	if s.HelixStream == nil && streamData != nil {
 		// Fire event emitter STREAM ONLINE
 		// Stream just went online
-	} else if s.Stream != nil && streamData == nil {
+	} else if s.HelixStream != nil && streamData == nil {
 		// Fire event emitter STREAM OFFLINE
 		// Stream just went offline
 	}
 
-	s.Stream = streamData
+	s.HelixStream = streamData
 }
 
 func (s *StreamStatus) Live() bool {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	return s.Stream != nil
+	return s.HelixStream != nil
 }
 
 func (s *StreamStatus) StartedAt() (r time.Time) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	if s.Stream != nil {
-		r = s.Stream.StartedAt
+	if s.HelixStream != nil {
+		r = s.HelixStream.StartedAt
 	}
 
 	return
@@ -75,7 +75,7 @@ func (s *Stream) Status() pkg.StreamStatus {
 	return &s.status
 }
 
-func (s *Stream) Update(stream *gotwitch.Stream) {
+func (s *Stream) Update(stream *gotwitch.HelixStream) {
 	s.status.Update(stream)
 }
 

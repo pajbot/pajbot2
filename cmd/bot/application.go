@@ -490,13 +490,13 @@ func (a *Application) LoadBots() (err error) {
 
 			token, err := refreshingTokenSource.Token()
 			if err != nil {
-				fmt.Println("ERROR!!! Error getting token from token source for bot", acc.Name())
+				fmt.Printf("Error getting token from token source for bot '%s': %s\n", acc.Name(), err.Error())
 				return
 			}
 
-			self, _, err := apirequest.TwitchBot.ValidateOAuthTokenSimple(token.AccessToken)
+			self, err := apirequest.TwitchBot.ID().Authenticate(token.AccessToken).Validate()
 			if err != nil {
-				fmt.Println("ERROR!!! Error validating oauth token for", acc.Name(), err)
+				fmt.Printf("Error validating oauth token for bot '%s': %s\n", acc.Name(), err)
 				return
 			}
 
