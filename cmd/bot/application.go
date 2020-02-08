@@ -480,14 +480,6 @@ func (a *Application) LoadBots() (err error) {
 			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
 			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
 
-			botsMutex.Lock()
-			defer botsMutex.Unlock()
-			bots = append(bots, botConfig{
-				databaseID:  databaseID,
-				account:     acc,
-				tokenSource: refreshingTokenSource,
-			})
-
 			token, err := refreshingTokenSource.Token()
 			if err != nil {
 				fmt.Printf("Error getting token from token source for bot '%s': %s\n", acc.Name(), err.Error())
@@ -504,6 +496,14 @@ func (a *Application) LoadBots() (err error) {
 				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
 				return
 			}
+
+			botsMutex.Lock()
+			defer botsMutex.Unlock()
+			bots = append(bots, botConfig{
+				databaseID:  databaseID,
+				account:     acc,
+				tokenSource: refreshingTokenSource,
+			})
 		}(databaseID, &acc, c)
 	}
 
