@@ -16,5 +16,6 @@ type User interface {
 	IsModerator() bool
 	IsBroadcaster() bool
 	IsVIP() bool
+	IsSubscriber() bool
 	GetBadges() map[string]int
 }
