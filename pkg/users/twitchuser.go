@@ -143,6 +143,11 @@ func (u TwitchUser) IsVIP() bool {
 	return ok
 }
 
+func (u TwitchUser) IsSubscriber() bool {
+	_, ok := u.Badges["subscriber"]
+	return ok
+}
+
 func (u TwitchUser) GetBadges() map[string]int {
 	return u.Badges
 }
