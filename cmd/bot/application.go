@@ -480,23 +480,15 @@ func (a *Application) LoadBots() (err error) {
 			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
 			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
 
-			botsMutex.Lock()
-			defer botsMutex.Unlock()
-			bots = append(bots, botConfig{
-				databaseID:  databaseID,
-				account:     acc,
-				tokenSource: refreshingTokenSource,
-			})
-
 			token, err := refreshingTokenSource.Token()
 			if err != nil {
-				fmt.Println("ERROR!!! Error getting token from token source for bot", acc.Name())
+				fmt.Printf("Error getting token from token source for bot '%s': %s\n", acc.Name(), err.Error())
 				return
 			}
 
-			self, _, err := apirequest.TwitchBot.ValidateOAuthTokenSimple(token.AccessToken)
+			self, err := apirequest.TwitchBot.ID().Authenticate(token.AccessToken).Validate()
 			if err != nil {
-				fmt.Println("ERROR!!! Error validating oauth token for", acc.Name(), err)
+				fmt.Printf("Error validating oauth token for bot '%s': %s\n", acc.Name(), err)
 				return
 			}
 
@@ -504,6 +496,14 @@ func (a *Application) LoadBots() (err error) {
 				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
 				return
 			}
+
+			botsMutex.Lock()
+			defer botsMutex.Unlock()
+			bots = append(bots, botConfig{
+				databaseID:  databaseID,
+				account:     acc,
+				tokenSource: refreshingTokenSource,
+			})
 		}(databaseID, &acc, c)
 	}
 
@@ -609,6 +609,7 @@ func (a *Application) StartPubSubClient() error {
 	a.TwitchPubSub = twitchpubsub.NewClient(twitchpubsub.DefaultHost)
 
 	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
+		fmt.Println("Got moderation action")
 		const ActionUnknown = 0
 		const ActionTimeout = 1
 		const ActionBan = 2

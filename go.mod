@@ -7,7 +7,7 @@ require (
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/dankeroni/gotwitch v0.0.0-20190429150511-5924c422419a
+	github.com/dankeroni/gotwitch v0.0.0-20200208125003-d25d6b1cc17c
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.6.0
 	github.com/gempir/go-twitch-irc/v2 v2.2.2
@@ -40,7 +40,7 @@ require (
 	github.com/urakozz/go-emoji v0.0.0-20190204094219-2f379953d125
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20191117063200-497ca9f6d64f // indirect
-	golang.org/x/net v0.0.0-20191116160921-f9c825593386 // indirect
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191115151921-52ab43148777 // indirect
 	golang.org/x/tools v0.0.0-20191116214431-80313e1ba718 // indirect

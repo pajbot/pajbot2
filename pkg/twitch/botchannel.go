@@ -370,8 +370,6 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 	c.eventEmitter.Emit("on_msg", nil)
 
-	log.Println("Got message:", message.GetText())
-
 	event := pkg.MessageEvent{
 		BaseEvent: pkg.BaseEvent{
 			UserStore: c.bot.GetUserStore(),
