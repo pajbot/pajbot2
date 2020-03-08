@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dankeroni/gotwitch"
+	"github.com/dankeroni/gotwitch/v2"
 	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
