@@ -115,17 +115,17 @@ func (u *TwitchUser) HasChannelPermission(channel pkg.Channel, permission pkg.Pe
 	return (channelPermissionSet.permissions & permission) != 0
 }
 
-func (u TwitchUser) GetName() string {
+func (u *TwitchUser) GetName() string {
 	return u.Name
 }
-func (u TwitchUser) GetDisplayName() string {
+func (u *TwitchUser) GetDisplayName() string {
 	return ""
 }
-func (u TwitchUser) GetID() string {
+func (u *TwitchUser) GetID() string {
 	return u.ID
 }
 
-func (u TwitchUser) IsModerator() bool {
+func (u *TwitchUser) IsModerator() bool {
 	_, ok := u.Badges["moderator"]
 	if !ok {
 		ok = u.IsBroadcaster()
@@ -133,22 +133,22 @@ func (u TwitchUser) IsModerator() bool {
 	return ok
 }
 
-func (u TwitchUser) IsBroadcaster() bool {
+func (u *TwitchUser) IsBroadcaster() bool {
 	_, ok := u.Badges["broadcaster"]
 	return ok
 }
 
-func (u TwitchUser) IsVIP() bool {
+func (u *TwitchUser) IsVIP() bool {
 	_, ok := u.Badges["vip"]
 	return ok
 }
 
-func (u TwitchUser) IsSubscriber() bool {
+func (u *TwitchUser) IsSubscriber() bool {
 	_, ok := u.Badges["subscriber"]
 	return ok
 }
 
-func (u TwitchUser) GetBadges() map[string]int {
+func (u *TwitchUser) GetBadges() map[string]int {
 	return u.Badges
 }
 
