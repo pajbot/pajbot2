@@ -609,6 +609,7 @@ func (a *Application) StartPubSubClient() error {
 	a.TwitchPubSub = twitchpubsub.NewClient(twitchpubsub.DefaultHost)
 
 	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
+		fmt.Println("Got moderation action")
 		const ActionUnknown = 0
 		const ActionTimeout = 1
 		const ActionBan = 2

@@ -1,6 +1,7 @@
 package twitch
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -21,9 +22,11 @@ func (s *StreamStatus) Update(streamData *gotwitch.HelixStream) {
 	defer s.mutex.Unlock()
 
 	if s.HelixStream == nil && streamData != nil {
+		fmt.Println("Stream went online")
 		// Fire event emitter STREAM ONLINE
 		// Stream just went online
 	} else if s.HelixStream != nil && streamData == nil {
+		fmt.Println("Stream went offline")
 		// Fire event emitter STREAM OFFLINE
 		// Stream just went offline
 	}
