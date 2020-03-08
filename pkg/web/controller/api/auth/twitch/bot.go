@@ -3,7 +3,7 @@ package twitch
 import (
 	"net/http"
 
-	"github.com/dankeroni/gotwitch"
+	"github.com/dankeroni/gotwitch/v2"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/utils"
 	"golang.org/x/oauth2"
