@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import WebSocketHandler from "./WebSocketHandler";
+import { isLoggedIn } from "./auth";
 
 const ReportActionUnknown = 0;
 const ReportActionBan = 1;
@@ -50,6 +51,7 @@ export default class Dashboard extends Component {
       bots: channel?.Bots || [],
       channel: channel?.Channel || "",
       currentBot: channel?.Bots[0] || null,
+      channels: channel?.Channels || [],
       reports: [],
       userLookupLoading: false,
       userLookupData: null,
@@ -75,8 +77,21 @@ export default class Dashboard extends Component {
     if (!this.state.channel) {
       return (
         <section>
-          <h2>GLObal Dashboards</h2>
-          <p>todo list dashboards u have access to</p>
+          <h2>Dashboards</h2>
+          <p hidden={isLoggedIn()}>
+            If you log in, you will get a list of channels you have access to
+            here
+          </p>
+          <h4 hidden={!isLoggedIn()}>List of channel dashboards:</h4>
+          <ul>
+            {this.state.channels.map((channel, index) => (
+              <li key={index}>
+                <a href={`/c/${encodeURIComponent(channel.Name)}/dashboard`}>
+                  {channel.Name} ({channel.ID})
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
       );
     }
