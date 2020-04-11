@@ -55,7 +55,8 @@ func handleDashboard(a pkg.Application) func(w http.ResponseWriter, r *http.Requ
 
 			// fmt.Fprintf(w, "Bot: %s\n", bot.TwitchAccount().ID())
 			bi := BotInfo{
-				Name: bot.TwitchAccount().Name(),
+				Name:      bot.TwitchAccount().Name(),
+				Connected: bot.Connected(),
 			}
 			extra.Bots = append(extra.Bots, bi)
 		}
