@@ -1,9 +1,12 @@
 package commands
 
 import (
+	"runtime"
+
 	"github.com/pajbot/pajbot2/internal/commands/base"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commandlist"
+	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
 )
@@ -27,5 +30,5 @@ func NewPing() pkg.CustomCommand2 {
 }
 
 func (c Ping) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
-	return twitchactions.Mentionf(event.User, "pb2 has been running for %s", utils.TimeSince(startTime))
+	return twitchactions.Mentionf(event.User, "pb2 has been running for %s (bot:%s, go:%s, built:%s)", utils.TimeSince(startTime), common.Version(), runtime.Version(), common.BuildTime)
 }
