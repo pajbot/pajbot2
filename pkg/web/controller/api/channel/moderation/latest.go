@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/users"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/utils"
 )
@@ -53,6 +55,22 @@ func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 
 	if c.Channel == nil {
 		utils.WebWriteError(w, 500, "this is not a channel we are in")
+		return
+	}
+
+	if c.Session == nil {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		return
+	}
+
+	user := users.NewSimpleTwitchUser(c.Session.TwitchUserID, c.Session.TwitchUserName)
+	if user == nil {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		return
+	}
+
+	if !user.HasPermission(c.Channel, pkg.PermissionModeration) && !user.HasPermission(c.Channel, pkg.PermissionReport) && !user.HasPermission(c.Channel, pkg.PermissionAdmin) && !user.HasPermission(c.Channel, pkg.PermissionReportAPI) {
+		utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
 		return
 	}
 
