@@ -7,12 +7,12 @@ RUN cd /src && ./utils/install.sh
 RUN cd /src/web && npm i && npm run build
 RUN cd /src/cmd/bot && go build -v -tags csharp
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1-buster-slim
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1.3-buster-slim
 ARG COMMIT
 ARG COMMIT_COUNT
 ARG BRANCH
 WORKDIR /app/cmd/bot
-ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.0
+ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.3
 ENV PB2_COMMIT=${COMMIT}
 ENV PB2_COMMIT_COUNT=${COMMIT_COUNT}
 ENV PB2_BRANCH=${BRANCH}
