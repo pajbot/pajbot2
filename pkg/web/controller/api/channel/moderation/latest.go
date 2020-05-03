@@ -54,23 +54,31 @@ func apiChannelModerationLatest(w http.ResponseWriter, r *http.Request) {
 	c := state.Context(w, r)
 
 	if c.Channel == nil {
-		utils.WebWriteError(w, 500, "this is not a channel we are in")
+		if err := utils.WebWriteError(w, 500, "this is not a channel we are in"); err != nil {
+			fmt.Println("Error in network write:", err)
+		}
 		return
 	}
 
 	if c.Session == nil {
-		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		if err := utils.WebWriteError(w, 400, "Not authorized to view this endpoint"); err != nil {
+			fmt.Println("Error in network write:", err)
+		}
 		return
 	}
 
 	user := users.NewSimpleTwitchUser(c.Session.TwitchUserID, c.Session.TwitchUserName)
 	if user == nil {
-		utils.WebWriteError(w, 400, "Not authorized to view this endpoint")
+		if err := utils.WebWriteError(w, 400, "Not authorized to view this endpoint"); err != nil {
+			fmt.Println("Error in network write:", err)
+		}
 		return
 	}
 
 	if !user.HasPermission(c.Channel, pkg.PermissionModeration) && !user.HasPermission(c.Channel, pkg.PermissionReport) && !user.HasPermission(c.Channel, pkg.PermissionAdmin) && !user.HasPermission(c.Channel, pkg.PermissionReportAPI) {
-		utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!")
+		if err := utils.WebWriteError(w, 400, "Not authorized to view this endpoint!!!"); err != nil {
+			fmt.Println("Error in network write:", err)
+		}
 		return
 	}
 

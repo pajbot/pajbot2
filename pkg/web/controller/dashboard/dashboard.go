@@ -19,7 +19,7 @@ func Load() {
 const dashboardPermissions = pkg.PermissionAdmin | pkg.PermissionReport | pkg.PermissionModeration | pkg.PermissionReportAPI
 
 func Dashboard(w http.ResponseWriter, r *http.Request) {
-	state := state.Context(w, r)
+	c := state.Context(w, r)
 
 	const queryF = `
 SELECT
@@ -42,8 +42,8 @@ WHERE twitch_userid=$1`
 
 	var extraBytes []byte
 
-	if state.Session != nil {
-		rows, err := state.SQL.Query(queryF, state.Session.TwitchUserID)
+	if c.Session != nil {
+		rows, err := c.SQL.Query(queryF, c.Session.TwitchUserID)
 		if err != nil {
 			// TODO: render error page somehow?
 			fmt.Println("ERROR 1:", err)
@@ -67,7 +67,7 @@ WHERE twitch_userid=$1`
 			if (permission & dashboardPermissions) != 0 {
 				extra.Channels = append(extra.Channels, ChannelInfo{
 					ID:   twitchChannelID,
-					Name: state.TwitchUserStore.GetName(twitchChannelID),
+					Name: c.TwitchUserStore.GetName(twitchChannelID),
 				})
 			}
 			extraBytes, _ = json.Marshal(extra)
