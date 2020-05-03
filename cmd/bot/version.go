@@ -1,4 +1,5 @@
 package main
 
 // Version of pajbot2
-const Version string = "0.0.1"
+// This value should be fed from the build process
+const Version string = "dev"
