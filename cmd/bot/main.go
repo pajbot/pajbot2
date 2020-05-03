@@ -12,7 +12,7 @@ import (
 
 var (
 	buildTime    string
-	buildRelease string
+	buildRelease = "dev"
 	buildHash    string
 	buildBranch  string
 )
@@ -46,7 +46,7 @@ func main() {
 	command := flag.Arg(0)
 
 	if *version {
-		fmt.Println(Version)
+		fmt.Println(common.Version())
 		os.Exit(0)
 	}
 

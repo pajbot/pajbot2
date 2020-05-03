@@ -20,7 +20,7 @@ var (
 )
 
 func Version() string {
-	if BuildRelease == "dev" {
+	if BuildRelease == "git" {
 		return fmt.Sprintf("%s@%s", BuildHash, BuildBranch)
 	}
 
