@@ -5,17 +5,11 @@ RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-3.1 nodejs 
 ADD . /src
 RUN cd /src && ./utils/install.sh
 RUN cd /src/web && npm i && npm run build
-RUN cd /src/cmd/bot && go build -v -tags csharp
+RUN cd /src && ./utils/build.sh -v -tags csharp
 
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1.3-buster-slim
-ARG COMMIT
-ARG COMMIT_COUNT
-ARG BRANCH
 WORKDIR /app/cmd/bot
 ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.3
-ENV PB2_COMMIT=${COMMIT}
-ENV PB2_COMMIT_COUNT=${COMMIT_COUNT}
-ENV PB2_BRANCH=${BRANCH}
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
 COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot
