@@ -20,7 +20,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
 	github.com/labstack/echo/v4 v4.1.16
-	github.com/lib/pq v1.3.0
+	github.com/lib/pq v1.8.0
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
 	github.com/pajbot/commandmatcher v1.0.1
