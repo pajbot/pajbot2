@@ -43,5 +43,5 @@ require (
 	golang.org/x/tools v0.0.0-20200308013534-11ec41452d41 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
-	mvdan.cc/xurls/v2 v2.1.0
+	mvdan.cc/xurls/v2 v2.2.0
 )
