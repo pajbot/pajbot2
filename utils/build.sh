@@ -9,6 +9,8 @@ basedir="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 
 >&2 echo " * Building pajbot2 with the following flags: git_release=$git_release, git_hash=$git_hash, git_branch=$git_branch"
 
+cd "$basedir/../web" && npm i && npm run build && cp static/build/views/index.html views/
+
 go build -ldflags "\
     -X \"main.buildTime=$(date +%Y-%m-%dT%H:%M:%S%:z)\" \
     -X \"main.buildRelease=$git_release\" \
