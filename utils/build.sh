@@ -5,7 +5,7 @@ set -e
 basedir="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 
 if [ -z "$git_release" ]; then
-    git_release=$(git describe --exact 2>/dev/null)
+    git_release=$(git describe --exact 2>/dev/null || echo "")
 fi
 if [ -z "$git_release" ]; then
     git_release="git"
