@@ -4,12 +4,11 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
 RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-3.1 nodejs -y
 ADD . /src
 RUN cd /src && ./utils/install.sh
-RUN cd /src/web && npm i && npm run build
 RUN cd /src && ./utils/build.sh -v -tags csharp
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1.3-buster-slim
+FROM mcr.microsoft.com/dotnet/core/runtime:3.1.7-buster-slim
 WORKDIR /app/cmd/bot
-ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.3
+ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.7
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
 COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot
