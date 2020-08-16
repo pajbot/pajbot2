@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 basedir="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 
 [ -z "$git_release" ] && git_release=$(git describe --exact 2>/dev/null)
