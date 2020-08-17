@@ -31,7 +31,7 @@ require (
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/swaggo/echo-swagger v0.0.0-20191205130555-62f81ea88919
 	github.com/swaggo/swag v1.6.7
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
