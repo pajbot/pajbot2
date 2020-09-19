@@ -13,7 +13,7 @@ import (
 )
 
 func Load(a pkg.Application, cfg *config.Config) {
-	m := router.Subrouter("/c/{channel:[a-zA-Z0-9]+}")
+	m := router.Subrouter("/c/{channel:[a-zA-Z0-9_]+}")
 
 	router.RGet(m, "/dashboard", handleDashboard(a))
 }
