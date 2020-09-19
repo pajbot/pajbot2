@@ -19,7 +19,7 @@ fi
 
 >&2 echo " * Building pajbot2 with the following flags: git_release=$git_release, git_hash=$git_hash, git_branch=$git_branch"
 
-cd "$basedir/../web" && npm i && npm run build && mv static/build/index.html views/
+cd "$basedir/../web" && npm i && npm run build
 
 go build -ldflags "\
     -X \"main.buildTime=$(date +%Y-%m-%dT%H:%M:%S%:z)\" \
