@@ -12,8 +12,14 @@ import (
 
 func init() {
 	Register("link_filter", func() pkg.ModuleSpec {
-		relaxedRegexp := xurls.Relaxed()
-		strictRegexp := xurls.Strict()
+		const regexpModifier = `(\b|$)`
+		relaxedRegexpStr := xurls.Relaxed().String()
+		strictRegexpStr := xurls.Strict().String()
+
+		relaxedRegexp := regexp.MustCompile(relaxedRegexpStr + regexpModifier)
+		relaxedRegexp.Longest()
+		strictRegexp := regexp.MustCompile(strictRegexpStr + regexpModifier)
+		strictRegexp.Longest()
 
 		return &Spec{
 			id:   "link_filter",
@@ -41,6 +47,11 @@ func newLinkFilter(b *mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pk
 	}
 }
 
+func (m *LinkFilter) checkMessage(text string) bool {
+	links := m.relaxedRegexp.FindAllString(text, -1)
+	return len(links) > 0
+}
+
 func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	if event.User.IsModerator() {
 		return nil
@@ -50,8 +61,7 @@ func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
-	links := m.relaxedRegexp.FindAllString(event.Message.GetText(), -1)
-	if len(links) > 0 {
+	if m.checkMessage(event.Message.GetText()) {
 		actions := &twitchactions.Actions{}
 		actions.Timeout(event.User, 180*time.Second).SetReason("No links allowed")
 		return actions
