@@ -41,7 +41,7 @@ module.exports = {
 			filename: '[name].[hash].css'
 		}),
 		new HtmlWebpackPlugin({
-			filename: 'index.html',
+			filename: path.join(__dirname, './views/index.html'),
 			template: path.join(__dirname, './views/base.html'),
 		}),
 	]
