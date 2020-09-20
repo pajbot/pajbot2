@@ -15,6 +15,7 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
+	"golang.org/x/oauth2"
 
 	_ "github.com/lib/pq" // PostgreSQL Driver
 
@@ -398,14 +399,8 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
-func (a *Application) loadBot(botConfig botConfig) error {
-	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, a)
-	if err != nil {
-		return fmt.Errorf("loadBot NewBot: %w", err)
-	}
-
-	botUserID := botConfig.account.ID()
-	bot.OnNewChannelJoined(func(channel pkg.Channel) {
+func (a *Application) botOnNewChannelJoined(bot *pb2twitch.Bot, botUserID string) func(pkg.Channel) {
+	return func(channel pkg.Channel) {
 		accessToken, err := bot.GetAccessToken()
 		if err != nil {
 			fmt.Println("Error getting access token for", bot.TwitchAccount().Name())
@@ -415,7 +410,16 @@ func (a *Application) loadBot(botConfig botConfig) error {
 		a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), accessToken)
 
 		a.twitchChannelStore.RegisterTwitchChannel(channel)
-	})
+	}
+}
+
+func (a *Application) loadBot(botConfig botConfig) error {
+	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, a)
+	if err != nil {
+		return fmt.Errorf("loadBot NewBot: %w", err)
+	}
+
+	bot.OnNewChannelJoined(a.botOnNewChannelJoined(bot, botConfig.account.ID()))
 
 	err = bot.LoadChannels(a.sqlClient)
 	if err != nil {
@@ -425,6 +429,21 @@ func (a *Application) loadBot(botConfig botConfig) error {
 	a.twitchBots.Add(bot)
 
 	return nil
+}
+
+func appendBotConfig(wg *sync.WaitGroup, botsMutex sync.Locker, bots *[]botConfig, databaseID int, acc pb2twitch.TwitchAccount, c pb2twitch.BotCredentials, oauthConfig *oauth2.Config, sqlClient *sql.DB) {
+	defer wg.Done()
+
+	bc := newBotConfig(databaseID, &acc, c, oauthConfig)
+
+	if err := bc.Validate(sqlClient); err != nil {
+		fmt.Println("Error validating bot config:", err)
+		return
+	}
+
+	botsMutex.Lock()
+	defer botsMutex.Unlock()
+	*bots = append(*bots, bc)
 }
 
 // LoadBots loads bots from the database
@@ -447,6 +466,8 @@ func (a *Application) LoadBots() (err error) {
 
 	var wg sync.WaitGroup
 
+	oauthConfig := a.twitchAuths.Bot()
+
 	for rows.Next() {
 		var databaseID int
 		var acc pb2twitch.TwitchAccount
@@ -459,20 +480,7 @@ func (a *Application) LoadBots() (err error) {
 
 		c.AccessToken = strings.TrimPrefix(c.AccessToken, "oauth:")
 
-		go func(databaseID int, acc *pb2twitch.TwitchAccount, c pb2twitch.BotCredentials) {
-			defer wg.Done()
-
-			bc := newBotConfig(databaseID, acc, c, a.twitchAuths.Bot())
-
-			if err := bc.Validate(a.sqlClient); err != nil {
-				fmt.Println("Error validating bot config:", err)
-				return
-			}
-
-			botsMutex.Lock()
-			defer botsMutex.Unlock()
-			bots = append(bots, bc)
-		}(databaseID, &acc, c)
+		go appendBotConfig(&wg, &botsMutex, &bots, databaseID, acc, c, oauthConfig, a.sqlClient)
 	}
 
 	wg.Wait()

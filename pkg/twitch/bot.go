@@ -132,7 +132,9 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 
 // DEV
 func (b *Bot) Disconnect() {
-	b.Client.Disconnect()
+	if err := b.Client.Disconnect(); err != nil {
+		fmt.Println("Error occurred while trying to disconnect:", err)
+	}
 }
 
 func (b *Bot) createClient() error {
@@ -176,15 +178,10 @@ func (b *Bot) GetAccessToken() (string, error) {
 		return "", fmt.Errorf("[Bot::GetAccessToken] Error getting token from token source: %w", err)
 	}
 
-	if b.token.AccessToken != token.AccessToken {
-		fmt.Println("Refreshing token because access tokens don't match")
-		b.refreshToken(token)
-	} else if b.token.RefreshToken != token.RefreshToken {
-		fmt.Println("Refreshing token because resfresh tokens don't match")
-		b.refreshToken(token)
-	} else if b.token.Expiry != token.Expiry {
-		fmt.Println("Refreshing token because token expiry takes don't match")
-		b.refreshToken(token)
+	if *b.token != *token {
+		if err := b.refreshToken(token); err != nil {
+			return "", err
+		}
 	}
 
 	return token.AccessToken, nil

@@ -33,7 +33,7 @@ func newBotConfig(databaseID int, account *pb2twitch.TwitchAccount, credentials 
 	}
 }
 
-func (bc *botConfig) Validate(sql *sql.DB) error {
+func (bc *botConfig) Validate(sqlClient *sql.DB) error {
 	token, err := bc.tokenSource.Token()
 	if err != nil {
 		return fmt.Errorf("error validating botconfig for %s: %w", bc.account.Name(), err)
@@ -48,7 +48,7 @@ SET
 	twitch_access_token_expiry = $3
 WHERE
 id=$4`
-	_, err = sql.Exec(queryF, token.AccessToken, token.RefreshToken, token.Expiry, bc.databaseID)
+	_, err = sqlClient.Exec(queryF, token.AccessToken, token.RefreshToken, token.Expiry, bc.databaseID)
 	if err != nil {
 		return err
 	}
@@ -57,11 +57,11 @@ id=$4`
 
 	self, err := apirequest.TwitchBot.ID().Authenticate(token.AccessToken).Validate()
 	if err != nil {
-		return fmt.Errorf("Error validating oauth token for bot '%s': %w", bc.account.Name(), err)
+		return fmt.Errorf("error validating oauth token for bot '%s': %w", bc.account.Name(), err)
 	}
 
 	if self.UserID != bc.account.ID() {
-		return fmt.Errorf("ERROR!!! User ID for %s (%s) doesn't match the API response (%s)", bc.account.Name(), bc.account.ID(), self.UserID)
+		return fmt.Errorf("mismatching user ID for %s (%s) - doesn't match the API response (%s)", bc.account.Name(), bc.account.ID(), self.UserID)
 	}
 
 	return nil
