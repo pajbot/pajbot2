@@ -1,6 +1,7 @@
 package mbase
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,9 @@ import (
 type Base struct {
 	spec pkg.ModuleSpec
 	bot  pkg.BotChannel
+
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	connections []*eventemitter.Listener
 
@@ -39,11 +43,19 @@ func New(spec pkg.ModuleSpec, bot pkg.BotChannel, sql, oldSession *sql.DB, pubSu
 		ReportHolder: reportHolder,
 	}
 
+	parentContext := context.TODO()
+
+	b.ctx, b.cancel = context.WithCancel(parentContext)
+
 	for key, value := range spec.Parameters() {
 		b.parameters[key] = value()
 	}
 
 	return b
+}
+
+func (b *Base) Context() context.Context {
+	return b.ctx
 }
 
 func (b *Base) BotChannel() pkg.BotChannel {
@@ -92,6 +104,9 @@ func (b *Base) Disable() error {
 	for _, c := range b.connections {
 		c.Disconnected = true
 	}
+
+	b.cancel()
+
 	return nil
 }
 
