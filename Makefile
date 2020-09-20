@@ -2,7 +2,7 @@ swag:
 	@swag init --generalInfo cmd/bot/main.go
 
 lint:
-	@golangci-lint run --new-from-rev=2baeaf2880~13
+	@golangci-lint run --new-from-rev=84427cb7eb19ed8edb89b3bfd2962b219691443b
 
 lint-all:
 	@golangci-lint run
