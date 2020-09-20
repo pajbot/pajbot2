@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -24,6 +25,10 @@ import (
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
+)
+
+const (
+	reloadPeriod = time.Minute * 30
 )
 
 func init() {
@@ -59,6 +64,8 @@ var _ pkg.Module = &MessageHeightLimit{}
 
 type MessageHeightLimit struct {
 	mbase.Base
+
+	initMutex sync.RWMutex
 
 	HeightLimit float32
 
@@ -170,7 +177,24 @@ func initMessageHeightLimitLibrary() error {
 	return nil
 }
 
+func (m *MessageHeightLimit) reloader() {
+	ticker := time.NewTicker(reloadPeriod)
+
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Automatically reloading MessageHeightLimit for", m.BotChannel().Channel().GetName())
+			m.reload()
+
+		case <-m.Context().Done():
+			return
+		}
+	}
+}
+
 func (m *MessageHeightLimit) Initialize() {
+	go m.reloader()
+
 	var err error
 	fmt.Println("Initializing message height limit")
 
@@ -186,15 +210,16 @@ func (m *MessageHeightLimit) Initialize() {
 		fmt.Println("done init height limit library")
 	}
 
-	fmt.Println("init channel")
-	if err := initChannel(m.BotChannel().ChannelName(), m.BotChannel().ChannelID()); err != nil {
+	if err := m.reload(); err != nil {
 		log.Println("Error initializing channel:", err)
 		return
 	}
-	fmt.Println("done")
 }
 
 func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, message pkg.Message) float32 {
+	m.initMutex.RLock()
+	defer m.initMutex.RUnlock()
+
 	channelString := C.CString(channel.GetName())
 	input := C.CString(message.GetText())
 	loginName := C.CString(user.GetName())
@@ -247,6 +272,9 @@ func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, messa
 }
 
 func (m *MessageHeightLimit) reload() error {
+	m.initMutex.Lock()
+	defer m.initMutex.Unlock()
+
 	err := initChannel(m.BotChannel().Channel().GetName(), m.BotChannel().Channel().GetID())
 	if err != nil {
 		return fmt.Errorf("error reloading height module: %w", err)
