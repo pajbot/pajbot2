@@ -136,15 +136,18 @@ func initChannel(channelName, channelID string) error {
 	channel := C.CString(channelName)
 	cChannelID := C.CString(channelID)
 
-	fmt.Println("init channel", channelName)
+	defer func() {
+		C.free(unsafe.Pointer(channel))
+		C.free(unsafe.Pointer(cChannelID))
+	}()
+
+	log.Printf("init channel %s (%s)", channelName, channelID)
 	res := C.InitChannel(channel, cChannelID, 5000)
-	fmt.Println("done")
+	log.Println("done")
 
 	if res != 1 {
 		return errors.New("Failed to init Channel " + channelName)
 	}
-
-	C.free(unsafe.Pointer(channel))
 
 	return nil
 }
