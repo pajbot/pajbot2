@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -17,7 +15,6 @@ import (
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 
 	_ "github.com/lib/pq" // PostgreSQL Driver
 
@@ -402,38 +399,32 @@ func (a *Application) StartWebServer() error {
 }
 
 func (a *Application) loadBot(botConfig botConfig) error {
-	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, a)
+	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, a)
 	if err != nil {
-		return err
+		return fmt.Errorf("loadBot NewBot: %w", err)
 	}
 
 	botUserID := botConfig.account.ID()
 	bot.OnNewChannelJoined(func(channel pkg.Channel) {
-		var token *oauth2.Token
-		token, err = bot.GetTokenSource().Token()
+		accessToken, err := bot.GetAccessToken()
 		if err != nil {
-			fmt.Println("Error renewing token: ", err)
+			fmt.Println("Error getting access token for", bot.TwitchAccount().Name())
 			return
 		}
-		a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), token.AccessToken)
+
+		a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), accessToken)
 
 		a.twitchChannelStore.RegisterTwitchChannel(channel)
 	})
 
 	err = bot.LoadChannels(a.sqlClient)
 	if err != nil {
-		return err
+		return fmt.Errorf("loadChannels NewBot: %w", err)
 	}
 
 	a.twitchBots.Add(bot)
 
 	return nil
-}
-
-type botConfig struct {
-	databaseID  int
-	account     *pb2twitch.TwitchAccount
-	tokenSource oauth2.TokenSource
 }
 
 // LoadBots loads bots from the database
@@ -470,40 +461,17 @@ func (a *Application) LoadBots() (err error) {
 
 		go func(databaseID int, acc *pb2twitch.TwitchAccount, c pb2twitch.BotCredentials) {
 			defer wg.Done()
-			oldToken := &oauth2.Token{
-				AccessToken:  c.AccessToken,
-				TokenType:    "bearer",
-				RefreshToken: c.RefreshToken,
-				Expiry:       c.Expiry.Time,
-			}
 
-			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
-			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
+			bc := newBotConfig(databaseID, acc, c, a.twitchAuths.Bot())
 
-			token, err := refreshingTokenSource.Token()
-			if err != nil {
-				fmt.Printf("Error getting token from token source for bot '%s': %s\n", acc.Name(), err.Error())
-				return
-			}
-
-			self, err := apirequest.TwitchBot.ID().Authenticate(token.AccessToken).Validate()
-			if err != nil {
-				fmt.Printf("Error validating oauth token for bot '%s': %s\n", acc.Name(), err)
-				return
-			}
-
-			if self.UserID != acc.ID() {
-				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
+			if err := bc.Validate(a.sqlClient); err != nil {
+				fmt.Println("Error validating bot config:", err)
 				return
 			}
 
 			botsMutex.Lock()
 			defer botsMutex.Unlock()
-			bots = append(bots, botConfig{
-				databaseID:  databaseID,
-				account:     acc,
-				tokenSource: refreshingTokenSource,
-			})
+			bots = append(bots, bc)
 		}(databaseID, &acc, c)
 	}
 
@@ -585,16 +553,22 @@ func (a *Application) StartBots() error {
 			// }
 			// bot.StartChatterPoller()
 
-			bot.IsConnected = true
-			err := bot.Connect()
-			if err != nil {
-				if err == twitch.ErrLoginAuthenticationFailed {
-					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
-				} else {
-					log.Fatal(err)
+			for {
+				bot.IsConnected = true
+				accessToken, err := bot.GetAccessToken()
+				if err != nil {
+					fmt.Printf("Unable to refresh token for %s: %s\n", bot.TwitchAccount().Name(), err)
 				}
+				bot.SetIRCToken("oauth:" + accessToken)
+				err = bot.Connect()
+				switch err {
+				case twitch.ErrLoginAuthenticationFailed:
+					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
+				default:
+					fmt.Println("Unhandled error from go-twitch-irc Connect:", err)
+				}
+				bot.IsConnected = false
 			}
-			bot.IsConnected = false
 
 			// TODO: Check if we want to try to reconnect here (with a delay)
 		}(pb2bot)

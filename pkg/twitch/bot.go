@@ -51,7 +51,10 @@ type Bot struct {
 
 	app pkg.Application
 
-	TokenSource oauth2.TokenSource
+	// last fetched token
+	token *oauth2.Token
+
+	tokenSource oauth2.TokenSource
 
 	DatabaseID int
 
@@ -86,18 +89,14 @@ type Bot struct {
 var _ pkg.PubSubConnection = &Bot{}
 var _ pkg.PubSubSource = &Bot{}
 
-func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, app pkg.Application) (*Bot, error) {
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, err
-	}
+func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, token *oauth2.Token, app pkg.Application) (*Bot, error) {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
 		app: app,
 
-		TokenSource: tokenSource,
-		Client:      twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
+		token:       token,
+		tokenSource: tokenSource,
 
 		DatabaseID: databaseID,
 
@@ -118,6 +117,10 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 		QuitChannel: app.QuitChannel(),
 	}
 
+	if err := b.createClient(); err != nil {
+		return nil, err
+	}
+
 	b.pubSub.Subscribe(b, "Ban", nil)
 	b.pubSub.Subscribe(b, "Timeout", nil)
 	b.pubSub.Subscribe(b, "Untimeout", nil)
@@ -127,8 +130,64 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	return b, nil
 }
 
+// DEV
+func (b *Bot) Disconnect() {
+	b.Client.Disconnect()
+}
+
+func (b *Bot) createClient() error {
+	accessToken, err := b.GetAccessToken()
+	if err != nil {
+		return err
+	}
+
+	b.Client = twitch.NewClient(b.twitchAccount.Name(), "oauth:"+accessToken)
+
+	return nil
+}
+
 func (b *Bot) GetTokenSource() oauth2.TokenSource {
-	return b.TokenSource
+	return b.tokenSource
+}
+
+func (b *Bot) refreshToken(token *oauth2.Token) error {
+	const queryF = `
+UPDATE "bot"
+SET
+	twitch_access_token = $1,
+	twitch_refresh_token = $2,
+	twitch_access_token_expiry = $3
+WHERE
+id=$4`
+
+	_, err := b.sql.Exec(queryF, token.AccessToken, token.RefreshToken, token.Expiry, b.DatabaseID)
+	if err != nil {
+		return err
+	}
+
+	b.token = token
+
+	return nil
+}
+
+func (b *Bot) GetAccessToken() (string, error) {
+	token, err := b.GetTokenSource().Token()
+	if err != nil {
+		return "", fmt.Errorf("[Bot::GetAccessToken] Error getting token from token source: %w", err)
+	}
+
+	if b.token.AccessToken != token.AccessToken {
+		fmt.Println("Refreshing token because access tokens don't match")
+		b.refreshToken(token)
+	} else if b.token.RefreshToken != token.RefreshToken {
+		fmt.Println("Refreshing token because resfresh tokens don't match")
+		b.refreshToken(token)
+	} else if b.token.Expiry != token.Expiry {
+		fmt.Println("Refreshing token because token expiry takes don't match")
+		b.refreshToken(token)
+	}
+
+	return token.AccessToken, nil
 }
 
 func (b *Bot) OnNewChannelJoined(cb func(channel pkg.Channel)) {
