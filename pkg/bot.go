@@ -58,4 +58,7 @@ type Sender interface {
 	Quit(message string)
 
 	Application() Application
+
+	// DEV
+	Disconnect()
 }
