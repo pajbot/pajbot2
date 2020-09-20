@@ -533,6 +533,9 @@ func (a *Application) StartBots() error {
 				message.Message = strings.TrimPrefix(message.Message, "@"+bot.TwitchAccount().Name()+" ")
 				message.Message = strings.TrimPrefix(message.Message, bot.TwitchAccount().Name()+" ")
 
+				// Trim message off any potential Chatterino suffix
+				message.Message = strings.TrimSuffix(message.Message, " \U000e0000")
+
 				// Forward to bot to let its modules work
 				bot.HandleMessage(message.Channel, message.User, &message)
 			})
