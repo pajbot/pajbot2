@@ -178,7 +178,7 @@ func (b *Bot) GetAccessToken() (string, error) {
 		return "", fmt.Errorf("[Bot::GetAccessToken] Error getting token from token source: %w", err)
 	}
 
-	if *b.token != *token {
+	if b.token == nil || *b.token != *token {
 		if err := b.refreshToken(token); err != nil {
 			return "", err
 		}
