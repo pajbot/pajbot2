@@ -72,7 +72,7 @@ func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions
 		return nil
 	}
 
-	if len(parts) == 1 {
+	if len(parts) < 3 {
 		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
 	}
 	phrase := strings.Join(parts[1:len(parts)-2], " ")
