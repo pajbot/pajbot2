@@ -23,3 +23,10 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/3rdParty"
+    schedule:
+      interval: "daily"
+    labels:
+      - "submodules"
+
