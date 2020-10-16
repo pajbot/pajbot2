@@ -5,7 +5,7 @@
     "watch": "node_modules/.bin/webpack --watch --mode development"
   },
   "dependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-class-properties": "^7.12.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
