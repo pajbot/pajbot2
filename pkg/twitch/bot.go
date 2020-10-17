@@ -172,13 +172,37 @@ id=$4`
 	return nil
 }
 
+func tokensAreTheSame(a, b *oauth2.Token) bool {
+	if a == nil || b == nil {
+		return false
+	}
+
+	if a.AccessToken != b.AccessToken {
+		return false
+	}
+
+	if a.TokenType != b.TokenType {
+		return false
+	}
+
+	if a.RefreshToken != b.RefreshToken {
+		return false
+	}
+
+	if a.Expiry != b.Expiry {
+		return false
+	}
+
+	return true
+}
+
 func (b *Bot) GetAccessToken() (string, error) {
 	token, err := b.GetTokenSource().Token()
 	if err != nil {
 		return "", fmt.Errorf("[Bot::GetAccessToken] Error getting token from token source: %w", err)
 	}
 
-	if b.token == nil || *b.token != *token {
+	if !tokensAreTheSame(token, b.token) {
 		if err := b.refreshToken(token); err != nil {
 			return "", err
 		}
