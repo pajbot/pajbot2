@@ -8,6 +8,8 @@ const ReportActionTimeout = 2;
 const ReportActionDismiss = 3;
 const ReportActionUndo = 4;
 
+const actionList = { ban: 'banned', unban: 'unbanned', timeout: 'timed out' };
+
 function jsonifyResponse(response) {
   if (!response.ok) {
     throw response;
@@ -301,8 +303,8 @@ export default class Dashboard extends Component {
                     {this.state.userLookupData.Actions.map((action, index) => (
                       <li className="list-group-item" key={index}>
                         <span>
-                          [{action.Timestamp}] {action.UserName} {action.Action}
-                          ed {this.state.userLookupName} for {action.Duration}s:{" "}
+                          [{action.Timestamp}] {action.UserName} {actionList[action.Action]}{" "}
+                          {this.state.userLookupName} {action.Action === 'timeout' ? `for ${action.Duration}s: ` : ': '}
                           {action.Reason}
                         </span>
                       </li>
