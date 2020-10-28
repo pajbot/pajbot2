@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import LogInButton from "./LogInButton"
 import ThemeSwitcher from './ThemeSwitcher';
+import { isLoggedIn } from "./auth";
 
 export default class Menu extends Component {
 
@@ -11,10 +12,17 @@ export default class Menu extends Component {
       {
         link: "/",
         name: "Home",
+
+      },
+      {
+        link: "/admin",
+        name: "Admin",
+        requireLogin: true,
       },
       {
         link: "/dashboard",
         name: "Dashboard",
+        requireLogin: true,
       },
     ];
 
@@ -30,7 +38,7 @@ export default class Menu extends Component {
         <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
           <div className="navbar-nav">
 {this.menuItems.map((menuItem, index) =>
-            <a key={index} className={"nav-item nav-link "+(window.location.pathname == menuItem.link ? "active" : "")} href={menuItem.link}>{menuItem.name}</a>
+            <a key={index} className={`nav-item nav-link ${window.location.pathname == menuItem.link ? "active" : ""} ${menuItem.requireLogin && !isLoggedIn() ? 'd-none' : ''}`} href={menuItem.link}>{menuItem.name}</a>
           )}
           </div>
         </div>
