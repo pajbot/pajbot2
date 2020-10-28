@@ -14,7 +14,7 @@ module.exports = {
 	},
 	output: {
 		path: BUILD_DIR,
-		filename: '[name].[hash].js',
+		filename: '[name].[contenthash].js',
 		publicPath: '/static/build',
 	},
 	module: {
@@ -38,7 +38,7 @@ module.exports = {
 	plugins: [
  		new CleanWebpackPlugin(),
 		new MiniCssExtractPlugin({
-			filename: '[name].[hash].css'
+			filename: '[name].[contenthash].css'
 		}),
 		new HtmlWebpackPlugin({
 			filename: path.join(__dirname, './views/index.html'),
