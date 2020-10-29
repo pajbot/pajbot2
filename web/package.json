@@ -19,7 +19,7 @@
     "html-webpack-plugin": "^5.0.0-alpha.7",
     "mini-css-extract-plugin": "^1.2.1",
     "prettier": "^2.1.2",
-    "sass": "^1.27.0",
+    "sass": "^1.27.1",
     "sass-loader": "^10.0.4",
     "style-loader": "^2.0.0",
     "terser-webpack-plugin": "^5.0.2",
