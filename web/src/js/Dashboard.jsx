@@ -163,7 +163,7 @@ export default class Dashboard extends Component {
                   ) : null}
                   <a
                     target="_blank"
-                    href={`https://logs.ivr.fi/?channel/=${report.Channel.Name}/user/=${report.Target.Name}`}
+                    href={`https://logs.ivr.fi/?channel=${report.Channel.Name}&user=${report.Target.Name}`}
                   >
                     &nbsp;logs
                   </a>
