@@ -290,7 +290,7 @@ export default class Dashboard extends Component {
             <span hidden={this.state.userLookupLoading === false}>
               Loading...
             </span>
-            {this.state.userLookupData &&
+            {!this.state.userLookupLoading && this.state.userLookupData &&
               (this.state.userLookupData.Actions.length > 0 ? (
                 <div className="userData">
                   <span>
