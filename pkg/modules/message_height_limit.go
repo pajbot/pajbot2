@@ -55,6 +55,12 @@ func init() {
 						DefaultValue: false,
 					})
 				},
+				"TimeoutMultiplier": func() pkg.ModuleParameter {
+					return newFloatParameter(parameterSpec{
+						Description:  "Timeout multiplier",
+						DefaultValue: float32(1.2),
+					})
+				},
 			},
 		}
 	})
@@ -71,6 +77,8 @@ type MessageHeightLimit struct {
 
 	AsciiArtOnly bool
 
+	TimeoutMultiplier float32
+
 	userViolationCount map[string]int
 }
 
@@ -83,6 +91,7 @@ func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
 
 	m.Parameters()["HeightLimit"].Link(&m.HeightLimit)
 	m.Parameters()["AsciiArtOnly"].Link(&m.AsciiArtOnly)
+	m.Parameters()["TimeoutMultiplier"].Link(&m.TimeoutMultiplier)
 
 	// FIXME
 	m.Initialize()
@@ -318,6 +327,19 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				}
 
 				return twitchactions.Mentionf(user, "Height limit is %.0f", m.HeightLimit)
+			}
+
+			if parts[0] == "!heighttimeoutmultiplier" {
+				if len(parts) >= 2 {
+					if err := m.SetParameter("TimeoutMultiplier", parts[1]); err != nil {
+						return twitchactions.Mention(user, err.Error())
+					}
+
+					m.Save()
+					return twitchactions.Mentionf(user, "Height timeout multiplier set to %g", m.TimeoutMultiplier)
+				}
+
+				return twitchactions.Mentionf(user, "Height timeout multiplier is %g", m.TimeoutMultiplier)
 			}
 
 			if parts[0] == "!heighttest" {
