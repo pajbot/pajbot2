@@ -279,41 +279,61 @@ export default class Dashboard extends Component {
                 <div className="input-group-append">
                   <input
                     type="submit"
-                    className="btn btn-primary"
+                    className={
+                      this.state.userLookupLoading
+                        ? "btn btn-secondary"
+                        : "btn btn-primary"
+                    }
                     type="submit"
                     id="button-addon2"
-                    value="Look up user"
+                    disabled={this.state.userLookupLoading}
+                    value={
+                      this.state.userLookupLoading
+                        ? "Loading..."
+                        : "Look up user"
+                    }
                   />
                 </div>
               </div>
             </form>
-            <span hidden={this.state.userLookupLoading === false}>
-              Loading...
-            </span>
-            {this.state.userLookupData &&
-              (this.state.userLookupData.Actions.length > 0 ? (
-                <div className="userData">
-                  <span>
-                    Listing latest{" "}
-                    <strong>{this.state.userLookupData.Actions.length}</strong>{" "}
-                    moderation actions on{" "}
-                    <strong>{this.state.userLookupName}</strong>
-                  </span>
-                  <ul className="list-group">
-                    {this.state.userLookupData.Actions.map((action, index) => (
-                      <li className="list-group-item" key={index}>
-                        <span>
-                          [{action.Timestamp}] {action.UserName} {actionList[action.Action]}{" "}
-                          {this.state.userLookupName} {action.Action === 'timeout' ? `for ${action.Duration}s: ` : ': '}
-                          {action.Reason}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                "lol no bans"
-              ))}
+            <div
+              class={
+                this.state.userLookupLoading ? "results loading" : "results"
+              }
+            >
+              {this.state.userLookupData &&
+                (this.state.userLookupData.Actions.length > 0 ? (
+                  <div className="userData">
+                    <span>
+                      Listing latest{" "}
+                      <strong>
+                        {this.state.userLookupData.Actions.length}
+                      </strong>{" "}
+                      moderation actions on{" "}
+                      <strong>{this.state.userLookupName}</strong>
+                    </span>
+                    <ul className="list-group">
+                      {this.state.userLookupData.Actions.map(
+                        (action, index) => (
+                          <li className="list-group-item" key={index}>
+                            <span>
+                              [{action.Timestamp}] {action.UserName}{" "}
+                              {actionList[action.Action]}{" "}
+                              {this.state.userLookupName}{" "}
+                              {action.Action === "timeout"
+                                ? `for ${action.Duration}s: `
+                                : ": "}
+                              {action.Reason}
+                            </span>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                ) : (
+                  "lol no bans"
+                ))}
+            </div>
           </div>
         </div>
       </section>
