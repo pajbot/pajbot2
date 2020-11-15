@@ -61,6 +61,12 @@ func init() {
 						DefaultValue: float32(1.2),
 					})
 				},
+				"ApplyUserViolations": func() pkg.ModuleParameter {
+					return newBoolParameter(parameterSpec{
+						Description:  "Apply user violations",
+						DefaultValue: true,
+					})
+				},
 			},
 		}
 	})
@@ -79,7 +85,8 @@ type MessageHeightLimit struct {
 
 	TimeoutMultiplier float32
 
-	userViolationCount map[string]int
+	ApplyUserViolations bool
+	userViolationCount  map[string]int
 }
 
 func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
@@ -92,6 +99,7 @@ func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
 	m.Parameters()["HeightLimit"].Link(&m.HeightLimit)
 	m.Parameters()["AsciiArtOnly"].Link(&m.AsciiArtOnly)
 	m.Parameters()["TimeoutMultiplier"].Link(&m.TimeoutMultiplier)
+	m.Parameters()["ApplyUserViolations"].Link(&m.ApplyUserViolations)
 
 	// FIXME
 	m.Initialize()
@@ -342,6 +350,19 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				return twitchactions.Mentionf(user, "Height timeout multiplier is %g", m.TimeoutMultiplier)
 			}
 
+			if parts[0] == "!heightapplyuserviolations" {
+				if len(parts) >= 2 {
+					if err := m.SetParameter("ApplyUserViolations", parts[1]); err != nil {
+						return twitchactions.Mention(user, err.Error())
+					}
+
+					m.Save()
+					return twitchactions.Mentionf(user, "Height limit module set to apply user violations: %v", m.ApplyUserViolations)
+				}
+
+				return twitchactions.Mentionf(user, "Height limit module is set to apply user violations: %v", m.ApplyUserViolations)
+			}
+
 			if parts[0] == "!heighttest" {
 				height := m.getHeight(m.BotChannel().Channel(), user, message)
 				return twitchactions.Mentionf(user, "your message height is %.2f", height)
@@ -389,7 +410,6 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	var ratio float32
 	ratio = float32(doesntFitIn7Bit) / float32(messageLength)
 	var reason string
-	userViolations := 0
 	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), 1.2), maxTimeoutLength))
 	if ratio > 0.5 {
 		timeoutDuration = timeoutDuration + 90
@@ -403,11 +423,15 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
 
 	const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
+	userViolations := 1
 
 	if ratio > 0.5 && height > 140.0 {
-		m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
-		userViolations = m.userViolationCount[user.GetID()]
-		timeoutDuration = timeoutDuration * userViolations
+		if m.ApplyUserViolations {
+			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
+			userViolations = m.userViolationCount[user.GetID()]
+			timeoutDuration = timeoutDuration * userViolations
+		}
+
 		timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
 		actions.Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
 	}
