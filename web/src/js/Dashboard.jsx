@@ -207,6 +207,20 @@ export default class Dashboard extends Component {
                         report.Channel.ID,
                         report.ID,
                         ReportActionTimeout,
+                        259200
+                      )
+                    }
+                  >
+                    Timeout 3d
+                  </button>
+                  <button
+                    className="card-link btn btn-danger"
+                    title="Timeout the user"
+                    onClick={() =>
+                      this.handleReport(
+                        report.Channel.ID,
+                        report.ID,
+                        ReportActionTimeout,
                         604800
                       )
                     }
