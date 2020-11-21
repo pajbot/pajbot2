@@ -38,7 +38,7 @@ export default class Menu extends Component {
         </button>
         <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
           <div className="navbar-nav">
-            {this.menuItems.filter(item => !item.requireLogin || item.requireLogin === isLoggedIn()).map((menuItem, index) => 
+            {this.menuItems.filter(item => !item.requireLogin || (item.requireLogin && isLoggedIn())).map((menuItem, index) => 
               <a key={index} className={`nav-item nav-link ${window.location.pathname == menuItem.link ? "active" : ""}`} href={menuItem.link}>{menuItem.name}</a>
             )}
           </div>
