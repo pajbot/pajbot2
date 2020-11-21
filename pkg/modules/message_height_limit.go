@@ -410,7 +410,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	var ratio float32
 	ratio = float32(doesntFitIn7Bit) / float32(messageLength)
 	var reason string
-	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), 1.2), maxTimeoutLength))
+	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), float64(m.TimeoutMultiplier)), maxTimeoutLength))
 	if ratio > 0.5 {
 		timeoutDuration = timeoutDuration + 90
 	} else {
