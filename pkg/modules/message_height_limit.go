@@ -383,6 +383,10 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		}
 	}
 
+	if user.IsModerator() {
+		return nil
+	}
+
 	const minTimeoutLength = 10
 	const maxTimeoutLength = 1800
 
