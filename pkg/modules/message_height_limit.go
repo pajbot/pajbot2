@@ -308,10 +308,6 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	user := event.User
 	message := event.Message
 
-	if user.HasPermission(m.BotChannel().Channel(), pkg.PermissionImmuneToMessageLimits) {
-		return nil
-	}
-
 	if user.IsModerator() || user.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
@@ -384,6 +380,10 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	}
 
 	if user.IsModerator() {
+		return nil
+	}
+
+	if user.HasPermission(m.BotChannel().Channel(), pkg.PermissionImmuneToMessageLimits) {
 		return nil
 	}
 
