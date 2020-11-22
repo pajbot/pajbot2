@@ -2,6 +2,7 @@
 
 ## Unversioned
 
+- Message height limit no longer applies to Twitch Moderators (#89, #228)
 - The version of MessageHeightTwitch was updated, which requires version 3.0 of .NET Core.
 - Changed DB backend from MySQL to PostgreSQL.  
   Setting up the bot from scratch? You don't need to do anything!  
