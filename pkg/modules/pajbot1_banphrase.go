@@ -156,7 +156,7 @@ func (m *pajbot1BanphraseFilter) Initialize() {
 	m.addCustomBanphrase("nigker")
 
 	m.addCustomBanphrase("nl@@er")
-	m.addCustomBanphrase("nlger")
+	// m.addCustomBanphrase("nlger")
 	m.addCustomBanphrase("nlgger")
 	m.addCustomBanphrase("nlggger")
 	m.addCustomBanphrase("nlgggger")
