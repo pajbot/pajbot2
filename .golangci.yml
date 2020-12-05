@@ -21,6 +21,8 @@ linters-settings:
       - opinionated
       - performance
       - style
+    disabled-checks:
+      - commentedOutCode
   funlen:
     lines: 100
     statements: 50
