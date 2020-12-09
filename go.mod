@@ -11,8 +11,6 @@ require (
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.6.0
 	github.com/gempir/go-twitch-irc/v2 v2.5.0
-	github.com/go-openapi/spec v0.19.6 // indirect
-	github.com/go-openapi/swag v0.19.7 // indirect
 	github.com/go-resty/resty/v2 v2.2.0 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang/protobuf v1.3.4 // indirect
@@ -32,12 +30,10 @@ require (
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v0.0.0-20191205130555-62f81ea88919
-	github.com/swaggo/swag v1.6.7
+	github.com/swaggo/swag v1.7.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/tools v0.0.0-20200308013534-11ec41452d41 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 	mvdan.cc/xurls/v2 v2.2.0
 )
