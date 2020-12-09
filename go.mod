@@ -10,7 +10,7 @@ require (
 	github.com/dankeroni/gotwitch/v2 v2.0.0
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.6.0
-	github.com/gempir/go-twitch-irc/v2 v2.4.2
+	github.com/gempir/go-twitch-irc/v2 v2.5.0
 	github.com/go-openapi/spec v0.19.6 // indirect
 	github.com/go-openapi/swag v0.19.7 // indirect
 	github.com/go-resty/resty/v2 v2.2.0 // indirect
