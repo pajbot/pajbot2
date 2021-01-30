@@ -25,9 +25,9 @@ updates:
     labels:
       - "dependencies"
   - package-ecosystem: "gitsubmodule"
-    directory: "/3rdParty/MessageHeightTwitch"
+    directory: "/"
     schedule:
       interval: "daily"
     labels:
+      - "dependencies"
       - "submodules"
-
