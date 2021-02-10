@@ -1,14 +1,13 @@
-FROM golang:buster AS build
-RUN curl -sL https://packages.microsoft.com/config/debian/10/packages-microsoft-prod.deb -o packages-microsoft-prod.deb && dpkg -i packages-microsoft-prod.deb
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-3.1 nodejs -y
+FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine3.13 AS build
+RUN apk add --no-cache go nodejs npm build-base
 ADD . /src
 RUN cd /src && ./utils/install.sh
-RUN cd /src && ./utils/build.sh -v -tags csharp
+RUN cd /src && ./utils/build.sh -ldflags="-s -w" -v -tags csharp
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1.9-buster-slim
+FROM mcr.microsoft.com/dotnet/runtime:5.0.3-alpine3.13
 WORKDIR /app/cmd/bot
-ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/3.1.9
+RUN apk add --no-cache icu
+ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/5.0.3
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
 COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot
