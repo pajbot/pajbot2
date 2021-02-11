@@ -118,15 +118,10 @@ func initCLR() error {
 		return err
 	}
 
-	fmt.Println("Executable dir", executableDir)
-	fmt.Println("os args 0:", os.Args[0])
-
 	clrPath := utils.GetEnv("LIBCOREFOLDER", "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5")
 
 	// Path to our own executable
 	clr1 := C.CString(executableDir + "/bot")
-
-	fmt.Println(executableDir)
 
 	// Folder where libcoreclr.so is located
 	clr2 := C.CString(clrPath)
@@ -165,9 +160,9 @@ func initChannel(channelName, channelID string) error {
 		C.free(unsafe.Pointer(cChannelID))
 	}()
 
-	log.Printf("init channel %s (%s)", channelName, channelID)
+	log.Printf("Initialize channel %s (%s)", channelName, channelID)
 	res := C.InitChannel(channel, cChannelID, 5000)
-	log.Println("done")
+	log.Printf("Channel %s initialized successfully", channelName)
 
 	if res != 1 {
 		return errors.New("Failed to init Channel " + channelName)
@@ -178,8 +173,6 @@ func initChannel(channelName, channelID string) error {
 
 func initMessageHeightLimitLibrary() error {
 	charMap := C.CString(charMapPath)
-
-	fmt.Println(charMapPath)
 
 	res := C.InitCharMap(charMap)
 
@@ -216,15 +209,14 @@ func (m *MessageHeightLimit) Initialize() {
 	fmt.Println("Initializing message height limit")
 
 	if !clrInitialized {
-		fmt.Println("init clr..")
+		fmt.Println("Initialize CLR...")
 		err = initCLR()
 		if err != nil {
 			return
 		}
-		fmt.Println("done")
 
 		err = initMessageHeightLimitLibrary()
-		fmt.Println("done init height limit library")
+		fmt.Println("Message height limit library initialized.")
 	}
 
 	if err := m.reload(); err != nil {
