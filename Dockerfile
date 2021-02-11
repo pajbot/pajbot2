@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine3.13 AS build
 RUN apk add --no-cache go nodejs npm build-base
 ADD . /src
 RUN cd /src && ./utils/install.sh
-RUN cd /src && ./utils/build.sh -ldflags="-s -w" -v -tags csharp
+RUN cd /src && ./utils/build.sh -v -tags csharp
 
 FROM mcr.microsoft.com/dotnet/runtime:5.0.3-alpine3.13
 WORKDIR /app/cmd/bot
