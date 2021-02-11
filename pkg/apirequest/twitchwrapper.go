@@ -39,7 +39,7 @@ func initWrapper(cfg *config.TwitchWebhookConfig) error {
 	// TODO: follow paginations
 
 	TwitchWrapper.WebhookSubscriptions = subscriptions.Data
-	fmt.Println("Subscriptions:", TwitchWrapper.WebhookSubscriptions)
+	// fmt.Println("Subscriptions:", TwitchWrapper.WebhookSubscriptions)
 
 	return nil
 }

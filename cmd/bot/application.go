@@ -246,7 +246,7 @@ func (a *Application) InitializeModules() (err error) {
 		return errors.Wrap(err, "initializing report holder")
 	}
 
-	a.twitterTest()
+	// a.twitterTest()
 
 	err = a.StartTwitterStream()
 	if err != nil {
@@ -268,22 +268,22 @@ func (a *Application) InitializeModules() (err error) {
 	return
 }
 
-func (a *Application) twitterTest() {
-	localConfig := a.config.Auth.Twitter
-
-	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
-	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
-	httpClient := config.Client(oauth1.NoContext, token)
-
-	client := twitter.NewClient(httpClient)
-
-	user, resp, err := client.Users.Show(&twitter.UserShowParams{
-		ScreenName: "pajtest",
-	})
-	fmt.Println(user)
-	fmt.Println(resp)
-	fmt.Println(err)
-}
+// func (a *Application) twitterTest() {
+//	localConfig := a.config.Auth.Twitter
+//
+//	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
+//	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
+//	httpClient := config.Client(oauth1.NoContext, token)
+//
+//	client := twitter.NewClient(httpClient)
+//
+//	user, resp, err := client.Users.Show(&twitter.UserShowParams{
+//		ScreenName: "pajtest",
+//	})
+//	fmt.Println(user)
+//	fmt.Println(resp)
+//	fmt.Println(err)
+//}
 
 func (a *Application) StartTwitterStream() error {
 	localConfig := a.config.Auth.Twitter
