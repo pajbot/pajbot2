@@ -2,7 +2,7 @@ package auth
 
 import (
 	"errors"
-	"fmt"
+	"net/url"
 
 	"github.com/pajbot/pajbot2/pkg/common/config"
 	"golang.org/x/oauth2"
@@ -27,14 +27,20 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig, webConfig *config.WebConfig) (
 		protocol = "http"
 	}
 
+	url := url.URL{
+		Scheme: protocol,
+		Host:   webConfig.Domain,
+	}
+
 	authConfig = &cfg.Bot
 	if err = validateAuthConfig("Bot", authConfig); err != nil {
 		return nil, err
 	}
+	url.Path = "/api/auth/twitch/bot/callback"
 	ta.twitchBotOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  fmt.Sprintf("%s://%s/api/auth/twitch/bot/callback", protocol, webConfig.Domain),
+		RedirectURL:  url.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes: []string{
 			"user:edit", // Edit bot account description/profile picture
@@ -50,10 +56,11 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig, webConfig *config.WebConfig) (
 	if err = validateAuthConfig("Streamer", authConfig); err != nil {
 		return nil, err
 	}
+	url.Path = "/api/auth/twitch/streamer/callback"
 	ta.twitchStreamerOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  fmt.Sprintf("%s://%s/api/auth/twitch/streamer/callback", protocol, webConfig.Domain),
+		RedirectURL:  url.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes:       []string{
 			// TODO: Figure out what scopes to ask for streamer authentications
@@ -64,10 +71,11 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig, webConfig *config.WebConfig) (
 	if err = validateAuthConfig("User", authConfig); err != nil {
 		return nil, err
 	}
+	url.Path = "/api/auth/twitch/user/callback"
 	ta.twitchUserOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  fmt.Sprintf("%s://%s/api/auth/twitch/user/callback", protocol, webConfig.Domain),
+		RedirectURL:  url.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes:       []string{},
 	}
