@@ -53,7 +53,7 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig, webConfig *config.WebConfig) (
 	ta.twitchStreamerOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  fmt.Sprintf("%s://%s/api/auth/twitch/streeamer/callback", protocol, webConfig.Domain),
+		RedirectURL:  fmt.Sprintf("%s://%s/api/auth/twitch/streamer/callback", protocol, webConfig.Domain),
 		Endpoint:     twitch.Endpoint,
 		Scopes:       []string{
 			// TODO: Figure out what scopes to ask for streamer authentications
