@@ -163,7 +163,7 @@ func (a *Application) LoadConfig(path string) error {
 
 // https://dev.twitch.tv/docs/authentication/#scopes
 func (a *Application) InitializeOAuth2Configs() (err error) {
-	a.twitchAuths, err = auth.NewTwitchAuths(&a.config.Auth.Twitch)
+	a.twitchAuths, err = auth.NewTwitchAuths(&a.config.Auth.Twitch, &a.config.Web)
 
 	return
 }

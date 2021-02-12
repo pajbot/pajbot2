@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"net/url"
 
 	"github.com/pajbot/pajbot2/pkg/common/config"
 	"golang.org/x/oauth2"
@@ -14,19 +15,32 @@ type TwitchAuths struct {
 	twitchStreamerOauth *oauth2.Config
 }
 
-func NewTwitchAuths(cfg *config.AuthTwitchConfig) (*TwitchAuths, error) {
+func NewTwitchAuths(cfg *config.AuthTwitchConfig, webConfig *config.WebConfig) (*TwitchAuths, error) {
 	var authConfig *config.TwitchAuthConfig
+	var protocol string
 	var err error
 	ta := &TwitchAuths{}
+
+	if webConfig.Secure {
+		protocol = "https"
+	} else {
+		protocol = "http"
+	}
+
+	u := url.URL{
+		Scheme: protocol,
+		Host:   webConfig.Domain,
+	}
 
 	authConfig = &cfg.Bot
 	if err = validateAuthConfig("Bot", authConfig); err != nil {
 		return nil, err
 	}
+	u.Path = "/api/auth/twitch/bot/callback"
 	ta.twitchBotOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  authConfig.RedirectURI,
+		RedirectURL:  u.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes: []string{
 			"user:edit", // Edit bot account description/profile picture
@@ -42,10 +56,11 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig) (*TwitchAuths, error) {
 	if err = validateAuthConfig("Streamer", authConfig); err != nil {
 		return nil, err
 	}
+	u.Path = "/api/auth/twitch/streamer/callback"
 	ta.twitchStreamerOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  authConfig.RedirectURI,
+		RedirectURL:  u.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes:       []string{
 			// TODO: Figure out what scopes to ask for streamer authentications
@@ -56,10 +71,11 @@ func NewTwitchAuths(cfg *config.AuthTwitchConfig) (*TwitchAuths, error) {
 	if err = validateAuthConfig("User", authConfig); err != nil {
 		return nil, err
 	}
+	u.Path = "/api/auth/twitch/user/callback"
 	ta.twitchUserOauth = &oauth2.Config{
 		ClientID:     authConfig.ClientID,
 		ClientSecret: authConfig.ClientSecret,
-		RedirectURL:  authConfig.RedirectURI,
+		RedirectURL:  u.String(),
 		Endpoint:     twitch.Endpoint,
 		Scopes:       []string{},
 	}
@@ -73,9 +89,6 @@ func validateAuthConfig(name string, authConfig *config.TwitchAuthConfig) error 
 	}
 	if authConfig.ClientSecret == "" {
 		return errors.New("Missing required Client Secret in " + name + " auth in your config.json file")
-	}
-	if authConfig.RedirectURI == "" {
-		return errors.New("Missing required Redirect URI in " + name + " auth in your config.json file")
 	}
 
 	return nil

@@ -18,18 +18,15 @@
             },
             "Bot": {
                 "ClientID": "123",
-                "ClientSecret": "123",
-                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/bot/callback"
+                "ClientSecret": "123"
             },
             "User": {
                 "ClientID": "123",
-                "ClientSecret": "123",
-                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/user/callback"
+                "ClientSecret": "123"
             },
             "Streamer": {
                 "ClientID": "123",
-                "ClientSecret": "123",
-                "RedirectURI": "https://paj.pajbot.com/api/auth/twitch/streamer/callback"
+                "ClientSecret": "123"
             }
         }
     }
