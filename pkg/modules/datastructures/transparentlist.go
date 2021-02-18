@@ -57,7 +57,7 @@ func (t *TransparentList) Add(s string) {
 
 func (t *TransparentList) Build() error {
 	if t.m == nil {
-		return errors.New("Transparent list not initialized properly")
+		return errors.New("transparent list not initialized properly")
 	}
 
 	return t.m.Build(t.dict)
