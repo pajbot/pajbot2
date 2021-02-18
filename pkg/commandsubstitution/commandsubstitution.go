@@ -55,8 +55,8 @@ type User struct {
 	level int
 }
 
-// maybe return error as second value
 func (u User) GetKey(key string) string {
+	// TODO: maybe return error as second value
 	switch key {
 	case "name":
 		return u.name
