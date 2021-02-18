@@ -185,7 +185,7 @@ func (h *Holder) Register(report Report) (*Report, bool, error) {
 
 func (h *Holder) Update(report Report) error {
 	if report.ID == 0 {
-		return errors.New("Missing report ID in Update")
+		return errors.New("missing report ID in Update")
 	}
 
 	const queryF = `UPDATE report SET time=$1, logs=$2 WHERE id=$3`
