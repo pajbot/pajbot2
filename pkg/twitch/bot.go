@@ -130,7 +130,7 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	return b, nil
 }
 
-// DEV
+// Disconnect function should only ever be used for development purposes
 func (b *Bot) Disconnect() {
 	if err := b.Client.Disconnect(); err != nil {
 		fmt.Println("Error occurred while trying to disconnect:", err)
