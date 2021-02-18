@@ -421,11 +421,7 @@ func (h *emoteReader) Next() bool {
 	if !h.started {
 		h.started = true
 
-		if len(*h.emotes) == 0 {
-			return false
-		}
-
-		return true
+		return len(*h.emotes) != 0
 	}
 
 	h.index++
