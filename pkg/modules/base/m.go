@@ -134,7 +134,7 @@ func (b *Base) SetParameter(key string, value string) error {
 	// 1. Find parameter spec (This includes type of the parameter)
 	param, ok := b.parameters[key]
 	if !ok {
-		return fmt.Errorf("No parameter found with the key '%s'", key)
+		return fmt.Errorf("no parameter found with the key '%s'", key)
 	}
 
 	// 2. Parse `value` according to that parameter spec
