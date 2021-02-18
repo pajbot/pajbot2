@@ -34,11 +34,11 @@ const (
 var (
 	filters = map[string]Filter{}
 
-	ErrNonExistantFilter = errors.New("Attempted to use a filter that is not registered")
+	ErrNonExistantFilter = errors.New("attempted to use a filter that is not registered")
 
-	ErrNonExistantArgument = errors.New("Attempted to use an argument that wasn't provided")
+	ErrNonExistantArgument = errors.New("attempted to use an argument that wasn't provided")
 
-	ErrNoArgumentsProvided = errors.New("No arguments were provided, so no substitutions can be made")
+	ErrNoArgumentsProvided = errors.New("no arguments were provided, so no substitutions can be made")
 )
 
 func init() {
