@@ -407,14 +407,14 @@ type reportReceivedParameters struct {
 	ChannelID string
 }
 
-func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, parameters json.RawMessage) (error, bool) {
+func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, parameters json.RawMessage) (bool, error) {
 	switch topic {
 	case "ReportReceived":
 		fmt.Println("aaaaaaaaaaaaaaaa")
 		user := source.AuthenticatedUser()
 		if user == nil {
 			fmt.Println("no user")
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Parameters:", string(parameters))
@@ -423,13 +423,13 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 		err := json.Unmarshal(parameters, &parsedParams)
 		if err != nil {
 			fmt.Println("Error parsing subscription parameters:", err)
-			return nil, false
+			return false, nil
 		}
 
 		channel := h.channelStore.TwitchChannel(parsedParams.ChannelID)
 		if channel == nil {
 			fmt.Println("Channel with id", parsedParams.ChannelID, "is not being moderated by us")
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Channel ID:", parsedParams.ChannelID)
@@ -440,7 +440,7 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 
 		if !hasPermission {
 			fmt.Println("user", user.GetName(), "does not have permission in channel", channel.GetName())
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Send reports to new connection")
@@ -452,11 +452,11 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 			bytes, err := json.Marshal(report)
 			if err != nil {
 				fmt.Println(err)
-				return err, true
+				return true, err
 			}
 			source.Connection().MessageReceived(h, topic, bytes)
 		}
 	}
 
-	return nil, true
+	return true, nil
 }

@@ -16,7 +16,7 @@ type PubSubConnection interface {
 }
 
 type PubSubSubscriptionHandler interface {
-	ConnectionSubscribed(source PubSubSource, topic string, parameters json.RawMessage) (error, bool)
+	ConnectionSubscribed(source PubSubSource, topic string, parameters json.RawMessage) (bool, error)
 }
 
 // PubSubSource is an interface that is responsible for a message being written into pubsub
