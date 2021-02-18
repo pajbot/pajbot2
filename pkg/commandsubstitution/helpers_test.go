@@ -37,6 +37,7 @@ func assertFalse(t *testing.T, actual bool, errorMessage string) {
 func assertStringSlicesEqual(t *testing.T, expected, actual []string) {
 	if actual == nil {
 		t.Errorf("actual slice was nil")
+		return
 	}
 
 	if len(actual) != len(expected) {

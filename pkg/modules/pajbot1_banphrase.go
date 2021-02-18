@@ -266,10 +266,10 @@ func (m *pajbot1BanphraseFilter) Initialize() {
 
 	// m.addCustomBanphrase("g63r")
 
-	err := m.loadPajbot1Banphrases()
-	if err != nil {
-		// return err
-	}
+	m.loadPajbot1Banphrases()
+	// if err != nil {
+	// return err
+	// }
 }
 
 type TimeoutData struct {

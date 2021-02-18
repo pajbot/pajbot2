@@ -37,14 +37,14 @@ func (c *Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	match, parts := c.Match(message.GetText())
 	if match != nil {
 		switch command := match.(type) {
-		case pkg.SimpleCommand:
-			return command.Trigger(parts, event)
-
 		case pkg.CustomCommand2:
 			if command.HasCooldown(user) {
 				return nil
 			}
 			command.AddCooldown(user)
+			return command.Trigger(parts, event)
+
+		case pkg.SimpleCommand:
 			return command.Trigger(parts, event)
 		}
 	}

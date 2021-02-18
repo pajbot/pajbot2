@@ -17,7 +17,7 @@ func (s *Store) TwitchChannel(channelID string) (channel pkg.Channel) {
 	s.dataMutex.Lock()
 	defer s.dataMutex.Unlock()
 
-	channel, _ = s.data[channelID]
+	channel = s.data[channelID]
 
 	return
 }

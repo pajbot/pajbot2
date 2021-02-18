@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var testError = errors.New("test")
+var errTest = errors.New("test")
 
 func TestBadListen(t *testing.T) {
 	e := New()
@@ -87,7 +87,7 @@ func TestMultipleListeners(t *testing.T) {
 func TestListenerError(t *testing.T) {
 	e := New()
 	_, err := e.Listen("asd", func() error {
-		return testError
+		return errTest
 	}, 100)
 	assertErrorsEqual(t, nil, err)
 	_, err = e.Listen("asd", func() error {
@@ -101,7 +101,7 @@ func TestListenerError(t *testing.T) {
 func TestListenerErrorArguments(t *testing.T) {
 	e := New()
 	_, err := e.Listen("asd", func(arguments map[string]interface{}) error {
-		return testError
+		return errTest
 	}, 100)
 	assertErrorsEqual(t, nil, err)
 	_, err = e.Listen("asd", func(arguments map[string]interface{}) error {
@@ -110,5 +110,5 @@ func TestListenerErrorArguments(t *testing.T) {
 	assertErrorsEqual(t, nil, err)
 	n, err := e.Emit("asd", nil)
 	assertIntsEqual(t, 0, n)
-	assertErrorsEqual(t, testError, err)
+	assertErrorsEqual(t, errTest, err)
 }

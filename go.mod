@@ -35,5 +35,6 @@ require (
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/appengine v1.6.5 // indirect
+	honnef.co/go/tools v0.1.1
 	mvdan.cc/xurls/v2 v2.2.0
 )

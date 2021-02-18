@@ -130,7 +130,7 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	return b, nil
 }
 
-// DEV
+// Disconnect function should only ever be used for development purposes
 func (b *Bot) Disconnect() {
 	if err := b.Client.Disconnect(); err != nil {
 		fmt.Println("Error occurred while trying to disconnect:", err)
@@ -421,20 +421,12 @@ func (h *emoteReader) Next() bool {
 	if !h.started {
 		h.started = true
 
-		if len(*h.emotes) == 0 {
-			return false
-		}
-
-		return true
+		return len(*h.emotes) != 0
 	}
 
 	h.index++
 
-	if h.index >= len(*h.emotes) {
-		return false
-	}
-
-	return true
+	return h.index < len(*h.emotes)
 }
 
 func (h *emoteReader) Get() pkg.Emote {

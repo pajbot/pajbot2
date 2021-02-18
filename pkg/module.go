@@ -2,7 +2,7 @@ package pkg
 
 type ModuleFactory func() ModuleSpec
 
-// A module is local to a bots channel
+// A BaseModule is local to a bots channel
 // i.e. bot "pajbot" joins channels "pajlada" and "forsen"
 // Module list looks like this:
 // "pajbot":

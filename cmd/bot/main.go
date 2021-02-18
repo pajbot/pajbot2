@@ -70,9 +70,9 @@ func main() {
 	case "help":
 		helpCmd()
 
-	default:
-		fallthrough
 	case "run":
+		fallthrough
+	default:
 		runCmd()
 	}
 }

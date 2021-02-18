@@ -43,7 +43,7 @@ func (u *User) fillIn(userStore pkg.UserStore) error {
 		// Has name but not ID
 		u.id = userStore.GetID(u.name)
 		if u.id == "" {
-			return errors.New("Unable to get ID")
+			return errors.New("unable to get ID")
 		}
 
 		return nil
@@ -53,7 +53,7 @@ func (u *User) fillIn(userStore pkg.UserStore) error {
 		// Has ID but not name
 		u.name = userStore.GetName(u.id)
 		if u.name == "" {
-			return errors.New("Unable to get Name")
+			return errors.New("unable to get Name")
 		}
 
 		return nil

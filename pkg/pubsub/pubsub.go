@@ -158,7 +158,7 @@ func (ps *PubSub) notifySubscriptionHandlers(source pkg.PubSubSource, topic stri
 	defer ps.onSubscribeMutex.Unlock()
 
 	for _, handler := range ps.onSubscribe[topic] {
-		err, successfulAuthorization := handler.ConnectionSubscribed(source, topic, parameters)
+		successfulAuthorization, err := handler.ConnectionSubscribed(source, topic, parameters)
 		if err != nil {
 			fmt.Println("Error in subscription handler:", err)
 		}
