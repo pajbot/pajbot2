@@ -426,11 +426,7 @@ func (h *emoteReader) Next() bool {
 
 	h.index++
 
-	if h.index >= len(*h.emotes) {
-		return false
-	}
-
-	return true
+	return h.index < len(*h.emotes)
 }
 
 func (h *emoteReader) Get() pkg.Emote {
