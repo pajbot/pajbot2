@@ -194,6 +194,8 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 	return c.enableModule(spec, settings)
 }
 
+// DisableModule disables a module with the given id
+// Returns an error if the module is already disabled
 // We assume that modulesMutex is locked already
 func (c *BotChannel) DisableModule(moduleID string) error {
 	moduleID = strings.ToLower(moduleID)
