@@ -109,7 +109,7 @@ func Render(templateName string, w http.ResponseWriter, r *http.Request) error {
 	return RenderExtra(templateName, w, r, nil)
 }
 
-// Default pages
+// Render403 renders the default 403 error page
 func Render403(w http.ResponseWriter, r *http.Request) error {
 	w.WriteHeader(403)
 	return RenderBasic("403", w, r)
