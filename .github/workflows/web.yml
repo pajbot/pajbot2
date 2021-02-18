@@ -1,7 +1,13 @@
+---
 name: Build web
-on: [push, pull_request]
-jobs:
 
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
   build:
     name: Build web
     runs-on: ubuntu-latest
