@@ -26,7 +26,7 @@ func (r *UserStoreRequest) AddName(name string) {
 	r.names[name] = true
 }
 
-// Returns two values:
+// Execute returns two values:
 // First value: map where key is a user ID pointing at a user name
 // Second value: map where key is a user name pointing at a user ID
 func (r *UserStoreRequest) Execute(userStore UserStore) (names map[string]string, ids map[string]string) {
