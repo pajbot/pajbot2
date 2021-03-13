@@ -18,7 +18,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/labstack/echo/v4 v4.2.0
-	github.com/lib/pq v1.9.0
+	github.com/lib/pq v1.10.0
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/pajbot/botsync v0.0.0-20190525182020-93928cd651a3
 	github.com/pajbot/commandmatcher v1.0.1
@@ -35,6 +35,6 @@ require (
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/appengine v1.6.5 // indirect
-	honnef.co/go/tools v0.1.1
+	honnef.co/go/tools v0.1.3
 	mvdan.cc/xurls/v2 v2.2.0
 )
