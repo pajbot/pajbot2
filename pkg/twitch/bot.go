@@ -15,7 +15,6 @@ import (
 	"time"
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
-	"github.com/go-sql-driver/mysql"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
@@ -42,7 +41,7 @@ type botFlags struct {
 type BotCredentials struct {
 	AccessToken  string
 	RefreshToken string
-	Expiry       mysql.NullTime
+	Expiry       sql.NullTime
 }
 
 // Bot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
