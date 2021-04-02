@@ -12,7 +12,7 @@ require (
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/gempir/go-twitch-irc/v2 v2.5.0
 	github.com/go-resty/resty/v2 v2.2.0 // indirect
-	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
