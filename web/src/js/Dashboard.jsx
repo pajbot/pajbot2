@@ -164,6 +164,7 @@ export default class Dashboard extends Component {
                   <a
                     target="_blank"
                     href={`https://logs.ivr.fi/?channel=${report.Channel.Name}&username=${report.Target.Name}`}
+                    rel="noopener noreferrer"
                   >
                     &nbsp;logs
                   </a>
