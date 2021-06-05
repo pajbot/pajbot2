@@ -2,6 +2,7 @@ package webhook
 
 import (
 	"fmt"
+	"html"
 	"io/ioutil"
 	"net/http"
 
@@ -115,5 +116,5 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write([]byte(challenge))
+	w.Write([]byte(html.EscapeString(challenge)))
 }
