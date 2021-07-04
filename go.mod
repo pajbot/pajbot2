@@ -7,11 +7,9 @@ require (
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/dankeroni/gotwitch/v2 v2.0.0
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/gempir/go-twitch-irc/v2 v2.5.0
-	github.com/go-resty/resty/v2 v2.2.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/gorilla/handlers v1.5.1

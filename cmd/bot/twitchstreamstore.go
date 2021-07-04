@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nicklaw5/helix"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/twitch"
@@ -61,7 +62,8 @@ func (s *StreamStore) PollStreams() {
 		go func(batch []string) {
 			for _, userID := range batch {
 				go func(userID string) {
-					// TODO: Subscribe to stream status updates through EventSub
+					apirequest.TwitchWrapper.EventSubSubscribe(helix.EventSubTypeStreamOnline, userID)
+					apirequest.TwitchWrapper.EventSubSubscribe(helix.EventSubTypeStreamOffline, userID)
 				}(userID)
 			}
 		}(batch)

@@ -13,6 +13,10 @@ type MessageSender interface {
 }
 
 type BotChannel interface {
+	// Implement Channel interface
+	GetName() string
+	GetID() string
+
 	MessageSender
 
 	DatabaseID() int64
@@ -24,11 +28,13 @@ type BotChannel interface {
 	DisableModule(string) error
 	GetModule(string) (Module, error)
 
+	// Implement ChannelWithStream interface
 	Stream() Stream
 
 	Events() *eventemitter.EventEmitter
 
 	HandleMessage(user User, message Message) error
+	HandleEventSubNotification(notification TwitchEventSubNotification) error
 	OnModules(cb func(module Module) Actions, stop bool) []Actions
 
 	Bot() Sender

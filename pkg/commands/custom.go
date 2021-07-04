@@ -277,11 +277,10 @@ func (c IsLive) Trigger(parts []string, event pkg.MessageEvent) (actions pkg.Act
 		return
 	}
 
-	// FIXME: Re-implement stream status checker
-	// if botChannel.Stream().Status().Live() {
-	// 	startedAt := botChannel.Stream().Status().StartedAt()
-	// 	return twitchactions.Mention(event.User, fmt.Sprintf("LIVE FOR %s KKona", utils.TimeSince(startedAt)))
-	// }
+	if event.Channel.Stream().Status().Live() {
+		startedAt := event.Channel.Stream().Status().StartedAt()
+		return twitchactions.Mention(event.User, fmt.Sprintf("LIVE FOR %s KKona", utils.TimeSince(startedAt)))
+	}
 
 	return twitchactions.Mention(event.User, "offline FeelsBadMan")
 }

@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 )
 
@@ -33,6 +34,14 @@ type TwitchWebhookConfig struct {
 	HostPrefix       string
 	Secret           string
 	LeaseTimeSeconds int
+}
+
+func (c *TwitchWebhookConfig) Validate() error {
+	if len(c.Secret) < 10 || len(c.Secret) > 100 {
+		return errors.New("twitch WebHook secret must be at least 10 characters and at most 100 characters")
+	}
+
+	return nil
 }
 
 type AuthTwitchConfig struct {
@@ -124,4 +133,12 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func (c *Config) Validate() error {
+	if err := c.Auth.Twitch.Webhook.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }

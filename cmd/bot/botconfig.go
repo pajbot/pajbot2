@@ -55,13 +55,16 @@ id=$4`
 
 	bc.token = token
 
-	self, err := apirequest.TwitchBot.ID().Authenticate(token.AccessToken).Validate()
+	isValid, self, err := apirequest.TwitchWrapper.HelixBot().ValidateToken(token.AccessToken)
 	if err != nil {
 		return fmt.Errorf("error validating oauth token for bot '%s': %w", bc.account.Name(), err)
 	}
+	if !isValid {
+		return fmt.Errorf("token for '%s' is invalid", bc.account.Name())
+	}
 
-	if self.UserID != bc.account.ID() {
-		return fmt.Errorf("mismatching user ID for %s (%s) - doesn't match the API response (%s)", bc.account.Name(), bc.account.ID(), self.UserID)
+	if self.Data.UserID != bc.account.ID() {
+		return fmt.Errorf("mismatching user ID for %s (%s) - doesn't match the API response (%s)", bc.account.Name(), bc.account.ID(), self.Data.UserID)
 	}
 
 	return nil

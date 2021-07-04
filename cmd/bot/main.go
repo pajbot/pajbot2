@@ -52,14 +52,19 @@ func main() {
 
 	switch command {
 	case "check":
-		_, err := config.LoadConfig(*configPath)
+		cfg, err := config.LoadConfig(*configPath)
 		if err != nil {
 			fmt.Println("An error occurred while loading the config file:", err)
 			os.Exit(1)
-		} else {
-			fmt.Println("No errors found in the config file")
-			os.Exit(0)
 		}
+
+		if err := cfg.Validate(); err != nil {
+			fmt.Println("An error occurred while validating the config:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("No errors found in the config file")
+		os.Exit(0)
 
 	case "install":
 		installCmd()

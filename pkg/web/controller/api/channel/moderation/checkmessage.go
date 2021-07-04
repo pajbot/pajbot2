@@ -108,7 +108,7 @@ func apiCheckMessage(w http.ResponseWriter, r *http.Request) {
 			},
 			User:    users.NewTwitchUser(privMsg.User, privMsg.Tags["user-id"]),
 			Message: pb2twitch.NewTwitchMessage(privMsg),
-			Channel: botChannel.Channel(),
+			Channel: botChannel,
 		}
 
 		// run message through modules on all bot channels until we detect an issue

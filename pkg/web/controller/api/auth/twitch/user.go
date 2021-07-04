@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dankeroni/gotwitch/v2"
+	"github.com/nicklaw5/helix"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"golang.org/x/oauth2"
 )
 
 func onUserAuthenticated(
 	w http.ResponseWriter, r *http.Request,
-	self gotwitch.ValidateResponse, oauth2Token *oauth2.Token, stateData *stateData) {
+	self *helix.ValidateTokenResponse, oauth2Token *oauth2.Token, stateData *stateData) {
 	c := state.Context(w, r)
-	twitchUserName := self.Login
+	twitchUserName := self.Data.Login
 
 	twitchUserID := c.TwitchUserStore.GetID(twitchUserName)
 
