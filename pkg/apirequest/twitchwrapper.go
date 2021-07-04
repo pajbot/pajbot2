@@ -98,7 +98,7 @@ func (w *TwitchWrapperX) HelixUser() *helix.Client {
 }
 
 func (w *TwitchWrapperX) HelixBot() *helix.Client {
-	return w.helix
+	return w.helixBot
 }
 
 func (w *TwitchWrapperX) GetUsersByLogin(in []string) (data []helix.User, err error) {
