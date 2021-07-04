@@ -16,7 +16,6 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc/v2"
 	"github.com/pajbot/pajbot2/pkg"
-	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/users"
@@ -662,34 +661,34 @@ func (b *Bot) HandleClearChatMessage(message *twitch.ClearChatMessage) {
 }
 
 func (b *Bot) StartChatterPoller() {
-	b.ticker = time.NewTicker(5 * time.Minute)
+	// b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol
 
-	go func() {
-		for range b.ticker.C {
-			chatters, err := apirequest.TwitchWrapper.API().TMI().GetChatters("pajlada")
-			if err != nil {
-				continue
-			}
+	// go func() {
+	// 	for range b.ticker.C {
+	// 		chatters, err := apirequest.TwitchWrapper.API().TMI().GetChatters("pajlada")
+	// 		if err != nil {
+	// 			continue
+	// 		}
 
-			var usernames []string
-			usernames = append(usernames, chatters.Moderators...)
-			usernames = append(usernames, chatters.Staff...)
-			usernames = append(usernames, chatters.Admins...)
-			usernames = append(usernames, chatters.GlobalMods...)
-			usernames = append(usernames, chatters.Viewers...)
-			userIDs := b.GetUserStore().GetIDs(usernames)
+	// 		var usernames []string
+	// 		usernames = append(usernames, chatters.Moderators...)
+	// 		usernames = append(usernames, chatters.Staff...)
+	// 		usernames = append(usernames, chatters.Admins...)
+	// 		usernames = append(usernames, chatters.GlobalMods...)
+	// 		usernames = append(usernames, chatters.Viewers...)
+	// 		userIDs := b.GetUserStore().GetIDs(usernames)
 
-			userIDsSlice := make([]string, len(userIDs))
-			i := 0
-			for _, userID := range userIDs {
-				userIDsSlice[i] = userID
-				i++
-			}
+	// 		userIDsSlice := make([]string, len(userIDs))
+	// 		i := 0
+	// 		for _, userID := range userIDs {
+	// 			userIDsSlice[i] = userID
+	// 			i++
+	// 		}
 
-			b.BulkEdit("pajlada", userIDsSlice, 25)
-		}
-	}()
+	// 		b.BulkEdit("pajlada", userIDsSlice, 25)
+	// 	}
+	// }()
 }
 
 type PointServer struct {
