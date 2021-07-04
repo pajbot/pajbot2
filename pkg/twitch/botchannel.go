@@ -246,6 +246,10 @@ func (c *BotChannel) Initialize(b *Bot) error {
 
 	c.eventEmitter.Emit("on_join", nil)
 
+	c.stream = b.streamStore.GetStream(&User{
+		id: c.channel.id,
+	})
+
 	return nil
 }
 

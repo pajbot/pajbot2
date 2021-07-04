@@ -618,14 +618,6 @@ func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *tw
 }
 
 func (b *Bot) HandleRoomstateMessage(message twitch.RoomStateMessage) {
-	if len(message.Tags) > 2 {
-		if channelID, ok := message.Tags["room-id"]; ok {
-			// Joined channel
-			b.streamStore.JoinStream(&SimpleAccount{channelID, message.Channel})
-		} else {
-			fmt.Println("room-id not set in roomstate message:", message.Raw)
-		}
-	}
 	subMode := ModeUnset
 
 	channel := &channels.TwitchChannel{
@@ -960,8 +952,6 @@ func (b *Bot) JoinChannel(channelID string) error {
 
 	botChannel := &BotChannel{
 		ID: id,
-
-		stream: b.streamStore.GetStream(&botChannelUser),
 
 		channel: botChannelUser,
 	}

@@ -110,13 +110,3 @@ func (s *StreamStore) GetStream(account pkg.Account) pkg.Stream {
 
 	return stream
 }
-
-func (s *StreamStore) JoinStream(account pkg.Account) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if _, ok := s.streams[account.ID()]; !ok {
-		// Insert stream
-		s.streams[account.ID()] = twitch.NewTwitchStream(account)
-	}
-}
