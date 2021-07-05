@@ -45,9 +45,9 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-func newNuke(b mbase.Base) pkg.Module {
+func newNuke(b *mbase.Base) pkg.Module {
 	m := &nukeModule{
-		Base: b,
+		Base: *b,
 
 		messages: make(map[string][]nukeMessage),
 
@@ -59,11 +59,8 @@ func newNuke(b mbase.Base) pkg.Module {
 	m.ticker = time.NewTicker(garbageCollectionInterval)
 
 	go func() {
-		for {
-			select {
-			case <-m.ticker.C:
-				m.garbageCollect()
-			}
+		for range m.ticker.C {
+			m.garbageCollect()
 		}
 	}()
 
@@ -71,11 +68,11 @@ func newNuke(b mbase.Base) pkg.Module {
 }
 
 func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
-	if !(event.User.IsModerator() || event.User.HasChannelPermission(m.BotChannel().Channel(), pkg.PermissionModeration)) {
+	if !(event.User.IsModerator() || event.User.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration)) {
 		return nil
 	}
 
-	if len(parts) == 1 {
+	if len(parts) < 3 {
 		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
 	}
 	phrase := strings.Join(parts[1:len(parts)-2], " ")

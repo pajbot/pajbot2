@@ -1,22 +1,13 @@
 package moderation
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/gorilla/mux"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 )
 
-func root(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Channel moderation root for channel ID '%s'", vars["channel_id"])
-}
-
+// Load routes for /api/channel/:channel_id/moderation/
 func Load(parent *mux.Router) {
 	m := parent.PathPrefix("/moderation").Subrouter()
-
-	router.RGet(m, "", root)
 
 	router.RGet(m, `/latest`, apiChannelModerationLatest)
 

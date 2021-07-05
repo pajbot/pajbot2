@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
@@ -159,6 +160,9 @@ ON CONFLICT (bot_channel_id, module_id) DO UPDATE SET enabled=$3`
 	return err
 }
 
+// EnableModule enables a module with the given id
+// Returns an error if the module is not registered
+// Returns an error if the module is already enabled
 // We assume that modulesMutex is locked already
 func (c *BotChannel) EnableModule(moduleID string) error {
 	log.Println("Enable module!!!!!!!", moduleID)
@@ -190,6 +194,8 @@ func (c *BotChannel) EnableModule(moduleID string) error {
 	return c.enableModule(spec, settings)
 }
 
+// DisableModule disables a module with the given id
+// Returns an error if the module is already disabled
 // We assume that modulesMutex is locked already
 func (c *BotChannel) DisableModule(moduleID string) error {
 	moduleID = strings.ToLower(moduleID)
@@ -209,6 +215,19 @@ func (c *BotChannel) DisableModule(moduleID string) error {
 	}
 
 	return errors.New("module isn't enabled")
+}
+
+func (c *BotChannel) GetModule(moduleID string) (pkg.Module, error) {
+	c.modulesMutex.Lock()
+	defer c.modulesMutex.Unlock()
+
+	for _, m := range c.modules {
+		if m.ID() == moduleID {
+			return m, nil
+		}
+	}
+
+	return nil, errors.New("no module with this ID found")
 }
 
 func (c *BotChannel) Initialize(b *Bot) error {
@@ -332,7 +351,12 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 			case pkg.MuteTypeTemporary:
 				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
 			case pkg.MuteTypePermanent:
-				c.Ban(mute.User(), mute.Reason())
+				c.Timeout(mute.User(), 30, mute.Reason())
+				go func() {
+					time.Sleep(1000)
+
+					c.Ban(mute.User(), mute.Reason())
+				}()
 			}
 		}
 
@@ -343,7 +367,6 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 		for _, whisper := range action.Whispers() {
 			c.bot.Whisper(whisper.User(), whisper.Content())
 		}
-
 	}
 
 	return nil
@@ -351,8 +374,6 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 
 func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 	c.eventEmitter.Emit("on_msg", nil)
-
-	log.Println("Got message:", message.GetText())
 
 	event := pkg.MessageEvent{
 		BaseEvent: pkg.BaseEvent{

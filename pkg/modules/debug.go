@@ -114,9 +114,9 @@ type debugModule struct {
 	commands pkg.CommandsManager
 }
 
-func newDebugModule(b mbase.Base) pkg.Module {
+func newDebugModule(b *mbase.Base) pkg.Module {
 	m := &debugModule{
-		Base: b,
+		Base: *b,
 
 		commands: commands.NewCommands(),
 	}

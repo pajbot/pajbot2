@@ -24,24 +24,14 @@ type MessageLengthLimit struct {
 	mbase.Base
 }
 
-func newMessageLengthLimit(b mbase.Base) pkg.Module {
+func newMessageLengthLimit(b *mbase.Base) pkg.Module {
 	return &MessageLengthLimit{
-		Base: b,
+		Base: *b,
 	}
 }
 
 func (m MessageLengthLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
-	user := event.User
 	message := event.Message
-	return nil
-
-	if user.GetName() == "gazatu2" {
-		return nil
-	}
-
-	if user.GetName() == "supibot" {
-		return nil
-	}
 
 	messageLength := len(message.GetText())
 	if messageLength > 140 {

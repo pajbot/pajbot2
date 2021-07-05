@@ -12,13 +12,19 @@ import (
 
 func init() {
 	Register("link_filter", func() pkg.ModuleSpec {
-		relaxedRegexp := xurls.Relaxed()
-		strictRegexp := xurls.Strict()
+		const regexpModifier = `(\b|$)`
+		relaxedRegexpStr := xurls.Relaxed().String()
+		strictRegexpStr := xurls.Strict().String()
+
+		relaxedRegexp := regexp.MustCompile(relaxedRegexpStr + regexpModifier)
+		relaxedRegexp.Longest()
+		strictRegexp := regexp.MustCompile(strictRegexpStr + regexpModifier)
+		strictRegexp.Longest()
 
 		return &Spec{
 			id:   "link_filter",
 			name: "Link filter",
-			maker: func(b mbase.Base) pkg.Module {
+			maker: func(b *mbase.Base) pkg.Module {
 				return newLinkFilter(b, relaxedRegexp, strictRegexp)
 			},
 		}
@@ -32,13 +38,18 @@ type LinkFilter struct {
 	strictRegexp  *regexp.Regexp
 }
 
-func newLinkFilter(b mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
+func newLinkFilter(b *mbase.Base, relaxedRegexp, strictRegexp *regexp.Regexp) pkg.Module {
 	return &LinkFilter{
-		Base: b,
+		Base: *b,
 
 		relaxedRegexp: relaxedRegexp,
 		strictRegexp:  strictRegexp,
 	}
+}
+
+func (m *LinkFilter) checkMessage(text string) bool {
+	links := m.relaxedRegexp.FindAllString(text, -1)
+	return len(links) > 0
 }
 
 func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
@@ -50,8 +61,7 @@ func (m LinkFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
-	links := m.relaxedRegexp.FindAllString(event.Message.GetText(), -1)
-	if len(links) > 0 {
+	if m.checkMessage(event.Message.GetText()) {
 		actions := &twitchactions.Actions{}
 		actions.Timeout(event.User, 180*time.Second).SetReason("No links allowed")
 		return actions

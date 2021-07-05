@@ -8,10 +8,10 @@ import (
 )
 
 type cmdAddTrigger struct {
-	m *commandsModule
+	m *CommandsModule
 }
 
-func newCmdAddTrigger(m *commandsModule) *cmdAddTrigger {
+func newCmdAddTrigger(m *CommandsModule) *cmdAddTrigger {
 	return &cmdAddTrigger{
 		m: m,
 	}

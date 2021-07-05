@@ -1,17 +1,21 @@
 const path = require("path");
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
+const TerserJSPlugin = require('terser-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-const extractSASS = new ExtractTextPlugin({ filename: 'bundle.css' })
-const SRC_DIR = path.resolve(__dirname, 'src');
-const BUILD_DIR = path.resolve(__dirname, 'static/build');
+const BUILD_DIR = path.resolve(__dirname, './static/build');
 
 module.exports = {
 	entry: './src/index.jsx',
+ 	optimization: {
+		minimizer: [new TerserJSPlugin({})]
+	},
 	output: {
 		path: BUILD_DIR,
-		filename: 'bundle.js',
-		publicPath: "/",
+		filename: '[name].[contenthash].js',
+		publicPath: '/static/build',
 	},
 	module: {
 		rules: [
@@ -24,10 +28,7 @@ module.exports = {
 			},
 			{
 				test: /\.scss$/,
-				use: extractSASS.extract({
-					fallback: 'style-loader',
-					use: ['css-loader', 'sass-loader']
-				})
+				use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
 			}
 		]
 	},
@@ -35,6 +36,13 @@ module.exports = {
 		extensions: ['.js', '.jsx'],
 	},
 	plugins: [
-		extractSASS
+ 		new CleanWebpackPlugin(),
+		new MiniCssExtractPlugin({
+			filename: '[name].[contenthash].css'
+		}),
+		new HtmlWebpackPlugin({
+			filename: path.join(__dirname, './views/index.html'),
+			template: path.join(__dirname, './views/base.html'),
+		}),
 	]
 };

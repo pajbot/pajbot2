@@ -22,7 +22,7 @@ func init() {
 			id:               "afk",
 			name:             "AFK",
 			enabledByDefault: false,
-			maker: func(b mbase.Base) pkg.Module {
+			maker: func(b *mbase.Base) pkg.Module {
 				return newAFK(b, afkDatabase)
 			},
 		}
@@ -39,9 +39,9 @@ type afk struct {
 	afkDatabase map[string]bool
 }
 
-func newAFK(b mbase.Base, afkDatabase map[string]bool) pkg.Module {
+func newAFK(b *mbase.Base, afkDatabase map[string]bool) pkg.Module {
 	m := &afk{
-		Base: b,
+		Base: *b,
 
 		afkDatabase: afkDatabase,
 

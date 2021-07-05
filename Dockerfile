@@ -1,15 +1,13 @@
-FROM golang:buster AS build
-RUN wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /etc/apt/trusted.gpg.d/microsoft.asc.gpg && wget -q https://packages.microsoft.com/config/debian/10/prod.list -O /etc/apt/sources.list.d/microsoft-prod.list
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash -
-RUN apt-get update && apt-get install apt-transport-https dotnet-sdk-2.2 nodejs -y
+FROM mcr.microsoft.com/dotnet/sdk:5.0-alpine3.13 AS build
+RUN apk add --no-cache go nodejs npm build-base
 ADD . /src
 RUN cd /src && ./utils/install.sh
-RUN cd /src/web && npm i && npm run build
-RUN cd /src/cmd/bot && go build -v -tags csharp
+RUN cd /src && ./utils/build.sh -v -tags csharp
 
-FROM mcr.microsoft.com/dotnet/core/runtime:2.2.7-stretch-slim
+FROM mcr.microsoft.com/dotnet/runtime:5.0.3-alpine3.13
 WORKDIR /app/cmd/bot
-ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/2.2.7
+RUN apk add --no-cache icu
+ENV LIBCOREFOLDER /usr/share/dotnet/shared/Microsoft.NETCore.App/5.0.3
 COPY --from=build /src/web/static /app/web/static
 COPY --from=build /src/web/views /app/web/views
 COPY --from=build /src/cmd/bot/bot /app/cmd/bot/bot

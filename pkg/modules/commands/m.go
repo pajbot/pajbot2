@@ -3,6 +3,7 @@
 // Add command
 // Chat: !pb2addcmd trigger response
 // Web: not implemented
+// Code: not implemented
 //
 // Add trigger to command
 // Chat: !pb2addtrigger command_id new_trigger
@@ -52,15 +53,15 @@ func init() {
 	})
 }
 
-type commandsModule struct {
+type CommandsModule struct {
 	mbase.Base
 
 	commands pkg.CommandsManager
 }
 
-func newCommands(b mbase.Base) pkg.Module {
-	m := &commandsModule{
-		Base: b,
+func newCommands(b *mbase.Base) pkg.Module {
+	m := &CommandsModule{
+		Base: *b,
 
 		commands: commands.NewCommands(),
 	}
@@ -77,7 +78,7 @@ func newCommands(b mbase.Base) pkg.Module {
 	return m
 }
 
-func (m *commandsModule) loadCommands() error {
+func (m *CommandsModule) loadCommands() error {
 	const querySelect = `
 SELECT
 	id, response, command_trigger.trigger
@@ -123,15 +124,15 @@ WHERE
 	return nil
 }
 
-func (m *commandsModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+func (m *CommandsModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
 	return m.commands.OnMessage(event)
 }
 
-func (m *commandsModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
+func (m *CommandsModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return m.commands.OnMessage(event)
 }
 
-func (m *commandsModule) addToDB(trigger, response string) error {
+func (m *CommandsModule) addToDB(trigger, response string) error {
 	err := utils.WithTransaction(m.SQL, func(tx *sql.Tx) error {
 		const queryInsertCommand = `
 		INSERT INTO
@@ -174,7 +175,7 @@ func (m *commandsModule) addToDB(trigger, response string) error {
 	return nil
 }
 
-func (m *commandsModule) addTrigger(commandID int64, newTrigger string) error {
+func (m *CommandsModule) addTrigger(commandID int64, newTrigger string) error {
 	err := utils.WithTransaction(m.SQL, func(tx *sql.Tx) error {
 		const queryTrigger = `
 		INSERT INTO
@@ -205,7 +206,7 @@ func (m *commandsModule) addTrigger(commandID int64, newTrigger string) error {
 	return nil
 }
 
-func (m *commandsModule) removeTrigger(commandID int64, trigger string) error {
+func (m *CommandsModule) removeTrigger(commandID int64, trigger string) error {
 	const queryRemoveTrigger = `
 	DELETE FROM
 		command_trigger

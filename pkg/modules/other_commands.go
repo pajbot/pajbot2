@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"github.com/pajbot/pajbot2/internal/commands/disconnect"
 	"github.com/pajbot/pajbot2/internal/commands/getuserid"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
@@ -24,9 +25,9 @@ type otherCommandsModule struct {
 	commands pkg.CommandsManager
 }
 
-func newOtherCommandsModule(b mbase.Base) pkg.Module {
+func newOtherCommandsModule(b *mbase.Base) pkg.Module {
 	m := &otherCommandsModule{
-		Base: b,
+		Base: *b,
 
 		commands: commands.NewCommands(),
 	}
@@ -43,6 +44,7 @@ func (m *otherCommandsModule) Initialize() {
 	m.commands.Register([]string{"!pb2points"}, &commands.GetPoints{})
 	m.commands.Register([]string{"!pb2roulette"}, &commands.Roulette{})
 	m.commands.Register([]string{"!pb2givepoints"}, &commands.GivePoints{})
+	m.commands.Register([]string{"!pb2disconnect"}, &disconnect.Command{Bot: m.BotChannel()})
 	// m.commands.Register([]string{"!pb2addpoints"}, &commands.AddPoints{})
 	// m.commands.Register([]string{"!pb2removepoints"}, &commands.RemovePoints{})
 	m.commands.Register([]string{"!roffle", "!join"}, commands.NewRaffle())

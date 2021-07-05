@@ -25,9 +25,9 @@ type Pajbot1Commands struct {
 	commands []*commands.Pajbot1Command
 }
 
-func newPajbot1Commands(b mbase.Base) pkg.Module {
+func newPajbot1Commands(b *mbase.Base) pkg.Module {
 	m := &Pajbot1Commands{
-		Base: b,
+		Base: *b,
 	}
 
 	m.loadPajbot1Commands()

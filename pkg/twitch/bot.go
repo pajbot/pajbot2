@@ -14,10 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dankeroni/gotwitch"
 	twitch "github.com/gempir/go-twitch-irc/v2"
-	"github.com/go-sql-driver/mysql"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/users"
@@ -42,7 +41,7 @@ type botFlags struct {
 type BotCredentials struct {
 	AccessToken  string
 	RefreshToken string
-	Expiry       mysql.NullTime
+	Expiry       sql.NullTime
 }
 
 // Bot is a wrapper around go-twitch-irc's twitch.Client with a few extra features
@@ -51,7 +50,10 @@ type Bot struct {
 
 	app pkg.Application
 
-	TokenSource oauth2.TokenSource
+	// last fetched token
+	token *oauth2.Token
+
+	tokenSource oauth2.TokenSource
 
 	DatabaseID int
 
@@ -86,18 +88,14 @@ type Bot struct {
 var _ pkg.PubSubConnection = &Bot{}
 var _ pkg.PubSubSource = &Bot{}
 
-func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, app pkg.Application) (*Bot, error) {
-	token, err := tokenSource.Token()
-	if err != nil {
-		return nil, err
-	}
+func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, token *oauth2.Token, app pkg.Application) (*Bot, error) {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
 		app: app,
 
-		TokenSource: tokenSource,
-		Client:      twitch.NewClient(twitchAccount.Name(), "oauth:"+token.AccessToken),
+		token:       token,
+		tokenSource: tokenSource,
 
 		DatabaseID: databaseID,
 
@@ -118,6 +116,10 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 		QuitChannel: app.QuitChannel(),
 	}
 
+	if err := b.createClient(); err != nil {
+		return nil, err
+	}
+
 	b.pubSub.Subscribe(b, "Ban", nil)
 	b.pubSub.Subscribe(b, "Timeout", nil)
 	b.pubSub.Subscribe(b, "Untimeout", nil)
@@ -127,8 +129,85 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 	return b, nil
 }
 
+// Disconnect function should only ever be used for development purposes
+func (b *Bot) Disconnect() {
+	if err := b.Client.Disconnect(); err != nil {
+		fmt.Println("Error occurred while trying to disconnect:", err)
+	}
+}
+
+func (b *Bot) createClient() error {
+	accessToken, err := b.GetAccessToken()
+	if err != nil {
+		return err
+	}
+
+	b.Client = twitch.NewClient(b.twitchAccount.Name(), "oauth:"+accessToken)
+
+	return nil
+}
+
 func (b *Bot) GetTokenSource() oauth2.TokenSource {
-	return b.TokenSource
+	return b.tokenSource
+}
+
+func (b *Bot) refreshToken(token *oauth2.Token) error {
+	const queryF = `
+UPDATE "bot"
+SET
+	twitch_access_token = $1,
+	twitch_refresh_token = $2,
+	twitch_access_token_expiry = $3
+WHERE
+id=$4`
+
+	_, err := b.sql.Exec(queryF, token.AccessToken, token.RefreshToken, token.Expiry, b.DatabaseID)
+	if err != nil {
+		return err
+	}
+
+	b.token = token
+
+	return nil
+}
+
+func tokensAreTheSame(a, b *oauth2.Token) bool {
+	if a == nil || b == nil {
+		return false
+	}
+
+	if a.AccessToken != b.AccessToken {
+		return false
+	}
+
+	if a.TokenType != b.TokenType {
+		return false
+	}
+
+	if a.RefreshToken != b.RefreshToken {
+		return false
+	}
+
+	if a.Expiry != b.Expiry {
+		return false
+	}
+
+	return true
+}
+
+func (b *Bot) GetAccessToken() (string, error) {
+	token, err := b.GetTokenSource().Token()
+	if err != nil {
+		return "", fmt.Errorf("[Bot::GetAccessToken] Error getting token from token source: %w", err)
+	}
+
+	if !tokensAreTheSame(token, b.token) {
+		if err := b.refreshToken(token); err != nil {
+			return "", err
+		}
+	}
+
+	return token.AccessToken, nil
 }
 
 func (b *Bot) OnNewChannelJoined(cb func(channel pkg.Channel)) {
@@ -341,20 +420,12 @@ func (h *emoteReader) Next() bool {
 	if !h.started {
 		h.started = true
 
-		if len(*h.emotes) == 0 {
-			return false
-		}
-
-		return true
+		return len(*h.emotes) != 0
 	}
 
 	h.index++
 
-	if h.index >= len(*h.emotes) {
-		return false
-	}
-
-	return true
+	return h.index < len(*h.emotes)
 }
 
 func (h *emoteReader) Get() pkg.Emote {
@@ -442,6 +513,10 @@ func (b *Bot) Mention(channel pkg.Channel, user pkg.User, message string) {
 
 func (b *Bot) Whisper(user pkg.User, message string) {
 	b.Client.Whisper(user.GetName(), message)
+}
+
+func (b *Bot) Whisperf(user pkg.User, format string, a ...interface{}) {
+	b.Client.Whisper(user.GetName(), fmt.Sprintf(format, a...))
 }
 
 func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
@@ -579,36 +654,48 @@ func (b *Bot) HandleRoomstateMessage(message twitch.RoomStateMessage) {
 	}
 }
 
+func (b *Bot) HandleClearChatMessage(message *twitch.ClearChatMessage) {
+	_, botChannel := b.getBotChannel(message.RoomID)
+	if botChannel == nil {
+		fmt.Println("Received a CLEARCHAT message in room", message.RoomID, "that we haven't joined?")
+		return
+	}
+	_, err := botChannel.Events().Emit("on_clearchat", map[string]interface{}{
+		"message": message,
+	})
+
+	if err != nil {
+		fmt.Println("Error occurred when emitting the clearchat event:", err)
+	}
+}
+
 func (b *Bot) StartChatterPoller() {
 	b.ticker = time.NewTicker(5 * time.Minute)
 	// defer close ticker lol
 
 	go func() {
-		for {
-			select {
-			case <-b.ticker.C:
-				chatters, _, err := gotwitch.GetChattersSimple("pajlada")
-				if err != nil {
-					continue
-				}
-
-				var usernames []string
-				usernames = append(usernames, chatters.Moderators...)
-				usernames = append(usernames, chatters.Staff...)
-				usernames = append(usernames, chatters.Admins...)
-				usernames = append(usernames, chatters.GlobalMods...)
-				usernames = append(usernames, chatters.Viewers...)
-				userIDs := b.GetUserStore().GetIDs(usernames)
-
-				userIDsSlice := make([]string, len(userIDs))
-				i := 0
-				for _, userID := range userIDs {
-					userIDsSlice[i] = userID
-					i++
-				}
-
-				b.BulkEdit("pajlada", userIDsSlice, 25)
+		for range b.ticker.C {
+			chatters, err := apirequest.TwitchWrapper.API().TMI().GetChatters("pajlada")
+			if err != nil {
+				continue
 			}
+
+			var usernames []string
+			usernames = append(usernames, chatters.Moderators...)
+			usernames = append(usernames, chatters.Staff...)
+			usernames = append(usernames, chatters.Admins...)
+			usernames = append(usernames, chatters.GlobalMods...)
+			usernames = append(usernames, chatters.Viewers...)
+			userIDs := b.GetUserStore().GetIDs(usernames)
+
+			userIDsSlice := make([]string, len(userIDs))
+			i := 0
+			for _, userID := range userIDs {
+				userIDsSlice[i] = userID
+				i++
+			}
+
+			b.BulkEdit("pajlada", userIDsSlice, 25)
 		}
 	}()
 }
@@ -644,12 +731,10 @@ func (p *PointServer) Send(command uint8, body []byte) bool {
 	binary.BigEndian.PutUint32(bodyLength, uint32(len(body)))
 
 	// Write header (Command + Body length)
-	instant := p.Write(append([]byte{command}, bodyLength...))
+	p.Write(append([]byte{command}, bodyLength...))
 
 	// Write body
-	instant = p.Write(body)
-
-	return instant
+	return p.Write(body)
 }
 
 func (p *PointServer) Read(size int) []byte {
@@ -707,7 +792,6 @@ func (p *PointServer) connect() {
 		p.conn = nil
 		log.Println("Reconnect...")
 	}
-
 }
 
 func (b *Bot) ConnectToPointServer() (err error) {

@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
@@ -163,9 +161,9 @@ func (a *Application) LoadConfig(path string) error {
 	return nil
 }
 
-// https://dev.twitch.tv/docs/authentication/#scopes
 func (a *Application) InitializeOAuth2Configs() (err error) {
-	a.twitchAuths, err = auth.NewTwitchAuths(&a.config.Auth.Twitch)
+	// https://dev.twitch.tv/docs/authentication/#scopes
+	a.twitchAuths, err = auth.NewTwitchAuths(&a.config.Auth.Twitch, &a.config.Web)
 
 	return
 }
@@ -180,7 +178,6 @@ func (a *Application) RunDatabaseMigrations() error {
 	if err != nil {
 		fmt.Println("Unable to run SQL migrations", err)
 		return err
-
 	}
 
 	return nil
@@ -249,7 +246,7 @@ func (a *Application) InitializeModules() (err error) {
 		return errors.Wrap(err, "initializing report holder")
 	}
 
-	a.twitterTest()
+	// a.twitterTest()
 
 	err = a.StartTwitterStream()
 	if err != nil {
@@ -271,22 +268,22 @@ func (a *Application) InitializeModules() (err error) {
 	return
 }
 
-func (a *Application) twitterTest() {
-	localConfig := a.config.Auth.Twitter
-
-	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
-	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
-	httpClient := config.Client(oauth1.NoContext, token)
-
-	client := twitter.NewClient(httpClient)
-
-	user, resp, err := client.Users.Show(&twitter.UserShowParams{
-		ScreenName: "pajtest",
-	})
-	fmt.Println(user)
-	fmt.Println(resp)
-	fmt.Println(err)
-}
+// func (a *Application) twitterTest() {
+//	localConfig := a.config.Auth.Twitter
+//
+//	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
+//	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
+//	httpClient := config.Client(oauth1.NoContext, token)
+//
+//	client := twitter.NewClient(httpClient)
+//
+//	user, resp, err := client.Users.Show(&twitter.UserShowParams{
+//		ScreenName: "pajtest",
+//	})
+//	fmt.Println(user)
+//	fmt.Println(resp)
+//	fmt.Println(err)
+//}
 
 func (a *Application) StartTwitterStream() error {
 	localConfig := a.config.Auth.Twitter
@@ -402,8 +399,55 @@ func (a *Application) StartWebServer() error {
 	return nil
 }
 
+func (a *Application) botOnNewChannelJoined(bot *pb2twitch.Bot, botUserID string) func(pkg.Channel) {
+	return func(channel pkg.Channel) {
+		accessToken, err := bot.GetAccessToken()
+		if err != nil {
+			fmt.Println("Error getting access token for", bot.TwitchAccount().Name())
+			return
+		}
+
+		a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), accessToken)
+
+		a.twitchChannelStore.RegisterTwitchChannel(channel)
+	}
+}
+
+func (a *Application) loadBot(botConfig botConfig) error {
+	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, a)
+	if err != nil {
+		return fmt.Errorf("loadBot NewBot: %w", err)
+	}
+
+	bot.OnNewChannelJoined(a.botOnNewChannelJoined(bot, botConfig.account.ID()))
+
+	err = bot.LoadChannels(a.sqlClient)
+	if err != nil {
+		return fmt.Errorf("loadChannels NewBot: %w", err)
+	}
+
+	a.twitchBots.Add(bot)
+
+	return nil
+}
+
+func appendBotConfig(wg *sync.WaitGroup, botsMutex sync.Locker, bots *[]botConfig, databaseID int, acc pb2twitch.TwitchAccount, c pb2twitch.BotCredentials, oauthConfig *oauth2.Config, sqlClient *sql.DB) {
+	defer wg.Done()
+
+	bc := newBotConfig(databaseID, &acc, c, oauthConfig)
+
+	if err := bc.Validate(sqlClient); err != nil {
+		fmt.Println("Error validating bot config:", err)
+		return
+	}
+
+	botsMutex.Lock()
+	defer botsMutex.Unlock()
+	*bots = append(*bots, bc)
+}
+
 // LoadBots loads bots from the database
-func (a *Application) LoadBots() error {
+func (a *Application) LoadBots() (err error) {
 	const queryF = `SELECT id, twitch_userid, twitch_username, twitch_access_token, twitch_refresh_token, twitch_access_token_expiry FROM bot`
 	rows, err := a.sqlClient.Query(queryF) // GOOD
 	if err != nil {
@@ -417,16 +461,12 @@ func (a *Application) LoadBots() error {
 		}
 	}()
 
-	type bot struct {
-		databaseID  int
-		account     *pb2twitch.TwitchAccount
-		tokenSource oauth2.TokenSource
-	}
-
 	var botsMutex sync.Mutex
-	var bots []bot
+	var bots []botConfig
 
 	var wg sync.WaitGroup
+
+	oauthConfig := a.twitchAuths.Bot()
 
 	for rows.Next() {
 		var databaseID int
@@ -440,72 +480,16 @@ func (a *Application) LoadBots() error {
 
 		c.AccessToken = strings.TrimPrefix(c.AccessToken, "oauth:")
 
-		go func(databaseID int, acc *pb2twitch.TwitchAccount, c pb2twitch.BotCredentials) {
-			defer wg.Done()
-			oldToken := &oauth2.Token{
-				AccessToken:  c.AccessToken,
-				TokenType:    "bearer",
-				RefreshToken: c.RefreshToken,
-				Expiry:       c.Expiry.Time,
-			}
-
-			tokenSource := a.twitchAuths.Bot().TokenSource(context.Background(), oldToken)
-			refreshingTokenSource := oauth2.ReuseTokenSource(oldToken, tokenSource)
-
-			botsMutex.Lock()
-			defer botsMutex.Unlock()
-			bots = append(bots, bot{
-				databaseID:  databaseID,
-				account:     acc,
-				tokenSource: refreshingTokenSource,
-			})
-
-			token, err := refreshingTokenSource.Token()
-			if err != nil {
-				fmt.Println("ERROR!!! Error getting token from token source for bot", acc.Name())
-				return
-			}
-
-			self, _, err := apirequest.TwitchBot.ValidateOAuthTokenSimple(token.AccessToken)
-			if err != nil {
-				fmt.Println("ERROR!!! Error validating oauth token for", acc.Name(), err)
-				return
-			}
-
-			if self.UserID != acc.ID() {
-				fmt.Println("ERROR!!! User ID for", acc.Name(), acc.ID(), "doesn't match the api response:", self.UserID)
-				return
-			}
-		}(databaseID, &acc, c)
+		go appendBotConfig(&wg, &botsMutex, &bots, databaseID, acc, c, oauthConfig, a.sqlClient)
 	}
 
 	wg.Wait()
 
 	for _, botConfig := range bots {
-		bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, a)
+		err = a.loadBot(botConfig)
 		if err != nil {
 			return err
 		}
-
-		botUserID := botConfig.account.ID()
-		bot.OnNewChannelJoined(func(channel pkg.Channel) {
-			token, err := bot.GetTokenSource().Token()
-			if err != nil {
-				fmt.Println("Error renewing token: ", err)
-				return
-			}
-			fmt.Println("Listen on", botUserID, " ", channel.GetID())
-			a.TwitchPubSub.Listen(twitchpubsub.ModerationActionTopic(botUserID, channel.GetID()), token.AccessToken)
-
-			a.twitchChannelStore.RegisterTwitchChannel(channel)
-		})
-
-		err = bot.LoadChannels(a.sqlClient)
-		if err != nil {
-			return err
-		}
-
-		a.twitchBots.Add(bot)
 	}
 
 	return nil
@@ -549,11 +533,18 @@ func (a *Application) StartBots() error {
 				message.Message = strings.TrimPrefix(message.Message, "@"+bot.TwitchAccount().Name()+" ")
 				message.Message = strings.TrimPrefix(message.Message, bot.TwitchAccount().Name()+" ")
 
+				// Trim message off any potential Chatterino suffix
+				message.Message = strings.TrimSuffix(message.Message, " \U000e0000")
+
 				// Forward to bot to let its modules work
 				bot.HandleMessage(message.Channel, message.User, &message)
 			})
 
 			bot.OnRoomStateMessage(bot.HandleRoomstateMessage)
+
+			bot.OnClearChatMessage(func(message twitch.ClearChatMessage) {
+				bot.HandleClearChatMessage(&message)
+			})
 
 			bot.OnUnsetMessage(func(message twitch.RawMessage) {
 				fmt.Println("Unparsed message:", message.Raw)
@@ -573,16 +564,22 @@ func (a *Application) StartBots() error {
 			// }
 			// bot.StartChatterPoller()
 
-			bot.IsConnected = true
-			err := bot.Connect()
-			if err != nil {
-				if err == twitch.ErrLoginAuthenticationFailed {
-					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
-				} else {
-					log.Fatal(err)
+			for {
+				bot.IsConnected = true
+				accessToken, err := bot.GetAccessToken()
+				if err != nil {
+					fmt.Printf("Unable to refresh token for %s: %s\n", bot.TwitchAccount().Name(), err)
 				}
+				bot.SetIRCToken("oauth:" + accessToken)
+				err = bot.Connect()
+				switch err {
+				case twitch.ErrLoginAuthenticationFailed:
+					fmt.Printf("%s: Login authentication failed\n", bot.TwitchAccount().Name())
+				default:
+					fmt.Println("Unhandled error from go-twitch-irc Connect:", err)
+				}
+				bot.IsConnected = false
 			}
-			bot.IsConnected = false
 
 			// TODO: Check if we want to try to reconnect here (with a delay)
 		}(pb2bot)
@@ -597,6 +594,7 @@ func (a *Application) StartPubSubClient() error {
 	a.TwitchPubSub = twitchpubsub.NewClient(twitchpubsub.DefaultHost)
 
 	a.TwitchPubSub.OnModerationAction(func(channelID string, event *twitchpubsub.ModerationAction) {
+		fmt.Println("Got moderation action")
 		const ActionUnknown = 0
 		const ActionTimeout = 1
 		const ActionBan = 2

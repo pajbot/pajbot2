@@ -94,7 +94,6 @@ func apiUser(w http.ResponseWriter, r *http.Request) {
 			if action.TargetID == id {
 				response.Actions[i].TargetName = name
 			}
-
 		}
 	}
 

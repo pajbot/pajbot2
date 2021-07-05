@@ -11,6 +11,7 @@ type Sender interface {
 	Say(Channel, string)
 	Mention(Channel, User, string)
 	Whisper(User, string)
+	Whisperf(User, string, ...interface{})
 
 	// Timeout times the user out immediately, and then again after X seconds
 	Timeout(Channel, User, int, string)
@@ -57,4 +58,7 @@ type Sender interface {
 	Quit(message string)
 
 	Application() Application
+
+	// DEV
+	Disconnect()
 }

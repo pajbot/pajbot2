@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/utils"
 	"github.com/tevino/abool"
 )
 
@@ -94,7 +94,7 @@ func (c *WSConn) MessageReceived(source pkg.PubSubSource, topic string, bytes []
 
 	msgBytes, err := json.Marshal(&msg)
 	if err != nil {
-		fmt.Println("error marshalling pubsub message", err)
+		fmt.Println("error marshaling pubsub message", err)
 		return nil
 	}
 

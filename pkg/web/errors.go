@@ -2,27 +2,16 @@ package web
 
 import "regexp"
 
-// funny haHAA
 const (
-	ErrInvalidUserName = "https://i.imgur.com/r7FGMh8.png"
+	// ErrInvalidUserName is returned if an invalid username was posted to a router that expected a valid username
+	ErrInvalidUserName = "invalid username"
 )
 
 var (
 	singleUserName = regexp.MustCompile(`\w+`)
 	userNameList   = regexp.MustCompile(`[\w\,]+`)
-	rawURL         = regexp.MustCompile(`[\w\,\/]+`)
 )
 
 func isValidUserName(input string) bool {
-	if singleUserName.FindString(input) != input {
-		return false
-	}
-	return true
-}
-
-func isValidURL(url string) bool {
-	if rawURL.FindString(url) != url {
-		return false
-	}
-	return true
+	return singleUserName.FindString(input) == input
 }

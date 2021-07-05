@@ -13,7 +13,7 @@ type giveawayCmdDraw struct {
 
 func (c *giveawayCmdDraw) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if !event.User.IsModerator() {
-		// User does not have permission to stop a giveaway
+		// User does not have permission to draw a winner
 		return nil
 	}
 

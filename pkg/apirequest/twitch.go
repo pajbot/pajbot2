@@ -1,7 +1,7 @@
 package apirequest
 
 import (
-	"github.com/dankeroni/gotwitch"
+	"github.com/dankeroni/gotwitch/v2"
 	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
@@ -17,17 +17,15 @@ var TwitchBot *gotwitch.TwitchAPI
 func InitTwitch(cfg *config.Config) (err error) {
 	// Twitch APIs
 	Twitch = gotwitch.New(cfg.Auth.Twitch.User.ClientID)
-	Twitch.Credentials.ClientSecret = cfg.Auth.Twitch.User.ClientSecret
-	_, err = Twitch.GetAppAccessTokenSimple()
-	// TODO: Refresh the access token every now and then
+	Twitch.SetClientSecret(cfg.Auth.Twitch.User.ClientSecret)
+	err = Twitch.Helix().RefreshAppAccessToken()
 	if err != nil {
 		return
 	}
 
 	TwitchBot = gotwitch.New(cfg.Auth.Twitch.Bot.ClientID)
-	TwitchBot.Credentials.ClientSecret = cfg.Auth.Twitch.Bot.ClientSecret
-	_, err = TwitchBot.GetAppAccessTokenSimple()
-	// TODO: Refresh the access token every now and then
+	TwitchBot.SetClientSecret(cfg.Auth.Twitch.Bot.ClientSecret)
+	err = TwitchBot.Helix().RefreshAppAccessToken()
 	if err != nil {
 		return
 	}

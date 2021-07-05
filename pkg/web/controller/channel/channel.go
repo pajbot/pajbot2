@@ -13,7 +13,7 @@ import (
 )
 
 func Load(a pkg.Application, cfg *config.Config) {
-	m := router.Subrouter("/c/{channel:[a-zA-Z0-9]+}")
+	m := router.Subrouter("/c/{channel:[a-zA-Z0-9_]+}")
 
 	router.RGet(m, "/dashboard", handleDashboard(a))
 }
@@ -55,7 +55,8 @@ func handleDashboard(a pkg.Application) func(w http.ResponseWriter, r *http.Requ
 
 			// fmt.Fprintf(w, "Bot: %s\n", bot.TwitchAccount().ID())
 			bi := BotInfo{
-				Name: bot.TwitchAccount().Name(),
+				Name:      bot.TwitchAccount().Name(),
+				Connected: bot.Connected(),
 			}
 			extra.Bots = append(extra.Bots, bi)
 		}

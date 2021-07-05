@@ -5,6 +5,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -23,7 +24,7 @@ type followResponse struct {
 func apiCallbacksFollow(w http.ResponseWriter, r *http.Request) {
 	challenge := r.URL.Query().Get("hub.challenge")
 	if challenge != "" {
-		fmt.Fprintf(w, challenge)
+		fmt.Fprint(w, html.EscapeString(challenge))
 		return
 	}
 
@@ -62,7 +63,7 @@ type streamsResponse struct {
 func apiCallbacksStreams(w http.ResponseWriter, r *http.Request) {
 	challenge := r.URL.Query().Get("hub.challenge")
 	if challenge != "" {
-		fmt.Fprintf(w, challenge)
+		fmt.Fprint(w, html.EscapeString(challenge))
 		fmt.Println("Responding to streams")
 		return
 	}

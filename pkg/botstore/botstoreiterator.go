@@ -12,11 +12,8 @@ type BotStoreIterator struct {
 
 func (i *BotStoreIterator) Next() bool {
 	i.index++
-	if i.index >= len(i.data) {
-		return false
-	}
 
-	return true
+	return i.index < len(i.data)
 }
 
 func (i *BotStoreIterator) Value() pkg.Sender {

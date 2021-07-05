@@ -21,9 +21,9 @@ type twitter struct {
 	mbase.Base
 }
 
-func newTwitter(b mbase.Base) pkg.Module {
+func newTwitter(b *mbase.Base) pkg.Module {
 	m := &twitter{
-		Base: b,
+		Base: *b,
 	}
 
 	// FIXME
@@ -40,5 +40,4 @@ func (m *twitter) Initialize() {
 			m.BotChannel().Say("got tweet: " + message)
 		}
 	}()
-
 }

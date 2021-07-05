@@ -5,8 +5,8 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/users"
-	"github.com/pajbot/utils"
 	"github.com/pajbot/pajbot2/pkg/web/state"
+	"github.com/pajbot/utils"
 )
 
 func RequirePermission(w http.ResponseWriter, c state.State, channel pkg.Channel, permission pkg.Permission) bool {

@@ -3,12 +3,29 @@ package common
 // this should make things easier with redis
 
 import (
+	"fmt"
 	"time"
 )
 
-// BuildTime is the time when the binary was built
-// filled in with ./build.sh (ldflags)
-var BuildTime string
+var (
+	// BuildTime is the time when the binary was built
+	// filled in with ./build.sh (ldflags)
+	BuildTime string
+
+	BuildRelease string
+
+	BuildHash string
+
+	BuildBranch string
+)
+
+func Version() string {
+	if BuildRelease == "git" {
+		return fmt.Sprintf("%s@%s", BuildHash, BuildBranch)
+	}
+
+	return BuildRelease
+}
 
 // GlobalUser will only be used by boss to check if user is admin
 // and to decide what channel to send the message to if its a whisper

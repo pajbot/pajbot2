@@ -1,6 +1,7 @@
 package mbase
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,9 @@ import (
 type Base struct {
 	spec pkg.ModuleSpec
 	bot  pkg.BotChannel
+
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	connections []*eventemitter.Listener
 
@@ -39,11 +43,19 @@ func New(spec pkg.ModuleSpec, bot pkg.BotChannel, sql, oldSession *sql.DB, pubSu
 		ReportHolder: reportHolder,
 	}
 
+	parentContext := context.TODO()
+
+	b.ctx, b.cancel = context.WithCancel(parentContext)
+
 	for key, value := range spec.Parameters() {
 		b.parameters[key] = value()
 	}
 
 	return b
+}
+
+func (b *Base) Context() context.Context {
+	return b.ctx
 }
 
 func (b *Base) BotChannel() pkg.BotChannel {
@@ -92,6 +104,9 @@ func (b *Base) Disable() error {
 	for _, c := range b.connections {
 		c.Disconnected = true
 	}
+
+	b.cancel()
+
 	return nil
 }
 
@@ -119,7 +134,7 @@ func (b *Base) SetParameter(key string, value string) error {
 	// 1. Find parameter spec (This includes type of the parameter)
 	param, ok := b.parameters[key]
 	if !ok {
-		return fmt.Errorf("No parameter found with the key '%s'", key)
+		return fmt.Errorf("no parameter found with the key '%s'", key)
 	}
 
 	// 2. Parse `value` according to that parameter spec
@@ -140,7 +155,7 @@ func (b *Base) SetParameterResponse(key, value string, event pkg.MessageEvent) p
 
 	err := b.Save()
 	if err != nil {
-		return twitchactions.Mentionf(event.User, "an error occured while saving parameters for module %s, key %s: %s", b.ID(), key, err.Error())
+		return twitchactions.Mentionf(event.User, "an error occurred while saving parameters for module %s, key %s: %s", b.ID(), key, err.Error())
 	}
 	return twitchactions.Mentionf(event.User, "%s set to %s", key, value)
 }
@@ -189,7 +204,7 @@ func (b *Base) Save() error {
 	return nil
 }
 
-func (b *Base) Listen(event string, cb func() error, prio int) error {
+func (b *Base) Listen(event string, cb interface{}, prio int) error {
 	conn, err := b.bot.Events().Listen(event, cb, prio)
 	if err != nil {
 		return err

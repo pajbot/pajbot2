@@ -8,10 +8,10 @@ import (
 )
 
 type addCmd struct {
-	m *commandsModule
+	m *CommandsModule
 }
 
-func newAddCmd(m *commandsModule) *addCmd {
+func newAddCmd(m *CommandsModule) *addCmd {
 	return &addCmd{
 		m: m,
 	}

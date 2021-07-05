@@ -7,7 +7,7 @@ import { createCookie, readCookie } from './cookie';
 export default class ThemeProvider extends Component {
 
 
-  validThemes = ['default', 'dark'];
+  validThemes = ['Light', 'Dark'];
 
   constructor(props) {
     super(props);
@@ -15,7 +15,7 @@ export default class ThemeProvider extends Component {
     let savedTheme = readCookie('currentTheme');
 
     if (!savedTheme || this.validThemes.indexOf(savedTheme) === -1) {
-      savedTheme = 'default';
+      savedTheme = 'Dark';
     }
 
     this.state = {

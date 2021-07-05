@@ -50,9 +50,9 @@ type giveaway struct {
 	emoteName string
 }
 
-func newGiveaway(b mbase.Base) pkg.Module {
+func newGiveaway(b *mbase.Base) pkg.Module {
 	m := &giveaway{
-		Base: b,
+		Base: *b,
 
 		state: giveawayStateStopped,
 
@@ -116,7 +116,6 @@ func (m *giveaway) OnMessage(event pkg.MessageEvent) pkg.Actions {
 					// User has already joined
 					return nil
 				}
-
 			}
 			m.entrants = append(m.entrants, user.GetName())
 

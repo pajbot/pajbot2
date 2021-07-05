@@ -11,7 +11,7 @@ import (
 
 const (
 	templateSuffix = ".html"
-	defaultTheme   = "default"
+	defaultTheme   = "Dark"
 )
 
 var cfg Config
@@ -40,7 +40,7 @@ func templatePath(templateName string) string {
 	return filepath.Join(config.WebStaticPath, "views", templateName+templateSuffix)
 }
 
-var validThemes = []string{"default", "dark"}
+var validThemes = []string{"Light", "Dark"}
 
 // get theme from cookie of request. return default if cookie is non-existent or invalid
 func getTheme(r *http.Request) (theme string) {
@@ -83,7 +83,7 @@ func RenderBasic(templateName string, w http.ResponseWriter, r *http.Request) er
 func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, extra []byte) error {
 	var err error
 	tpl := template.New(templateName)
-	_, err = tpl.ParseFiles(templatePath(templateName), templatePath("base"))
+	_, err = tpl.ParseFiles(templatePath(templateName), templatePath("index"))
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func RenderExtra(templateName string, w http.ResponseWriter, r *http.Request, ex
 		Extra:       string(extra),
 	}
 
-	err = tpl.ExecuteTemplate(w, "base"+templateSuffix, state)
+	err = tpl.ExecuteTemplate(w, "index"+templateSuffix, state)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func Render(templateName string, w http.ResponseWriter, r *http.Request) error {
 	return RenderExtra(templateName, w, r, nil)
 }
 
-// Default pages
+// Render403 renders the default 403 error page
 func Render403(w http.ResponseWriter, r *http.Request) error {
 	w.WriteHeader(403)
 	return RenderBasic("403", w, r)

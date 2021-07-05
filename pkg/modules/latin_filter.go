@@ -40,9 +40,9 @@ type latinFilter struct {
 	unicodeWhitelist []UnicodeRange
 }
 
-func newLatinFilter(b mbase.Base) pkg.Module {
+func newLatinFilter(b *mbase.Base) pkg.Module {
 	m := &latinFilter{
-		Base: b,
+		Base: *b,
 
 		transparentList: datastructures.NewTransparentList(),
 	}
@@ -166,7 +166,6 @@ func (m *latinFilter) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				if !alreadySet {
 					lol.BadCharacters = append(lol.BadCharacters, r)
 				}
-
 			}
 			i++
 		}

@@ -11,7 +11,7 @@ import (
 // }
 
 var (
-	ErrBadCallback = errors.New("Bad callback passed through to Listen")
+	ErrBadCallback = errors.New("bad callback passed through to Listen")
 )
 
 type Listener struct {

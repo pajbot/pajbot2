@@ -24,9 +24,9 @@ type badCharacterFilter struct {
 	badCharacters []rune
 }
 
-func newBadCharacterFilter(b mbase.Base) pkg.Module {
+func newBadCharacterFilter(b *mbase.Base) pkg.Module {
 	return &badCharacterFilter{
-		Base: b,
+		Base: *b,
 
 		badCharacters: []rune{'\x01'},
 	}

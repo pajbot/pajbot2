@@ -185,7 +185,7 @@ func (h *Holder) Register(report Report) (*Report, bool, error) {
 
 func (h *Holder) Update(report Report) error {
 	if report.ID == 0 {
-		return errors.New("Missing report ID in Update")
+		return errors.New("missing report ID in Update")
 	}
 
 	const queryF = `UPDATE report SET time=$1, logs=$2 WHERE id=$3`
@@ -309,7 +309,7 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			Target:  report.Target.Name,
 			// Reason:  report.Reason,
 		})
-		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been permanently banned", report.Target.Name))
+		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been permanently banned :)", report.Target.Name))
 
 	case pkg.ReportActionTimeout:
 		var duration uint32
@@ -323,7 +323,7 @@ func (h *Holder) handleReport(source pkg.PubSubSource, action handleReportMessag
 			Duration: duration,
 			// Reason:   report.Reason,
 		})
-		bot.Whisper(reporterInst, fmt.Sprintf("Thanks to your report, user %s has been timed out for %d seconds", report.Target.Name, duration))
+		bot.Whisperf(reporterInst, "Thanks to your report, user %s has been timed out for %d seconds :)", report.Target.Name, duration)
 
 	case pkg.ReportActionDismiss:
 		bot.Whisper(reporterInst, fmt.Sprintf("Your report of %s has been dismissed with no further action taken :\\", report.Target.Name))
@@ -407,14 +407,14 @@ type reportReceivedParameters struct {
 	ChannelID string
 }
 
-func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, parameters json.RawMessage) (error, bool) {
+func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, parameters json.RawMessage) (bool, error) {
 	switch topic {
 	case "ReportReceived":
 		fmt.Println("aaaaaaaaaaaaaaaa")
 		user := source.AuthenticatedUser()
 		if user == nil {
 			fmt.Println("no user")
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Parameters:", string(parameters))
@@ -423,13 +423,13 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 		err := json.Unmarshal(parameters, &parsedParams)
 		if err != nil {
 			fmt.Println("Error parsing subscription parameters:", err)
-			return nil, false
+			return false, nil
 		}
 
 		channel := h.channelStore.TwitchChannel(parsedParams.ChannelID)
 		if channel == nil {
 			fmt.Println("Channel with id", parsedParams.ChannelID, "is not being moderated by us")
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Channel ID:", parsedParams.ChannelID)
@@ -440,7 +440,7 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 
 		if !hasPermission {
 			fmt.Println("user", user.GetName(), "does not have permission in channel", channel.GetName())
-			return nil, false
+			return false, nil
 		}
 
 		fmt.Println("Send reports to new connection")
@@ -452,11 +452,11 @@ func (h *Holder) ConnectionSubscribed(source pkg.PubSubSource, topic string, par
 			bytes, err := json.Marshal(report)
 			if err != nil {
 				fmt.Println(err)
-				return err, true
+				return true, err
 			}
 			source.Connection().MessageReceived(h, topic, bytes)
 		}
 	}
 
-	return nil, true
+	return true, nil
 }

@@ -27,7 +27,6 @@ type TwitchAuthConfig struct {
 	// Twitch OAuth2 ID and Secret (created at twitch.tv/settings/connections)
 	ClientID     string
 	ClientSecret string
-	RedirectURI  string
 }
 
 type TwitchWebhookConfig struct {

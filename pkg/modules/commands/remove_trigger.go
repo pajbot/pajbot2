@@ -8,10 +8,10 @@ import (
 )
 
 type cmdRemoveTrigger struct {
-	m *commandsModule
+	m *CommandsModule
 }
 
-func newCmdRemoveTrigger(m *commandsModule) *cmdRemoveTrigger {
+func newCmdRemoveTrigger(m *CommandsModule) *cmdRemoveTrigger {
 	return &cmdRemoveTrigger{
 		m: m,
 	}

@@ -35,9 +35,9 @@ type emoteFilter struct {
 	combinedLimits int
 }
 
-func newEmoteFilter(b mbase.Base) pkg.Module {
+func newEmoteFilter(b *mbase.Base) pkg.Module {
 	m := &emoteFilter{
-		Base: b,
+		Base: *b,
 
 		emoteLimits: make(map[string]limitConsequence),
 

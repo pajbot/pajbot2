@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -24,6 +25,10 @@ import (
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
+)
+
+const (
+	reloadPeriod = time.Minute * 30
 )
 
 func init() {
@@ -50,6 +55,18 @@ func init() {
 						DefaultValue: false,
 					})
 				},
+				"TimeoutMultiplier": func() pkg.ModuleParameter {
+					return newFloatParameter(parameterSpec{
+						Description:  "Timeout multiplier",
+						DefaultValue: float32(1.2),
+					})
+				},
+				"ApplyUserViolations": func() pkg.ModuleParameter {
+					return newBoolParameter(parameterSpec{
+						Description:  "Apply user violations",
+						DefaultValue: true,
+					})
+				},
 			},
 		}
 	})
@@ -60,22 +77,29 @@ var _ pkg.Module = &MessageHeightLimit{}
 type MessageHeightLimit struct {
 	mbase.Base
 
+	initMutex sync.RWMutex
+
 	HeightLimit float32
 
 	AsciiArtOnly bool
 
-	userViolationCount map[string]int
+	TimeoutMultiplier float32
+
+	ApplyUserViolations bool
+	userViolationCount  map[string]int
 }
 
-func NewMessageHeightLimit(b mbase.Base) pkg.Module {
+func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
 	m := &MessageHeightLimit{
-		Base: b,
+		Base: *b,
 
 		userViolationCount: make(map[string]int),
 	}
 
 	m.Parameters()["HeightLimit"].Link(&m.HeightLimit)
 	m.Parameters()["AsciiArtOnly"].Link(&m.AsciiArtOnly)
+	m.Parameters()["TimeoutMultiplier"].Link(&m.TimeoutMultiplier)
+	m.Parameters()["ApplyUserViolations"].Link(&m.ApplyUserViolations)
 
 	// FIXME
 	m.Initialize()
@@ -94,15 +118,10 @@ func initCLR() error {
 		return err
 	}
 
-	fmt.Println("Executable dir", executableDir)
-	fmt.Println("os args 0:", os.Args[0])
-
 	clrPath := utils.GetEnv("LIBCOREFOLDER", "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5")
 
 	// Path to our own executable
 	clr1 := C.CString(executableDir + "/bot")
-
-	fmt.Println(executableDir)
 
 	// Folder where libcoreclr.so is located
 	clr2 := C.CString(clrPath)
@@ -132,26 +151,28 @@ func initCLR() error {
 	return nil
 }
 
-func initChannel(channelName string) error {
+func initChannel(channelName, channelID string) error {
 	channel := C.CString(channelName)
+	cChannelID := C.CString(channelID)
 
-	fmt.Println("init channel", channelName)
-	res := C.InitChannel(channel)
-	fmt.Println("done")
+	defer func() {
+		C.free(unsafe.Pointer(channel))
+		C.free(unsafe.Pointer(cChannelID))
+	}()
+
+	log.Printf("Initialize channel %s (%s)", channelName, channelID)
+	res := C.InitChannel(channel, cChannelID, 5000)
+	log.Printf("Channel %s initialized successfully", channelName)
 
 	if res != 1 {
 		return errors.New("Failed to init Channel " + channelName)
 	}
-
-	C.free(unsafe.Pointer(channel))
 
 	return nil
 }
 
 func initMessageHeightLimitLibrary() error {
 	charMap := C.CString(charMapPath)
-
-	fmt.Println(charMapPath)
 
 	res := C.InitCharMap(charMap)
 
@@ -166,31 +187,48 @@ func initMessageHeightLimitLibrary() error {
 	return nil
 }
 
+func (m *MessageHeightLimit) reloader() {
+	ticker := time.NewTicker(reloadPeriod)
+
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Automatically reloading MessageHeightLimit for", m.BotChannel().Channel().GetName())
+			m.reload()
+
+		case <-m.Context().Done():
+			return
+		}
+	}
+}
+
 func (m *MessageHeightLimit) Initialize() {
+	go m.reloader()
+
 	var err error
 	fmt.Println("Initializing message height limit")
 
 	if !clrInitialized {
-		fmt.Println("init clr..")
+		fmt.Println("Initialize CLR...")
 		err = initCLR()
 		if err != nil {
 			return
 		}
-		fmt.Println("done")
 
 		err = initMessageHeightLimitLibrary()
-		fmt.Println("done init height limit library")
+		fmt.Println("Message height limit library initialized.")
 	}
 
-	fmt.Println("init channel")
-	if err := initChannel(m.BotChannel().ChannelName()); err != nil {
+	if err := m.reload(); err != nil {
 		log.Println("Error initializing channel:", err)
 		return
 	}
-	fmt.Println("done")
 }
 
 func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, message pkg.Message) float32 {
+	m.initMutex.RLock()
+	defer m.initMutex.RUnlock()
+
 	channelString := C.CString(channel.GetName())
 	input := C.CString(message.GetText())
 	loginName := C.CString(user.GetName())
@@ -242,6 +280,18 @@ func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, messa
 	return float32(height)
 }
 
+func (m *MessageHeightLimit) reload() error {
+	m.initMutex.Lock()
+	defer m.initMutex.Unlock()
+
+	err := initChannel(m.BotChannel().Channel().GetName(), m.BotChannel().Channel().GetID())
+	if err != nil {
+		return fmt.Errorf("error reloading height module: %w", err)
+	}
+
+	return nil
+}
+
 func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	if !messageHeightLimitLibraryInitialized {
 		return nil
@@ -250,13 +300,18 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	user := event.User
 	message := event.Message
 
-	if user.HasPermission(m.BotChannel().Channel(), pkg.PermissionImmuneToMessageLimits) {
-		return nil
-	}
-
 	if user.IsModerator() || user.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration) {
 		if strings.HasPrefix(message.GetText(), "!") {
 			parts := strings.Split(message.GetText(), " ")
+			if parts[0] == "!heightreload" {
+				start := time.Now()
+
+				if err := m.reload(); err != nil {
+					return twitchactions.Mentionf(user, "%s", err.Error())
+				}
+
+				return twitchactions.Mentionf(user, "reloaded height module (took %s)", time.Now().Sub(start))
+			}
 			if parts[0] == "!heightlimit" {
 				if len(parts) >= 2 {
 					if err := m.SetParameter("HeightLimit", parts[1]); err != nil {
@@ -268,6 +323,32 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				}
 
 				return twitchactions.Mentionf(user, "Height limit is %.0f", m.HeightLimit)
+			}
+
+			if parts[0] == "!heighttimeoutmultiplier" {
+				if len(parts) >= 2 {
+					if err := m.SetParameter("TimeoutMultiplier", parts[1]); err != nil {
+						return twitchactions.Mention(user, err.Error())
+					}
+
+					m.Save()
+					return twitchactions.Mentionf(user, "Height timeout multiplier set to %g", m.TimeoutMultiplier)
+				}
+
+				return twitchactions.Mentionf(user, "Height timeout multiplier is %g", m.TimeoutMultiplier)
+			}
+
+			if parts[0] == "!heightapplyuserviolations" {
+				if len(parts) >= 2 {
+					if err := m.SetParameter("ApplyUserViolations", parts[1]); err != nil {
+						return twitchactions.Mention(user, err.Error())
+					}
+
+					m.Save()
+					return twitchactions.Mentionf(user, "Height limit module set to apply user violations: %v", m.ApplyUserViolations)
+				}
+
+				return twitchactions.Mentionf(user, "Height limit module is set to apply user violations: %v", m.ApplyUserViolations)
 			}
 
 			if parts[0] == "!heighttest" {
@@ -288,6 +369,14 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 				return twitchactions.Mentionf(user, "Height limit module is set to act on ascii art only: %v", m.AsciiArtOnly)
 			}
 		}
+	}
+
+	if user.IsModerator() {
+		return nil
+	}
+
+	if user.HasPermission(m.BotChannel().Channel(), pkg.PermissionImmuneToMessageLimits) {
+		return nil
 	}
 
 	const minTimeoutLength = 10
@@ -317,8 +406,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	var ratio float32
 	ratio = float32(doesntFitIn7Bit) / float32(messageLength)
 	var reason string
-	userViolations := 0
-	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), 1.2), maxTimeoutLength))
+	timeoutDuration := int(math.Min(math.Pow(float64(height-m.HeightLimit), float64(m.TimeoutMultiplier)), maxTimeoutLength))
 	if ratio > 0.5 {
 		timeoutDuration = timeoutDuration + 90
 	} else {
@@ -331,11 +419,15 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	timeoutDuration = utils.MaxInt(minTimeoutLength, timeoutDuration)
 
 	const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
+	userViolations := 1
 
 	if ratio > 0.5 && height > 140.0 {
-		m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
-		userViolations = m.userViolationCount[user.GetID()]
-		timeoutDuration = timeoutDuration * userViolations
+		if m.ApplyUserViolations {
+			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
+			userViolations = m.userViolationCount[user.GetID()]
+			timeoutDuration = timeoutDuration * userViolations
+		}
+
 		timeoutDuration = utils.MinInt(3600*24*7, timeoutDuration)
 		actions.Whisper(user, fmt.Sprintf("Your message is too long and contains too many non-ascii characters. Your next timeout will be multiplied by %d", userViolations))
 	}

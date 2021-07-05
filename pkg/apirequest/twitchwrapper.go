@@ -2,10 +2,9 @@ package apirequest
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/dankeroni/gotwitch"
+	"github.com/dankeroni/gotwitch/v2"
 	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
@@ -40,9 +39,13 @@ func initWrapper(cfg *config.TwitchWebhookConfig) error {
 	// TODO: follow paginations
 
 	TwitchWrapper.WebhookSubscriptions = subscriptions.Data
-	fmt.Println("Subscriptions:", TwitchWrapper.WebhookSubscriptions)
+	// fmt.Println("Subscriptions:", TwitchWrapper.WebhookSubscriptions)
 
 	return nil
+}
+
+func (w *TwitchWrapperX) API() *gotwitch.TwitchAPI {
+	return w.api
 }
 
 func (w *TwitchWrapperX) WebhookSubscribe(topic gotwitch.WebhookTopic, userID string) error {
@@ -52,7 +55,6 @@ func (w *TwitchWrapperX) WebhookSubscribe(topic gotwitch.WebhookTopic, userID st
 	for _, subscription := range w.WebhookSubscriptions {
 		if subscription.Topic == url &&
 			subscription.Callback == callbackURL {
-
 			if subscription.ExpiresAt.Add(-TimeToRefresh).Before(time.Now()) {
 				// We are subscribed already, but it's time to refresh our subscription
 				break
@@ -65,53 +67,37 @@ func (w *TwitchWrapperX) WebhookSubscribe(topic gotwitch.WebhookTopic, userID st
 
 	leaseTime := time.Duration(w.cfg.LeaseTimeSeconds) * time.Second
 	// Subscribe!
-	data, response, err := w.api.WebhookSubscribeSimple(callbackURL, topic, userID, leaseTime, w.cfg.Secret)
+	// TODO: RATE LIMITING XD
+	data, err := w.api.Helix().WebhookSubscribe(callbackURL, topic, userID, leaseTime, w.cfg.Secret)
 	if err != nil {
 		return err
 	}
-	if response != nil {
-		w.RateLimit.Update(response)
-	}
 
-	fmt.Println("Response after subscribing:", string(*data))
+	fmt.Println("Response after subscribing:", string(data))
 
 	return nil
 }
 
 func (w *TwitchWrapperX) GetUsersByLogin(in []string) (data []gotwitch.User, err error) {
-	var response *http.Response
-	data, response, err = w.api.GetUsersByLoginSimple(in)
-	if response != nil {
-		w.RateLimit.Update(response)
-	}
-	return
+	// TODO: RATE LIMITING XD
+	return w.api.Helix().GetUsers(gotwitch.NewGetUsersParameters().SetUserLogins(in))
 }
 
 func (w *TwitchWrapperX) GetUsersByID(in []string) (data []gotwitch.User, err error) {
-	var response *http.Response
-	data, response, err = w.api.GetUsersSimple(in)
-	if response != nil {
-		w.RateLimit.Update(response)
-	}
-	return
+	// TODO: RATE LIMITING XD
+	return w.api.Helix().GetUsers(gotwitch.NewGetUsersParameters().SetUserIDs(in))
 }
 
-func (w *TwitchWrapperX) GetStreams(userIDs, userLogins []string) (data []gotwitch.Stream, err error) {
-	var response *http.Response
-	data, response, err = w.api.GetStreamsSimple(userIDs, userLogins)
-	if response != nil {
-		w.RateLimit.Update(response)
-		fmt.Println("Executed twitch request:", w.RateLimit.String())
-	}
-	return
+func (w *TwitchWrapperX) GetStreams(userIDs, userLogins []string) (data []gotwitch.HelixStream, err error) {
+	// TODO: RATE LIMITING XD
+	return w.api.Helix().
+		GetStreams(gotwitch.NewGetStreamsParameters().
+			SetUserIDs(userIDs).
+			SetUserLogins(userLogins))
 }
 
-func (w *TwitchWrapperX) GetWebhookSubscriptions(after, first string) (data *gotwitch.WebhookSubscriptionsResponse, err error) {
-	var response *http.Response
-	data, response, err = w.api.GetWebhookSubscriptionsSimple(after, first)
-	if response != nil {
-		w.RateLimit.Update(response)
-		fmt.Println("Executed twitch request:", w.RateLimit.String())
-	}
-	return
+func (w *TwitchWrapperX) GetWebhookSubscriptions(after, first string) (data gotwitch.WebhookSubscriptionsResponse, err error) {
+	// TODO: RATE LIMITING XD
+	return w.api.Helix().
+		GetWebhookSubscriptions(after, first)
 }

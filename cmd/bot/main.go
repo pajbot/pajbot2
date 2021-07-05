@@ -10,7 +10,12 @@ import (
 	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
-var buildTime string
+var (
+	buildTime    string
+	buildRelease = "dev"
+	buildHash    string
+	buildBranch  string
+)
 
 var version = flag.Bool("version", false, "Show pajbot2 version")
 var configPath = flag.String("config", "./config.json", "")
@@ -30,6 +35,9 @@ var configPath = flag.String("config", "./config.json", "")
 
 func main() {
 	common.BuildTime = buildTime
+	common.BuildRelease = buildRelease
+	common.BuildHash = buildHash
+	common.BuildBranch = buildBranch
 
 	flag.Usage = func() {
 		helpCmd()
@@ -38,7 +46,7 @@ func main() {
 	command := flag.Arg(0)
 
 	if *version {
-		fmt.Println(Version)
+		fmt.Println(common.Version())
 		os.Exit(0)
 	}
 
@@ -62,9 +70,9 @@ func main() {
 	case "help":
 		helpCmd()
 
-	default:
-		fallthrough
 	case "run":
+		fallthrough
+	default:
 		runCmd()
 	}
 }

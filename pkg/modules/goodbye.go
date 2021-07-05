@@ -23,9 +23,9 @@ type goodbye struct {
 	mbase.Base
 }
 
-func newGoodbye(b mbase.Base) pkg.Module {
+func newGoodbye(b *mbase.Base) pkg.Module {
 	m := &goodbye{
-		Base: b,
+		Base: *b,
 	}
 
 	err := m.Listen("on_quit", func() error {

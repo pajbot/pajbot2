@@ -15,7 +15,7 @@ type Payload struct {
 func (p *Payload) ToJSON() (ret []byte) {
 	ret, err := json.Marshal(p)
 	if err != nil {
-		log.Println("Error marshalling payload:", err)
+		log.Println("Error marshaling payload:", err)
 	}
 	return
 }
