@@ -12,4 +12,6 @@ import (
 	_ "github.com/pajbot/pajbot2/pkg/modules/system"
 
 	_ "github.com/pajbot/pajbot2/pkg/modules/giveaway"
+
+	_ "github.com/pajbot/pajbot2/pkg/modules/link_filter"
 )
