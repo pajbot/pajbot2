@@ -1,4 +1,4 @@
-package modules
+package giveaway
 
 import (
 	"github.com/pajbot/pajbot2/pkg"

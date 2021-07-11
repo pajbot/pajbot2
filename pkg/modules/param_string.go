@@ -16,7 +16,7 @@ func stringPtr(v string) *string {
 	return &v
 }
 
-func newStringParameter(spec parameterSpec) *stringParameter {
+func NewStringParameter(spec ParameterSpec) *stringParameter {
 	p := &stringParameter{}
 
 	if spec.DefaultValue == nil {

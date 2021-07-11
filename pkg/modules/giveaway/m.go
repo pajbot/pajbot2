@@ -1,8 +1,9 @@
-package modules
+package giveaway
 
 import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
@@ -15,25 +16,23 @@ const (
 )
 
 func init() {
-	Register("giveaway", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "giveaway",
-			name:  "Giveaway",
-			maker: newGiveaway,
+	modules.Register("giveaway", func() pkg.ModuleSpec {
+		spec := modules.NewSpec("giveaway", "Giveaway", false, newGiveaway)
 
-			parameters: map[string]pkg.ModuleParameterSpec{
-				"EmoteID": func() pkg.ModuleParameter {
-					return newStringParameter(parameterSpec{
-						Description: "Emote ID that needs to exist in a message for a user to join the giveaway",
-					})
-				},
-				"EmoteName": func() pkg.ModuleParameter {
-					return newStringParameter(parameterSpec{
-						Description: "Name of the emote that needs to exist in a message for a user to join the giveaway",
-					})
-				},
+		spec.SetParameters(map[string]pkg.ModuleParameterSpec{
+			"EmoteID": func() pkg.ModuleParameter {
+				return modules.NewStringParameter(modules.ParameterSpec{
+					Description: "Emote ID that needs to exist in a message for a user to join the giveaway",
+				})
 			},
-		}
+			"EmoteName": func() pkg.ModuleParameter {
+				return modules.NewStringParameter(modules.ParameterSpec{
+					Description: "Name of the emote that needs to exist in a message for a user to join the giveaway",
+				})
+			},
+		})
+
+		return spec
 	})
 }
 

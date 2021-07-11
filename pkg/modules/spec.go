@@ -72,4 +72,8 @@ func (s *Spec) Parameters() map[string]pkg.ModuleParameterSpec {
 	return s.parameters
 }
 
+func (s *Spec) SetParameters(parameters map[string]pkg.ModuleParameterSpec) {
+	s.parameters = parameters
+}
+
 var _ pkg.ModuleSpec = &Spec{}

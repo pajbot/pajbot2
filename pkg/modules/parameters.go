@@ -56,7 +56,7 @@ func (p *floatParameter) HasValue() bool {
 	return p.value != nil
 }
 
-type parameterSpec struct {
+type ParameterSpec struct {
 	Description  string
 	DefaultValue interface{}
 }
@@ -65,7 +65,7 @@ func floatPtr(v float32) *float32 {
 	return &v
 }
 
-func newFloatParameter(spec parameterSpec) *floatParameter {
+func NewFloatParameter(spec ParameterSpec) *floatParameter {
 	p := &floatParameter{}
 	if spec.DefaultValue == nil {
 		p.defaultValue = floatPtr(0.0)
@@ -209,7 +209,7 @@ type boolParameter struct {
 	value        *bool
 }
 
-func newBoolParameter(spec parameterSpec) *boolParameter {
+func NewBoolParameter(spec ParameterSpec) *boolParameter {
 	p := &boolParameter{}
 
 	if spec.DefaultValue == nil {

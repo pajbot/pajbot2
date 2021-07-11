@@ -19,13 +19,13 @@ func init() {
 
 			parameters: map[string]pkg.ModuleParameterSpec{
 				"A": func() pkg.ModuleParameter {
-					return newFloatParameter(parameterSpec{
+					return NewFloatParameter(ParameterSpec{
 						Description:  "A kjdfghk jdfhgkj dfg",
 						DefaultValue: float32(3.0),
 					})
 				},
 				"B": func() pkg.ModuleParameter {
-					return newFloatParameter(parameterSpec{
+					return NewFloatParameter(ParameterSpec{
 						Description:  "Bdfkgjh dkfjgh sdfgkkkk",
 						DefaultValue: float32(6.0),
 					})
