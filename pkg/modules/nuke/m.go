@@ -1,4 +1,4 @@
-package modules
+package nuke
 
 import (
 	"fmt"
@@ -9,19 +9,14 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
-	Register("nuke", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "nuke",
-			name:  "Nuke",
-			maker: newNuke,
-
-			enabledByDefault: true,
-		}
+	modules.Register("nuke", func() pkg.ModuleSpec {
+		return modules.NewSpec("nuke", "Nuke", true, newNuke)
 	})
 }
 
