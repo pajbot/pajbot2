@@ -1,19 +1,14 @@
-package modules
+package twitter
 
 import (
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
-	Register("twitter", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "twitter",
-			name:  "Twitter",
-			maker: newTwitter,
-
-			enabledByDefault: false,
-		}
+	modules.Register("twitter", func() pkg.ModuleSpec {
+		return modules.NewSpec("twitter", "Twitter", false, newTwitter)
 	})
 }
 
