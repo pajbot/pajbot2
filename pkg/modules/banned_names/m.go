@@ -1,15 +1,17 @@
-package modules
+package banned_names
 
 import (
 	"regexp"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
-	Register("banned_names", func() pkg.ModuleSpec {
+	modules.Register("banned_names", func() pkg.ModuleSpec {
+		// TODO: Make configurable
 		badUsernames := []*regexp.Regexp{
 			regexp.MustCompile(`tos_is_trash\d+`),
 			regexp.MustCompile(`trash_is_the_tos\d+`),
@@ -22,15 +24,9 @@ func init() {
 			regexp.MustCompile(`^h[il1]erot[il1]tan.+`),
 		}
 
-		return &Spec{
-			id:   "banned_names",
-			name: "Banned names",
-			maker: func(b *mbase.Base) pkg.Module {
-				return newBannedNames(b, badUsernames)
-			},
-
-			enabledByDefault: false,
-		}
+		return modules.NewSpec("banned_names", "Banned names", false, func(b *mbase.Base) pkg.Module {
+			return newBannedNames(b, badUsernames)
+		})
 	})
 }
 

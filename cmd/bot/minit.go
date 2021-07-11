@@ -20,4 +20,6 @@ import (
 	_ "github.com/pajbot/pajbot2/pkg/modules/twitter"
 
 	_ "github.com/pajbot/pajbot2/pkg/modules/welcome"
+
+	_ "github.com/pajbot/pajbot2/pkg/modules/banned_names"
 )
