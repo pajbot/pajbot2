@@ -1,11 +1,13 @@
-package modules
+package link_filter
 
 import (
 	"testing"
+
+	"github.com/pajbot/pajbot2/pkg/modules"
 )
 
 func TestLinkFilterUnmatches(t *testing.T) {
-	spec, ok := GetModuleSpec("link_filter")
+	spec, ok := modules.GetModuleSpec("link_filter")
 	if !ok {
 		t.Fatal("AAAAAA")
 	}
@@ -26,7 +28,7 @@ func TestLinkFilterUnmatches(t *testing.T) {
 }
 
 func TestLinkFilterMatches(t *testing.T) {
-	spec, ok := GetModuleSpec("link_filter")
+	spec, ok := modules.GetModuleSpec("link_filter")
 	if !ok {
 		t.Fatal("AAAAAA")
 	}

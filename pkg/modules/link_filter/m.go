@@ -1,17 +1,18 @@
-package modules
+package link_filter
 
 import (
 	"regexp"
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	xurls "mvdan.cc/xurls/v2"
 )
 
 func init() {
-	Register("link_filter", func() pkg.ModuleSpec {
+	modules.Register("link_filter", func() pkg.ModuleSpec {
 		const regexpModifier = `(\b|$)`
 		relaxedRegexpStr := xurls.Relaxed().String()
 		strictRegexpStr := xurls.Strict().String()
@@ -21,13 +22,9 @@ func init() {
 		strictRegexp := regexp.MustCompile(strictRegexpStr + regexpModifier)
 		strictRegexp.Longest()
 
-		return &Spec{
-			id:   "link_filter",
-			name: "Link filter",
-			maker: func(b *mbase.Base) pkg.Module {
-				return newLinkFilter(b, relaxedRegexp, strictRegexp)
-			},
-		}
+		return modules.NewSpec("link_filter", "Link filter", false, func(b *mbase.Base) pkg.Module {
+			return newLinkFilter(b, relaxedRegexp, strictRegexp)
+		})
 	})
 }
 
