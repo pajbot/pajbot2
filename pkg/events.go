@@ -9,5 +9,11 @@ type MessageEvent struct {
 
 	User    User
 	Message Message
-	Channel Channel
+	Channel ChannelWithStream
+}
+
+type EventSubNotificationEvent struct {
+	BaseEvent
+
+	Notification TwitchEventSubNotification
 }

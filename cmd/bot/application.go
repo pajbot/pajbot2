@@ -156,6 +156,10 @@ func (a *Application) LoadConfig(path string) error {
 		return err
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return err
+	}
+
 	a.config = cfg
 
 	return nil

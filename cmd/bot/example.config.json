@@ -14,7 +14,7 @@
     "Auth": {
         "Twitch": {
             "Webhook": {
-                "HostPrefix": "https://paj.pajbot.com/api/webhook"
+                "Secret": "topsecretstringbetween10and100characters"
             },
             "Bot": {
                 "ClientID": "123",

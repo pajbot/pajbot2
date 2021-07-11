@@ -2,6 +2,7 @@
 
 ## Unversioned
 
+- The `Auth->Twitch->Webhook->Secret` config value is now REQUIRED. It's your own private secret you need to generate yourself, and it must be at least 10 characters and at most 100 characters long.
 - The nuke module will now recognize users with global permissions. (#268)
 - Message height limit no longer applies to Twitch Moderators (#89, #228)
 - The version of MessageHeightTwitch was updated, which requires version 3.0 of .NET Core.

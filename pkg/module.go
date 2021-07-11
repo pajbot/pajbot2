@@ -30,6 +30,7 @@ type Module interface {
 
 	OnWhisper(event MessageEvent) Actions
 	OnMessage(event MessageEvent) Actions
+	OnEventSubNotification(event EventSubNotificationEvent) Actions
 }
 
 type ModuleType uint

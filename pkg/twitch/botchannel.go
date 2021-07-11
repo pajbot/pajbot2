@@ -1,7 +1,9 @@
 package twitch
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nicklaw5/helix"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/eventemitter"
 	"github.com/pajbot/pajbot2/pkg/modules"
@@ -75,6 +78,14 @@ func (c *BotChannel) DatabaseID() int64 {
 
 func (c *BotChannel) Events() *eventemitter.EventEmitter {
 	return c.eventEmitter
+}
+
+func (c *BotChannel) GetName() string {
+	return c.channel.Name()
+}
+
+func (c *BotChannel) GetID() string {
+	return c.channel.ID()
 }
 
 func (c *BotChannel) ChannelID() string {
@@ -246,6 +257,10 @@ func (c *BotChannel) Initialize(b *Bot) error {
 
 	c.eventEmitter.Emit("on_join", nil)
 
+	c.stream = b.streamStore.GetStream(&User{
+		id: c.channel.id,
+	})
+
 	return nil
 }
 
@@ -381,11 +396,47 @@ func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 		},
 		User:    user,
 		Message: message,
-		Channel: c.Channel(),
+		Channel: c,
 	}
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
 		return module.OnMessage(event)
+	}, true)
+
+	return c.resolveActions(actions)
+}
+
+func (c *BotChannel) HandleEventSubNotification(notification pkg.TwitchEventSubNotification) error {
+	// We might want to handle some events here, so read the subscription type and handle before forwarding to modules
+
+	switch notification.Subscription.Type {
+	case helix.EventSubTypeStreamOnline:
+		var onlineEvent helix.EventSubStreamOnlineEvent
+		err := json.NewDecoder(bytes.NewReader(notification.Event)).Decode(&onlineEvent)
+		if err != nil {
+			return nil
+		}
+
+		// Fake the helix stream as much as we can
+		s := &helix.Stream{
+			ID:        onlineEvent.ID,
+			Type:      onlineEvent.Type,
+			StartedAt: onlineEvent.StartedAt.Time,
+		}
+		c.stream.Update(s)
+	case helix.EventSubTypeStreamOffline:
+		c.stream.Update(nil)
+	}
+
+	event := pkg.EventSubNotificationEvent{
+		BaseEvent: pkg.BaseEvent{
+			UserStore: c.bot.GetUserStore(),
+		},
+		Notification: notification,
+	}
+
+	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
+		return module.OnEventSubNotification(event)
 	}, true)
 
 	return c.resolveActions(actions)
@@ -398,7 +449,7 @@ func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error 
 		},
 		User:    user,
 		Message: message,
-		Channel: c.Channel(),
+		Channel: c,
 	}
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {

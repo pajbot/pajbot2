@@ -118,6 +118,10 @@ func (b Base) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return nil
 }
 
+func (b Base) OnEventSubNotification(event pkg.EventSubNotificationEvent) pkg.Actions {
+	return nil
+}
+
 func (b Base) ID() string {
 	return b.spec.ID()
 }

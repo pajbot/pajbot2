@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/dankeroni/gotwitch/v2"
 	"github.com/gorilla/mux"
+	"github.com/nicklaw5/helix"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 	"github.com/pajbot/utils"
@@ -61,7 +61,7 @@ func makeState(redirectURL string) (string, error) {
 }
 
 type authorizedCallback func(w http.ResponseWriter, r *http.Request,
-	self gotwitch.ValidateResponse, oauth2Token *oauth2.Token,
+	self *helix.ValidateTokenResponse, oauth2Token *oauth2.Token,
 	stateData *stateData)
 
 func initializeOauthRoutes(ctx context.Context, m *mux.Router, config *oauth2.Config, name string, onAuthorized authorizedCallback) {
@@ -90,9 +90,13 @@ func initializeOauthRoutes(ctx context.Context, m *mux.Router, config *oauth2.Co
 				return
 			}
 
-			validateResponse, err := apirequest.Twitch.ID().Authenticate(oauth2Token.AccessToken).Validate()
+			isValid, validateResponse, err := apirequest.TwitchWrapper.HelixUser().ValidateToken(oauth2Token.AccessToken)
 			if err != nil {
 				http.Error(w, "Error validating token: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if !isValid {
+				http.Error(w, "Error validating token", http.StatusInternalServerError)
 				return
 			}
 

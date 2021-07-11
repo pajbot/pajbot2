@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dankeroni/gotwitch/v2"
+	"github.com/nicklaw5/helix"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/twitch"
@@ -62,10 +62,8 @@ func (s *StreamStore) PollStreams() {
 		go func(batch []string) {
 			for _, userID := range batch {
 				go func(userID string) {
-					err := apirequest.TwitchWrapper.WebhookSubscribe(gotwitch.WebhookTopicStreams, userID)
-					if err != nil {
-						fmt.Println("Error subscribing to webhook for user", userID, err)
-					}
+					apirequest.TwitchWrapper.EventSubSubscribe(helix.EventSubTypeStreamOnline, userID)
+					apirequest.TwitchWrapper.EventSubSubscribe(helix.EventSubTypeStreamOffline, userID)
 				}(userID)
 			}
 		}(batch)
@@ -109,14 +107,4 @@ func (s *StreamStore) GetStream(account pkg.Account) pkg.Stream {
 	s.streams[account.ID()] = stream
 
 	return stream
-}
-
-func (s *StreamStore) JoinStream(account pkg.Account) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	if _, ok := s.streams[account.ID()]; !ok {
-		// Insert stream
-		s.streams[account.ID()] = twitch.NewTwitchStream(account)
-	}
 }
