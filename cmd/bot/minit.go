@@ -18,4 +18,6 @@ import (
 	_ "github.com/pajbot/pajbot2/pkg/modules/nuke"
 
 	_ "github.com/pajbot/pajbot2/pkg/modules/twitter"
+
+	_ "github.com/pajbot/pajbot2/pkg/modules/welcome"
 )

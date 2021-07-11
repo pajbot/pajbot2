@@ -1,21 +1,16 @@
-package modules
+package welcome
 
 import (
 	"log"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 )
 
 func init() {
-	Register("welcome", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "welcome",
-			name:  "Welcome",
-			maker: newWelcome,
-
-			enabledByDefault: false,
-		}
+	modules.Register("welcome", func() pkg.ModuleSpec {
+		return modules.NewSpec("welcome", "Welcome", false, newWelcome)
 	})
 }
 
