@@ -1,11 +1,11 @@
 // +build csharp
 
-package modules
+package message_height_limit
 
 // To enable the message height limit module, you need .NET Core on your server
 
-// #cgo LDFLAGS: -L../../3rdParty/MessageHeightTwitch/c-interop -lcoreruncommon -ldl -lstdc++
-// #include "../../3rdParty/MessageHeightTwitch/c-interop/exports.h"
+// #cgo LDFLAGS: -L../../../3rdParty/MessageHeightTwitch/c-interop -lcoreruncommon -ldl -lstdc++
+// #include "../../../3rdParty/MessageHeightTwitch/c-interop/exports.h"
 // #include <stdlib.h>
 import "C"
 
@@ -22,6 +22,7 @@ import (
 	"unsafe"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 	"github.com/pajbot/utils"
@@ -32,43 +33,37 @@ const (
 )
 
 func init() {
-	Register("message_height_limit", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "message_height_limit",
-			name:  "Message height limit",
-			maker: NewMessageHeightLimit,
+	modules.Register("message_height_limit", func() pkg.ModuleSpec {
+		spec := modules.NewSpec("message_height_limit", "Message height limit", false, NewMessageHeightLimit)
 
-			moduleType: pkg.ModuleTypeFilter,
-
-			enabledByDefault: false,
-
-			parameters: map[string]pkg.ModuleParameterSpec{
-				"HeightLimit": func() pkg.ModuleParameter {
-					return newFloatParameter(parameterSpec{
-						Description:  "Max height of a message before it's timed out",
-						DefaultValue: float32(95.0),
-					})
-				},
-				"AsciiArtOnly": func() pkg.ModuleParameter {
-					return newBoolParameter(parameterSpec{
-						Description:  "Only attempt to catch ascii art",
-						DefaultValue: false,
-					})
-				},
-				"TimeoutMultiplier": func() pkg.ModuleParameter {
-					return newFloatParameter(parameterSpec{
-						Description:  "Timeout multiplier",
-						DefaultValue: float32(1.2),
-					})
-				},
-				"ApplyUserViolations": func() pkg.ModuleParameter {
-					return newBoolParameter(parameterSpec{
-						Description:  "Apply user violations",
-						DefaultValue: true,
-					})
-				},
+		spec.SetParameters(map[string]pkg.ModuleParameterSpec{
+			"HeightLimit": func() pkg.ModuleParameter {
+				return modules.NewFloatParameter(modules.ParameterSpec{
+					Description:  "Max height of a message before it's timed out",
+					DefaultValue: float32(95.0),
+				})
 			},
-		}
+			"AsciiArtOnly": func() pkg.ModuleParameter {
+				return modules.NewBoolParameter(modules.ParameterSpec{
+					Description:  "Only attempt to catch ascii art",
+					DefaultValue: false,
+				})
+			},
+			"TimeoutMultiplier": func() pkg.ModuleParameter {
+				return modules.NewFloatParameter(modules.ParameterSpec{
+					Description:  "Timeout multiplier",
+					DefaultValue: float32(1.2),
+				})
+			},
+			"ApplyUserViolations": func() pkg.ModuleParameter {
+				return modules.NewBoolParameter(modules.ParameterSpec{
+					Description:  "Apply user violations",
+					DefaultValue: true,
+				})
+			},
+		})
+
+		return spec
 	})
 }
 
