@@ -3,6 +3,7 @@ package apirequest
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/nicklaw5/helix"
@@ -15,7 +16,9 @@ const TimeToRefresh = time.Hour * 2
 type TwitchWrapperX struct {
 	helix    *helix.Client
 	helixBot *helix.Client
-	cfg      *config.TwitchWebhookConfig
+
+	webhookCallbackURL string
+	webhookSecret      string
 
 	RateLimit TwitchRateLimit
 }
@@ -67,13 +70,13 @@ func newHelixAPIClient(clientID, clientSecret string) (*helix.Client, chan struc
 	return apiClient, waitForFirstAppAccessToken, nil
 }
 
-func initWrapper(cfg *config.AuthTwitchConfig) error {
-	helixUser, userChan, err := newHelixAPIClient(cfg.User.ClientID, cfg.User.ClientSecret)
+func initWrapper(cfg *config.Config) error {
+	helixUser, userChan, err := newHelixAPIClient(cfg.Auth.Twitch.User.ClientID, cfg.Auth.Twitch.User.ClientSecret)
 	if err != nil {
 		return err
 	}
 
-	helixBot, botChan, err := newHelixAPIClient(cfg.Bot.ClientID, cfg.Bot.ClientSecret)
+	helixBot, botChan, err := newHelixAPIClient(cfg.Auth.Twitch.Bot.ClientID, cfg.Auth.Twitch.Bot.ClientSecret)
 	if err != nil {
 		return err
 	}
@@ -82,10 +85,23 @@ func initWrapper(cfg *config.AuthTwitchConfig) error {
 	<-userChan
 	<-botChan
 
+	protocol := "https"
+	if !cfg.Web.Secure {
+		protocol = "http"
+	}
+
+	u := url.URL{
+		Scheme: protocol,
+		Host:   cfg.Web.Domain,
+		Path:   "/api/webhook/eventsub",
+	}
+
 	TwitchWrapper = &TwitchWrapperX{
-		cfg:      &cfg.Webhook,
 		helix:    helixUser,
 		helixBot: helixBot,
+
+		webhookCallbackURL: u.String(),
+		webhookSecret:      cfg.Auth.Twitch.Webhook.Secret,
 
 		RateLimit: NewTwitchRateLimit(),
 	}
@@ -164,8 +180,8 @@ func (w *TwitchWrapperX) EventSubSubscribe(eventType, channelID string) {
 		},
 		Transport: helix.EventSubTransport{
 			Method:   "webhook",
-			Callback: w.cfg.HostPrefix + "/api/webhook/callback",
-			Secret:   w.cfg.Secret,
+			Callback: w.webhookCallbackURL,
+			Secret:   w.webhookSecret,
 		},
 	})
 	if err != nil {

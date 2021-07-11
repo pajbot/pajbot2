@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 )
 
 type AdminConfig struct {
@@ -31,14 +32,20 @@ type TwitchAuthConfig struct {
 }
 
 type TwitchWebhookConfig struct {
-	HostPrefix       string
 	Secret           string
 	LeaseTimeSeconds int
+
+	// HostPrefix is deprecated since 2021-07-11
+	HostPrefix *string
 }
 
 func (c *TwitchWebhookConfig) Validate() error {
 	if len(c.Secret) < 10 || len(c.Secret) > 100 {
 		return errors.New("twitch WebHook secret must be at least 10 characters and at most 100 characters")
+	}
+
+	if c.HostPrefix != nil {
+		log.Println("Twitch.Webhook.HostPrefix is deprecated - we now rely on Web.Domain + Web.Secure to figure out the webhook callback URL.")
 	}
 
 	return nil

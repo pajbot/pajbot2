@@ -5,7 +5,7 @@ import (
 )
 
 func InitTwitch(cfg *config.Config) (err error) {
-	err = initWrapper(&cfg.Auth.Twitch)
+	err = initWrapper(cfg)
 
 	return
 }
