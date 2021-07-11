@@ -22,4 +22,6 @@ import (
 	_ "github.com/pajbot/pajbot2/pkg/modules/welcome"
 
 	_ "github.com/pajbot/pajbot2/pkg/modules/banned_names"
+
+	_ "github.com/pajbot/pajbot2/pkg/modules/bad_character_filter"
 )

@@ -1,20 +1,17 @@
-package modules
+package bad_character_filter
 
 import (
 	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
 func init() {
-	Register("bad_character_filter", func() pkg.ModuleSpec {
-		return &Spec{
-			id:    "bad_character_filter",
-			name:  "Bad character filter",
-			maker: newBadCharacterFilter,
-		}
+	modules.Register("bad_character_filter", func() pkg.ModuleSpec {
+		return modules.NewSpec("bad_character_filter", "Bad character filter", false, newBadCharacterFilter)
 	})
 }
 
