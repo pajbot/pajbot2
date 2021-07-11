@@ -28,7 +28,7 @@ func TestLinkFilterUnmatches(t *testing.T) {
 }
 
 func TestLinkFilterMatches(t *testing.T) {
-	spec, ok := GetModuleSpec("link_filter")
+	spec, ok := modules.GetModuleSpec("link_filter")
 	if !ok {
 		t.Fatal("AAAAAA")
 	}
