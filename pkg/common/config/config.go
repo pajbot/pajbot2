@@ -32,11 +32,13 @@ type TwitchAuthConfig struct {
 }
 
 type TwitchWebhookConfig struct {
-	Secret           string
-	LeaseTimeSeconds int
+	Secret string
 
 	// HostPrefix is deprecated since 2021-07-11
 	HostPrefix *string
+
+	// LeaseTimeSeconds is deprecated since 2021-07-11
+	LeaseTimeSeconds *int
 }
 
 func (c *TwitchWebhookConfig) Validate() error {
@@ -46,6 +48,10 @@ func (c *TwitchWebhookConfig) Validate() error {
 
 	if c.HostPrefix != nil {
 		log.Println("Twitch.Webhook.HostPrefix is deprecated - we now rely on Web.Domain + Web.Secure to figure out the webhook callback URL.")
+	}
+
+	if c.LeaseTimeSeconds != nil {
+		log.Println("Twitch.Webhook.LeaseTimeSeconds is deprecated. This value serves no purpose for Twitch's EventSub.")
 	}
 
 	return nil
@@ -114,13 +120,6 @@ var defaultConfig = Config{
 	},
 	PostgreSQL: PostgreSQLConfig{
 		DSN: "host=/var/run/postgresql database=pajbot2 sslmode=disable",
-	},
-	Auth: authConfig{
-		Twitch: AuthTwitchConfig{
-			Webhook: TwitchWebhookConfig{
-				LeaseTimeSeconds: 24 * 3600,
-			},
-		},
 	},
 }
 
