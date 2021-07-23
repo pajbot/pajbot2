@@ -109,8 +109,8 @@ github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHX
 github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/nicklaw5/helix v1.24.0 h1:GhZc6a1OSI7s6fnX5mZKP14kS4g+o/7SAakfCnfIfTI=
-github.com/nicklaw5/helix v1.24.0/go.mod h1:XeeXY7oY5W+MVMu6wF4qGm8uvjZ1/Nss0FqprVkXKrg=
+github.com/nicklaw5/helix v1.24.1 h1:ubPLLr6UZ8RyKR3ahQlaihCS/S5x3IG+DMtW5dBYN88=
+github.com/nicklaw5/helix v1.24.1/go.mod h1:XeeXY7oY5W+MVMu6wF4qGm8uvjZ1/Nss0FqprVkXKrg=
 github.com/pajbot/commandmatcher v1.0.1 h1:C45KmJezhaBKuPUQLDyLjvcMXrQ7pofhk7jVgAdp2vU=
 github.com/pajbot/commandmatcher v1.0.1/go.mod h1:kZzeHeGqmDvWxQP3pB6KrvaPbMEVIyeJycMoQpkpOZ0=
 github.com/pajbot/testhelper v1.0.0 h1:C6OxLN1O5u70voShcra5hPOAgtykHNmtoNmu1T+yDRI=
