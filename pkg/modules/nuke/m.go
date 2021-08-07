@@ -1,6 +1,7 @@
 package nuke
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,20 +15,37 @@ import (
 	"github.com/pajbot/pajbot2/pkg/twitchactions"
 )
 
+var (
+	ErrUsage = errors.New("usage: !nuke bad phrase 1m 10m")
+)
+
 func init() {
 	modules.Register("nuke", func() pkg.ModuleSpec {
-		return modules.NewSpec("nuke", "Nuke", true, newNuke)
+		return modules.NewSpec("nuke", "Nuke", true, func(b *mbase.Base) pkg.Module {
+			return NewNuke(b, &NukeParameterParser{})
+		})
 	})
 }
 
 const garbageCollectionInterval = 1 * time.Minute
 const maxMessageAge = 5 * time.Minute
 
-type nukeModule struct {
+type NukeParameters struct {
+	Phrase      string
+	RegexPhrase *regexp.Regexp
+
+	ScrollbackLength time.Duration
+
+	TimeoutDuration time.Duration
+}
+
+type NukeModule struct {
 	mbase.Base
 
 	messages      map[string][]nukeMessage
 	messagesMutex sync.Mutex
+
+	parameterParser *NukeParameterParser
 
 	commands pkg.CommandsManager
 
@@ -40,8 +58,8 @@ type nukeMessage struct {
 	timestamp time.Time
 }
 
-func newNuke(b *mbase.Base) pkg.Module {
-	m := &nukeModule{
+func NewNuke(b *mbase.Base, parameterParser *NukeParameterParser) *NukeModule {
+	m := &NukeModule{
 		Base: *b,
 
 		messages: make(map[string][]nukeMessage),
@@ -62,40 +80,40 @@ func newNuke(b *mbase.Base) pkg.Module {
 	return m
 }
 
-func (m *nukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
+/*
+!nuke test 1m 10m
+	phrase=test
+	regex=false
+	scrollback=1m
+	timeoutDuration=10m
+
+!nuke /test/ 1m 10m
+	phrase=test
+	regex=true
+	scrollback=1m
+	timeoutDuration=10m
+*/
+
+func (m *NukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if !(event.User.IsModerator() || event.User.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration)) {
 		return nil
 	}
 
-	if len(parts) < 3 {
-		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
-	}
-	phrase := strings.Join(parts[1:len(parts)-2], " ")
-	scrollbackLength, err := time.ParseDuration(parts[len(parts)-2])
+	params, err := m.parameterParser.ParseNukeParameters(parts)
 	if err != nil {
-		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
-	}
-	if scrollbackLength < 0 {
-		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
-	}
-	timeoutDuration, err := time.ParseDuration(parts[len(parts)-1])
-	if err != nil {
-		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
-	}
-	if timeoutDuration < 0 {
-		return twitchactions.Mention(event.User, "usage: !nuke bad phrase 1m 10m")
+		return twitchactions.Mention(event.User, err.Error())
 	}
 
-	m.nuke(event.User, m.BotChannel(), phrase, scrollbackLength, timeoutDuration)
+	m.nuke(event.User, m.BotChannel(), params)
 
 	return nil
 }
 
-func (m *nukeModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+func (m *NukeModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
 	return m.commands.OnMessage(event)
 }
 
-func (m *nukeModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
+func (m *NukeModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	defer func() {
 		m.addMessage(m.BotChannel().Channel(), event.User, event.Message)
 	}()
@@ -103,7 +121,7 @@ func (m *nukeModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return m.commands.OnMessage(event)
 }
 
-func (m *nukeModule) garbageCollect() {
+func (m *NukeModule) garbageCollect() {
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
 
@@ -120,32 +138,28 @@ func (m *nukeModule) garbageCollect() {
 	}
 }
 
-func (m *nukeModule) nuke(source pkg.User, bot pkg.BotChannel, phrase string, scrollbackLength, timeoutDuration time.Duration) {
-	if timeoutDuration > 72*time.Hour {
-		timeoutDuration = 72 * time.Hour
+func (m *NukeModule) nuke(source pkg.User, bot pkg.BotChannel, params *NukeParameters) {
+	// TODO: Should this be moved to the NukeParameters parser?
+	if params.TimeoutDuration > 72*time.Hour {
+		params.TimeoutDuration = 72 * time.Hour
 	}
 
-	lowercasePhrase := strings.ToLower(phrase)
+	lowercasePhrase := strings.ToLower(params.Phrase)
 
 	matcher := func(msg *nukeMessage) bool {
 		return strings.Contains(strings.ToLower(msg.message.GetText()), lowercasePhrase)
 	}
 
-	reason := "Nuked '" + phrase + "'"
-
-	if strings.HasPrefix(phrase, "/") && strings.HasSuffix(phrase, "/") {
-		regex, err := regexp.Compile(phrase[1 : len(phrase)-1])
-		if err == nil {
-			reason = "Nuked r'" + phrase[1:len(phrase)-1] + "'"
-			matcher = func(msg *nukeMessage) bool {
-				return regex.MatchString(msg.message.GetText())
-			}
+	if params.RegexPhrase != nil {
+		matcher = func(msg *nukeMessage) bool {
+			return params.RegexPhrase.MatchString(msg.message.GetText())
 		}
-		// parse as regex
 	}
 
+	reason := "Nuked '" + params.Phrase + "'"
+
 	now := time.Now()
-	timeoutDurationInSeconds := int(timeoutDuration.Seconds())
+	timeoutDurationInSeconds := int(params.TimeoutDuration.Seconds())
 
 	if timeoutDurationInSeconds < 1 {
 		// Timeout duration too short
@@ -161,7 +175,7 @@ func (m *nukeModule) nuke(source pkg.User, bot pkg.BotChannel, phrase string, sc
 
 	for i := len(messages) - 1; i >= 0; i-- {
 		diff := now.Sub(messages[i].timestamp)
-		if diff > scrollbackLength {
+		if diff > params.ScrollbackLength {
 			// We've gone far enough in the buffer, time to exit
 			break
 		}
@@ -175,10 +189,10 @@ func (m *nukeModule) nuke(source pkg.User, bot pkg.BotChannel, phrase string, sc
 		bot.SingleTimeout(user, timeoutDurationInSeconds, reason)
 	}
 
-	fmt.Printf("%s nuked %d users for the phrase %s in the last %s for %s\n", source.GetName(), len(targets), phrase, scrollbackLength, timeoutDuration)
+	fmt.Printf("%s nuked %d users for the phrase %s in the last %s for %s\n", source.GetName(), len(targets), params.Phrase, params.ScrollbackLength, params.TimeoutDuration)
 }
 
-func (m *nukeModule) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
+func (m *NukeModule) addMessage(channel pkg.Channel, user pkg.User, message pkg.Message) {
 	m.messagesMutex.Lock()
 	defer m.messagesMutex.Unlock()
 
