@@ -80,20 +80,6 @@ func NewNuke(b *mbase.Base, parameterParser *NukeParameterParser) *NukeModule {
 	return m
 }
 
-/*
-!nuke test 1m 10m
-	phrase=test
-	regex=false
-	scrollback=1m
-	timeoutDuration=10m
-
-!nuke /test/ 1m 10m
-	phrase=test
-	regex=true
-	scrollback=1m
-	timeoutDuration=10m
-*/
-
 func (m *NukeModule) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	if !(event.User.IsModerator() || event.User.HasPermission(m.BotChannel().Channel(), pkg.PermissionModeration)) {
 		return nil
