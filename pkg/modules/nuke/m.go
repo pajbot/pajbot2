@@ -65,6 +65,8 @@ func NewNuke(b *mbase.Base, parameterParser *NukeParameterParser) *NukeModule {
 		messages: make(map[string][]nukeMessage),
 
 		commands: commands.NewCommands(),
+
+		parameterParser: parameterParser,
 	}
 
 	m.commands.Register([]string{"!nuke"}, m)
