@@ -17,7 +17,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/lib/pq v1.10.2
-	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/nicklaw5/helix v1.24.2
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
@@ -28,12 +27,11 @@ require (
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v0.0.0-20191205130555-62f81ea88919
-	github.com/swaggo/swag v1.7.0
+	github.com/swaggo/swag v1.7.1
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	honnef.co/go/tools v0.2.0
 	mvdan.cc/xurls/v2 v2.3.0
 )
