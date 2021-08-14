@@ -9,9 +9,11 @@ require (
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.7.0
+	github.com/frankban/quicktest v1.13.0
 	github.com/gempir/go-twitch-irc/v2 v2.6.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.3.4 // indirect
+	github.com/google/go-cmp v0.5.6
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
@@ -31,6 +33,7 @@ require (
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/tools v0.1.1 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	honnef.co/go/tools v0.2.0
 	mvdan.cc/xurls/v2 v2.3.0
