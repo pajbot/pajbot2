@@ -19,7 +19,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/labstack/echo/v4 v4.5.0
 	github.com/lib/pq v1.10.2
-	github.com/nicklaw5/helix v1.24.2
+	github.com/nicklaw5/helix v1.24.4
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
 	github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71
