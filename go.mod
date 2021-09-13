@@ -10,7 +10,7 @@ require (
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.7.0
 	github.com/frankban/quicktest v1.13.1
-	github.com/gempir/go-twitch-irc/v2 v2.6.0
+	github.com/gempir/go-twitch-irc/v2 v2.7.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/google/go-cmp v0.5.6
