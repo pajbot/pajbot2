@@ -2,6 +2,7 @@ package modules
 
 import (
 	"time"
+	"unicode/utf8"
 
 	"github.com/pajbot/pajbot2/pkg"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
@@ -33,7 +34,7 @@ func newMessageLengthLimit(b *mbase.Base) pkg.Module {
 func (m MessageLengthLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	message := event.Message
 
-	messageLength := len(message.GetText())
+	messageLength := utf8.RuneCountInString(message.GetText())
 	if messageLength > 140 {
 		if messageLength > 420 {
 			return twitchactions.DoTimeout(event.User, 600*time.Second, "Your message is way too long")
