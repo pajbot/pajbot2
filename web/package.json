@@ -19,7 +19,7 @@
     "html-webpack-plugin": "^5.5.0",
     "mini-css-extract-plugin": "^2.4.5",
     "prettier": "^2.4.1",
-    "sass": "^1.43.4",
+    "sass": "^1.43.5",
     "sass-loader": "^12.3.0",
     "style-loader": "^3.3.1",
     "webpack": "^5.64.3",
