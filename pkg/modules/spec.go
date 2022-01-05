@@ -32,13 +32,27 @@ type Spec struct {
 	maker moduleMaker
 }
 
-func NewSpec(id, name string, enabledByDefault bool, maker moduleMaker) *Spec {
-	return &Spec{
+type Option func(s *Spec)
+
+func WithModuleType(moduleType pkg.ModuleType) Option {
+	return func(s *Spec) {
+		s.moduleType = moduleType
+	}
+}
+
+func NewSpec(id, name string, enabledByDefault bool, maker moduleMaker, opts ...Option) *Spec {
+	s := &Spec{
 		id:               id,
 		name:             name,
 		enabledByDefault: enabledByDefault,
 		maker:            maker,
 	}
+
+	for _, option := range opts {
+		option(s)
+	}
+
+	return s
 }
 
 func (s *Spec) ID() string {

@@ -1,3 +1,4 @@
+//go:build csharp
 // +build csharp
 
 package message_height_limit
@@ -34,7 +35,7 @@ const (
 
 func init() {
 	modules.Register("message_height_limit", func() pkg.ModuleSpec {
-		spec := modules.NewSpec("message_height_limit", "Message height limit", false, NewMessageHeightLimit)
+		spec := modules.NewSpec("message_height_limit", "Message height limit", false, NewMessageHeightLimit, modules.WithModuleType(pkg.ModuleTypeFilter))
 
 		spec.SetParameters(map[string]pkg.ModuleParameterSpec{
 			"HeightLimit": func() pkg.ModuleParameter {
