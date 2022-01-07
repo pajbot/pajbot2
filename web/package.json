@@ -17,7 +17,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.5.1",
     "html-webpack-plugin": "^5.5.0",
-    "mini-css-extract-plugin": "^2.4.5",
+    "mini-css-extract-plugin": "^2.4.6",
     "prettier": "^2.5.1",
     "sass": "^1.45.2",
     "sass-loader": "^12.4.0",
