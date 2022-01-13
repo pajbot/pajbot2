@@ -8,7 +8,7 @@ require (
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
-	github.com/dghubble/oauth1 v0.7.0
+	github.com/dghubble/oauth1 v0.7.1
 	github.com/frankban/quicktest v1.14.0
 	github.com/gempir/go-twitch-irc/v2 v2.8.1
 	github.com/go-sql-driver/mysql v1.6.0
