@@ -35,5 +35,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/appengine v1.6.5 // indirect
 	honnef.co/go/tools v0.2.2
-	mvdan.cc/xurls/v2 v2.3.0
+	mvdan.cc/xurls/v2 v2.4.0
 )
