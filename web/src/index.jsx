@@ -21,8 +21,8 @@ const App = (
     <Menu />
     {dashboard && <Dashboard element={dashboard} />}
     {banphrases && <Banphrases />}
-    {admin && <Admin element={admin}/>}
-    {commands && <Commands element={commands}/>}
+    {admin && <Admin element={admin} />}
+    {commands && <Commands element={commands} />}
   </ThemeProvider>
 );
 

@@ -1,8 +1,7 @@
-import React, { Component } from "react";
-import WebSocketHandler from "./WebSocketHandler";
+import React, { Component } from 'react';
+import WebSocketHandler from './WebSocketHandler';
 
 export default class Commands extends Component {
-
   constructor(props) {
     super(props);
 
@@ -27,12 +26,12 @@ export default class Commands extends Component {
             </tr>
           </thead>
           <tbody>
-          {this.state.commands.map((command, index) =>
-            <tr key={index}>
-              <td>{command.Name}</td>
-              <td>{command.Description}</td>
-            </tr>
-          )}
+            {this.state.commands.map((command, index) => (
+              <tr key={index}>
+                <td>{command.Name}</td>
+                <td>{command.Description}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </section>
