@@ -29,4 +29,7 @@ jobs:
         run: npm ci
 
       - working-directory: ./web
+        run: npm run check_formatting
+
+      - working-directory: ./web
         run: npm run build

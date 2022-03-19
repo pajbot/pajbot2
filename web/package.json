@@ -2,7 +2,9 @@
   "name": "pajbot2-web",
   "scripts": {
     "build": "node_modules/.bin/webpack --mode production",
-    "watch": "node_modules/.bin/webpack --watch --mode development"
+    "watch": "node_modules/.bin/webpack --watch --mode development",
+    "check_formatting": "prettier --check .",
+    "reformat": "prettier --write ."
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.16.7",

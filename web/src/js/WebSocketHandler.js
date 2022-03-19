@@ -24,9 +24,9 @@ export default class WebSocketHandler {
 
   publish(topic, data) {
     let payload = {
-      'Type': 'Publish',
-      'Topic': topic,
-      'Data': data,
+      Type: 'Publish',
+      Topic: topic,
+      Data: data,
     };
 
     this.send(payload);
@@ -39,9 +39,9 @@ export default class WebSocketHandler {
   sendSubscribe(topic, params) {
     console.log('Params2:', params);
     let payload = {
-      'Type': 'Subscribe',
-      'Topic': topic,
-      'Data': params,
+      Type: 'Subscribe',
+      Topic: topic,
+      Data: params,
     };
 
     console.log('Sending', payload);
@@ -105,6 +105,6 @@ export default class WebSocketHandler {
       setTimeout(() => {
         this.connect();
       }, 500);
-    }
+    };
   }
 }
