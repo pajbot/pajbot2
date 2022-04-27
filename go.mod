@@ -10,7 +10,7 @@ require (
 	github.com/frankban/quicktest v1.14.3
 	github.com/gempir/go-twitch-irc/v2 v2.8.1
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
