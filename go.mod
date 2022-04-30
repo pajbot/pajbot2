@@ -30,7 +30,7 @@ require (
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	honnef.co/go/tools v0.3.0
+	honnef.co/go/tools v0.3.1
 	mvdan.cc/xurls/v2 v2.4.0
 )
 
