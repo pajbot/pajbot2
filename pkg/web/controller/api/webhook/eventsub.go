@@ -17,7 +17,6 @@ import (
 func apiEventsub(cfg *config.TwitchWebhookConfig) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := state.Context(w, r)
-		subscriptionType := r.Header.Get("Twitch-Eventsub-Subscription-Type")
 
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -46,7 +45,7 @@ func apiEventsub(cfg *config.TwitchWebhookConfig) func(w http.ResponseWriter, r 
 		var botChannel pkg.BotChannel
 		var channelID string
 
-		switch subscriptionType {
+		switch notification.Subscription.Type {
 		case helix.EventSubTypeChannelFollow:
 			fallthrough
 		case helix.EventSubTypeStreamOnline:
@@ -72,7 +71,7 @@ func apiEventsub(cfg *config.TwitchWebhookConfig) func(w http.ResponseWriter, r 
 		}
 
 		if botChannel == nil {
-			fmt.Println("No bot channel active to handle this request", channelID, subscriptionType)
+			fmt.Println("No bot channel active to handle this request", channelID, notification.Subscription.Type)
 			fmt.Println(string(notification.Event))
 			// No bot channel active to handle this request
 			return
@@ -83,6 +82,6 @@ func apiEventsub(cfg *config.TwitchWebhookConfig) func(w http.ResponseWriter, r 
 			fmt.Println("Error handling eventsub notification:", err)
 		}
 
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 	}
 }
