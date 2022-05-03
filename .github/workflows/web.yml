@@ -18,15 +18,18 @@ jobs:
 
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2.4.0
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-node@v2.5.1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
       - working-directory: ./web
         run: npm ci
+
+      - working-directory: ./web
+        run: npm run check_formatting
 
       - working-directory: ./web
         run: npm run build

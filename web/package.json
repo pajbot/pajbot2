@@ -2,27 +2,29 @@
   "name": "pajbot2-web",
   "scripts": {
     "build": "node_modules/.bin/webpack --mode production",
-    "watch": "node_modules/.bin/webpack --watch --mode development"
+    "watch": "node_modules/.bin/webpack --watch --mode development",
+    "check_formatting": "prettier --check .",
+    "reformat": "prettier --write ."
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.16.7",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.5",
-    "@babel/preset-env": "^7.16.11",
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
     "@babel/preset-react": "^7.16.7",
-    "babel-loader": "^8.2.3",
+    "babel-loader": "^8.2.5",
     "clean-webpack-plugin": "^4.0.0",
-    "css-loader": "^6.6.0",
+    "css-loader": "^6.7.1",
     "html-webpack-plugin": "^5.5.0",
-    "mini-css-extract-plugin": "^2.5.3",
-    "prettier": "^2.5.1",
-    "sass": "^1.49.8",
+    "mini-css-extract-plugin": "^2.6.0",
+    "prettier": "^2.6.2",
+    "sass": "^1.51.0",
     "sass-loader": "^12.6.0",
     "style-loader": "^3.3.1",
-    "webpack": "^5.69.1",
+    "webpack": "^5.72.0",
     "webpack-cli": "^4.9.2"
   },
   "bugs": {

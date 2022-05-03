@@ -1,6 +1,6 @@
-import React, { Component } from "react";
-import WebSocketHandler from "./WebSocketHandler";
-import { isLoggedIn } from "./auth";
+import React, { Component } from 'react';
+import WebSocketHandler from './WebSocketHandler';
+import { isLoggedIn } from './auth';
 
 const ReportActionUnknown = 0;
 const ReportActionBan = 1;
@@ -22,25 +22,25 @@ function parseError(response, onErrorParsed) {
   response
     .json()
     .then((obj) => onErrorParsed(obj))
-    .catch((e) => console.error("Error parsing json from response:", e));
+    .catch((e) => console.error('Error parsing json from response:', e));
 }
 
 export default class Dashboard extends Component {
   constructor(props) {
     super(props);
 
-    this.ws = new WebSocketHandler(props.element.getAttribute("data-wshost"));
+    this.ws = new WebSocketHandler(props.element.getAttribute('data-wshost'));
 
-    this.ws.subscribe("ReportHandled", (json) => {
+    this.ws.subscribe('ReportHandled', (json) => {
       this.removeVisibleReport(json.ReportID);
     });
 
     let channel = null;
 
     try {
-      channel = JSON.parse(props.element.getAttribute("data-extra"));
+      channel = JSON.parse(props.element.getAttribute('data-extra'));
     } catch (e) {
-      console.error("Error parsing channel JSON:", e);
+      console.error('Error parsing channel JSON:', e);
     }
 
     if (channel) {
@@ -51,7 +51,7 @@ export default class Dashboard extends Component {
 
     this.state = {
       bots: channel?.Bots || [],
-      channel: channel?.Channel || "",
+      channel: channel?.Channel || '',
       currentBot: channel?.Bots[0] || null,
       channels: channel?.Channels || [],
       reports: [],
@@ -60,9 +60,9 @@ export default class Dashboard extends Component {
     };
 
     if (this.state.channel.ID) {
-      console.log("Subscribe to report received", this.state.channel.ID);
+      console.log('Subscribe to report received', this.state.channel.ID);
       this.ws.subscribe(
-        "ReportReceived",
+        'ReportReceived',
         (json) => {
           this.addToVisibleReports(json);
         },
@@ -98,7 +98,7 @@ export default class Dashboard extends Component {
       );
     }
 
-    if (this.state.channel.ID == "") {
+    if (this.state.channel.ID == '') {
       return (
         <section>
           <h2>No bot is running in this channel</h2>
@@ -134,7 +134,7 @@ export default class Dashboard extends Component {
             {this.state.bots.map((bot, index) => (
               <tr key={index}>
                 <td>{bot.Name}</td>
-                <td>{bot.Connected ? "Yes" : "No"}</td>
+                <td>{bot.Connected ? 'Yes' : 'No'}</td>
               </tr>
             ))}
           </tbody>
@@ -147,9 +147,9 @@ export default class Dashboard extends Component {
                 <div className="card-header">
                   <i
                     className={
-                      report.Channel.Type === "twitch"
-                        ? "fab fa-twitch"
-                        : "fab fa-discord"
+                      report.Channel.Type === 'twitch'
+                        ? 'fab fa-twitch'
+                        : 'fab fa-discord'
                     }
                   />
                   &nbsp;{report.Channel.Name}&nbsp;
@@ -296,16 +296,16 @@ export default class Dashboard extends Component {
                     type="submit"
                     className={
                       this.state.userLookupLoading
-                        ? "btn btn-secondary"
-                        : "btn btn-primary"
+                        ? 'btn btn-secondary'
+                        : 'btn btn-primary'
                     }
                     type="submit"
                     id="button-addon2"
                     disabled={this.state.userLookupLoading}
                     value={
                       this.state.userLookupLoading
-                        ? "Loading..."
-                        : "Look up user"
+                        ? 'Loading...'
+                        : 'Look up user'
                     }
                   />
                 </div>
@@ -313,18 +313,18 @@ export default class Dashboard extends Component {
             </form>
             <div
               class={
-                this.state.userLookupLoading ? "results loading" : "results"
+                this.state.userLookupLoading ? 'results loading' : 'results'
               }
             >
               {this.state.userLookupData &&
                 (this.state.userLookupData.Actions.length > 0 ? (
                   <div className="userData">
                     <span>
-                      Listing latest{" "}
+                      Listing latest{' '}
                       <strong>
                         {this.state.userLookupData.Actions.length}
-                      </strong>{" "}
-                      moderation actions on{" "}
+                      </strong>{' '}
+                      moderation actions on{' '}
                       <strong>{this.state.userLookupName}</strong>
                     </span>
                     <ul className="list-group">
@@ -332,12 +332,12 @@ export default class Dashboard extends Component {
                         (action, index) => (
                           <li className="list-group-item" key={index}>
                             <span>
-                              [{action.Timestamp}] {action.UserName}{" "}
-                              {actionList[action.Action]}{" "}
-                              {this.state.userLookupName}{" "}
-                              {action.Action === "timeout"
+                              [{action.Timestamp}] {action.UserName}{' '}
+                              {actionList[action.Action]}{' '}
+                              {this.state.userLookupName}{' '}
+                              {action.Action === 'timeout'
                                 ? `for ${action.Duration}s: `
-                                : ": "}
+                                : ': '}
                               {action.Reason}
                             </span>
                           </li>
@@ -346,7 +346,7 @@ export default class Dashboard extends Component {
                     </ul>
                   </div>
                 ) : (
-                  "lol no bans"
+                  'lol no bans'
                 ))}
             </div>
           </div>
@@ -362,15 +362,15 @@ export default class Dashboard extends Component {
       ReportID: reportId,
     };
 
-    if (action === "dismiss") {
+    if (action === 'dismiss') {
       this.removeVisibleReport(reportId);
     }
 
     if (duration) {
-      payload["Duration"] = duration;
+      payload['Duration'] = duration;
     }
 
-    this.ws.publish("HandleReport", payload);
+    this.ws.publish('HandleReport', payload);
   };
 
   removeVisibleReport = (id) => {
@@ -417,9 +417,9 @@ export default class Dashboard extends Component {
     });
 
     fetch(
-      "/api/channel/" +
+      '/api/channel/' +
         this.state.channel.ID +
-        "/moderation/user?user_name=" +
+        '/moderation/user?user_name=' +
         username
     )
       .then(jsonifyResponse)

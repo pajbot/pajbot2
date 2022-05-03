@@ -1,11 +1,11 @@
-import React, { Component } from "react";
-import WebSocketHandler from "./WebSocketHandler";
+import React, { Component } from 'react';
+import WebSocketHandler from './WebSocketHandler';
 
 const ReportActionUnknown = 0;
-const ReportActionBan     = 1;
+const ReportActionBan = 1;
 const ReportActionTimeout = 2;
 const ReportActionDismiss = 3;
-const ReportActionUndo    = 4;
+const ReportActionUndo = 4;
 
 function jsonifyResponse(response) {
   if (!response.ok) {
@@ -16,13 +16,13 @@ function jsonifyResponse(response) {
 }
 
 function parseError(response, onErrorParsed) {
-  response.json()
-    .then(obj => onErrorParsed(obj))
-    .catch(e => console.error('Error parsing json from response:', e));
+  response
+    .json()
+    .then((obj) => onErrorParsed(obj))
+    .catch((e) => console.error('Error parsing json from response:', e));
 }
 
 export default class Banphrases extends Component {
-
   constructor(props) {
     super(props);
 
@@ -30,28 +30,28 @@ export default class Banphrases extends Component {
 
     let banphrases = [
       {
-        'id': 1,
-        'description': 'lol description',
-        'phrase': 'lol phrase',
-        'enabled': true,
+        id: 1,
+        description: 'lol description',
+        phrase: 'lol phrase',
+        enabled: true,
       },
       {
-        'id': 2,
-        'description': 'lol description',
-        'phrase': 'lol phrase',
-        'enabled': true,
+        id: 2,
+        description: 'lol description',
+        phrase: 'lol phrase',
+        enabled: true,
       },
       {
-        'id': 3,
-        'description': 'lol description',
-        'phrase': 'lol phrase',
-        'enabled': false,
+        id: 3,
+        description: 'lol description',
+        phrase: 'lol phrase',
+        enabled: false,
       },
       {
-        'id': 4,
-        'description': 'lol description',
-        'phrase': 'lol phrase',
-        'enabled': true,
+        id: 4,
+        description: 'lol description',
+        phrase: 'lol phrase',
+        enabled: true,
       },
     ];
 
@@ -77,15 +77,17 @@ export default class Banphrases extends Component {
             </tr>
           </thead>
           <tbody>
-          {this.state.banphrases.map((bp, index) =>
-            <tr key={index}>
-              <td>{bp.id}</td>
-              <td>{bp.description}</td>
-              <td>{bp.phrase}</td>
-              <td><input type="checkbox" checked={bp.enabled} /></td>
-              <td>button</td>
-            </tr>
-          )}
+            {this.state.banphrases.map((bp, index) => (
+              <tr key={index}>
+                <td>{bp.id}</td>
+                <td>{bp.description}</td>
+                <td>{bp.phrase}</td>
+                <td>
+                  <input type="checkbox" checked={bp.enabled} />
+                </td>
+                <td>button</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </section>

@@ -1,12 +1,10 @@
-import React, { Component } from "react";
+import React, { Component } from 'react';
 
-import { ThemeContext } from "./ThemeContext";
+import { ThemeContext } from './ThemeContext';
 
 import { createCookie, readCookie } from './cookie';
 
 export default class ThemeProvider extends Component {
-
-
   validThemes = ['Light', 'Dark'];
 
   constructor(props) {
@@ -25,13 +23,15 @@ export default class ThemeProvider extends Component {
 
   render() {
     return (
-      <ThemeContext.Provider value={{
-        theme: this.state.theme,
-        validThemes: this.validThemes,
-        setTheme: this.setTheme,
-      }}>
-      {this.props.children}
-    </ThemeContext.Provider>
+      <ThemeContext.Provider
+        value={{
+          theme: this.state.theme,
+          validThemes: this.validThemes,
+          setTheme: this.setTheme,
+        }}
+      >
+        {this.props.children}
+      </ThemeContext.Provider>
     );
   }
 
@@ -42,5 +42,5 @@ export default class ThemeProvider extends Component {
 
     // Save theme
     createCookie('currentTheme', t, 3600);
-  }
-};
+  };
+}
