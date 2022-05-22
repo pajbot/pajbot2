@@ -156,7 +156,7 @@ func initChannel(channelName, channelID string) error {
 	}()
 
 	log.Printf("Initialize channel %s (%s)", channelName, channelID)
-	res := C.InitChannel(channel, cChannelID, 5000)
+	res := C.InitChannel2(channel, cChannelID, 5000, true)
 	log.Printf("Channel %s initialized successfully", channelName)
 
 	if res != 1 {
