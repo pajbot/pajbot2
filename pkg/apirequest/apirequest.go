@@ -1,7 +1,7 @@
 package apirequest
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -11,7 +11,7 @@ func HTTPRequest(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	bs, err := ioutil.ReadAll(req.Body)
+	bs, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, err
 	}

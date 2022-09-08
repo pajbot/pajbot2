@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -28,7 +28,7 @@ func apiCallbacksFollow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +86,7 @@ func apiCallbacksStreams(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Streams response xd \n")
 	fmt.Printf("Streams response xd \n")
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
 	}
