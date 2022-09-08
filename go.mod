@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/labstack/echo/v4 v4.8.0
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/lib/pq v1.10.7
 	github.com/nicklaw5/helix v1.25.0
 	github.com/pajbot/commandmatcher v1.0.1
