@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -18,7 +18,7 @@ func apiEventsub(cfg *config.TwitchWebhookConfig) func(w http.ResponseWriter, r 
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := state.Context(w, r)
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Println(err)
 			return

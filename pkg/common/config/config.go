@@ -3,8 +3,8 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
+	"os"
 )
 
 type AdminConfig struct {
@@ -128,7 +128,7 @@ LoadConfig parses a config file from the given json file at the path
 and returns a Config object
 */
 func LoadConfig(path string) (*Config, error) {
-	file, err := ioutil.ReadFile(path)
+	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
