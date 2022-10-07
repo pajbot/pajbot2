@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	twitch "github.com/gempir/go-twitch-irc/v2"
+	twitch "github.com/gempir/go-twitch-irc/v3"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"

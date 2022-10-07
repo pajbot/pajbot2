@@ -36,6 +36,8 @@ github.com/frankban/quicktest v1.14.3 h1:FJKSZTDHjyhriyC81FLQ0LY93eSai0ZyR/ZIkd3
 github.com/frankban/quicktest v1.14.3/go.mod h1:mgiwOwqx65TmIk1wJ6Q7wvnVMocbUorkibMOrVTHZps=
 github.com/gempir/go-twitch-irc/v2 v2.8.1 h1:M0Rt2ODGPEk33+UEwv2XSrnGMMwVyUoBt+MNI3ZVf8c=
 github.com/gempir/go-twitch-irc/v2 v2.8.1/go.mod h1:120d2SdlRYg8tRnZwsyNPeS+mWPn+YmNEzB7Bv/CDGE=
+github.com/gempir/go-twitch-irc/v3 v3.2.0 h1:ENhsa7RgBE1GMmDqe0iMkvcSYfgw6ZsXilt+sAg32/U=
+github.com/gempir/go-twitch-irc/v3 v3.2.0/go.mod h1:/W9KZIiyizVecp4PEb7kc4AlIyXKiCmvlXrzlpPUytU=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/gzip v0.0.1/go.mod h1:fGBJBCdt6qCZuCAOwWuFhBB4OOq9EFqlo5dEaFhhu5w=
 github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
