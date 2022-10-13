@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gempir/go-twitch-irc/v2"
+	"github.com/gempir/go-twitch-irc/v3"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/modules"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"

@@ -8,7 +8,7 @@ require (
 	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
 	github.com/dghubble/oauth1 v0.7.1
 	github.com/frankban/quicktest v1.14.3
-	github.com/gempir/go-twitch-irc/v2 v2.8.1
+	github.com/gempir/go-twitch-irc/v3 v3.2.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/handlers v1.5.1

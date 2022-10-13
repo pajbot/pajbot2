@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	twitch "github.com/gempir/go-twitch-irc/v2"
+	twitch "github.com/gempir/go-twitch-irc/v3"
 	"github.com/gorilla/mux"
 	"github.com/pajbot/pajbot2/pkg"
 	pb2twitch "github.com/pajbot/pajbot2/pkg/twitch"
