@@ -53,6 +53,10 @@ func (s *Spec) Type() pkg.ModuleType {
 	return s.moduleType
 }
 
+func (s *Spec) SetType(moduleType pkg.ModuleType) {
+	s.moduleType = moduleType
+}
+
 func (s *Spec) EnabledByDefault() bool {
 	return s.enabledByDefault
 }
