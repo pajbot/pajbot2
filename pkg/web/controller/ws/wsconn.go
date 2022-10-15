@@ -12,7 +12,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg/users"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/utils"
-	"github.com/tevino/abool"
+	"github.com/tevino/abool/v2"
 )
 
 const (
