@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/web/router"
 	"github.com/pajbot/utils"

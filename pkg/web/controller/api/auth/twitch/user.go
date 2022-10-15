@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"golang.org/x/oauth2"
 )

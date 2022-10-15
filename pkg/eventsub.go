@@ -3,7 +3,7 @@ package pkg
 import (
 	"encoding/json"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 )
 
 type TwitchEventSubNotification struct {

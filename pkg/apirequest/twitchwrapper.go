@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg/common/config"
 )
 
