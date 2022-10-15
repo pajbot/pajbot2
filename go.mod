@@ -25,7 +25,7 @@ require (
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
-	github.com/swaggo/echo-swagger v0.0.0-20191205130555-62f81ea88919
+	github.com/swaggo/echo-swagger v1.3.5
 	github.com/swaggo/swag v1.8.6
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
@@ -37,7 +37,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/PuerkitoBio/purell v1.1.1 // indirect
+	github.com/PuerkitoBio/purell v1.2.0 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
@@ -45,9 +45,9 @@ require (
 	github.com/dghubble/sling v1.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.6 // indirect
-	github.com/go-openapi/spec v0.20.4 // indirect
-	github.com/go-openapi/swag v0.19.15 // indirect
+	github.com/go-openapi/jsonreference v0.20.0 // indirect
+	github.com/go-openapi/spec v0.20.7 // indirect
+	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
@@ -55,20 +55,21 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
-	github.com/mailru/easyjson v0.7.6 // indirect
-	github.com/mattn/go-colorable v0.1.11 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/rogpeppe/go-internal v1.8.1 // indirect
-	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14 // indirect
+	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220907003533-145caa8ea1d0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
-	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/net v0.0.0-20221014081412-f15817d10f9b // indirect
+	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
+	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
