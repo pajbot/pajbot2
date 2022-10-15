@@ -81,6 +81,7 @@ github.com/gorilla/handlers v1.5.1 h1:9lRY6j8DEeeBT10CvO9hGW0gmky0BprnvDI5vfhUHH
 github.com/gorilla/handlers v1.5.1/go.mod h1:t8XrUpc4KVXb7HGyJ4/cEnwQiaxrX/hz1Zv/4g96P1Q=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
@@ -132,6 +133,8 @@ github.com/pajbot/utils v1.0.0 h1:LiVOInr6gY/yA82QsgTnyGJaBcMOB0GaRYKDIC/4rB4=
 github.com/pajbot/utils v1.0.0/go.mod h1:lLYJXlC7fGL4FYvdZk+IQerV5zgwerjIsKDUJNb7LuE=
 github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71 h1:oznyU+DAD2koiTYyytzjFf4WLEynYRxig0HwV6NV8jM=
 github.com/pajlada/go-twitch-pubsub v0.0.0-20190525183000-d70aff1c5c71/go.mod h1:dGYg2nHDP/eiV699HP0DN0LjAQi1r1i+VwcBM9wvWyI=
+github.com/pajlada/go-twitch-pubsub v0.0.2 h1:o58DTgNlMbPCtAnshOYrKgPrF5pOpXLq9J9fRfqR+Vg=
+github.com/pajlada/go-twitch-pubsub v0.0.2/go.mod h1:g1aV3w3eX1FC45lS0dMTyc6VYH9XH5Sp0nnQce8hXRs=
 github.com/pajlada/gobttv v1.0.0 h1:wkQrEeBM0liLKSWhEC11BbT1mAr+LW4+50KzEhMB5Gk=
 github.com/pajlada/gobttv v1.0.0/go.mod h1:J2A6ZSOOw6Qn5vsNXRBtShJH4HBsH9h4sgA+Q5XWk7Q=
 github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6 h1:5ybV3qk98cGmL5mlM2hhSHIX9cvqLiSOjEzFwbw9SK8=
