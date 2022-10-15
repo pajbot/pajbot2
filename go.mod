@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
-	github.com/dghubble/go-twitter v0.0.0-20190719072343-39e5462e111f
+	github.com/dghubble/go-twitter v0.0.0-20220816163853-8a0df96f1e6d
 	github.com/dghubble/oauth1 v0.7.1
 	github.com/frankban/quicktest v1.14.3
 	github.com/gempir/go-twitch-irc/v3 v3.2.0
@@ -37,12 +37,10 @@ require (
 require (
 	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/PuerkitoBio/purell v1.2.0 // indirect
-	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
+	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/dankeroni/jsonapi v0.0.0-20160914195301-7aa17e21f323 // indirect
-	github.com/dghubble/sling v1.3.0 // indirect
+	github.com/dghubble/sling v1.4.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -50,7 +48,7 @@ require (
 	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.3.4 // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -70,6 +68,5 @@ require (
 	golang.org/x/text v0.3.8 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
