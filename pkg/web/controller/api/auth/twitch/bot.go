@@ -3,7 +3,7 @@ package twitch
 import (
 	"net/http"
 
-	"github.com/nicklaw5/helix"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg/web/state"
 	"github.com/pajbot/utils"
 	"golang.org/x/oauth2"
