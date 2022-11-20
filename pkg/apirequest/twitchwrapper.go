@@ -1,6 +1,7 @@
 package apirequest
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -8,10 +9,17 @@ import (
 
 	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg/common/config"
+	"golang.org/x/oauth2"
 )
 
 const WebhookDefaultTime = time.Hour * 24
 const TimeToRefresh = time.Hour * 2
+
+var (
+	ErrMissingChannelID   = errors.New("channel id must be specified")
+	ErrMissingModeratorID = errors.New("moderator id must be specified")
+	ErrMissingUserID      = errors.New("user id must be specified")
+)
 
 type TwitchWrapperX struct {
 	helix    *helix.Client
@@ -51,6 +59,71 @@ func initAppAccessToken(helixAPI *helix.Client, tokenFetched chan struct{}) {
 
 		helixAPI.SetAppAccessToken(response.Data.AccessToken)
 	}
+}
+
+type HelixWrapper struct {
+	*helix.Client
+}
+
+func NewHelixUserAPIClient(clientID string, userTokenSource oauth2.TokenSource, userToken *oauth2.Token) (*HelixWrapper, error) {
+	apiClient, err := helix.NewClient(&helix.Options{
+		ClientID: clientID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	apiClient.SetUserAccessToken(userToken.AccessToken)
+
+	// TODO: refresh shit
+
+	return &HelixWrapper{Client: apiClient}, nil
+}
+
+func (w *HelixWrapper) TimeoutUser(channelID string, moderatorID string, userID string, reason string, durationS int) (*helix.BanUserResponse, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if moderatorID == "" {
+		return nil, ErrMissingModeratorID
+	}
+	if userID == "" {
+		return nil, ErrMissingUserID
+	}
+
+	fmt.Println("Timing out", userID, "in", channelID, "as", moderatorID)
+
+	return w.Client.BanUser(&helix.BanUserParams{
+		BroadcasterID: channelID,
+		ModeratorId:   moderatorID,
+		Body: helix.BanUserRequestBody{
+			UserId:   userID,
+			Reason:   reason,
+			Duration: durationS,
+		},
+	})
+}
+
+// BanUser will attempt to ban the given `userID` using the bot account
+func (w *HelixWrapper) BanUser(channelID string, moderatorID string, userID string, reason string) (*helix.BanUserResponse, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if moderatorID == "" {
+		return nil, ErrMissingModeratorID
+	}
+	if userID == "" {
+		return nil, ErrMissingUserID
+	}
+
+	return w.Client.BanUser(&helix.BanUserParams{
+		BroadcasterID: channelID,
+		ModeratorId:   moderatorID,
+		Body: helix.BanUserRequestBody{
+			UserId: userID,
+			Reason: reason,
+		},
+	})
 }
 
 func newHelixAPIClient(clientID, clientSecret string) (*helix.Client, chan struct{}, error) {

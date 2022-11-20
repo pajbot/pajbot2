@@ -15,9 +15,10 @@ type botConfig struct {
 	account     *pb2twitch.TwitchAccount
 	tokenSource oauth2.TokenSource
 	token       *oauth2.Token
+	helixClient *apirequest.HelixWrapper
 }
 
-func newBotConfig(databaseID int, account *pb2twitch.TwitchAccount, credentials pb2twitch.BotCredentials, oauthConfig *oauth2.Config) botConfig {
+func newBotConfig(databaseID int, account *pb2twitch.TwitchAccount, credentials pb2twitch.BotCredentials, oauthConfig *oauth2.Config, clientID string) (botConfig, error) {
 	databaseToken := &oauth2.Token{
 		AccessToken:  credentials.AccessToken,
 		TokenType:    "bearer",
@@ -25,12 +26,20 @@ func newBotConfig(databaseID int, account *pb2twitch.TwitchAccount, credentials 
 		Expiry:       credentials.Expiry.Time,
 	}
 
+	tokenSource := oauth2.ReuseTokenSource(databaseToken, oauthConfig.TokenSource(context.Background(), databaseToken))
+
+	helixClient, err := apirequest.NewHelixUserAPIClient(clientID, tokenSource, databaseToken)
+	if err != nil {
+		return botConfig{}, err
+	}
+
 	return botConfig{
 		databaseID:  databaseID,
 		account:     account,
-		tokenSource: oauth2.ReuseTokenSource(databaseToken, oauthConfig.TokenSource(context.Background(), databaseToken)),
+		tokenSource: tokenSource,
 		token:       databaseToken,
-	}
+		helixClient: helixClient,
+	}, nil
 }
 
 func (bc *botConfig) Validate(sqlClient *sql.DB) error {
