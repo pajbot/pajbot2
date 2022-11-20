@@ -571,7 +571,7 @@ func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, re
 		fmt.Println("Error timing out user:", err)
 	} else {
 		if resp.ErrorStatus < 200 || resp.ErrorStatus > 299 {
-			fmt.Println("Timeout error:", resp.ErrorMessage, resp.Error)
+			fmt.Println("Timeout error:", resp.ErrorMessage, resp.Error, resp, b.TwitchAccount().Name())
 		} else {
 			fmt.Println("Timeout success:", resp.Data.Bans)
 		}
@@ -588,7 +588,7 @@ func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 		fmt.Println("Error banning user:", err)
 	} else {
 		if resp.ErrorStatus < 200 || resp.ErrorStatus > 299 {
-			fmt.Println("Ban error:", resp.ErrorMessage, resp.Error)
+			fmt.Println("Ban error:", resp.ErrorMessage, resp.Error, resp, b.TwitchAccount().Name())
 		} else {
 			fmt.Println("Ban success:", resp.Data.Bans)
 		}
