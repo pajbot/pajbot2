@@ -174,7 +174,7 @@ func (m *NukeModule) nuke(source pkg.User, bot pkg.BotChannel, params *NukeParam
 	}
 
 	for _, user := range targets {
-		bot.SingleTimeout(user, timeoutDurationInSeconds, reason)
+		bot.Timeout(user, timeoutDurationInSeconds, reason)
 	}
 
 	fmt.Printf("%s nuked %d users for the phrase %s in the last %s for %s\n", source.GetName(), len(targets), params.Phrase, params.ScrollbackLength, params.TimeoutDuration)
