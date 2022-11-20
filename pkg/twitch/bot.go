@@ -570,7 +570,11 @@ func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, re
 	if err != nil {
 		fmt.Println("Error timing out user:", err)
 	} else {
-		fmt.Println("Timeout result:", resp)
+		if resp.ErrorStatus < 200 || resp.ErrorStatus > 299 {
+			fmt.Println("Timeout error:", resp.ErrorMessage, resp.Error)
+		} else {
+			fmt.Println("Timeout success:", resp.Data.Bans)
+		}
 	}
 }
 
@@ -583,7 +587,11 @@ func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 	if err != nil {
 		fmt.Println("Error banning user:", err)
 	} else {
-		fmt.Println("Ban result:", resp)
+		if resp.ErrorStatus < 200 || resp.ErrorStatus > 299 {
+			fmt.Println("Ban error:", resp.ErrorMessage, resp.Error)
+		} else {
+			fmt.Println("Ban success:", resp.Data.Bans)
+		}
 	}
 }
 
