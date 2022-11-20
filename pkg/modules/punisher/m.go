@@ -113,7 +113,7 @@ func (m *module) startPunisher() {
 					} else {
 						newDuration := int(punishment.timeout.Seconds())
 						fmt.Println("[PUNISHER] Perform timeout punishment on user:", punishment.username, newDuration)
-						m.BotChannel().SingleTimeout(m.BotChannel().Bot().MakeUser(punishment.username), newDuration, "PUNISHER")
+						m.BotChannel().Timeout(m.BotChannel().Bot().MakeUser(punishment.username), newDuration, "PUNISHER")
 					}
 				}
 

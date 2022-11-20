@@ -8,7 +8,6 @@ type MessageSender interface {
 
 	// Moderation
 	Timeout(User, int, string)
-	SingleTimeout(User, int, string)
 	Ban(User, string)
 }
 

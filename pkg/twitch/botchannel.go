@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg"
@@ -61,15 +60,11 @@ func (c *BotChannel) Mention(user pkg.User, message string) {
 }
 
 func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
-	c.bot.Timeout(&c.channel, user, duration, reason)
+	c.bot.SingleTimeout(&c.channel, user, duration, reason)
 }
 
 func (c *BotChannel) Ban(user pkg.User, reason string) {
 	c.bot.Ban(&c.channel, user, reason)
-}
-
-func (c *BotChannel) SingleTimeout(user pkg.User, duration int, reason string) {
-	c.bot.SingleTimeout(&c.channel, user, duration, reason)
 }
 
 func (c *BotChannel) DatabaseID() int64 {
@@ -366,12 +361,7 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 			case pkg.MuteTypeTemporary:
 				c.Timeout(mute.User(), int(mute.Duration().Seconds()), mute.Reason())
 			case pkg.MuteTypePermanent:
-				c.Timeout(mute.User(), 30, mute.Reason())
-				go func() {
-					time.Sleep(1000)
-
-					c.Ban(mute.User(), mute.Reason())
-				}()
+				c.Ban(mute.User(), mute.Reason())
 			}
 		}
 
