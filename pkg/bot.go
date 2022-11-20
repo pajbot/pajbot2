@@ -13,11 +13,8 @@ type Sender interface {
 	Whisper(User, string)
 	Whisperf(User, string, ...interface{})
 
-	// Timeout times the user out immediately, and then again after X seconds
+	// Timeout times the user out a single time immediately
 	Timeout(Channel, User, int, string)
-
-	// SingleTimeout times the user out a single time immediately
-	SingleTimeout(Channel, User, int, string)
 
 	Ban(Channel, User, string)
 

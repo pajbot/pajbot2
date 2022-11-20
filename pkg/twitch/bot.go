@@ -554,18 +554,6 @@ func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason s
 		return
 	}
 
-	b.SingleTimeout(channel, user, duration, reason)
-	time.AfterFunc(1200*time.Millisecond, func() {
-		b.SingleTimeout(channel, user, duration, reason)
-	})
-}
-
-// SingleTimeout times a user out a single time
-func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
-	if user.IsModerator() {
-		return
-	}
-
 	resp, err := b.HelixClient().TimeoutUser(channel.GetID(), b.TwitchAccount().ID(), user.GetID(), reason, duration)
 	if err != nil {
 		fmt.Println("Error timing out user:", err)
