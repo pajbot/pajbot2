@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/dghubble/go-twitter v0.0.0-20220816163853-8a0df96f1e6d
-	github.com/dghubble/oauth1 v0.7.1
+	github.com/dghubble/oauth1 v0.7.2
 	github.com/frankban/quicktest v1.14.4
 	github.com/gempir/go-twitch-irc/v3 v3.2.0
 	github.com/go-sql-driver/mysql v1.7.0
