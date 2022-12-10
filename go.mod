@@ -6,17 +6,17 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0
 	github.com/dghubble/go-twitter v0.0.0-20220816163853-8a0df96f1e6d
-	github.com/dghubble/oauth1 v0.7.1
-	github.com/frankban/quicktest v1.14.3
+	github.com/dghubble/oauth1 v0.7.2
+	github.com/frankban/quicktest v1.14.4
 	github.com/gempir/go-twitch-irc/v3 v3.2.0
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/lib/pq v1.10.7
-	github.com/nicklaw5/helix/v2 v2.11.0
+	github.com/nicklaw5/helix/v2 v2.12.0
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
 	github.com/pajlada/go-twitch-pubsub v0.0.2
@@ -26,7 +26,7 @@ require (
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v1.3.5
-	github.com/swaggo/swag v1.8.7
+	github.com/swaggo/swag v1.8.8
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
@@ -50,13 +50,13 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/kr/pretty v0.3.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/rogpeppe/go-internal v1.8.1 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
