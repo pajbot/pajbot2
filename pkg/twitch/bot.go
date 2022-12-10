@@ -16,6 +16,7 @@ import (
 
 	twitch "github.com/gempir/go-twitch-irc/v3"
 	"github.com/pajbot/pajbot2/pkg"
+	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/users"
@@ -54,6 +55,8 @@ type Bot struct {
 
 	tokenSource oauth2.TokenSource
 
+	helixClient *apirequest.HelixWrapper
+
 	DatabaseID int
 
 	twitchAccount *User
@@ -87,7 +90,7 @@ type Bot struct {
 var _ pkg.PubSubConnection = &Bot{}
 var _ pkg.PubSubSource = &Bot{}
 
-func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, token *oauth2.Token, app pkg.Application) (*Bot, error) {
+func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.TokenSource, token *oauth2.Token, helixClient *apirequest.HelixWrapper, app pkg.Application) (*Bot, error) {
 	// TODO(pajlada): share user store between twitch bots
 	// TODO(pajlada): mutex lock user store
 	b := &Bot{
@@ -95,6 +98,8 @@ func NewBot(databaseID int, twitchAccount pkg.TwitchAccount, tokenSource oauth2.
 
 		token:       token,
 		tokenSource: tokenSource,
+
+		helixClient: helixClient,
 
 		DatabaseID: databaseID,
 
@@ -160,12 +165,15 @@ SET
 WHERE
 id=$4`
 
+	fmt.Println("Refreshing token for", b.TwitchAccount().Name())
 	_, err := b.sql.Exec(queryF, token.AccessToken, token.RefreshToken, token.Expiry, b.DatabaseID)
 	if err != nil {
 		return err
 	}
 
 	b.token = token
+
+	b.helixClient.SetUserAccessToken(token.AccessToken)
 
 	return nil
 }
@@ -209,6 +217,21 @@ func (b *Bot) GetAccessToken() (string, error) {
 	return token.AccessToken, nil
 }
 
+func (b *Bot) RefreshToken() error {
+	token, err := b.GetTokenSource().Token()
+	if err != nil {
+		return fmt.Errorf("[Bot::RefreshToken] Error getting token from token source: %w", err)
+	}
+
+	if !tokensAreTheSame(token, b.token) {
+		if err := b.refreshToken(token); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (b *Bot) OnNewChannelJoined(cb func(channel pkg.Channel)) {
 	b.onNewChannelJoined = cb
 }
@@ -223,6 +246,13 @@ func (b *Bot) Application() pkg.Application {
 
 func (b *Bot) Connection() pkg.PubSubConnection {
 	return b
+}
+
+func (b *Bot) HelixClient() *apirequest.HelixWrapper {
+	if err := b.RefreshToken(); err != nil {
+		fmt.Println("Error refreshing token when getting helix client:", err)
+	}
+	return b.helixClient
 }
 
 func (b *Bot) FetchDatabaseID() int {
@@ -518,24 +548,38 @@ func (b *Bot) Whisperf(user pkg.User, format string, a ...interface{}) {
 	b.Client.Whisper(user.GetName(), fmt.Sprintf(format, a...))
 }
 
+// Timeout will time a user out two times with a delay inbetween to ensure no sneaky messages come through
 func (b *Bot) Timeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
-	if !user.IsModerator() {
-		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
-		time.AfterFunc(1200*time.Millisecond, func() {
-			b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
-		})
+	if user.IsModerator() {
+		return
 	}
-}
 
-func (b *Bot) SingleTimeout(channel pkg.Channel, user pkg.User, duration int, reason string) {
-	if !user.IsModerator() {
-		b.Say(channel, fmt.Sprintf(".timeout %s %d %s", user.GetName(), duration, reason))
+	resp, err := b.HelixClient().TimeoutUser(channel.GetID(), b.TwitchAccount().ID(), user.GetID(), reason, duration)
+	if err != nil {
+		fmt.Println("Error timing out user:", err)
+	} else {
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			fmt.Println("Timeout error:", resp.ErrorMessage, resp.Error, resp, b.TwitchAccount().Name())
+		} else {
+			fmt.Println("Timeout success:", resp.Data.Bans)
+		}
 	}
 }
 
 func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
-	if !user.IsModerator() {
-		b.Say(channel, fmt.Sprintf(".ban %s %s", user.GetName(), reason))
+	if user.IsModerator() {
+		return
+	}
+
+	resp, err := b.HelixClient().BanUser(channel.GetID(), b.TwitchAccount().ID(), user.GetID(), reason)
+	if err != nil {
+		fmt.Println("Error banning user:", err)
+	} else {
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			fmt.Println("Ban error:", resp.ErrorMessage, resp.Error, resp, b.TwitchAccount().Name())
+		} else {
+			fmt.Println("Ban success:", resp.Data.Bans)
+		}
 	}
 }
 

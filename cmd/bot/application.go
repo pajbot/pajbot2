@@ -418,7 +418,7 @@ func (a *Application) botOnNewChannelJoined(bot *pb2twitch.Bot, botUserID string
 }
 
 func (a *Application) loadBot(botConfig botConfig) error {
-	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, a)
+	bot, err := pb2twitch.NewBot(botConfig.databaseID, botConfig.account, botConfig.tokenSource, botConfig.token, botConfig.helixClient, a)
 	if err != nil {
 		return fmt.Errorf("loadBot NewBot: %w", err)
 	}
@@ -435,19 +435,24 @@ func (a *Application) loadBot(botConfig botConfig) error {
 	return nil
 }
 
-func appendBotConfig(wg *sync.WaitGroup, botsMutex sync.Locker, bots *[]botConfig, databaseID int, acc pb2twitch.TwitchAccount, c pb2twitch.BotCredentials, oauthConfig *oauth2.Config, sqlClient *sql.DB) {
+func appendBotConfig(wg *sync.WaitGroup, botsMutex sync.Locker, bots *[]botConfig, databaseID int, acc pb2twitch.TwitchAccount, c pb2twitch.BotCredentials, oauthConfig *oauth2.Config, sqlClient *sql.DB, clientID string) error {
 	defer wg.Done()
 
-	bc := newBotConfig(databaseID, &acc, c, oauthConfig)
+	bc, err := newBotConfig(databaseID, &acc, c, oauthConfig, clientID)
+	if err != nil {
+		return err
+	}
 
 	if err := bc.Validate(sqlClient); err != nil {
 		fmt.Println("Error validating bot config:", err)
-		return
+		return err
 	}
 
 	botsMutex.Lock()
 	defer botsMutex.Unlock()
 	*bots = append(*bots, bc)
+
+	return nil
 }
 
 // LoadBots loads bots from the database
@@ -484,7 +489,12 @@ func (a *Application) LoadBots() (err error) {
 
 		c.AccessToken = strings.TrimPrefix(c.AccessToken, "oauth:")
 
-		go appendBotConfig(&wg, &botsMutex, &bots, databaseID, acc, c, oauthConfig, a.sqlClient)
+		go func() {
+			err := appendBotConfig(&wg, &botsMutex, &bots, databaseID, acc, c, oauthConfig, a.sqlClient, a.config.Auth.Twitch.Bot.ClientID)
+			if err != nil {
+				fmt.Println("Error appending bot config:", err)
+			}
+		}()
 	}
 
 	wg.Wait()

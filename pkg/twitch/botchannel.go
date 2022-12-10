@@ -60,7 +60,7 @@ func (c *BotChannel) Mention(user pkg.User, message string) {
 }
 
 func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
-	c.bot.SingleTimeout(&c.channel, user, duration, reason)
+	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
 func (c *BotChannel) Ban(user pkg.User, reason string) {
