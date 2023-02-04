@@ -59,6 +59,8 @@ type UserStore interface {
 
 	GetID(string) string
 
+	GetUserByLogin(string) (User, error)
+
 	GetName(string) string
 
 	// Input: list of twitch IDs

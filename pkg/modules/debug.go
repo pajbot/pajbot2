@@ -1,8 +1,11 @@
 package modules
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
@@ -61,28 +64,8 @@ func (c pb2Whisper) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions 
 	return twitchactions.DoWhisper(targetUser, strings.Join(parts[2:], " "))
 }
 
-var (
-	whitelistedCommands = map[string]interface{}{
-		"ban":            nil,
-		"unban":          nil,
-		"timeout":        nil,
-		"untimeout":      nil,
-		"delete":         nil,
-		"subscribers":    nil,
-		"subscribersoff": nil,
-		"r9kbeta":        nil,
-		"r9kbetaoff":     nil,
-		"emoteonly":      nil,
-		"emoteonlyoff":   nil,
-		"slow":           nil,
-		"slowoff":        nil,
-		"followers":      nil,
-		"followersoff":   nil,
-		"clear":          nil,
-	}
-)
-
 type pb2Exec struct {
+	m *debugModule
 }
 
 func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
@@ -94,18 +77,140 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
-	command := parts[1]
-	if !strings.HasPrefix(command, ".") && !strings.HasPrefix(command, "/") {
-		command = "." + command
+	command := strings.ToLower(parts[1])
+
+	getTarget := func() (pkg.User, error) {
+		if len(parts) <= 2 {
+			return nil, errors.New("no target specified")
+		}
+
+		login := strings.ToLower(parts[2])
+
+		return event.UserStore.GetUserByLogin(login)
 	}
 
-	if _, ok := whitelistedCommands[command[1:]]; !ok {
-		return twitchactions.DoWhisperf(event.User, "You are not allowed to run the command '%s'", command[1:])
+	parseDuration := func(t string) (time.Duration, error) {
+		if seconds, err := strconv.Atoi(t); err == nil {
+			// No suffix = treat as seconds
+			return time.Duration(time.Duration(seconds) * time.Second), nil
+		}
+		return time.ParseDuration(t)
+	}
+
+	actions := &twitchactions.Actions{}
+
+	switch command {
+	case "ban":
+		target, err := getTarget()
+		if err != nil {
+			return twitchactions.DoWhisperf(event.User, "missing target: %s", err)
+		}
+		reason := strings.Join(parts[3:], " ")
+		actions.Ban(target).SetReason(reason)
+
+	case "unban":
+		// TODO: Implement new twitchactions action
+
+	case "timeout":
+		target, err := getTarget()
+		if err != nil {
+			return twitchactions.DoWhisperf(event.User, "missing target: %s", err)
+		}
+
+		var duration time.Duration
+		reason := ""
+		if len(parts) > 3 {
+			var err error
+			duration, err = parseDuration(parts[3])
+			if err != nil {
+				// default timeout duration is 10m
+				duration = 10 * time.Minute
+			}
+			if len(parts) > 4 {
+				reason = strings.Join(parts[4:], " ")
+			}
+		} else {
+			duration = 10 * time.Minute
+		}
+
+		actions.Timeout(target, duration).SetReason(reason)
+
+	case "untimeout":
+		// TODO: Implement new twitchactions action
+
+	case "delete":
+		// TODO: Implement new twitchactions action
+
+	case "subscribers":
+		if err := c.m.BotChannel().SetSubscribers(true); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling subscribers mode '%s'", err)
+		}
+
+	case "subscribersoff":
+		if err := c.m.BotChannel().SetSubscribers(false); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error disabling subscribers mode '%s'", err)
+		}
+
+	case "r9kbeta":
+		fallthrough
+	case "uniquechat":
+		if err := c.m.BotChannel().SetUniqueChat(true); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling unique chat '%s'", err)
+		}
+
+	case "r9kbetaoff":
+		fallthrough
+	case "uniquechatoff":
+		if err := c.m.BotChannel().SetUniqueChat(false); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error disabling unique chat '%s'", err)
+		}
+
+	case "emoteonly":
+		if err := c.m.BotChannel().SetEmoteOnly(true); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling emote only '%s'", err)
+		}
+
+	case "emoteonlyoff":
+		if err := c.m.BotChannel().SetEmoteOnly(false); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error disabling emote only '%s'", err)
+		}
+
+	case "slow":
+		// TODO: Parse duration
+		duration := 5
+
+		if err := c.m.BotChannel().SetSlowMode(true, duration); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling slow mode '%s'", err)
+		}
+
+	case "slowoff":
+		if err := c.m.BotChannel().SetSlowMode(false, 0); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error disabling slow mode '%s'", err)
+		}
+
+	case "followers":
+		// TODO: Parse duration
+		duration := 0
+
+		if err := c.m.BotChannel().SetSlowMode(true, duration); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling follower mode '%s'", err)
+		}
+
+	case "followersoff":
+		if err := c.m.BotChannel().SetSlowMode(false, 0); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error disabling follower mode '%s'", err)
+		}
+
+	case "clear":
+		return twitchactions.DoWhisper(event.User, "clear is no longer implemented, poke pajlada why you would need this")
+
+	default:
+		return twitchactions.DoWhisperf(event.User, "You are not allowed to run the command '%s'", command)
 	}
 
 	fmt.Printf("pb2exec Executing command for %s: %s\n", event.User.GetName(), strings.Join(parts[1:], " "))
 
-	return twitchactions.Sayf("%s %s", command, strings.Join(parts[2:], " "))
+	return actions
 }
 
 type debugModule struct {
@@ -130,7 +235,7 @@ func newDebugModule(b *mbase.Base) pkg.Module {
 func (m *debugModule) Initialize() {
 	m.commands.Register([]string{"!pb2say"}, &pb2Say{})
 	m.commands.Register([]string{"!pb2whisper"}, &pb2Whisper{})
-	m.commands.Register([]string{"!pb2exec"}, &pb2Exec{})
+	m.commands.Register([]string{"!pb2exec"}, &pb2Exec{m})
 }
 
 func (m *debugModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {

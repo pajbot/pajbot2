@@ -36,5 +36,11 @@ type BotChannel interface {
 	HandleEventSubNotification(notification TwitchEventSubNotification) error
 	OnModules(cb func(module Module) Actions, stop bool) []Actions
 
+	SetSubscribers(state bool) error
+	SetUniqueChat(state bool) error
+	SetEmoteOnly(state bool) error
+	SetSlowMode(state bool, durationS int) error
+	SetFollowerMode(state bool, durationM int) error
+
 	Bot() Sender
 }

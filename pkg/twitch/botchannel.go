@@ -448,3 +448,28 @@ func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error 
 
 	return c.resolveActions(actions)
 }
+
+func (c *BotChannel) SetSubscribers(state bool) error {
+	// TODO: Implement
+	return nil
+}
+
+func (c *BotChannel) SetUniqueChat(state bool) error {
+	// TODO: Implement
+	return nil
+}
+
+func (c *BotChannel) SetEmoteOnly(state bool) error {
+	// TODO: Implement
+	return nil
+}
+
+func (c *BotChannel) SetSlowMode(state bool, durationS int) error {
+	// TODO: Implement
+	return nil
+}
+
+func (c *BotChannel) SetFollowerMode(state bool, durationM int) error {
+	// TODO: Implement
+	return nil
+}
