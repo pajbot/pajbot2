@@ -93,7 +93,7 @@ func (w *HelixWrapper) Whisper(senderID string, userID string, message string) (
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return resp, fmt.Errorf("Error sending whisper: %s - %s", resp.ErrorMessage, resp.Error)
+		return resp, fmt.Errorf("error sending whisper: %s - %s", resp.ErrorMessage, resp.Error)
 	}
 
 	return resp, nil

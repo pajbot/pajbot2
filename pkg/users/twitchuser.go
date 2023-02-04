@@ -159,7 +159,7 @@ func (u *TwitchUser) SetID(id string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Unable to update the ID for %#v to %s", u, id)
+	return fmt.Errorf("unable to update the ID for %#v to %s", u, id)
 }
 
 func (u *TwitchUser) SetName(name string) error {
@@ -168,7 +168,7 @@ func (u *TwitchUser) SetName(name string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Unable to update the Name for %#v to %s", u, name)
+	return fmt.Errorf("unable to update the Name for %#v to %s", u, name)
 }
 
 func GetUserPermissions(userID, channelID string) (pkg.Permission, error) {
