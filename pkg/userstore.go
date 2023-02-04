@@ -64,4 +64,6 @@ type UserStore interface {
 	// Input: list of twitch IDs
 	// Returns: map of twitch IDs pointing at twitch usernames
 	GetNames([]string) map[string]string
+
+	Hydrate([]User) error
 }
