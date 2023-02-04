@@ -8,6 +8,7 @@ import (
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/utils"
+	"github.com/pkg/errors"
 )
 
 var _ pkg.UserStore = &UserStore{}
@@ -48,6 +49,7 @@ func (s *UserStore) GetIDs(names []string) (ids map[string]string) {
 
 	var wg sync.WaitGroup
 
+	fmt.Println("GetIDs", remaining)
 	batches, _ := utils.ChunkStringSlice(remaining, 100)
 	for _, batch := range batches {
 		wg.Add(1)
@@ -88,6 +90,7 @@ func (s *UserStore) GetID(name string) (id string) {
 		return
 	}
 
+	fmt.Println("GetID", id)
 	response, err := apirequest.TwitchWrapper.GetUsersByLogin([]string{name})
 	if err != nil {
 		return
@@ -118,6 +121,7 @@ func (s *UserStore) GetName(id string) (name string) {
 		return
 	}
 
+	fmt.Println("GetName", id)
 	response, err := apirequest.TwitchWrapper.GetUsersByID([]string{id})
 	if err != nil {
 		return
@@ -157,6 +161,7 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 
 	var wg sync.WaitGroup
 
+	fmt.Println("GetNames", remaining)
 	batches, _ := utils.ChunkStringSlice(remaining, 100)
 	for _, batch := range batches {
 		wg.Add(1)
@@ -183,6 +188,57 @@ func (s *UserStore) GetNames(ids []string) (names map[string]string) {
 	wg.Wait()
 
 	return
+}
+
+func (s *UserStore) Hydrate(users []pkg.User) error {
+	missingIDs := map[string]pkg.User{}
+	missingLogins := map[string]pkg.User{}
+
+	for _, user := range users {
+		if user.GetName() == "" {
+			if user.GetID() == "" {
+				return errors.New("Cannot hydrate an empty user (no name & no id)")
+			}
+
+			missingLogins[user.GetID()] = user
+		} else if user.GetID() == "" {
+			if user.GetName() == "" {
+				return errors.New("Cannot hydrate an empty user (no name & no id)")
+			}
+
+			missingIDs[user.GetName()] = user
+		}
+	}
+
+	if len(missingIDs) > 0 {
+		logins := make([]string, len(missingIDs))
+		i := 0
+		for login := range missingIDs {
+			logins[i] = login
+			i++
+		}
+		ids := s.GetIDs(logins)
+		for name, id := range ids {
+			fmt.Println("Updating ID of", name, "to", id)
+			missingIDs[name].SetID(id)
+		}
+	}
+
+	if len(missingLogins) > 0 {
+		ids := make([]string, len(missingLogins))
+		i := 0
+		for login := range missingLogins {
+			ids[i] = login
+			i++
+		}
+		names := s.GetNames(ids)
+		for id, name := range names {
+			fmt.Println("Updating name of", id, "to", name)
+			missingLogins[id].SetName(name)
+		}
+	}
+
+	return nil
 }
 
 func (s *UserStore) save(id, name string) {

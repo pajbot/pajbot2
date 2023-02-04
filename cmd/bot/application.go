@@ -19,7 +19,7 @@ import (
 
 	_ "github.com/lib/pq" // PostgreSQL Driver
 
-	twitch "github.com/gempir/go-twitch-irc/v3"
+	twitch "github.com/gempir/go-twitch-irc/v4"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/auth"

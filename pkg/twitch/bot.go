@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	twitch "github.com/gempir/go-twitch-irc/v3"
+	twitch "github.com/gempir/go-twitch-irc/v4"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
@@ -541,11 +541,23 @@ func (b *Bot) Mention(channel pkg.Channel, user pkg.User, message string) {
 }
 
 func (b *Bot) Whisper(user pkg.User, message string) {
-	b.Client.Whisper(user.GetName(), message)
+	err := b.userStore.Hydrate([]pkg.User{user})
+	if err != nil {
+		fmt.Println("Error hydrating whisper target:", err)
+		return
+	}
+
+	resp, err := b.HelixClient().Whisper(b.TwitchAccount().ID(), user.GetID(), message)
+	if err != nil {
+		fmt.Println("Error sending whisper:", err)
+		return
+	}
+
+	fmt.Println("Sent whisper:", resp)
 }
 
 func (b *Bot) Whisperf(user pkg.User, format string, a ...interface{}) {
-	b.Client.Whisper(user.GetName(), fmt.Sprintf(format, a...))
+	b.Whisper(user, fmt.Sprintf(format, a...))
 }
 
 // Timeout will time a user out two times with a delay inbetween to ensure no sneaky messages come through

@@ -80,6 +80,25 @@ func NewHelixUserAPIClient(clientID string, userTokenSource oauth2.TokenSource, 
 	return &HelixWrapper{Client: apiClient}, nil
 }
 
+func (w *HelixWrapper) Whisper(senderID string, userID string, message string) (*helix.SendUserWhisperResponse, error) {
+	fmt.Println("Sending whisper from", senderID, "to", userID, ":", message)
+	resp, err := w.Client.SendUserWhisper(&helix.SendUserWhisperParams{
+		FromUserID: senderID,
+		ToUserID:   userID,
+		Message:    message,
+	})
+
+	if err != nil {
+		return resp, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return resp, fmt.Errorf("error sending whisper: %s - %s", resp.ErrorMessage, resp.Error)
+	}
+
+	return resp, nil
+}
+
 func (w *HelixWrapper) TimeoutUser(channelID string, moderatorID string, userID string, reason string, durationS int) (*helix.BanUserResponse, error) {
 	if channelID == "" {
 		return nil, ErrMissingChannelID

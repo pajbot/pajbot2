@@ -3,9 +3,10 @@ package users
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 
-	twitch "github.com/gempir/go-twitch-irc/v3"
+	twitch "github.com/gempir/go-twitch-irc/v4"
 	"github.com/pajbot/pajbot2/pkg"
 )
 
@@ -150,6 +151,24 @@ func (u *TwitchUser) IsSubscriber() bool {
 
 func (u *TwitchUser) GetBadges() map[string]int {
 	return u.Badges
+}
+
+func (u *TwitchUser) SetID(id string) error {
+	if u.ID == "" {
+		u.ID = id
+		return nil
+	}
+
+	return fmt.Errorf("unable to update the ID for %#v to %s", u, id)
+}
+
+func (u *TwitchUser) SetName(name string) error {
+	if u.Name == "" {
+		u.Name = name
+		return nil
+	}
+
+	return fmt.Errorf("unable to update the Name for %#v to %s", u, name)
 }
 
 func GetUserPermissions(userID, channelID string) (pkg.Permission, error) {
