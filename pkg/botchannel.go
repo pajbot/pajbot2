@@ -41,6 +41,7 @@ type BotChannel interface {
 	SetEmoteOnly(state bool) error
 	SetSlowMode(state bool, durationS int) error
 	SetFollowerMode(state bool, durationM int) error
+	SetNonModChatDelay(state bool, durationS int) error
 
 	Bot() Sender
 }

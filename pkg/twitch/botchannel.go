@@ -63,8 +63,20 @@ func (c *BotChannel) Timeout(user pkg.User, duration int, reason string) {
 	c.bot.Timeout(&c.channel, user, duration, reason)
 }
 
+func (c *BotChannel) Untimeout(user pkg.User) {
+	c.bot.Untimeout(&c.channel, user)
+}
+
 func (c *BotChannel) Ban(user pkg.User, reason string) {
 	c.bot.Ban(&c.channel, user, reason)
+}
+
+func (c *BotChannel) Unban(user pkg.User) {
+	c.bot.Unban(&c.channel, user)
+}
+
+func (c *BotChannel) DeleteMessage(message string) {
+	c.bot.DeleteMessage(&c.channel, message)
 }
 
 func (c *BotChannel) DatabaseID() int64 {
@@ -365,6 +377,19 @@ func (c *BotChannel) resolveActions(actions []pkg.Actions) error {
 			}
 		}
 
+		for _, unmute := range action.Unmutes() {
+			switch unmute.Type() {
+			case pkg.MuteTypeTemporary:
+				c.Untimeout(unmute.User())
+			case pkg.MuteTypePermanent:
+				c.Unban(unmute.User())
+			}
+		}
+
+		for _, delete := range action.Deletes() {
+			c.DeleteMessage(delete.Message())
+		}
+
 		for _, message := range action.Messages() {
 			c.Say(message.Evaluate())
 		}
@@ -450,26 +475,46 @@ func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error 
 }
 
 func (c *BotChannel) SetSubscribers(state bool) error {
-	// TODO: Implement
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		SubscriberMode: &state,
+	})
 	return nil
 }
 
 func (c *BotChannel) SetUniqueChat(state bool) error {
-	// TODO: Implement
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		UniqueChatMode: &state,
+	})
 	return nil
 }
 
 func (c *BotChannel) SetEmoteOnly(state bool) error {
-	// TODO: Implement
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		EmoteMode: &state,
+	})
 	return nil
 }
 
 func (c *BotChannel) SetSlowMode(state bool, durationS int) error {
-	// TODO: Implement
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		SlowMode:         &state,
+		SlowModeWaitTime: &durationS,
+	})
 	return nil
 }
 
 func (c *BotChannel) SetFollowerMode(state bool, durationM int) error {
-	// TODO: Implement
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		FollowerMode:         &state,
+		FollowerModeDuration: &durationM,
+	})
+	return nil
+}
+
+func (c *BotChannel) SetNonModChatDelay(state bool, durationS int) error {
+	c.bot.UpdateChatSettings(&c.channel, &helix.UpdateChatSettingsParams{
+		NonModeratorChatDelay:         &state,
+		NonModeratorChatDelayDuration: &durationS,
+	})
 	return nil
 }

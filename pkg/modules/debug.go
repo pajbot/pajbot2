@@ -3,6 +3,7 @@ package modules
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -77,7 +78,12 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		return nil
 	}
 
-	command := strings.ToLower(parts[1])
+	command := strings.TrimLeftFunc(strings.ToLower(parts[1]), func(c rune) bool {
+		if c == '.' || c == '/' {
+			return true
+		}
+		return false
+	})
 
 	getTarget := func() (pkg.User, error) {
 		if len(parts) <= 2 {
@@ -89,12 +95,17 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		return event.UserStore.GetUserByLogin(login)
 	}
 
-	parseDuration := func(t string) (time.Duration, error) {
+	parseDuration := func(t string, defaultUnit time.Duration, defaultTime time.Duration) time.Duration {
 		if seconds, err := strconv.Atoi(t); err == nil {
 			// No suffix = treat as seconds
-			return time.Duration(time.Duration(seconds) * time.Second), nil
+			return time.Duration(time.Duration(seconds) * defaultUnit)
 		}
-		return time.ParseDuration(t)
+
+		d, err := time.ParseDuration(t)
+		if err != nil {
+			return defaultTime
+		}
+		return d
 	}
 
 	actions := &twitchactions.Actions{}
@@ -109,7 +120,11 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		actions.Ban(target).SetReason(reason)
 
 	case "unban":
-		// TODO: Implement new twitchactions action
+		target, err := getTarget()
+		if err != nil {
+			return twitchactions.DoWhisperf(event.User, "missing target: %s", err)
+		}
+		actions.Unban(target)
 
 	case "timeout":
 		target, err := getTarget()
@@ -120,12 +135,8 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		var duration time.Duration
 		reason := ""
 		if len(parts) > 3 {
-			var err error
-			duration, err = parseDuration(parts[3])
-			if err != nil {
-				// default timeout duration is 10m
-				duration = 10 * time.Minute
-			}
+			// default timeout duration is 10m
+			duration = parseDuration(parts[3], time.Second, 10*time.Minute)
 			if len(parts) > 4 {
 				reason = strings.Join(parts[4:], " ")
 			}
@@ -136,10 +147,18 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		actions.Timeout(target, duration).SetReason(reason)
 
 	case "untimeout":
-		// TODO: Implement new twitchactions action
+		target, err := getTarget()
+		if err != nil {
+			return twitchactions.DoWhisperf(event.User, "missing target: %s", err)
+		}
+		actions.Untimeout(target)
 
 	case "delete":
-		// TODO: Implement new twitchactions action
+		if len(parts) <= 2 {
+			return twitchactions.DoWhisperf(event.User, "missing msg id")
+		}
+
+		actions.Delete(parts[2])
 
 	case "subscribers":
 		if err := c.m.BotChannel().SetSubscribers(true); err != nil {
@@ -165,6 +184,21 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 			return twitchactions.DoWhisperf(event.User, "Error disabling unique chat '%s'", err)
 		}
 
+	case "nonmodchatdelay":
+		duration := 30 * time.Second
+		if len(parts) > 2 {
+			duration = parseDuration(parts[2], time.Second, 30*time.Second)
+		}
+
+		if err := c.m.BotChannel().SetNonModChatDelay(true, int(duration.Seconds())); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling slow mode '%s'", err)
+		}
+
+	case "nonmodchatdelayoff":
+		if err := c.m.BotChannel().SetNonModChatDelay(false, 0); err != nil {
+			return twitchactions.DoWhisperf(event.User, "Error enabling slow mode '%s'", err)
+		}
+
 	case "emoteonly":
 		if err := c.m.BotChannel().SetEmoteOnly(true); err != nil {
 			return twitchactions.DoWhisperf(event.User, "Error enabling emote only '%s'", err)
@@ -176,10 +210,12 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		}
 
 	case "slow":
-		// TODO: Parse duration
-		duration := 5
+		duration := 30 * time.Second
+		if len(parts) > 2 {
+			duration = parseDuration(parts[2], time.Second, 30*time.Second)
+		}
 
-		if err := c.m.BotChannel().SetSlowMode(true, duration); err != nil {
+		if err := c.m.BotChannel().SetSlowMode(true, int(duration.Seconds())); err != nil {
 			return twitchactions.DoWhisperf(event.User, "Error enabling slow mode '%s'", err)
 		}
 
@@ -189,15 +225,17 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		}
 
 	case "followers":
-		// TODO: Parse duration
-		duration := 0
+		duration := 0 * time.Second
+		if len(parts) > 2 {
+			duration = parseDuration(parts[2], time.Minute, 0*time.Second)
+		}
 
-		if err := c.m.BotChannel().SetSlowMode(true, duration); err != nil {
+		if err := c.m.BotChannel().SetFollowerMode(true, int(math.Floor(duration.Minutes()))); err != nil {
 			return twitchactions.DoWhisperf(event.User, "Error enabling follower mode '%s'", err)
 		}
 
 	case "followersoff":
-		if err := c.m.BotChannel().SetSlowMode(false, 0); err != nil {
+		if err := c.m.BotChannel().SetFollowerMode(false, 0); err != nil {
 			return twitchactions.DoWhisperf(event.User, "Error disabling follower mode '%s'", err)
 		}
 

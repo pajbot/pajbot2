@@ -22,6 +22,18 @@ type MuteAction interface {
 	Duration() time.Duration
 }
 
+// UnmuteAction defines an action that will unmute/untimeout or unban a user
+type UnmuteAction interface {
+	User() User
+
+	Type() MuteType
+}
+
+// DeleteAction defines an action that will delete a message
+type DeleteAction interface {
+	Message() string
+}
+
 // MessageAction defines a message that will be publicly displayed
 type MessageAction interface {
 	// TODO: Add reply message action
@@ -42,13 +54,19 @@ type Actions interface {
 
 	Ban(user User) MuteAction
 
+	Unban(user User) UnmuteAction
+
 	Say(content string) MessageAction
+
+	Delete(message string) DeleteAction
 
 	Mention(user User, content string) MessageAction
 
 	Whisper(user User, content string) WhisperAction
 
 	Mutes() []MuteAction
+	Unmutes() []UnmuteAction
+	Deletes() []DeleteAction
 	Messages() []MessageAction
 	Whispers() []WhisperAction
 
