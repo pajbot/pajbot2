@@ -195,7 +195,11 @@ func (w *HelixWrapper) UntimeoutUser(channelID string, moderatorID string, userI
 		return nil, nil
 	}
 
-	fmt.Println(bannedUser.ExpiresAt)
+	emptyTime := time.Time{}
+
+	if bannedUser.ExpiresAt.Time == emptyTime {
+		return nil, errors.New("user is perma banned, use UnbanUser instead of UntimeoutUser")
+	}
 
 	return w.UnbanUser(channelID, moderatorID, userID)
 }
