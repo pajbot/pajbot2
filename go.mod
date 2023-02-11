@@ -16,7 +16,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.10.0
 	github.com/lib/pq v1.10.7
-	github.com/nicklaw5/helix/v2 v2.15.1
+	github.com/nicklaw5/helix/v2 v2.17.0
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
 	github.com/pajlada/go-twitch-pubsub v0.0.2
@@ -29,7 +29,7 @@ require (
 	github.com/swaggo/swag v1.8.10
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
-	golang.org/x/oauth2 v0.4.0
+	golang.org/x/oauth2 v0.5.0
 	honnef.co/go/tools v0.4.0
 	mvdan.cc/xurls/v2 v2.4.0
 )
@@ -63,9 +63,9 @@ require (
 	golang.org/x/crypto v0.5.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
