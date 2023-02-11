@@ -12,6 +12,12 @@ type baseActions struct {
 	mutesMutex sync.RWMutex
 	mutes      []pkg.MuteAction
 
+	unmutesMutex sync.RWMutex
+	unmutes      []pkg.UnmuteAction
+
+	deletesMutex sync.RWMutex
+	deletes      []pkg.DeleteAction
+
 	messagesMutex sync.RWMutex
 	messages      []pkg.MessageAction
 
@@ -50,6 +56,44 @@ func (a *baseActions) Ban(user pkg.User) pkg.MuteAction {
 	a.mutesMutex.Lock()
 	a.mutes = append(a.mutes, action)
 	a.mutesMutex.Unlock()
+
+	return action
+}
+
+func (a *baseActions) Unban(user pkg.User) pkg.UnmuteAction {
+	action := &unmute{
+		user:     user,
+		muteType: pkg.MuteTypePermanent,
+	}
+
+	a.unmutesMutex.Lock()
+	a.unmutes = append(a.unmutes, action)
+	a.unmutesMutex.Unlock()
+
+	return action
+}
+
+func (a *baseActions) Untimeout(user pkg.User) pkg.UnmuteAction {
+	action := &unmute{
+		user:     user,
+		muteType: pkg.MuteTypeTemporary,
+	}
+
+	a.unmutesMutex.Lock()
+	a.unmutes = append(a.unmutes, action)
+	a.unmutesMutex.Unlock()
+
+	return action
+}
+
+func (a *baseActions) Delete(message string) pkg.DeleteAction {
+	action := &deleteAction{
+		message: message,
+	}
+
+	a.deletesMutex.Lock()
+	a.deletes = append(a.deletes, action)
+	a.deletesMutex.Unlock()
 
 	return action
 }
@@ -96,6 +140,20 @@ func (a *baseActions) Mutes() []pkg.MuteAction {
 	defer a.mutesMutex.RUnlock()
 
 	return a.mutes
+}
+
+func (a *baseActions) Unmutes() []pkg.UnmuteAction {
+	a.unmutesMutex.RLock()
+	defer a.unmutesMutex.RUnlock()
+
+	return a.unmutes
+}
+
+func (a *baseActions) Deletes() []pkg.DeleteAction {
+	a.deletesMutex.RLock()
+	defer a.deletesMutex.RUnlock()
+
+	return a.deletes
 }
 
 func (a *baseActions) Messages() []pkg.MessageAction {

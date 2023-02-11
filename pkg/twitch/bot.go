@@ -15,6 +15,7 @@ import (
 	"time"
 
 	twitch "github.com/gempir/go-twitch-irc/v4"
+	"github.com/nicklaw5/helix/v2"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
 	"github.com/pajbot/pajbot2/pkg/channels"
@@ -596,8 +597,44 @@ func (b *Bot) Ban(channel pkg.Channel, user pkg.User, reason string) {
 }
 
 func (b *Bot) Untimeout(channel pkg.Channel, user pkg.User) {
-	if !user.IsModerator() {
-		b.Say(channel, fmt.Sprintf(".untimeout %s", user.GetName()))
+	resp, err := b.HelixClient().UntimeoutUser(channel.GetID(), b.TwitchAccount().ID(), user.GetID())
+	if err != nil {
+		fmt.Println("Error untimeout for user:", err)
+	} else {
+		fmt.Println("Untimeout success:", resp)
+	}
+}
+
+func (b *Bot) Unban(channel pkg.Channel, user pkg.User) {
+	resp, err := b.HelixClient().UnbanUser(channel.GetID(), b.TwitchAccount().ID(), user.GetID())
+	if err != nil {
+		fmt.Println("Error untimeout for user:", err)
+	} else {
+		fmt.Println("Untimeout success:", resp)
+	}
+}
+
+func (b *Bot) DeleteMessage(channel pkg.Channel, message string) {
+	resp, err := b.HelixClient().DeleteMessage(channel.GetID(), b.TwitchAccount().ID(), message)
+	if err != nil {
+		fmt.Println("Error deleting message:", err)
+	} else {
+		fmt.Println("Delete message success:", resp)
+	}
+}
+
+func (b *Bot) UpdateChatSettings(channel pkg.Channel, params *helix.UpdateChatSettingsParams) {
+	params.BroadcasterID = channel.GetID()
+	params.ModeratorID = b.TwitchAccount().ID()
+	resp, err := b.HelixClient().Client.UpdateChatSettings(params)
+	if err != nil {
+		fmt.Println("Error updating chat settings:", err)
+	} else {
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			fmt.Printf("Error updating chat settings: %s - %s\n", resp.ErrorMessage, resp.Error)
+		} else {
+			fmt.Println("Successfully updated chat settings", resp)
+		}
 	}
 }
 

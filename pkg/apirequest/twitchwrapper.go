@@ -19,6 +19,7 @@ var (
 	ErrMissingChannelID   = errors.New("channel id must be specified")
 	ErrMissingModeratorID = errors.New("moderator id must be specified")
 	ErrMissingUserID      = errors.New("user id must be specified")
+	ErrMissingMessageID   = errors.New("message id must be specified")
 )
 
 type TwitchWrapperX struct {
@@ -143,6 +144,128 @@ func (w *HelixWrapper) BanUser(channelID string, moderatorID string, userID stri
 			Reason: reason,
 		},
 	})
+}
+
+func (w *HelixWrapper) GetBannedUser(channelID string, userID string) (*helix.Ban, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if userID == "" {
+		return nil, ErrMissingUserID
+	}
+
+	resp, err := w.Client.GetBannedUsers(&helix.BannedUsersParams{
+		BroadcasterID: channelID,
+		UserID:        userID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("error getting banned user: %s - %s", resp.ErrorMessage, resp.Error)
+	}
+
+	if len(resp.Data.Bans) == 0 {
+		return nil, nil
+	}
+
+	return &resp.Data.Bans[0], nil
+}
+
+func (w *HelixWrapper) UntimeoutUser(channelID string, moderatorID string, userID string) (*helix.UnbanUserResponse, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if moderatorID == "" {
+		return nil, ErrMissingModeratorID
+	}
+	if userID == "" {
+		return nil, ErrMissingUserID
+	}
+
+	bannedUser, err := w.GetBannedUser(channelID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if bannedUser == nil {
+		// User isn't banned
+		return nil, nil
+	}
+
+	emptyTime := time.Time{}
+
+	if bannedUser.ExpiresAt.Time == emptyTime {
+		return nil, errors.New("user is perma banned, use UnbanUser instead of UntimeoutUser")
+	}
+
+	return w.UnbanUser(channelID, moderatorID, userID)
+}
+
+func (w *HelixWrapper) UnbanUser(channelID string, moderatorID string, userID string) (*helix.UnbanUserResponse, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if moderatorID == "" {
+		return nil, ErrMissingModeratorID
+	}
+	if userID == "" {
+		return nil, ErrMissingUserID
+	}
+
+	fmt.Println("Channel ID", channelID)
+	fmt.Println("Moderator ID", moderatorID)
+	fmt.Println("User ID", userID)
+
+	resp, err := w.Client.UnbanUser(&helix.UnbanUserParams{
+		BroadcasterID: channelID,
+		ModeratorID:   moderatorID,
+		UserID:        userID,
+	})
+
+	if err != nil {
+		return resp, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return resp, fmt.Errorf("error unbanning: %s - %s", resp.ErrorMessage, resp.Error)
+	}
+
+	return resp, nil
+}
+
+func (w *HelixWrapper) DeleteMessage(channelID string, moderatorID string, messageID string) (*helix.DeleteChatMessageResponse, error) {
+	if channelID == "" {
+		return nil, ErrMissingChannelID
+	}
+	if moderatorID == "" {
+		return nil, ErrMissingModeratorID
+	}
+	if messageID == "" {
+		return nil, ErrMissingMessageID
+	}
+
+	fmt.Println("Channel ID", channelID)
+	fmt.Println("Moderator ID", moderatorID)
+	fmt.Println("Message ID", messageID)
+
+	resp, err := w.Client.DeleteChatMessage(&helix.DeleteChatMessageParams{
+		BroadcasterID: channelID,
+		ModeratorID:   moderatorID,
+		MessageID:     messageID,
+	})
+
+	if err != nil {
+		return resp, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return resp, fmt.Errorf("error deleting message: %s - %s", resp.ErrorMessage, resp.Error)
+	}
+
+	return resp, nil
 }
 
 func newHelixAPIClient(clientID, clientSecret string) (*helix.Client, chan struct{}, error) {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/apirequest"
+	"github.com/pajbot/pajbot2/pkg/users"
 	"github.com/pajbot/utils"
 	"github.com/pkg/errors"
 )
@@ -109,6 +110,15 @@ func (s *UserStore) GetID(name string) (id string) {
 	s.save(id, name)
 
 	return
+}
+
+func (s *UserStore) GetUserByLogin(login string) (pkg.User, error) {
+	userID := s.GetID(login)
+	if userID == "" {
+		return nil, fmt.Errorf("no user found with the login %s", login)
+	}
+
+	return users.NewSimpleTwitchUser(userID, login), nil
 }
 
 func (s *UserStore) GetName(id string) (name string) {
