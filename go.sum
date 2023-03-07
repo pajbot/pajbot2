@@ -118,8 +118,8 @@ github.com/pajbot/testhelper v1.0.0 h1:C6OxLN1O5u70voShcra5hPOAgtykHNmtoNmu1T+yD
 github.com/pajbot/testhelper v1.0.0/go.mod h1:Fdyg8LEqetKOAWe1QF8nXRiyxz/ijoPnOEJ4oc0IRSw=
 github.com/pajbot/utils v1.0.0 h1:LiVOInr6gY/yA82QsgTnyGJaBcMOB0GaRYKDIC/4rB4=
 github.com/pajbot/utils v1.0.0/go.mod h1:lLYJXlC7fGL4FYvdZk+IQerV5zgwerjIsKDUJNb7LuE=
-github.com/pajlada/go-twitch-pubsub v0.0.2 h1:o58DTgNlMbPCtAnshOYrKgPrF5pOpXLq9J9fRfqR+Vg=
-github.com/pajlada/go-twitch-pubsub v0.0.2/go.mod h1:g1aV3w3eX1FC45lS0dMTyc6VYH9XH5Sp0nnQce8hXRs=
+github.com/pajlada/go-twitch-pubsub v0.0.3 h1:rpa1QaR+E7yVz+6mP2OTjCfjtvZ+lABc8TjkfnMN0EE=
+github.com/pajlada/go-twitch-pubsub v0.0.3/go.mod h1:g1aV3w3eX1FC45lS0dMTyc6VYH9XH5Sp0nnQce8hXRs=
 github.com/pajlada/gobttv v1.0.0 h1:wkQrEeBM0liLKSWhEC11BbT1mAr+LW4+50KzEhMB5Gk=
 github.com/pajlada/gobttv v1.0.0/go.mod h1:J2A6ZSOOw6Qn5vsNXRBtShJH4HBsH9h4sgA+Q5XWk7Q=
 github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6 h1:5ybV3qk98cGmL5mlM2hhSHIX9cvqLiSOjEzFwbw9SK8=
