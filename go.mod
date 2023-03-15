@@ -19,7 +19,7 @@ require (
 	github.com/nicklaw5/helix/v2 v2.21.0
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
-	github.com/pajlada/go-twitch-pubsub v0.0.2
+	github.com/pajlada/go-twitch-pubsub v0.0.4
 	github.com/pajlada/gobttv v1.0.0
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
 	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
