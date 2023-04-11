@@ -22,7 +22,7 @@ require (
 	github.com/pajlada/go-twitch-pubsub v0.0.4
 	github.com/pajlada/gobttv v1.0.0
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
-	github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156
+	github.com/pajlada/lidl-normalize v0.1.1
 	github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v1.4.0
