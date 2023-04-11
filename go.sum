@@ -109,8 +109,8 @@ github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6/go.mod h1:CojD7O9WAy
 github.com/pajlada/lidl-normalize v0.0.0-20180520094422-e6eb1186f156/go.mod h1:ZwY6Ly1huS7aYfv8dH8tzbaBPwL/ZBgo2EsGiMifLA4=
 github.com/pajlada/lidl-normalize v0.1.1 h1:x40oxV0Gi2JQp5Hg/OP74cEYdSHI2Ub7q2PLfNLzIpY=
 github.com/pajlada/lidl-normalize v0.1.1/go.mod h1:paQ3UbvVEhswn/aD7Ruso5JXcNn3Ro9CORUVpB2PNSY=
-github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73 h1:d9p3XimwwVQo02MMg1To/3M0SqPAtExM/rfenN8HZAE=
-github.com/pajlada/stupidmigration v0.0.0-20190210111805-ed60e42e8f73/go.mod h1:MlMPBFutvqC6T4IjgTd+UZZWKRKCZz/3n5bbMrZar78=
+github.com/pajlada/stupidmigration v0.1.0 h1:W1JORTxnSzieu0f3bmgug1+KazSX1UVd2CGsq38ubA4=
+github.com/pajlada/stupidmigration v0.1.0/go.mod h1:RKprf5oZNfVGQA5s4yr99U5cfgM66Lq1Yd5h3tUeUSk=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
