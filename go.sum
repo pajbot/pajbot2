@@ -90,8 +90,8 @@ github.com/mattn/go-isatty v0.0.14/go.mod h1:7GGIvUiUoEMVVmxf/4nioHXj79iQHKdU27k
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/mattn/go-isatty v0.0.17 h1:BTarxUcIeDqL27Mc+vyvdWYSL28zpIhv3RoTdsLMPng=
 github.com/mattn/go-isatty v0.0.17/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
-github.com/nicklaw5/helix/v2 v2.22.2 h1:LTZnK9LhUb2xV1/9h3JtIPwAJOSdIakz0qCpTJQXY74=
-github.com/nicklaw5/helix/v2 v2.22.2/go.mod h1:zZcKsyyBWDli34x3QleYsVMiiNGMXPAEU5NjsiZDtvY=
+github.com/nicklaw5/helix/v2 v2.23.1 h1:Xo1tFOBIfQkNMg1jP3kf7XXSttaFKOb0SVbzNryWj08=
+github.com/nicklaw5/helix/v2 v2.23.1/go.mod h1:zZcKsyyBWDli34x3QleYsVMiiNGMXPAEU5NjsiZDtvY=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/pajbot/commandmatcher v1.0.1 h1:C45KmJezhaBKuPUQLDyLjvcMXrQ7pofhk7jVgAdp2vU=
 github.com/pajbot/commandmatcher v1.0.1/go.mod h1:kZzeHeGqmDvWxQP3pB6KrvaPbMEVIyeJycMoQpkpOZ0=
