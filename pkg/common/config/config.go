@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 )
@@ -136,6 +137,13 @@ func LoadConfig(path string) (*Config, error) {
 	err = json.Unmarshal(file, &config)
 	if err != nil {
 		return nil, err
+	}
+
+	if config.Auth.Twitter.ConsumerKey != "" ||
+		config.Auth.Twitter.ConsumerSecret != "" ||
+		config.Auth.Twitter.AccessToken != "" ||
+		config.Auth.Twitter.AccessSecret != "" {
+		fmt.Println("WARNING: You have Twitter credentials configured, but Twitter support has been completely wiped since v2.0.0")
 	}
 
 	return &config, nil
