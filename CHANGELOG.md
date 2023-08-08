@@ -2,6 +2,8 @@
 
 ## Unversioned
 
+## v2.0.0 - 2023-08-08
+
 - Bumped minimum Go version to 1.19. (#898)
 - The nuke module now has tests for parsing parameters. (#530)
 - The `Auth->Twitch->Webhook->Secret` config value is now REQUIRED. It's your own private secret you need to generate yourself, and it must be at least 10 characters and at most 100 characters long.
