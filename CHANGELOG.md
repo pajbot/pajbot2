@@ -2,6 +2,9 @@
 
 ## Unversioned
 
+- Remove Twitter support. (#1033)  
+  Warning messages will be posted in the console if twitter tokens are configured.
+
 ## v2.0.0 - 2023-08-08
 
 - Bumped minimum Go version to 1.19. (#898)
