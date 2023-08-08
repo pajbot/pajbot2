@@ -12,8 +12,6 @@ import (
 
 	"strconv"
 
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
 
@@ -51,7 +49,6 @@ type Application struct {
 
 	twitchBots   pkg.BotStore
 	sqlClient    *sql.DB
-	Twitter      *twitter.Client
 	TwitchPubSub *twitchpubsub.Client
 
 	ReportHolder *report.Holder
@@ -250,13 +247,6 @@ func (a *Application) InitializeModules() (err error) {
 		return errors.Wrap(err, "initializing report holder")
 	}
 
-	// a.twitterTest()
-
-	err = a.StartTwitterStream()
-	if err != nil {
-		fmt.Println("Error starting twitter stream:", err)
-	}
-
 	err = modules.InitServer(a, &a.config.Pajbot1, a.ReportHolder)
 	if err != nil {
 		return errors.Wrap(err, "initializing modules server")
@@ -270,116 +260,6 @@ func (a *Application) InitializeModules() (err error) {
 	fmt.Println("Available modules:", moduleList)
 
 	return
-}
-
-// func (a *Application) twitterTest() {
-//	localConfig := a.config.Auth.Twitter
-//
-//	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
-//	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
-//	httpClient := config.Client(oauth1.NoContext, token)
-//
-//	client := twitter.NewClient(httpClient)
-//
-//	user, resp, err := client.Users.Show(&twitter.UserShowParams{
-//		ScreenName: "pajtest",
-//	})
-//	fmt.Println(user)
-//	fmt.Println(resp)
-//	fmt.Println(err)
-//}
-
-func (a *Application) StartTwitterStream() error {
-	localConfig := a.config.Auth.Twitter
-
-	// users lookup
-	// userLookupParams := &twitter.UserLookupParams{ScreenName: []string{"pajtest"}}
-	// users, _, _ := client.Users.Lookup(userLookupParams)
-	// fmt.Printf("USERS LOOKUP:\n%+v\n", users)
-
-	if localConfig.ConsumerKey == "" || localConfig.ConsumerSecret == "" || localConfig.AccessToken == "" || localConfig.AccessSecret == "" {
-		return errors.New("Missing twitter configuration fields")
-	}
-
-	// config := &oauth2.Config{}
-	// token := &oauth2.Token{AccessToken: localConfig.AccessToken}
-	// httpClient := config.Client(oauth2.NoContext, token)
-
-	config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
-	token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
-	httpClient := config.Client(oauth1.NoContext, token)
-
-	client := twitter.NewClient(httpClient)
-
-	params := &twitter.StreamFilterParams{
-		Follow:        []string{"81085011"},
-		StallWarnings: twitter.Bool(true),
-	}
-
-	writer := a.mimo.Publisher("twitter")
-	demux := twitter.NewSwitchDemux()
-	demux.Tweet = func(tweet *twitter.Tweet) {
-		fmt.Println("got tweet:", tweet.Text)
-		writer <- tweet.Text
-		fmt.Println("done publishing tweet")
-	}
-	stream, err := client.Streams.Filter(params)
-	if err != nil {
-		fmt.Println("Error getting twitter stream:", err)
-		return err
-	}
-	go demux.HandleChan(stream.Messages)
-	fmt.Println("Stream:", stream)
-
-	/*
-		config := oauth1.NewConfig(localConfig.ConsumerKey, localConfig.ConsumerSecret)
-		token := oauth1.NewToken(localConfig.AccessToken, localConfig.AccessSecret)
-
-		httpClient := config.Client(oauth1.NoContext, token)
-		client := twitter.NewClient(httpClient)
-
-		demux := twitter.NewSwitchDemux()
-		demux.All = func(x interface{}) {
-			fmt.Printf("x %#v\n", x)
-		}
-		demux.StreamDisconnect = func(disconnect *twitter.StreamDisconnect) {
-			fmt.Printf("disconnected %#v\n", disconnect)
-		}
-		demux.Tweet = func(tweet *twitter.Tweet) {
-			fmt.Println(tweet.Text)
-		}
-
-		demux.Event = func(event *twitter.Event) {
-			fmt.Printf("%#v\n", event)
-		}
-
-		filterParams := &twitter.StreamFilterParams{
-			// Follow:        []string{"81085011"},
-			// Track: []string{"cat"},
-			// StallWarnings: twitter.Bool(true),
-		}
-		stream, err := client.Streams.Filter(filterParams)
-		if err != nil {
-			return err
-		}
-
-		fmt.Printf("stream is %#v\n", stream)
-		fmt.Printf("messages is is %#v\n", stream.Messages)
-
-		fmt.Println("start handling..")
-		for message := range stream.Messages {
-			fmt.Printf("got message %#v\n", message)
-			// demux.Handle(message)
-		}
-		_, xd := (<-stream.Messages)
-		if xd {
-			fmt.Println("channel is not closed")
-		}
-		fmt.Printf("messages is is %#v\n", stream.Messages)
-		fmt.Println("done")
-	*/
-
-	return nil
 }
 
 // StartWebServer starts the web server associated to the bot
