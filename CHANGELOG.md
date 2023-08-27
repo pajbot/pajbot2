@@ -4,6 +4,9 @@
 
 - Remove Twitter support. (#1033)  
   Warning messages will be posted in the console if twitter tokens are configured.
+- Add GitHub push event webhook support. (#TBD)  
+   Webhook format: `https://your-bot-domain.com/api/webhook/github/{channel_id}`  
+   Example config has been updated to show Auth -> Github -> Webhook -> Secret
 
 ## v2.0.0 - 2023-08-08
 
