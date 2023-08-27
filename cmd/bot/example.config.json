@@ -1,33 +1,38 @@
 {
-    "Admin": {
-        "TwitchUserID": "12345678"
+  "Admin": {
+    "TwitchUserID": "12345678"
+  },
+  "Web": {
+    "Host": "127.0.0.1:45000",
+    "Domain": "paj.pajbot.com",
+    "Secure": true
+  },
+  "PostgreSQL": {
+    "__dsn_comment": "Refer to https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters for valid options",
+    "DSN": "host=/var/run/postgresql dbname=pajbot2 sslmode=disable"
+  },
+  "Auth": {
+    "Twitch": {
+      "Webhook": {
+        "Secret": "topsecretstringbetween10and100characters"
+      },
+      "Bot": {
+        "ClientID": "123",
+        "ClientSecret": "123"
+      },
+      "User": {
+        "ClientID": "123",
+        "ClientSecret": "123"
+      },
+      "Streamer": {
+        "ClientID": "123",
+        "ClientSecret": "123"
+      }
     },
-    "Web": {
-        "Host": "127.0.0.1:45000",
-        "Domain": "paj.pajbot.com",
-        "Secure": true
-    },
-    "PostgreSQL": {
-        "__dsn_comment": "Refer to https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters for valid options",
-        "DSN": "host=/var/run/postgresql dbname=pajbot2 sslmode=disable"
-    },
-    "Auth": {
-        "Twitch": {
-            "Webhook": {
-                "Secret": "topsecretstringbetween10and100characters"
-            },
-            "Bot": {
-                "ClientID": "123",
-                "ClientSecret": "123"
-            },
-            "User": {
-                "ClientID": "123",
-                "ClientSecret": "123"
-            },
-            "Streamer": {
-                "ClientID": "123",
-                "ClientSecret": "123"
-            }
-        }
+    "Github": {
+      "Webhook": {
+        "Secret": "secret"
+      }
     }
+  }
 }

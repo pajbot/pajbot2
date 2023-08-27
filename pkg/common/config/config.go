@@ -79,10 +79,20 @@ type authTwitterConfig struct {
 	AccessSecret   string
 }
 
+type AuthGithubWebhook struct {
+	Secret string
+}
+
+type AuthGithubConfig struct {
+	Webhook AuthGithubWebhook
+}
+
 type authConfig struct {
 	Twitch AuthTwitchConfig
 
 	Twitter authTwitterConfig
+
+	Github AuthGithubConfig
 }
 
 type Pajbot1Config struct {

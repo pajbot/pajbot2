@@ -30,5 +30,5 @@ func Load(a pkg.Application, cfg *config.Config) {
 
 	report.Load(m)
 
-	webhook.Load(m, &cfg.Auth.Twitch.Webhook)
+	webhook.Load(m, cfg)
 }

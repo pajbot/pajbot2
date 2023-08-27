@@ -9,8 +9,6 @@ import (
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/pajbot/pajbot2/pkg"
 )
 
 type followResponse struct {
@@ -127,32 +125,7 @@ func apiCallbacksStreams(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handlePush(b pkg.Sender, body []byte, p *customPayload) {
-	var pushData PushHookResponse
-
-	err := json.Unmarshal(body, &pushData)
-	if err != nil {
-		p.Add("error", "Json Unmarshal error: "+err.Error())
-		return
-	}
-
-	delay := 100
-
-	for _, commit := range pushData.Commits {
-		func(iCommit Commit) {
-			time.AfterFunc(time.Millisecond*time.Duration(delay), func() { writeCommit(b, iCommit, pushData.Repository) })
-		}(commit)
-		delay += 250
-	}
-	p.Add("success", true)
-}
-
-func writeCommit(b pkg.Sender, commit Commit, repository RepositoryData) {
-	// msg := fmt.Sprintf("%s (%s) committed to %s (%s): %s %s", commit.Author.Name, commit.Author.Username, repository.Name, commit.Timestamp, commit.Message, commit.URL)
-	// XXX: Missing channel
-	// b.Say(msg)
-}
-
+/*
 func handleStatus(b pkg.Sender, body []byte, p *customPayload) {
 	var data StatusHookResponse
 
@@ -181,3 +154,4 @@ func handleStatus(b pkg.Sender, body []byte, p *customPayload) {
 
 	p.Add("success", true)
 }
+*/
