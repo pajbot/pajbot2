@@ -112,6 +112,15 @@ func (s *UserStore) GetID(name string) (id string) {
 	return
 }
 
+func (s *UserStore) GetUserByID(userID string) (pkg.User, error) {
+	login := s.GetName(userID)
+	if userID == "" {
+		return nil, fmt.Errorf("no user found with the userID %s", userID)
+	}
+
+	return users.NewSimpleTwitchUser(userID, login), nil
+}
+
 func (s *UserStore) GetUserByLogin(login string) (pkg.User, error) {
 	userID := s.GetID(login)
 	if userID == "" {

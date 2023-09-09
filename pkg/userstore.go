@@ -60,6 +60,7 @@ type UserStore interface {
 	GetID(string) string
 
 	GetUserByLogin(string) (User, error)
+	GetUserByID(string) (User, error)
 
 	GetName(string) string
 
