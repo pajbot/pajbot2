@@ -90,9 +90,13 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 			return nil, errors.New("no target specified")
 		}
 
-		login := strings.ToLower(parts[2])
+		target := strings.ToLower(parts[2])
 
-		return event.UserStore.GetUserByLogin(login)
+		if strings.HasPrefix(target, "id:") {
+			return event.UserStore.GetUserByID(strings.TrimPrefix(target, "id:"))
+		}
+
+		return event.UserStore.GetUserByLogin(target)
 	}
 
 	parseDuration := func(t string, defaultUnit time.Duration, defaultTime time.Duration) time.Duration {
