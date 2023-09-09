@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/lib/pq v1.10.9
-	github.com/nicklaw5/helix/v2 v2.24.1
+	github.com/nicklaw5/helix/v2 v2.25.0
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
 	github.com/pajlada/go-twitch-pubsub v0.1.0
@@ -23,11 +23,11 @@ require (
 	github.com/pajlada/lidl-normalize v0.1.1
 	github.com/pajlada/stupidmigration v0.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/swaggo/echo-swagger v1.4.0
-	github.com/swaggo/swag v1.16.1
+	github.com/swaggo/echo-swagger v1.4.1
+	github.com/swaggo/swag v1.16.2
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
-	golang.org/x/oauth2 v0.11.0
+	golang.org/x/oauth2 v0.12.0
 	honnef.co/go/tools v0.4.5
 	mvdan.cc/xurls/v2 v2.5.0
 )
@@ -38,6 +38,7 @@ require (
 	github.com/anknown/darts v0.0.0-20151216065714-83ff685239e6 // indirect
 	github.com/dankeroni/jsonapi v0.0.0-20160914195301-7aa17e21f323 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.8 // indirect
@@ -55,14 +56,15 @@ require (
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	golang.org/x/crypto v0.12.0 // indirect
+	golang.org/x/crypto v0.13.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/net v0.14.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.9.4-0.20230601214343-86c93e8732cc // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
