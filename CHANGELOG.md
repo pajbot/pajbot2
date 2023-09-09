@@ -5,7 +5,7 @@
 - Allow pb2exec commands `ban`, `unban`, `timeout`, `untimeout` to be used with IDs (e.g. `!pb2exec .timeout id:22484632 5 reason`). (#1056)
 - Remove Twitter support. (#1033)  
   Warning messages will be posted in the console if twitter tokens are configured.
-- Add GitHub push event webhook support. (#1042)  
+- Add GitHub push event webhook support. (#1042, #1043)  
    Webhook format: `https://your-bot-domain.com/api/webhook/github/{channel_id}`  
    Example config has been updated to show Auth -> Github -> Webhook -> Secret
 

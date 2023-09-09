@@ -68,6 +68,7 @@ type PushHookResponse struct {
 	Commits    []Commit       `json:"commits"`
 	HeadCommit Commit         `json:"head_commit"`
 	Repository RepositoryData `json:"repository"`
+	Ref        string         `json:"ref"`
 	BaseRef    string         `json:"base_ref"`
 	Pusher     pusher         `json:"pusher"`
 	Sender     sender         `json:"sender"`
@@ -168,9 +169,18 @@ func apiGithub(cfg *config.AuthGithubWebhook) func(w http.ResponseWriter, r *htt
 				return
 			}
 
-			targetBranch := strings.TrimPrefix(pushData.BaseRef, "refs/heads/")
+			targetBranch := strings.TrimPrefix(pushData.Ref, "refs/heads/")
+			if len(targetBranch) == 0 {
+				targetBranch = strings.TrimPrefix(pushData.BaseRef, "refs/heads/")
+			}
+
+			if len(targetBranch) == 0 {
+				log.Println("Unable to figure out branch name for this push:", pushData)
+				break
+			}
 
 			if strings.Contains(targetBranch, "/") {
+				log.Println("Ignoring push for branch", targetBranch)
 				// Skip any branches that contain a / - they are most likely a feature branch
 				break
 			}
@@ -179,7 +189,7 @@ func apiGithub(cfg *config.AuthGithubWebhook) func(w http.ResponseWriter, r *htt
 			for _, commit := range pushData.Commits {
 				func(iCommit Commit) {
 					time.AfterFunc(time.Millisecond*time.Duration(delay), func() {
-						botChannel.Say(fmt.Sprintf("%s (%s) committed to %s@%s (%s): %s %s", commit.Author.Name, commit.Author.Username, pushData.Repository.Name, targetBranch, commit.Timestamp, commit.Message, commit.URL))
+						botChannel.Say(fmt.Sprintf("%s (%s) committed to %s@%s (%s): %s %s", iCommit.Author.Name, iCommit.Author.Username, pushData.Repository.Name, targetBranch, iCommit.Timestamp, iCommit.Message, iCommit.URL))
 					})
 				}(commit)
 				delay += 250
