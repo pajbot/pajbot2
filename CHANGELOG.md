@@ -2,7 +2,6 @@
 
 ## Unversioned
 
-- Changed the minimum required Go version to 1.21. (#1064)
 - Allow pb2exec commands `ban`, `unban`, `timeout`, `untimeout` to be used with IDs (e.g. `!pb2exec .timeout id:22484632 5 reason`). (#1056)
 - Remove Twitter support. (#1033)  
   Warning messages will be posted in the console if twitter tokens are configured.

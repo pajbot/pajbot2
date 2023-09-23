@@ -40,6 +40,17 @@ type Commit struct {
 	} `json:"committer"`
 }
 
+func subSlice[S ~[]E, E any](s S, upTo int) S {
+	if upTo <= 0 {
+		return s[:0]
+	}
+	l := len(s)
+	if upTo > l {
+		return s[:l]
+	}
+	return s[:upTo]
+}
+
 func GenerateTwitchMessages(pushData PushHookResponse) []string {
 	targetBranch := strings.TrimPrefix(pushData.Ref, "refs/heads/")
 	if len(targetBranch) == 0 {
@@ -61,7 +72,7 @@ func GenerateTwitchMessages(pushData PushHookResponse) []string {
 
 	messages := []string{}
 
-	for _, commit := range pushData.Commits[:min(len(pushData.Commits), 5)] {
+	for _, commit := range subSlice(pushData.Commits, 5) {
 		var sb strings.Builder
 		if _, err := sb.WriteString(commit.Author.Username); err != nil {
 			log.Println("ERROR WRITING TO STRING:", err)
@@ -98,7 +109,7 @@ func GenerateTwitchMessages(pushData PushHookResponse) []string {
 				log.Println("ERROR WRITING TO STRING:", err)
 				continue
 			}
-			if _, err := sb.WriteString(strings.Join(coAuthors[:min(len(coAuthors), 5)], ", ")); err != nil {
+			if _, err := sb.WriteString(strings.Join(subSlice(coAuthors, 5), ", ")); err != nil {
 				log.Println("ERROR WRITING TO STRING:", err)
 				continue
 			}
