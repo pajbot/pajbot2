@@ -186,7 +186,7 @@ func apiGithub(cfg *config.AuthGithubWebhook) func(w http.ResponseWriter, r *htt
 			}
 
 			delay := 100
-			for _, commit := range pushData.Commits {
+			for _, commit := range pushData.Commits[:5] {
 				func(iCommit Commit) {
 					time.AfterFunc(time.Millisecond*time.Duration(delay), func() {
 						botChannel.Say(fmt.Sprintf("%s (%s) committed to %s@%s (%s): %s %s", iCommit.Author.Name, iCommit.Author.Username, pushData.Repository.Name, targetBranch, iCommit.Timestamp, iCommit.Message, iCommit.URL))
