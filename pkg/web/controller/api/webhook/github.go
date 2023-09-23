@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"bufio"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
@@ -37,6 +38,95 @@ type Commit struct {
 		Email    string `json:"email"`
 		Username string `json:"username"`
 	} `json:"committer"`
+}
+
+func GenerateTwitchMessages(pushData PushHookResponse) []string {
+	targetBranch := strings.TrimPrefix(pushData.Ref, "refs/heads/")
+	if len(targetBranch) == 0 {
+		targetBranch = strings.TrimPrefix(pushData.BaseRef, "refs/heads/")
+	}
+
+	repositoryName := pushData.Repository.Name
+
+	if len(targetBranch) == 0 {
+		log.Println("Unable to figure out branch name for this push:", pushData)
+		return nil
+	}
+
+	if strings.Contains(targetBranch, "/") {
+		log.Println("Ignoring push for branch", targetBranch)
+		// Skip any branches that contain a / - they are most likely a feature branch
+		return nil
+	}
+
+	messages := []string{}
+
+	for _, commit := range pushData.Commits[:min(len(pushData.Commits), 5)] {
+		var sb strings.Builder
+		if _, err := sb.WriteString(commit.Author.Username); err != nil {
+			log.Println("ERROR WRITING TO STRING:", err)
+			continue
+		}
+
+		// TODO: parse other authors
+		scanner := bufio.NewScanner(strings.NewReader(commit.Message))
+		commitMessage := ""
+		coAuthors := []string{}
+		for scanner.Scan() {
+			line := scanner.Text()
+			if commitMessage == "" {
+				commitMessage = line
+			} else {
+				const coAuthorPrefix = "co-authored-by: "
+				const coAuthorPrefixLen = len(coAuthorPrefix)
+				if strings.HasPrefix(strings.ToLower(line), coAuthorPrefix) {
+					author := line[coAuthorPrefixLen:]
+					emailStartIndex := strings.Index(author, " <")
+					if emailStartIndex != -1 {
+						author = strings.TrimSpace(author[:emailStartIndex])
+						if len(author) > 1 {
+							// author must be at least 1 character long
+							coAuthors = append(coAuthors, author)
+						}
+					}
+				}
+			}
+		}
+
+		if len(coAuthors) > 0 {
+			if _, err := sb.WriteString(" (with "); err != nil {
+				log.Println("ERROR WRITING TO STRING:", err)
+				continue
+			}
+			if _, err := sb.WriteString(strings.Join(coAuthors[:min(len(coAuthors), 5)], ", ")); err != nil {
+				log.Println("ERROR WRITING TO STRING:", err)
+				continue
+			}
+			if _, err := sb.WriteString(")"); err != nil {
+				log.Println("ERROR WRITING TO STRING:", err)
+				continue
+			}
+		}
+
+		// commitMessage := strings.SplitN(commit.Message, "\n", 2)[0]
+
+		if _, err := sb.WriteString(fmt.Sprintf(" committed to %s@%s (%s): %s", repositoryName, targetBranch, commit.Timestamp, commitMessage)); err != nil {
+			log.Println("ERROR WRITING TO STRING:", err)
+			continue
+		}
+
+		if sb.Len() < 350 {
+			// Only append the commit hash if the commit message is pretty small
+			if _, err := sb.WriteString(fmt.Sprintf(" %s", commit.URL)); err != nil {
+				log.Println("ERROR WRITING TO STRING:", err)
+				continue
+			}
+		}
+
+		messages = append(messages, sb.String())
+	}
+
+	return messages
 }
 
 // RepositoryData xD
@@ -162,36 +252,21 @@ func apiGithub(cfg *config.AuthGithubWebhook) func(w http.ResponseWriter, r *htt
 		switch hookType {
 		case "push":
 			var pushData PushHookResponse
-
 			err := json.Unmarshal(body, &pushData)
 			if err != nil {
 				utils.WebWriteError(w, 400, "bad push data")
 				return
 			}
 
-			targetBranch := strings.TrimPrefix(pushData.Ref, "refs/heads/")
-			if len(targetBranch) == 0 {
-				targetBranch = strings.TrimPrefix(pushData.BaseRef, "refs/heads/")
-			}
-
-			if len(targetBranch) == 0 {
-				log.Println("Unable to figure out branch name for this push:", pushData)
-				break
-			}
-
-			if strings.Contains(targetBranch, "/") {
-				log.Println("Ignoring push for branch", targetBranch)
-				// Skip any branches that contain a / - they are most likely a feature branch
-				break
-			}
+			messages := GenerateTwitchMessages(pushData)
 
 			delay := 100
-			for _, commit := range pushData.Commits[:5] {
-				func(iCommit Commit) {
+			for _, message := range messages {
+				func(message string) {
 					time.AfterFunc(time.Millisecond*time.Duration(delay), func() {
-						botChannel.Say(fmt.Sprintf("%s (%s) committed to %s@%s (%s): %s %s", iCommit.Author.Name, iCommit.Author.Username, pushData.Repository.Name, targetBranch, iCommit.Timestamp, iCommit.Message, iCommit.URL))
+						botChannel.Say(message)
 					})
-				}(commit)
+				}(message)
 				delay += 250
 			}
 		default:
