@@ -20,7 +20,7 @@ require (
 	github.com/pajlada/go-twitch-pubsub v0.1.1
 	github.com/pajlada/gobttv v1.0.0
 	github.com/pajlada/goffz v0.0.0-20160911112502-19eae10bc4f6
-	github.com/pajlada/lidl-normalize v0.1.1
+	github.com/pajlada/lidl-normalize v1.0.0
 	github.com/pajlada/stupidmigration v0.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v1.4.1
@@ -58,10 +58,10 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
