@@ -74,6 +74,15 @@ func TestParseNukeParameters(t *testing.T) {
 				TimeoutDuration:  time.Hour * 7,
 			},
 		},
+		{
+			input: []string{"!nuke", "/", "1m", "7h"},
+			output: NukeParameters{
+				Phrase:           "/",
+				RegexPhrase:      nil,
+				ScrollbackLength: time.Minute * 1,
+				TimeoutDuration:  time.Hour * 7,
+			},
+		},
 	}
 
 	for _, test := range tests {
