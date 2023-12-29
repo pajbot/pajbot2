@@ -2,6 +2,7 @@
 
 ## Unversioned
 
+- Fixed a crash when nuking with an "invalid" regex. (#1109)
 - Bumped minimum Go version to 1.20. (#1083)
 - Allow pb2exec commands `ban`, `unban`, `timeout`, `untimeout` to be used with IDs (e.g. `!pb2exec .timeout id:22484632 5 reason`). (#1056)
 - Remove Twitter support. (#1033)  
