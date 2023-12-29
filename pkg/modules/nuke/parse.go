@@ -16,7 +16,7 @@ func (p *NukeParameterParser) ParseNukeParameters(parts []string) (*NukeParamete
 
 	phrase := strings.Join(parts[1:len(parts)-2], " ")
 	var regexPhrase *regexp.Regexp
-	if strings.HasPrefix(phrase, "/") && strings.HasSuffix(phrase, "/") {
+	if strings.HasPrefix(phrase, "/") && strings.HasSuffix(phrase, "/") && len(phrase) >= 2 {
 		// parse as regex
 		asd := phrase[1 : len(phrase)-1]
 		regex, err := regexp.Compile(asd)
