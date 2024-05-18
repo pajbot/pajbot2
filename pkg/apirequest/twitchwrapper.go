@@ -156,7 +156,7 @@ func (w *HelixWrapper) GetBannedUser(channelID string, userID string) (*helix.Ba
 
 	resp, err := w.Client.GetBannedUsers(&helix.BannedUsersParams{
 		BroadcasterID: channelID,
-		UserID:        userID,
+		UserID:        []string{userID},
 	})
 
 	if err != nil {
