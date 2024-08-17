@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/pajbot/pajbot2/pkg/common"
 	"github.com/pajbot/pajbot2/pkg/common/config"
@@ -75,6 +77,9 @@ func main() {
 	case "help":
 		helpCmd()
 
+	case "messageheight":
+		messageheightCmd()
+
 	case "run":
 		fallthrough
 	default:
@@ -92,6 +97,7 @@ Commands:
    create <name>  Create a migration (WIP)
    newbot         Create a new bot
    linkchannel    Link a channel to a bot ID
+   messageheight <channelname> <channelid> <username> <badgecount> <message...>
 `)
 	if err != nil {
 		log.Fatal(err)
@@ -171,6 +177,25 @@ func installCmd() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func messageheightCmd() {
+	channelName := flag.Arg(1)
+	channelID := flag.Arg(2)
+	username := flag.Arg(3)
+	badgeCount, badgeCountErr := strconv.Atoi(flag.Arg(4))
+	if badgeCountErr != nil {
+		fmt.Println("bad badge count:", badgeCountErr)
+		return
+	}
+	message := strings.Join(flag.Args()[5:], " ")
+
+	height, err := getMessageHeight(channelName, channelID, message, username, badgeCount)
+	if err != nil {
+		fmt.Println("error getting message height:", err)
+		return
+	}
+	fmt.Println(height)
 }
 
 func createCmd() {
