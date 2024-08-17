@@ -589,5 +589,5 @@ func (a *Application) Run() error {
 
 	quitString := <-a.Quit
 
-	return fmt.Errorf(quitString)
+	return errors.New(quitString)
 }
