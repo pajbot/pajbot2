@@ -25,7 +25,7 @@
     "sass-loader": "^16.0.4",
     "style-loader": "^4.0.0",
     "webpack": "^5.97.1",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^6.0.0"
   },
   "bugs": {
     "url": "https://github.com/pajbot/pajbot2/issues"
