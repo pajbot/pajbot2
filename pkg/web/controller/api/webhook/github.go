@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -103,6 +104,10 @@ func GenerateTwitchMessages(pushData PushHookResponse) []string {
 				}
 			}
 		}
+
+		coAuthors = slices.DeleteFunc(coAuthors, func(name string) bool {
+			return name == commit.Author.Username
+		})
 
 		if len(coAuthors) > 0 {
 			if _, err := sb.WriteString(" (with "); err != nil {
