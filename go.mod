@@ -1,6 +1,7 @@
 module github.com/pajbot/pajbot2
 
-go 1.23
+go 1.23.0
+
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/anknown/ahocorasick v0.0.0-20190904063843-d75dbd5169c0

@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -104,6 +105,10 @@ func GenerateTwitchMessages(pushData PushHookResponse) []string {
 			}
 		}
 
+		coAuthors = slices.DeleteFunc(coAuthors, func(name string) bool {
+			return name == commit.Author.Username
+		})
+
 		if len(coAuthors) > 0 {
 			if _, err := sb.WriteString(" (with "); err != nil {
 				log.Println("ERROR WRITING TO STRING:", err)
@@ -121,7 +126,7 @@ func GenerateTwitchMessages(pushData PushHookResponse) []string {
 
 		// commitMessage := strings.SplitN(commit.Message, "\n", 2)[0]
 
-		if _, err := sb.WriteString(fmt.Sprintf(" committed to %s@%s (%s): %s", repositoryName, targetBranch, commit.Timestamp, commitMessage)); err != nil {
+		if _, err := sb.WriteString(fmt.Sprintf(" committed to %s@%s: %s", repositoryName, targetBranch, commitMessage)); err != nil {
 			log.Println("ERROR WRITING TO STRING:", err)
 			continue
 		}
