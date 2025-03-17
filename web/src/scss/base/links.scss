@@ -1,5 +1,7 @@
+@use '../variables/colors';
+
 a {
-  color: $flat-blue;
+  color: colors.$flat-blue;
 
   &:hover {
     cursor: pointer !important;

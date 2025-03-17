@@ -1,8 +1,10 @@
+@use '../variables/spacing';
+
 .dashboard {
-  padding: $spacing-XXL;
+  padding: spacing.$spacing-XXL;
 
   .reports {
-    margin-top: $spacing-XL;
+    margin-top: spacing.$spacing-XL;
 
     .report {
       min-height: 100px;

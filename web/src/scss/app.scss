@@ -1,12 +1,12 @@
-@import 'vendor/reset';
+@use 'vendor/reset';
 
-@import 'variables/colors';
-@import 'variables/spacing';
+@use 'variables/colors';
+@use 'variables/spacing';
 
-@import 'tools/mixins';
+@use 'tools/mixins';
 
-@import 'base/body';
-@import 'base/buttons';
-@import 'base/links';
+@use 'base/body';
+@use 'base/buttons';
+@use 'base/links';
 
-@import 'modules/dashboard';
+@use 'modules/dashboard';
