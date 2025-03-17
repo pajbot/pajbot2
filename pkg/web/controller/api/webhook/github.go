@@ -154,8 +154,9 @@ type RepositoryData struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	} `json:"owner"`
-	HTMLURL string `json:"html_url"`
-	URL     string `json:"url"`
+	HTMLURL       string `json:"html_url"`
+	URL           string `json:"url"`
+	DefaultBranch string `json:"default_branch"`
 }
 
 type sender struct {
