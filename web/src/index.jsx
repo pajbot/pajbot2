@@ -16,14 +16,16 @@ const admin = document.getElementById('admin');
 const commands = document.getElementById('commands');
 
 function App() {
-  return <ThemeProvider>
-    <ThemeLoader />
-    <Menu />
-    {dashboard && <Dashboard element={dashboard} />}
-    {banphrases && <Banphrases />}
-    {admin && <Admin element={admin} />}
-    {commands && <Commands element={commands} />}
-  </ThemeProvider>;
+  return (
+    <ThemeProvider>
+      <ThemeLoader />
+      <Menu />
+      {dashboard && <Dashboard element={dashboard} />}
+      {banphrases && <Banphrases />}
+      {admin && <Admin element={admin} />}
+      {commands && <Commands element={commands} />}
+    </ThemeProvider>
+  );
 }
 
 const root = ReactDOM.createRoot(document.getElementById('app'));
