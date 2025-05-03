@@ -27,7 +27,7 @@ require (
 	github.com/swaggo/swag v1.16.4
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/oauth2 v0.29.0
 	honnef.co/go/tools v0.6.1
 	mvdan.cc/xurls/v2 v2.6.0
 )
