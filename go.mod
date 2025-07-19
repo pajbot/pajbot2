@@ -24,7 +24,7 @@ require (
 	github.com/pajlada/stupidmigration v0.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/swaggo/echo-swagger v1.4.1
-	github.com/swaggo/swag v1.16.4
+	github.com/swaggo/swag v1.16.5
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.30.0
