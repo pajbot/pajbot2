@@ -1,6 +1,6 @@
 module github.com/pajbot/pajbot2
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -27,7 +27,7 @@ require (
 	github.com/swaggo/swag v1.16.6
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
-	golang.org/x/oauth2 v0.30.0
+	golang.org/x/oauth2 v0.31.0
 	honnef.co/go/tools v0.6.1
 	mvdan.cc/xurls/v2 v2.6.0
 )
