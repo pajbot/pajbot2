@@ -1,6 +1,6 @@
 module github.com/pajbot/pajbot2
 
-go 1.24.0
+go 1.25
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/labstack/echo/v4 v4.14.0
 	github.com/lib/pq v1.10.9
-	github.com/nicklaw5/helix/v2 v2.31.1
+	github.com/nicklaw5/helix/v2 v2.32.0
 	github.com/pajbot/commandmatcher v1.0.1
 	github.com/pajbot/utils v1.0.0
 	github.com/pajlada/go-twitch-pubsub v0.1.1
