@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.3
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/lib/pq v1.11.1
 	github.com/nicklaw5/helix/v2 v2.31.1
 	github.com/pajbot/commandmatcher v1.0.1
