@@ -407,6 +407,33 @@ func (a *Application) StartBots() error {
 		go func(bot *pb2twitch.Bot) {
 			bot.OnWhisperMessage(bot.HandleWhisper)
 
+			bot.OnUserNoticeMessage(func(message twitch.UserNoticeMessage) {
+				channelID := message.Tags["room-id"]
+				if channelID == "" {
+					fmt.Printf("Missing room-id tag in message: %+v\n", message)
+					return
+				}
+
+				if message.User.ID == bot.TwitchAccount().ID() {
+					// Ignore messages from self
+					return
+				}
+
+				formattedMessage := fmt.Sprintf("[%s] %s: %s", time.Now().Format("15:04:05"), message.User.Name, message.Message)
+
+				// Store message in our twitch message context class
+				a.twitchUserContext.AddContext(channelID, message.User.ID, formattedMessage)
+
+				message.Message = strings.TrimPrefix(message.Message, "@"+bot.TwitchAccount().Name()+" ")
+				message.Message = strings.TrimPrefix(message.Message, bot.TwitchAccount().Name()+" ")
+
+				// Trim message off any potential Chatterino suffix
+				message.Message = strings.TrimSuffix(message.Message, " \U000e0000")
+
+				// Forward to bot to let its modules work
+				bot.HandleUserNoticeMessage(message.Channel, message.User, &message)
+			})
+
 			bot.OnPrivateMessage(func(message twitch.PrivateMessage) {
 				channelID := message.Tags["room-id"]
 				if channelID == "" {
