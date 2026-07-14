@@ -489,6 +489,8 @@ func (m TwitchMessage) GetText() string {
 		return msg.Message
 	case *twitch.WhisperMessage:
 		return msg.Message
+	case *twitch.UserNoticeMessage:
+		return msg.Message
 	}
 	return ""
 }
@@ -498,6 +500,8 @@ func (m *TwitchMessage) SetText(newText string) {
 	case *twitch.PrivateMessage:
 		msg.Message = newText
 	case *twitch.WhisperMessage:
+		msg.Message = newText
+	case *twitch.UserNoticeMessage:
 		msg.Message = newText
 	}
 }
@@ -678,6 +682,38 @@ func (b *Bot) HandleWhisper(message twitch.WhisperMessage) {
 }
 
 func (b *Bot) HandleMessage(channelName string, user twitch.User, rawMessage *twitch.PrivateMessage) {
+	message := NewTwitchMessage(rawMessage)
+
+	twitchUser := users.NewTwitchUser(user, rawMessage.Tags["user-id"])
+
+	channel := &channels.TwitchChannel{
+		Channel: channelName,
+		ID:      rawMessage.Tags["room-id"],
+	}
+
+	for _, emote := range rawMessage.Emotes {
+		parsedEmote := &common.Emote{
+			Name:  emote.Name,
+			ID:    emote.ID,
+			Count: emote.Count,
+			Type:  "twitch",
+		}
+		message.twitchEmotes = append(message.twitchEmotes, parsedEmote)
+	}
+
+	_, botChannel := b.getBotChannel(channel.GetID())
+	if botChannel == nil {
+		fmt.Println("Message received in channel with id", channel.GetID(), "without having a BotChannel there")
+		return
+	}
+
+	err := botChannel.HandleMessage(twitchUser, message)
+	if err != nil {
+		fmt.Println("Error occurred while forwarding message to bot channel:", err)
+	}
+}
+
+func (b *Bot) HandleUserNoticeMessage(channelName string, user twitch.User, rawMessage *twitch.UserNoticeMessage) {
 	message := NewTwitchMessage(rawMessage)
 
 	twitchUser := users.NewTwitchUser(user, rawMessage.Tags["user-id"])
