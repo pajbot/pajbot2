@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 	"time"
 
+	pb2utils "github.com/pajbot/pajbot2/internal/utils"
 	"github.com/pajbot/pajbot2/pkg"
 	"github.com/pajbot/pajbot2/pkg/commands"
 	mbase "github.com/pajbot/pajbot2/pkg/modules/base"
@@ -99,19 +99,6 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		return event.UserStore.GetUserByLogin(target)
 	}
 
-	parseDuration := func(t string, defaultUnit time.Duration, defaultTime time.Duration) time.Duration {
-		if seconds, err := strconv.Atoi(t); err == nil {
-			// No suffix = treat as seconds
-			return time.Duration(time.Duration(seconds) * defaultUnit)
-		}
-
-		d, err := time.ParseDuration(t)
-		if err != nil {
-			return defaultTime
-		}
-		return d
-	}
-
 	actions := &twitchactions.Actions{}
 
 	switch command {
@@ -140,7 +127,7 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 		reason := ""
 		if len(parts) > 3 {
 			// default timeout duration is 10m
-			duration = parseDuration(parts[3], time.Second, 10*time.Minute)
+			duration = pb2utils.ParseTwitchDuration(parts[3], time.Second, 10*time.Minute)
 			if len(parts) > 4 {
 				reason = strings.Join(parts[4:], " ")
 			}
@@ -191,7 +178,7 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	case "nonmodchatdelay":
 		duration := 30 * time.Second
 		if len(parts) > 2 {
-			duration = parseDuration(parts[2], time.Second, 30*time.Second)
+			duration = pb2utils.ParseTwitchDuration(parts[2], time.Second, 30*time.Second)
 		}
 
 		if err := c.m.BotChannel().SetNonModChatDelay(true, int(duration.Seconds())); err != nil {
@@ -216,7 +203,7 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	case "slow":
 		duration := 30 * time.Second
 		if len(parts) > 2 {
-			duration = parseDuration(parts[2], time.Second, 30*time.Second)
+			duration = pb2utils.ParseTwitchDuration(parts[2], time.Second, 30*time.Second)
 		}
 
 		if err := c.m.BotChannel().SetSlowMode(true, int(duration.Seconds())); err != nil {
@@ -231,7 +218,7 @@ func (c *pb2Exec) Trigger(parts []string, event pkg.MessageEvent) pkg.Actions {
 	case "followers":
 		duration := 0 * time.Second
 		if len(parts) > 2 {
-			duration = parseDuration(parts[2], time.Minute, 0*time.Second)
+			duration = pb2utils.ParseTwitchDuration(parts[2], time.Minute, 0*time.Second)
 		}
 
 		if err := c.m.BotChannel().SetFollowerMode(true, int(math.Floor(duration.Minutes()))); err != nil {
