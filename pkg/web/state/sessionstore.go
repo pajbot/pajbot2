@@ -28,34 +28,46 @@ func IsValidSessionID(sessionID string) bool {
 
 func SetSessionCookies(w http.ResponseWriter, sessionID string, twitchUserName string) {
 	sessionIDCookie := &http.Cookie{
-		Name:  SessionIDCookie,
-		Value: sessionID,
-		Path:  "/",
+		Name:   SessionIDCookie,
+		Value:  sessionID,
+		Path:   "/",
+		Secure: true,
+		// the cookie is access from javascript
+		HttpOnly: false,
 	}
 	http.SetCookie(w, sessionIDCookie)
 
 	userNameCookie := &http.Cookie{
-		Name:  "pb2username",
-		Value: twitchUserName,
-		Path:  "/",
+		Name:   "pb2username",
+		Value:  twitchUserName,
+		Path:   "/",
+		Secure: true,
+		// the cookie is access from javascript
+		HttpOnly: false,
 	}
 	http.SetCookie(w, userNameCookie)
 }
 
 func ClearSessionCookies(w http.ResponseWriter) {
 	sessionIDCookie := &http.Cookie{
-		Name:  SessionIDCookie,
-		Value: "",
-		Path:  "/",
+		Name:   SessionIDCookie,
+		Value:  "",
+		Path:   "/",
+		Secure: true,
+		// the cookie is access from javascript
+		HttpOnly: false,
 
 		Expires: time.Unix(0, 0),
 	}
 	http.SetCookie(w, sessionIDCookie)
 
 	userNameCookie := &http.Cookie{
-		Name:  "pb2username",
-		Value: "",
-		Path:  "/",
+		Name:   "pb2username",
+		Value:  "",
+		Path:   "/",
+		Secure: true,
+		// the cookie is access from javascript
+		HttpOnly: false,
 
 		Expires: time.Unix(0, 0),
 	}
