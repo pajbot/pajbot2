@@ -5,7 +5,7 @@ export function loggedInUsername() {
 }
 
 export function isLoggedIn() {
-  return readCookie('pb2sessionid') !== null;
+  return readCookie('pb2username') !== null;
 }
 
 export function logIn() {
