@@ -2,7 +2,7 @@ swag:
 	@swag init --generalInfo cmd/bot/main.go
 
 lint:
-	@staticcheck ./...
+	@go tool staticcheck ./...
 
 build:
 	@go build ./cmd/bot/

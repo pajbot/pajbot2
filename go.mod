@@ -28,7 +28,6 @@ require (
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.36.0
-	honnef.co/go/tools v0.8.0
 	mvdan.cc/xurls/v2 v2.6.0
 )
 
@@ -67,5 +66,8 @@ require (
 	golang.org/x/tools v0.48.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	honnef.co/go/tools v0.8.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+tool honnef.co/go/tools/cmd/staticcheck
