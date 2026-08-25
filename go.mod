@@ -28,7 +28,7 @@ require (
 	github.com/tevino/abool/v2 v2.1.0
 	github.com/urakozz/go-emoji v0.0.0-20200127103110-a37fee94b407
 	golang.org/x/oauth2 v0.36.0
-	honnef.co/go/tools v0.8.0
+	honnef.co/go/tools v0.8.1
 	mvdan.cc/xurls/v2 v2.6.0
 )
 
