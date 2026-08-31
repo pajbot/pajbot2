@@ -11,6 +11,8 @@ updates:
       interval: "daily"
     labels:
       - "dependencies"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "npm"
     directory: "/web"
     schedule:
@@ -18,12 +20,16 @@ updates:
     labels:
       - "dependencies"
     versioning-strategy: increase
+    cooldown:
+      default-days: 7
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     labels:
       - "dependencies"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "gitsubmodule"
     directory: "/"
     schedule:
@@ -31,3 +37,5 @@ updates:
     labels:
       - "dependencies"
       - "submodules"
+    cooldown:
+      default-days: 7
