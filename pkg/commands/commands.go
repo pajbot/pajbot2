@@ -32,9 +32,28 @@ func (c *Commands) FindByCommandID(id int64) interface{} {
 
 func (c *Commands) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	message := event.Message
-	user := event.User
 
 	match, parts := c.Match(message.GetText())
+	return c.trigger(match, parts, event)
+}
+
+// OnWhisper forwards a whisper event to commands that opt into whisper handling via the CanExecuteWithWhisper function
+// Commands that flow through here will have been pre-parsed by bot/botchannel already, so while the user sends e.g. `#forsen !user xD`, the command system only ever sees `!user xD`
+func (c *Commands) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+	message := event.Message
+
+	match, parts := c.Match(message.GetText())
+	command, ok := match.(pkg.WhisperCommand)
+	if !ok || !command.CanExecuteWithWhisper() {
+		return nil
+	}
+
+	return c.trigger(match, parts, event)
+}
+
+func (c *Commands) trigger(match interface{}, parts []string, event pkg.MessageEvent) pkg.Actions {
+	user := event.User
+
 	if match != nil {
 		switch command := match.(type) {
 		case pkg.CustomCommand2:

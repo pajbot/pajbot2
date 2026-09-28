@@ -49,3 +49,7 @@ func (m *basicCommandsModule) Initialize() {
 func (m *basicCommandsModule) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	return m.commands.OnMessage(event)
 }
+
+func (m *basicCommandsModule) OnWhisper(event pkg.MessageEvent) pkg.Actions {
+	return m.commands.OnWhisper(event)
+}

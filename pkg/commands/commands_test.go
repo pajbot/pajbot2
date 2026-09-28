@@ -23,6 +23,14 @@ type testCustomCommand struct {
 	cds map[string]bool
 }
 
+type testWhisperCommand struct {
+	testSimpleCommand
+}
+
+func (c *testWhisperCommand) CanExecuteWithWhisper() bool {
+	return true
+}
+
 func (c *testCustomCommand) HasCooldown(user pkg.User) bool {
 	if c.cds == nil {
 		c.cds = make(map[string]bool)
@@ -132,5 +140,31 @@ func TestCustomCommand(t *testing.T) {
 
 	if !cmd.HasCooldown(user) {
 		t.Fatal("User should have cooldown now that the command has been run")
+	}
+}
+
+func TestWhisperCommand(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testWhisperCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	cmds.OnWhisper(pkg.MessageEvent{Message: &msg})
+
+	if cmd.n != 1 {
+		t.Fatal("Whisper-enabled command should have been executed once")
+	}
+}
+
+func TestWhisperCommandRequiresOptIn(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testSimpleCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	cmds.OnWhisper(pkg.MessageEvent{Message: &msg})
+
+	if cmd.n != 0 {
+		t.Fatal("Command without whisper opt-in should not be executed")
 	}
 }
