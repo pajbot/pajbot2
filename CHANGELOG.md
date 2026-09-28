@@ -2,6 +2,8 @@
 
 ## Unversioned
 
+- Allow some more commands to be run through whispers (e.g. `!user`). (#1565)
+
 ## v2.1.0 - 2024-03-06
 
 - Fixed a crash when nuking with an "invalid" regex. (#1109)
