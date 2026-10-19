@@ -3,11 +3,19 @@
 
 package message_height_limit
 
-// To enable the message height limit module, you need .NET Core on your server
+// To enable the message height limit module, you need .NET & Rust on your server
 
-// #cgo LDFLAGS: -L../../../3rdParty/MessageHeightTwitch/c-interop -lcoreruncommon -ldl -lstdc++
+// #cgo LDFLAGS: -L../../../cmd/bot/MessageHeightTwitch -l:MessageHeightTwitch.so -Wl,-rpath,$ORIGIN/MessageHeightTwitch
 // #include "../../../3rdParty/MessageHeightTwitch/c-interop/exports.h"
 // #include <stdlib.h>
+//
+// extern void printError(void* userData, char* channel, int errorCode, char* message);
+// static inline void MHT_CDECL onError(void* userData, const char* channel, int errorCode, const char* message) {
+//     printError(userData, (char*)channel, errorCode, (char*)message);
+// }
+// static inline EmoteErrorCallback getErrorCallback(void) {
+//     return onError;
+// }
 import "C"
 
 import (
@@ -15,8 +23,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -105,48 +111,11 @@ func NewMessageHeightLimit(b *mbase.Base) pkg.Module {
 	return m
 }
 
-var clrInitialized = false
-
 var messageHeightLimitLibraryInitialized = false
-var charMapPath string
 
-func initCLR() error {
-	executableDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		return err
-	}
-
-	clrPath := utils.GetEnv("LIBCOREFOLDER", "/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.5")
-
-	// Path to our own executable
-	clr1 := C.CString(executableDir + "/bot")
-
-	// Folder where libcoreclr.so is located
-	clr2 := C.CString(clrPath)
-
-	// Path to library we want to use
-	clr3 := C.CString(executableDir + "/MessageHeightTwitch.dll")
-
-	var res C.int
-
-	res = C.LoadCLRRuntime(
-		clr1,
-		clr2,
-		clr3)
-
-	C.free(unsafe.Pointer(clr1))
-	C.free(unsafe.Pointer(clr2))
-	C.free(unsafe.Pointer(clr3))
-
-	if res != 0 {
-		return errors.New("Failed to load CLR Runtime")
-	}
-
-	charMapPath = executableDir + "/charmap.bin.gz"
-
-	clrInitialized = true
-
-	return nil
+//export printError
+func printError(userData unsafe.Pointer, channel *C.char, errorCode C.int, message *C.char) {
+    fmt.Println("MessageHeightTwitch error:", C.GoString(channel), int(errorCode), C.GoString(message))
 }
 
 func initChannel(channelName, channelID string) error {
@@ -159,7 +128,7 @@ func initChannel(channelName, channelID string) error {
 	}()
 
 	log.Printf("Initialize channel %s (%s)", channelName, channelID)
-	res := C.InitChannel2(channel, cChannelID, 5000, true)
+	res := C.InitChannel(channel, cChannelID, 5000, 1, C.getErrorCallback(), nil)
 	log.Printf("Channel %s initialized successfully", channelName)
 
 	if res != 1 {
@@ -170,14 +139,10 @@ func initChannel(channelName, channelID string) error {
 }
 
 func initMessageHeightLimitLibrary() error {
-	charMap := C.CString(charMapPath)
-
-	res := C.InitCharMap(charMap)
-
-	C.free(unsafe.Pointer(charMap))
+	res := C.InitMessageHeightTwitch(nil, 10000, 1, C.getErrorCallback(), nil)
 
 	if res != 1 {
-		return errors.New(fmt.Sprintf("Failed to init CharMap: %d", int(res)))
+		return errors.New(fmt.Sprintf("Failed to init MessageHeightTwitch: %d", int(res)))
 	}
 
 	messageHeightLimitLibraryInitialized = true
@@ -203,17 +168,16 @@ func (m *MessageHeightLimit) reloader() {
 func (m *MessageHeightLimit) Initialize() {
 	go m.reloader()
 
-	var err error
 	fmt.Println("Initializing message height limit")
 
-	if !clrInitialized {
-		fmt.Println("Initialize CLR...")
-		err = initCLR()
+	if !messageHeightLimitLibraryInitialized {
+		err := initMessageHeightLimitLibrary()
+
 		if err != nil {
+			log.Println("Error initializing MessageHeightTwitch:", err)
 			return
 		}
 
-		err = initMessageHeightLimitLibrary()
 		fmt.Println("Message height limit library initialized.")
 	}
 
@@ -256,7 +220,7 @@ func (m *MessageHeightLimit) getHeight(channel pkg.Channel, user pkg.User, messa
 
 	badgeCount := C.int(len(user.GetBadges()))
 
-	height := C.CalculateMessageHeightDirect(
+	height := C.CalculateMessageHeight(
 		channelString,
 		input,                      // Message text
 		loginName,                  // Login name
@@ -419,7 +383,7 @@ func (m *MessageHeightLimit) OnMessage(event pkg.MessageEvent) pkg.Actions {
 	const reasonFmt = `Your message is too tall: %.1f - %.3f (%d)`
 	userViolations := 1
 
-	if ratio > 0.5 && height > 140.0 {
+	if ratio > 0.5 && height > 180.0 {
 		if m.ApplyUserViolations {
 			m.userViolationCount[user.GetID()] = m.userViolationCount[user.GetID()] + 1
 			userViolations = m.userViolationCount[user.GetID()]
