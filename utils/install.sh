@@ -12,4 +12,4 @@ fi
 
 
 cd 3rdParty/MessageHeightTwitch/
-dotnet publish MessageHeightTwitch.csproj -c Release -r $RID -o ../../cmd/bot/MessageHeightTwitch
+dotnet publish MessageHeightTwitch.csproj -c Release -r $RID -o ../../cmd/bot
