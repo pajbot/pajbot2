@@ -5,7 +5,7 @@ package message_height_limit
 
 // To enable the message height limit module, you need .NET & Rust on your server
 
-// #cgo LDFLAGS: -L../../../cmd/bot/MessageHeightTwitch -l:MessageHeightTwitch.so -Wl,-rpath,$ORIGIN/MessageHeightTwitch
+// #cgo LDFLAGS: -L../../../cmd/bot -l:MessageHeightTwitch.so -Wl,-rpath,$ORIGIN
 // #include "../../../3rdParty/MessageHeightTwitch/c-interop/exports.h"
 // #include <stdlib.h>
 //
