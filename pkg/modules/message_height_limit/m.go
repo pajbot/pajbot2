@@ -115,7 +115,7 @@ var messageHeightLimitLibraryInitialized = false
 
 //export printError
 func printError(userData unsafe.Pointer, channel *C.char, errorCode C.int, message *C.char) {
-    fmt.Println("MessageHeightTwitch error:", C.GoString(channel), int(errorCode), C.GoString(message))
+	fmt.Println("MessageHeightTwitch error:", C.GoString(channel), int(errorCode), C.GoString(message))
 }
 
 func initChannel(channelName, channelID string) error {
