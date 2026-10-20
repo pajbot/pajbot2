@@ -41,6 +41,7 @@ func newOtherCommandsModule(b *mbase.Base) pkg.Module {
 func (m *otherCommandsModule) Initialize() {
 	m.commands.Register([]string{"!userid"}, &getuserid.Command{})
 	m.commands.Register([]string{"!username"}, &commands.GetUserName{})
+	m.commands.Register([]string{"!mybadges"}, &commands.UserBadges{})
 	m.commands.Register([]string{"!pb2points"}, &commands.GetPoints{})
 	m.commands.Register([]string{"!pb2roulette"}, &commands.Roulette{})
 	m.commands.Register([]string{"!pb2givepoints"}, &commands.GivePoints{})
