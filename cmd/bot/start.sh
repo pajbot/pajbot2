@@ -1,5 +1,5 @@
 #!/bin/bash
 
-. ../../utils/findlibcoreclr.sh
+echo "NOTE: This start script is no longer necessary and will be removed at some point. Remove your reliance on this script."
 
-LIBCOREFOLDER="$(get_libcoreclr_path)" ./bot
+./bot

@@ -3,3 +3,6 @@
 /*.dll
 /charmap.bin.gz
 /web
+/Fonts
+/*.so
+/icu78
