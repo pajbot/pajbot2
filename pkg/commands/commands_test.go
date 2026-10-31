@@ -9,11 +9,13 @@ import (
 )
 
 type testSimpleCommand struct {
-	n int
+	n     int
+	event pkg.MessageEvent
 }
 
 func (c *testSimpleCommand) Trigger(args []string, e pkg.MessageEvent) pkg.Actions {
 	c.n += 1
+	c.event = e
 	return nil
 }
 
@@ -153,6 +155,33 @@ func TestWhisperCommand(t *testing.T) {
 
 	if cmd.n != 1 {
 		t.Fatal("Whisper-enabled command should have been executed once")
+	}
+}
+
+func TestWhisperCommandReceivesWhisperSource(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testWhisperCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	user := users.NewSimpleTwitchUser("11148817", "pajlada")
+	source := pkg.WhisperMessageSource{User: user}
+	cmds.OnWhisper(pkg.MessageEvent{
+		User:    user,
+		Message: &msg,
+		Source:  source,
+	})
+
+	if cmd.n != 1 {
+		t.Fatal("Whisper-enabled command should have been executed once")
+	}
+
+	receivedSource, ok := cmd.event.Source.(pkg.WhisperMessageSource)
+	if !ok {
+		t.Fatalf("Command received source %T, want pkg.WhisperMessageSource", cmd.event.Source)
+	}
+	if receivedSource.User != user {
+		t.Fatal("Command received whisper source for the wrong user")
 	}
 }
 

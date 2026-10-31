@@ -3,6 +3,7 @@
 ## Unversioned
 
 - Allow some more commands to be run through whispers (e.g. `!user`). (#1565)
+- Give commands the original source of a message. (#1568)
 
 ## v2.1.0 - 2024-03-06
 
