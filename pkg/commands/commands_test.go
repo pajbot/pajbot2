@@ -9,11 +9,13 @@ import (
 )
 
 type testSimpleCommand struct {
-	n int
+	n     int
+	event pkg.MessageEvent
 }
 
 func (c *testSimpleCommand) Trigger(args []string, e pkg.MessageEvent) pkg.Actions {
 	c.n += 1
+	c.event = e
 	return nil
 }
 
@@ -21,6 +23,14 @@ type testCustomCommand struct {
 	testSimpleCommand
 
 	cds map[string]bool
+}
+
+type testWhisperCommand struct {
+	testSimpleCommand
+}
+
+func (c *testWhisperCommand) CanExecuteWithWhisper() bool {
+	return true
 }
 
 func (c *testCustomCommand) HasCooldown(user pkg.User) bool {
@@ -132,5 +142,58 @@ func TestCustomCommand(t *testing.T) {
 
 	if !cmd.HasCooldown(user) {
 		t.Fatal("User should have cooldown now that the command has been run")
+	}
+}
+
+func TestWhisperCommand(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testWhisperCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	cmds.OnWhisper(pkg.MessageEvent{Message: &msg})
+
+	if cmd.n != 1 {
+		t.Fatal("Whisper-enabled command should have been executed once")
+	}
+}
+
+func TestWhisperCommandReceivesWhisperSource(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testWhisperCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	user := users.NewSimpleTwitchUser("11148817", "pajlada")
+	source := pkg.WhisperMessageSource{User: user}
+	cmds.OnWhisper(pkg.MessageEvent{
+		User:    user,
+		Message: &msg,
+		Source:  source,
+	})
+
+	if cmd.n != 1 {
+		t.Fatal("Whisper-enabled command should have been executed once")
+	}
+
+	receivedSource, ok := cmd.event.Source.(pkg.WhisperMessageSource)
+	if !ok {
+		t.Fatalf("Command received source %T, want pkg.WhisperMessageSource", cmd.event.Source)
+	}
+	if receivedSource.User != user {
+		t.Fatal("Command received whisper source for the wrong user")
+	}
+}
+
+func TestWhisperCommandRequiresOptIn(t *testing.T) {
+	cmds := commands.NewCommands()
+	cmd := &testSimpleCommand{}
+	cmds.Register2(5, []string{"!user"}, cmd)
+
+	msg := twitchMessage{msg: "!user pajlada"}
+	cmds.OnWhisper(pkg.MessageEvent{Message: &msg})
+
+	if cmd.n != 0 {
+		t.Fatal("Command without whisper opt-in should not be executed")
 	}
 }
