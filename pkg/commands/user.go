@@ -73,6 +73,10 @@ type User struct {
 	defaultSubCommand string
 }
 
+func (c *User) CanExecuteWithWhisper() bool {
+	return true
+}
+
 func NewUser(bot pkg.BotChannel) pkg.CustomCommand2 {
 	u := &User{
 		Command:           base.New(),

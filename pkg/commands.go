@@ -18,6 +18,10 @@ type CustomCommand2 interface {
 	AddCooldown(User)
 }
 
+type WhisperCommand interface {
+	CanExecuteWithWhisper() bool
+}
+
 type CommandMatcher interface {
 	Register(aliases []string, command interface{}) interface{}
 	Deregister(command interface{})
@@ -28,6 +32,7 @@ type CommandMatcher interface {
 type CommandsManager interface {
 	CommandMatcher
 	OnMessage(event MessageEvent) Actions
+	OnWhisper(event MessageEvent) Actions
 
 	FindByCommandID(id int64) interface{}
 
