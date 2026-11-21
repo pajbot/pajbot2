@@ -412,6 +412,9 @@ func (c *BotChannel) HandleMessage(user pkg.User, message pkg.Message) error {
 		User:    user,
 		Message: message,
 		Channel: c,
+		Source: pkg.ChannelMessageSource{
+			Channel: c,
+		},
 	}
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
@@ -465,6 +468,9 @@ func (c *BotChannel) handleWhisper(user pkg.User, message *TwitchMessage) error 
 		User:    user,
 		Message: message,
 		Channel: c,
+		Source: pkg.WhisperMessageSource{
+			User: user,
+		},
 	}
 
 	actions := c.OnModules(func(module pkg.Module) pkg.Actions {
